@@ -76,6 +76,40 @@ class ApiService {
     })
   }
 
+  async getCategories(params?: {
+    search?: string
+    page?: number
+    limit?: number
+  }) {
+    const searchParams = new URLSearchParams()
+    if (params?.search) searchParams.set("search", params.search)
+    if (params?.page) searchParams.set("page", params.page.toString())
+    if (params?.limit) searchParams.set("limit", params.limit.toString())
+
+    const query = searchParams.toString()
+    return this.request(`/categories${query ? `?${query}` : ""}`)
+  }
+
+  async createCategory(categoryData: any) {
+    return this.request("/categories", {
+      method: "POST",
+      body: JSON.stringify(categoryData),
+    })
+  }
+
+  async updateCategory(id: string, categoryData: any) {
+    return this.request(`/categories/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(categoryData),
+    })
+  }
+
+  async deleteCategory(id: string) {
+    return this.request(`/categories/${id}`, {
+      method: "DELETE",
+    })
+  }
+
   // Vendors API
   async getVendors(params?: {
     search?: string
@@ -95,6 +129,19 @@ class ApiService {
     return this.request("/vendors", {
       method: "POST",
       body: JSON.stringify(vendorData),
+    })
+  }
+
+  async updateVendor(id: string, vendorData: any) {
+    return this.request(`/vendors/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(vendorData),
+    })
+  }
+
+  async deleteVendor(id: string) {
+    return this.request(`/vendors/${id}`, {
+      method: "DELETE",
     })
   }
 
@@ -130,6 +177,10 @@ class ApiService {
 
   invalidateProducts() {
     this.invalidateCache("products")
+  }
+
+  invalidateCategories() {
+    this.invalidateCache("categories")
   }
 
   invalidateVendors() {

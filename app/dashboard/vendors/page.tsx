@@ -7,7 +7,7 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { DataTable } from "@/components/ui/data-table"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Building2, Mail, Phone } from "lucide-react"
+import { Plus, Building2, Mail, Phone, Edit, Trash2 } from "lucide-react"
 import { apiService } from "@/services/api.service"
 import type { Vendor } from "@/lib/mock-data"
 import {
@@ -31,6 +31,7 @@ export default function VendorsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [editingVendor, setEditingVendor] = useState<Vendor | null>(null)
 
   const [formData, setFormData] = useState({
     name: "",
@@ -75,6 +76,30 @@ export default function VendorsPage() {
     setPagination((prev) => ({ ...prev, page }))
   }
 
+  const handleDelete = async (vendor: Vendor) => {
+    if (confirm(`Are you sure you want to delete the vendor "${vendor.name}"?`)) {
+      try {
+        await apiService.deleteVendor(vendor.id)
+        fetchVendors()
+        apiService.invalidateVendors()
+      } catch (error) {
+        console.error("Failed to delete vendor:", error)
+      }
+    }
+  }
+
+  const handleEdit = (vendor: Vendor) => {
+    setEditingVendor(vendor)
+    setFormData({
+      name: vendor.name,
+      email: vendor.email,
+      phone: vendor.phone,
+      address: vendor.address,
+      contactPerson: vendor.contactPerson,
+    })
+    setIsAddDialogOpen(true)
+  }
+
   const resetForm = () => {
     setFormData({
       name: "",
@@ -83,19 +108,24 @@ export default function VendorsPage() {
       address: "",
       contactPerson: "",
     })
+    setEditingVendor(null)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     try {
-      await apiService.createVendor(formData)
+      if (editingVendor) {
+        await apiService.updateVendor(editingVendor.id, formData)
+      } else {
+        await apiService.createVendor(formData)
+      }
       setIsAddDialogOpen(false)
       resetForm()
       fetchVendors()
       apiService.invalidateVendors()
     } catch (error) {
-      console.error("Failed to create vendor:", error)
+      console.error("Failed to save vendor:", error)
     }
   }
 
@@ -145,6 +175,24 @@ export default function VendorsPage() {
       header: "Added",
       render: (vendor: Vendor) => new Date(vendor.createdAt).toLocaleDateString(),
     },
+    {
+      key: "actions",
+      header: "Actions",
+      render: (vendor: Vendor) => (
+        <div className="flex items-center gap-1">
+          <PermissionGuard permission="edit_vendors">
+            <Button variant="ghost" size="sm" onClick={() => handleEdit(vendor)}>
+              <Edit className="h-4 w-4" />
+            </Button>
+          </PermissionGuard>
+          <PermissionGuard permission="delete_vendors">
+            <Button variant="ghost" size="sm" onClick={() => handleDelete(vendor)}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </PermissionGuard>
+        </div>
+      ),
+    },
   ]
 
   if (!can("view_vendors")) {
@@ -170,8 +218,12 @@ export default function VendorsPage() {
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle>Add New Vendor</DialogTitle>
-                  <DialogDescription>Create a new vendor profile for your supplier network</DialogDescription>
+                  <DialogTitle>{editingVendor ? "Edit Vendor" : "Add New Vendor"}</DialogTitle>
+                  <DialogDescription>
+                    {editingVendor
+                      ? "Update vendor information"
+                      : "Create a new vendor profile for your supplier network"}
+                  </DialogDescription>
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -231,7 +283,7 @@ export default function VendorsPage() {
                     <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                       Cancel
                     </Button>
-                    <Button type="submit">Add Vendor</Button>
+                    <Button type="submit">{editingVendor ? "Update Vendor" : "Add Vendor"}</Button>
                   </div>
                 </form>
               </DialogContent>

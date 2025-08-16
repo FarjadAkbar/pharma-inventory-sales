@@ -1,14 +1,12 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Plus, FolderOpen, Edit, Trash2 } from "lucide-react"
-import { mockCategories } from "@/lib/mock-data"
 import type { Category } from "@/lib/mock-data"
 import {
   Dialog,
@@ -24,9 +22,13 @@ import { Textarea } from "@/components/ui/textarea"
 import { PermissionGuard } from "@/components/auth/permission-guard"
 import { usePermissions } from "@/hooks/use-permissions"
 import { AccessDenied } from "@/components/ui/access-denied"
+import { apiService } from "@/services/api.service"
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>(mockCategories)
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
 
@@ -43,29 +45,25 @@ export default function CategoriesPage() {
     setEditingCategory(null)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (editingCategory) {
-      // Update existing category
-      setCategories((prev) =>
-        prev.map((cat) =>
-          cat.id === editingCategory.id ? { ...cat, ...formData, updatedAt: new Date().toISOString() } : cat,
-        ),
-      )
-    } else {
-      // Add new category
-      const newCategory: Category = {
-        id: (categories.length + 1).toString(),
-        ...formData,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+    try {
+      if (editingCategory) {
+        // Update existing category
+        await apiService.updateCategory(editingCategory.id, formData)
+      } else {
+        // Add new category
+        await apiService.createCategory(formData)
       }
-      setCategories((prev) => [...prev, newCategory])
-    }
 
-    setIsAddDialogOpen(false)
-    resetForm()
+      setIsAddDialogOpen(false)
+      resetForm()
+      fetchCategories()
+      apiService.invalidateCategories()
+    } catch (error) {
+      console.error("Failed to save category:", error)
+    }
   }
 
   const handleEdit = (category: Category) => {
@@ -77,13 +75,48 @@ export default function CategoriesPage() {
     setIsAddDialogOpen(true)
   }
 
-  const handleDelete = (category: Category) => {
+  const handleDelete = async (category: Category) => {
     if (confirm(`Are you sure you want to delete the category "${category.name}"?`)) {
-      setCategories((prev) => prev.filter((cat) => cat.id !== category.id))
+      try {
+        await apiService.deleteCategory(category.id)
+        fetchCategories()
+        apiService.invalidateCategories()
+      } catch (error) {
+        console.error("Failed to delete category:", error)
+      }
+    }
+  }
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query)
+    setPagination((prev) => ({ ...prev, page: 1 }))
+  }
+
+  const fetchCategories = async () => {
+    try {
+      setLoading(true)
+      const response = await apiService.getCategories({
+        search: searchQuery,
+        page: pagination.page,
+        limit: 10,
+      })
+
+      if (response.success && response.data) {
+        setCategories(response.data.categories)
+        setPagination(response.data.pagination)
+      }
+    } catch (error) {
+      console.error("Failed to fetch categories:", error)
+    } finally {
+      setLoading(false)
     }
   }
 
   const { can } = usePermissions()
+
+  useEffect(() => {
+    fetchCategories()
+  }, [searchQuery, pagination.page])
 
   if (!can("view_categories")) {
     return <AccessDenied title="Categories Access Denied" description="You don't have permission to view categories." />
@@ -155,49 +188,53 @@ export default function CategoriesPage() {
               <FolderOpen className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{categories.length}</div>
+              <div className="text-2xl font-bold">{pagination.total}</div>
             </CardContent>
           </Card>
         </div>
 
         {/* Categories Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {categories.map((category) => (
-            <Card key={category.id} className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <FolderOpen className="h-5 w-5 text-primary" />
+        {loading ? (
+          <div className="text-center py-12">Loading categories...</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {categories.map((category) => (
+              <Card key={category.id} className="hover:shadow-md transition-shadow">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <FolderOpen className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg">{category.name}</CardTitle>
+                        <Badge variant="secondary">Active</Badge>
+                      </div>
                     </div>
-                    <div>
-                      <CardTitle className="text-lg">{category.name}</CardTitle>
-                      <Badge variant="secondary">Active</Badge>
+                    <div className="flex items-center gap-1">
+                      <PermissionGuard permission="edit_categories">
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(category)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </PermissionGuard>
+                      <PermissionGuard permission="delete_categories">
+                        <Button variant="ghost" size="sm" onClick={() => handleDelete(category)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </PermissionGuard>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <PermissionGuard permission="edit_categories">
-                      <Button variant="ghost" size="sm" onClick={() => handleEdit(category)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </PermissionGuard>
-                    <PermissionGuard permission="delete_categories">
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete(category)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </PermissionGuard>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">{category.description}</p>
+                  <div className="mt-4 text-sm text-muted-foreground">
+                    Created: {new Date(category.createdAt).toLocaleDateString()}
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">{category.description}</p>
-                <div className="mt-4 text-sm text-muted-foreground">
-                  Created: {new Date(category.createdAt).toLocaleDateString()}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         {categories.length === 0 && (
           <Card>

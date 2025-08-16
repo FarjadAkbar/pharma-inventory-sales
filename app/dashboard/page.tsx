@@ -5,47 +5,73 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { StatsCard } from "@/components/dashboard/stats-card"
 import { RecentActivity } from "@/components/dashboard/recent-activity"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Package, ShoppingCart, Building2, Users, TrendingUp, DollarSign } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Package,
+  ShoppingCart,
+  TrendingUp,
+  DollarSign,
+  AlertTriangle,
+  Calendar,
+  Plus,
+  Bell,
+  Clock,
+  RefreshCw,
+} from "lucide-react"
 
 export default function DashboardPage() {
   const { user } = useAuth()
 
-  // Mock data - in real app, this would come from API
   const stats = [
     {
-      title: "Total Products",
-      value: "1,234",
-      description: "Active products in inventory",
-      icon: Package,
-      trend: { value: 12, isPositive: true },
+      title: "Daily Sales",
+      value: "$2,847",
+      description: "Today's revenue",
+      icon: DollarSign,
+      trend: { value: 15, isPositive: true },
     },
     {
-      title: "Total Sales",
+      title: "Monthly Sales",
       value: "$45,231",
-      description: "Revenue this month",
-      icon: DollarSign,
+      description: "This month's revenue",
+      icon: TrendingUp,
       trend: { value: 8, isPositive: true },
     },
     {
-      title: "Active Vendors",
-      value: "89",
-      description: "Registered vendors",
-      icon: Building2,
-      trend: { value: 3, isPositive: true },
+      title: "Low Stock Items",
+      value: "23",
+      description: "Items below minimum stock",
+      icon: AlertTriangle,
+      trend: { value: 5, isPositive: false },
     },
     {
-      title: "System Users",
-      value: "24",
-      description: "Active user accounts",
-      icon: Users,
-      trend: { value: 2, isPositive: true },
+      title: "Expiring Soon",
+      value: "12",
+      description: "Items expiring in 30 days",
+      icon: Calendar,
+      trend: { value: 3, isPositive: false },
     },
+  ]
+
+  const stockAlerts = [
+    { name: "Paracetamol 500mg", type: "Low Stock", quantity: 15, minStock: 50, severity: "high" },
+    { name: "Amoxicillin 250mg", type: "Expiring", expiryDate: "2024-02-15", severity: "medium" },
+    { name: "Ibuprofen 400mg", type: "Low Stock", quantity: 8, minStock: 30, severity: "high" },
+    { name: "Vitamin D3", type: "Expiring", expiryDate: "2024-02-20", severity: "low" },
+  ]
+
+  const notifications = [
+    { type: "Pending Order", message: "Order #PO-2024-001 awaiting approval", time: "2 hours ago" },
+    { type: "Return Request", message: "Return request for Order #SO-2024-045", time: "4 hours ago" },
+    { type: "Low Stock", message: "Paracetamol 500mg is running low", time: "6 hours ago" },
+    { type: "Payment Due", message: "Invoice #INV-2024-123 payment overdue", time: "1 day ago" },
   ]
 
   // Filter stats based on user role
   const getVisibleStats = () => {
     if (user?.role === "admin") return stats
-    if (user?.role === "manager") return stats.slice(0, 3)
+    if (user?.role === "manager") return stats
     return stats.slice(0, 2) // user role
   }
 
@@ -60,80 +86,113 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* User Info Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Account Information</CardTitle>
-            <CardDescription>Your current account details and access level</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Name</p>
-                <p className="text-lg font-semibold">{user?.name}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Email</p>
-                <p className="text-lg font-semibold">{user?.email}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Role</p>
-                <p className="text-lg font-semibold capitalize">{user?.role}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {getVisibleStats().map((stat, index) => (
             <StatsCard key={index} {...stat} />
           ))}
         </div>
 
-        {/* Recent Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <RecentActivity />
-
-          {/* Quick Actions */}
           <Card>
             <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Common tasks based on your role</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-orange-500" />
+                Stock Alerts
+              </CardTitle>
+              <CardDescription>Items requiring immediate attention</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                {user?.role === "admin" && (
-                  <>
-                    <Card className="p-4 hover:bg-accent cursor-pointer transition-colors">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4" />
-                        <span className="text-sm font-medium">Add User</span>
-                      </div>
-                    </Card>
-                    <Card className="p-4 hover:bg-accent cursor-pointer transition-colors">
-                      <div className="flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4" />
-                        <span className="text-sm font-medium">View Reports</span>
-                      </div>
-                    </Card>
-                  </>
-                )}
-                <Card className="p-4 hover:bg-accent cursor-pointer transition-colors">
-                  <div className="flex items-center gap-2">
-                    <Package className="h-4 w-4" />
-                    <span className="text-sm font-medium">Add Product</span>
+              <div className="space-y-3">
+                {stockAlerts.map((alert, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex-1">
+                      <p className="font-medium">{alert.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {alert.type === "Low Stock"
+                          ? `${alert.quantity} left (Min: ${alert.minStock})`
+                          : `Expires: ${alert.expiryDate}`}
+                      </p>
+                    </div>
+                    <Badge
+                      variant={
+                        alert.severity === "high"
+                          ? "destructive"
+                          : alert.severity === "medium"
+                            ? "default"
+                            : "secondary"
+                      }
+                    >
+                      {alert.type}
+                    </Badge>
                   </div>
-                </Card>
-                <Card className="p-4 hover:bg-accent cursor-pointer transition-colors">
-                  <div className="flex items-center gap-2">
-                    <ShoppingCart className="h-4 w-4" />
-                    <span className="text-sm font-medium">New Sale</span>
-                  </div>
-                </Card>
+                ))}
               </div>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5 text-blue-500" />
+                Notifications
+              </CardTitle>
+              <CardDescription>Recent system notifications</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {notifications.map((notification, index) => (
+                  <div key={index} className="flex items-start gap-3 p-3 border rounded-lg">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant="outline" className="text-xs">
+                          {notification.type}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {notification.time}
+                        </span>
+                      </div>
+                      <p className="text-sm">{notification.message}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Plus className="h-5 w-5 text-green-500" />
+                Quick Actions
+              </CardTitle>
+              <CardDescription>Common tasks for efficient workflow</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <Button variant="outline" className="h-auto p-4 flex flex-col items-center gap-2 bg-transparent">
+                  <ShoppingCart className="h-6 w-6" />
+                  <span className="text-sm font-medium">New Sale</span>
+                </Button>
+                <Button variant="outline" className="h-auto p-4 flex flex-col items-center gap-2 bg-transparent">
+                  <Package className="h-6 w-6" />
+                  <span className="text-sm font-medium">New Purchase</span>
+                </Button>
+                <Button variant="outline" className="h-auto p-4 flex flex-col items-center gap-2 bg-transparent">
+                  <Plus className="h-6 w-6" />
+                  <span className="text-sm font-medium">Add Product</span>
+                </Button>
+                <Button variant="outline" className="h-auto p-4 flex flex-col items-center gap-2 bg-transparent">
+                  <RefreshCw className="h-6 w-6" />
+                  <span className="text-sm font-medium">Stock Update</span>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <RecentActivity />
         </div>
       </div>
     </DashboardLayout>
