@@ -1,4 +1,4 @@
-# Angular CRM project
+# Pharma Inventory Sales project
 
 *Automatically synced with your [v0.app](https://v0.app) deployments*
 

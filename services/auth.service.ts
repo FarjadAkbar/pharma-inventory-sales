@@ -10,7 +10,7 @@ import type {
 
 class AuthService {
   private baseUrl = "/api/auth"
-  private tokenKey = "crm_token"
+  private tokenKey = "pharma_inventory_sales_token" // Updated token key name
 
   // Token management
   setToken(token: string): void {

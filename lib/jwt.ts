@@ -30,7 +30,7 @@ export function getTokenFromHeaders(headers: Headers): string | null {
   const cookieHeader = headers.get("cookie")
   if (cookieHeader) {
     const cookies = cookieHeader.split(";").map((c) => c.trim())
-    const tokenCookie = cookies.find((c) => c.startsWith("crm_token="))
+    const tokenCookie = cookies.find((c) => c.startsWith("pharma_inventory_sales_token="))
     if (tokenCookie) {
       return tokenCookie.split("=")[1]
     }

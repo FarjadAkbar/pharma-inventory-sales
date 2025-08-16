@@ -104,7 +104,7 @@ export function Sidebar() {
         </div>
         {!collapsed && (
           <div>
-            <h2 className="text-lg font-semibold text-sidebar-foreground">CRM System</h2>
+            <h2 className="text-lg font-semibold text-sidebar-foreground">Pharma Inventory Sales</h2>
           </div>
         )}
       </div>

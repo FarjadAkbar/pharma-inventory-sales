@@ -4,7 +4,7 @@ import type { User } from "@/types/auth"
 export const mockUsers: User[] = [
   {
     id: "1",
-    email: "admin@crm.com",
+    email: "admin@pharma-inventory-sales.com", // Updated email domain
     name: "Admin User",
     role: "admin",
     createdAt: "2024-01-01T00:00:00Z",
@@ -12,7 +12,7 @@ export const mockUsers: User[] = [
   },
   {
     id: "2",
-    email: "manager@crm.com",
+    email: "manager@pharma-inventory-sales.com", // Updated email domain
     name: "Manager User",
     role: "manager",
     createdAt: "2024-01-02T00:00:00Z",
@@ -20,7 +20,7 @@ export const mockUsers: User[] = [
   },
   {
     id: "3",
-    email: "user@crm.com",
+    email: "user@pharma-inventory-sales.com", // Updated email domain
     name: "Regular User",
     role: "user",
     createdAt: "2024-01-03T00:00:00Z",
@@ -30,9 +30,9 @@ export const mockUsers: User[] = [
 
 // Mock passwords (in real app, these would be hashed)
 export const mockPasswords: Record<string, string> = {
-  "admin@crm.com": "Admin123!",
-  "manager@crm.com": "Manager123!",
-  "user@crm.com": "User123!",
+  "admin@pharma-inventory-sales.com": "Admin123!", // Updated email domain
+  "manager@pharma-inventory-sales.com": "Manager123!", // Updated email domain
+  "user@pharma-inventory-sales.com": "User123!", // Updated email domain
 }
 
 // Mock products

@@ -73,7 +73,8 @@ export function RecentActivity() {
     <Card>
       <CardHeader>
         <CardTitle>Recent Activity</CardTitle>
-        <CardDescription>Latest updates from your CRM system</CardDescription>
+        <CardDescription>Latest updates from your pharma inventory sales system</CardDescription>{" "}
+        {/* Updated system reference */}
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

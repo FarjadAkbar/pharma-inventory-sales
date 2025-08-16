@@ -6,8 +6,8 @@ import "./globals.css"
 import { AuthProvider } from "@/contexts/auth.context"
 
 export const metadata: Metadata = {
-  title: "CRM System",
-  description: "Professional CRM System with Role-Based Access",
+  title: "Pharma Inventory Sales System", // Updated title from CRM System
+  description: "Professional Pharma Inventory Sales System with Role-Based Access", // Updated description
   generator: "v0.app",
 }
 
