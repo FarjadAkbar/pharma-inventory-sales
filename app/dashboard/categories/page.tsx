@@ -1,0 +1,220 @@
+"use client"
+
+import type React from "react"
+
+import { useState } from "react"
+import { DashboardLayout } from "@/components/layout/dashboard-layout"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Plus, FolderOpen, Edit, Trash2 } from "lucide-react"
+import { mockCategories } from "@/lib/mock-data"
+import type { Category } from "@/lib/mock-data"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { PermissionGuard } from "@/components/auth/permission-guard"
+import { usePermissions } from "@/hooks/use-permissions"
+import { AccessDenied } from "@/components/ui/access-denied"
+
+export default function CategoriesPage() {
+  const [categories, setCategories] = useState<Category[]>(mockCategories)
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null)
+
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+  })
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      description: "",
+    })
+    setEditingCategory(null)
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (editingCategory) {
+      // Update existing category
+      setCategories((prev) =>
+        prev.map((cat) =>
+          cat.id === editingCategory.id ? { ...cat, ...formData, updatedAt: new Date().toISOString() } : cat,
+        ),
+      )
+    } else {
+      // Add new category
+      const newCategory: Category = {
+        id: (categories.length + 1).toString(),
+        ...formData,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+      setCategories((prev) => [...prev, newCategory])
+    }
+
+    setIsAddDialogOpen(false)
+    resetForm()
+  }
+
+  const handleEdit = (category: Category) => {
+    setEditingCategory(category)
+    setFormData({
+      name: category.name,
+      description: category.description,
+    })
+    setIsAddDialogOpen(true)
+  }
+
+  const handleDelete = (category: Category) => {
+    if (confirm(`Are you sure you want to delete the category "${category.name}"?`)) {
+      setCategories((prev) => prev.filter((cat) => cat.id !== category.id))
+    }
+  }
+
+  const { can } = usePermissions()
+
+  if (!can("view_categories")) {
+    return <AccessDenied title="Categories Access Denied" description="You don't have permission to view categories." />
+  }
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Categories</h1>
+            <p className="text-muted-foreground">Organize your products with categories</p>
+          </div>
+
+          <PermissionGuard permissions={["create_categories", "edit_categories"]} requireAll={false}>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={resetForm}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Category
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{editingCategory ? "Edit Category" : "Add New Category"}</DialogTitle>
+                  <DialogDescription>
+                    {editingCategory ? "Update category information" : "Create a new product category"}
+                  </DialogDescription>
+                </DialogHeader>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Category Name</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-2">
+                    <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit">{editingCategory ? "Update Category" : "Add Category"}</Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </PermissionGuard>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Categories</CardTitle>
+              <FolderOpen className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{categories.length}</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Categories Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {categories.map((category) => (
+            <Card key={category.id} className="hover:shadow-md transition-shadow">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <FolderOpen className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">{category.name}</CardTitle>
+                      <Badge variant="secondary">Active</Badge>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <PermissionGuard permission="edit_categories">
+                      <Button variant="ghost" size="sm" onClick={() => handleEdit(category)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </PermissionGuard>
+                    <PermissionGuard permission="delete_categories">
+                      <Button variant="ghost" size="sm" onClick={() => handleDelete(category)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </PermissionGuard>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">{category.description}</p>
+                <div className="mt-4 text-sm text-muted-foreground">
+                  Created: {new Date(category.createdAt).toLocaleDateString()}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {categories.length === 0 && (
+          <Card>
+            <CardContent className="text-center py-12">
+              <FolderOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+              <h3 className="text-lg font-medium mb-2">No categories yet</h3>
+              <p className="text-muted-foreground mb-4">Create your first product category to get started</p>
+              <PermissionGuard permissions={["create_categories", "edit_categories"]} requireAll={false}>
+                <Button onClick={() => setIsAddDialogOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Category
+                </Button>
+              </PermissionGuard>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </DashboardLayout>
+  )
+}

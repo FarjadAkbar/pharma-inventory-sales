@@ -1,0 +1,146 @@
+"use client"
+
+import type React from "react"
+
+import { useState } from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { cn } from "@/lib/utils"
+import { useAuth } from "@/contexts/auth.context"
+import { Button } from "@/components/ui/button"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  Building2,
+  FolderOpen,
+  TrendingUp,
+  Users,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react"
+
+interface NavItem {
+  title: string
+  href: string
+  icon: React.ComponentType<{ className?: string }>
+  roles: ("admin" | "manager" | "user")[]
+}
+
+const navItems: NavItem[] = [
+  {
+    title: "Dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+    roles: ["admin", "manager", "user"],
+  },
+  {
+    title: "Products",
+    href: "/dashboard/products",
+    icon: Package,
+    roles: ["admin", "manager", "user"],
+  },
+  {
+    title: "POS",
+    href: "/dashboard/pos",
+    icon: ShoppingCart,
+    roles: ["admin", "manager", "user"],
+  },
+  {
+    title: "Vendors",
+    href: "/dashboard/vendors",
+    icon: Building2,
+    roles: ["admin", "manager"],
+  },
+  {
+    title: "Categories",
+    href: "/dashboard/categories",
+    icon: FolderOpen,
+    roles: ["admin", "manager"],
+  },
+  {
+    title: "Sales",
+    href: "/dashboard/sales",
+    icon: TrendingUp,
+    roles: ["admin", "manager"],
+  },
+  {
+    title: "Users",
+    href: "/dashboard/users",
+    icon: Users,
+    roles: ["admin"],
+  },
+]
+
+export function Sidebar() {
+  const [collapsed, setCollapsed] = useState(false)
+  const pathname = usePathname()
+  const { user } = useAuth()
+
+  const filteredNavItems = navItems.filter((item) => user?.role && item.roles.includes(user.role))
+
+  return (
+    <div
+      className={cn(
+        "relative flex flex-col h-full bg-sidebar border-r border-sidebar-border transition-all duration-300",
+        collapsed ? "w-16" : "w-64",
+      )}
+    >
+      {/* Toggle Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute -right-3 top-6 z-10 h-6 w-6 rounded-full border bg-background shadow-md"
+        onClick={() => setCollapsed(!collapsed)}
+      >
+        {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
+      </Button>
+
+      {/* Logo/Brand */}
+      <div className="flex items-center gap-2 p-4 border-b border-sidebar-border">
+        <div className="h-8 w-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
+          <LayoutDashboard className="h-4 w-4 text-sidebar-primary-foreground" />
+        </div>
+        {!collapsed && (
+          <div>
+            <h2 className="text-lg font-semibold text-sidebar-foreground">CRM System</h2>
+          </div>
+        )}
+      </div>
+
+      {/* Navigation */}
+      <ScrollArea className="flex-1 px-3 py-4">
+        <nav className="space-y-2">
+          {filteredNavItems.map((item) => {
+            const Icon = item.icon
+            const isActive = pathname === item.href
+
+            return (
+              <Link key={item.href} href={item.href}>
+                <Button
+                  variant={isActive ? "secondary" : "ghost"}
+                  className={cn(
+                    "w-full justify-start gap-3 h-10",
+                    collapsed && "justify-center px-2",
+                    isActive && "bg-sidebar-accent text-sidebar-accent-foreground",
+                  )}
+                >
+                  <Icon className="h-4 w-4 flex-shrink-0" />
+                  {!collapsed && <span>{item.title}</span>}
+                </Button>
+              </Link>
+            )
+          })}
+        </nav>
+      </ScrollArea>
+
+      {/* User Role Badge */}
+      {!collapsed && user && (
+        <div className="p-4 border-t border-sidebar-border">
+          <div className="text-xs text-sidebar-foreground/60 uppercase tracking-wide">Role: {user.role}</div>
+        </div>
+      )}
+    </div>
+  )
+}
