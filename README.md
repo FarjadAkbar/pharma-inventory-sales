@@ -14,7 +14,7 @@ Any changes you make to your deployed app will be automatically pushed to this r
 
 Your project is live at:
 
-**[https://vercel.com/farjadakbar4s-projects/v0-angular-crm-project](https://vercel.com/farjadakbar4s-projects/v0-angular-crm-project)**
+**[https://vercel.com/farjadakbar4s-projects/v0-angular-crm-project](https://pharama-sales-inventory-git-main-farjadakbar4s-projects.vercel.app/)**
 
 ## Build your app
 
@@ -24,7 +24,6 @@ Continue building your app on:
 
 ## How It Works
 
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+1. **Admin**: admin@pharma-inventory-sales.com, Admin123!
+2. **Manager**: manager@pharma-inventory-sales.com, Manager123!
+3. **User**: user@pharma-inventory-sales.com, User123!
