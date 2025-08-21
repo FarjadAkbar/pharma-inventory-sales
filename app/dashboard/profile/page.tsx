@@ -1,6 +1,7 @@
 "use client"
 
 import { useAuth } from "@/contexts/auth.context"
+import { formatDateISO } from "@/lib/utils"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -92,7 +93,7 @@ export default function ProfilePage() {
                         <CalendarDays className="h-4 w-4 text-muted-foreground" />
                         <span className="text-sm font-medium text-muted-foreground">Member Since</span>
                       </div>
-                      <p className="text-lg font-semibold">{new Date(user.createdAt).toLocaleDateString()}</p>
+                      <p className="text-lg font-semibold">{formatDateISO(user.createdAt)}</p>
                     </div>
                   </div>
                 </div>

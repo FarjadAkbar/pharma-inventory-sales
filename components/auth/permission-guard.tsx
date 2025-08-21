@@ -4,6 +4,7 @@ import type React from "react"
 
 import { usePermissions } from "@/hooks/use-permissions"
 import type { Permission } from "@/lib/permissions"
+import type { Role } from "@/types/tenant"
 
 interface PermissionGuardProps {
   children: React.ReactNode
@@ -11,7 +12,7 @@ interface PermissionGuardProps {
   permissions?: Permission[]
   requireAll?: boolean
   fallback?: React.ReactNode
-  roles?: ("admin" | "manager" | "user")[]
+  roles?: Role[]
 }
 
 export function PermissionGuard({

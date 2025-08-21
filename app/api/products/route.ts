@@ -12,7 +12,14 @@ export async function GET(request: NextRequest) {
       const page = Number.parseInt(searchParams.get("page") || "1")
       const limit = Number.parseInt(searchParams.get("limit") || "10")
 
-      let filteredProducts = [...mockProducts]
+      const storeId = req.headers.get("x-store-id")
+      if (user.role !== "admin") {
+        if (!storeId || !(user as any).assignedStores?.includes(storeId)) {
+          return Response.json({ success: false, error: "Store access denied" }, { status: 403 })
+        }
+      }
+
+      let filteredProducts = [...mockProducts].filter((p) => (storeId ? p.storeId === storeId : true))
 
       // Apply search filter
       if (search) {
@@ -56,9 +63,14 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  return requireAuth(["admin", "manager"])(request, async (req, user) => {
+  return requireAuth(["admin", "store_manager", "employee"])(request, async (req, user) => {
     try {
       const productData = await request.json()
+
+      const storeId = req.headers.get("x-store-id")
+      if (!storeId || (user.role !== "admin" && !(user as any).assignedStores?.includes(storeId))) {
+        return Response.json({ success: false, error: "Store access denied" }, { status: 403 })
+      }
 
       // Validation
       const { name, description, price, category, vendor, stock, sku } = productData
@@ -70,8 +82,8 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // Check if SKU already exists
-      const existingProduct = mockProducts.find((p) => p.sku === sku)
+      // Check if SKU already exists in the same store
+      const existingProduct = mockProducts.find((p) => p.sku === sku && p.storeId === storeId)
       if (existingProduct) {
         return Response.json({ success: false, error: "Product with this SKU already exists" }, { status: 409 })
       }
@@ -85,6 +97,8 @@ export async function POST(request: NextRequest) {
         vendor,
         stock: Number.parseInt(stock) || 0,
         sku,
+        storeId,
+        createdBy: user.id,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }

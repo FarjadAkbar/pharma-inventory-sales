@@ -12,9 +12,9 @@ Any changes you make to your deployed app will be automatically pushed to this r
 
 ## Deployment
 
-Your project is live at:
+Project is live at:
 
-**[https://vercel.com/farjadakbar4s-projects/v0-angular-crm-project](https://pharama-sales-inventory-git-main-farjadakbar4s-projects.vercel.app/)**
+**[https://v0-angular-crm-project.vercel.app/auth/login]**
 
 ## Build your app
 

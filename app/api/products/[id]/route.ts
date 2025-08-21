@@ -11,10 +11,14 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         return Response.json({ success: false, error: "Product not found" }, { status: 404 })
       }
 
-      return Response.json({
-        success: true,
-        data: product,
-      })
+      const storeId = req.headers.get("x-store-id")
+      if (user.role !== "admin") {
+        if (!storeId || !(user as any).assignedStores?.includes(storeId) || product.storeId !== storeId) {
+          return Response.json({ success: false, error: "Store access denied" }, { status: 403 })
+        }
+      }
+
+      return Response.json({ success: true, data: product })
     } catch (error) {
       console.error("Get product error:", error)
       return Response.json({ success: false, error: "Internal server error" }, { status: 500 })
@@ -23,7 +27,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
-  return requireAuth(["admin", "manager"])(request, async (req, user) => {
+  return requireAuth(["admin", "store_manager", "employee"])(request, async (req, user) => {
     try {
       const productIndex = mockProducts.findIndex((p) => p.id === params.id)
 
@@ -34,18 +38,27 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       const updateData = await request.json()
       const existingProduct = mockProducts[productIndex]
 
-      // Update product
+      const storeId = req.headers.get("x-store-id")
+      if (user.role !== "admin") {
+        if (!storeId || !(user as any).assignedStores?.includes(storeId) || existingProduct.storeId !== storeId) {
+          return Response.json({ success: false, error: "Store access denied" }, { status: 403 })
+        }
+        if (user.role === "employee" && existingProduct.createdBy !== user.id) {
+          return Response.json({ success: false, error: "Insufficient permissions" }, { status: 403 })
+        }
+      }
+
+      // Update product (preserve identity and store ownership fields)
       mockProducts[productIndex] = {
         ...existingProduct,
         ...updateData,
-        id: existingProduct.id, // Prevent ID change
+        id: existingProduct.id,
+        storeId: existingProduct.storeId,
+        createdBy: existingProduct.createdBy,
         updatedAt: new Date().toISOString(),
       }
 
-      return Response.json({
-        success: true,
-        data: mockProducts[productIndex],
-      })
+      return Response.json({ success: true, data: mockProducts[productIndex] })
     } catch (error) {
       console.error("Update product error:", error)
       return Response.json({ success: false, error: "Internal server error" }, { status: 500 })
@@ -54,7 +67,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-  return requireAuth(["admin", "manager"])(request, async (req, user) => {
+  return requireAuth(["admin", "store_manager", "employee"])(request, async (req, user) => {
     try {
       const productIndex = mockProducts.findIndex((p) => p.id === params.id)
 
@@ -62,13 +75,20 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
         return Response.json({ success: false, error: "Product not found" }, { status: 404 })
       }
 
+      const product = mockProducts[productIndex]
+      const storeId = req.headers.get("x-store-id")
+      if (user.role !== "admin") {
+        if (!storeId || !(user as any).assignedStores?.includes(storeId) || product.storeId !== storeId) {
+          return Response.json({ success: false, error: "Store access denied" }, { status: 403 })
+        }
+        if (user.role === "employee" && product.createdBy !== user.id) {
+          return Response.json({ success: false, error: "Insufficient permissions" }, { status: 403 })
+        }
+      }
+
       const deletedProduct = mockProducts.splice(productIndex, 1)[0]
 
-      return Response.json({
-        success: true,
-        data: deletedProduct,
-        message: "Product deleted successfully",
-      })
+      return Response.json({ success: true, data: deletedProduct, message: "Product deleted successfully" })
     } catch (error) {
       console.error("Delete product error:", error)
       return Response.json({ success: false, error: "Internal server error" }, { status: 500 })

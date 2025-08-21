@@ -99,7 +99,7 @@ export default function POSPage() {
     try {
       // In a real app, this would create a sale record
       const saleData = {
-        customerId: "temp-" + Date.now(),
+        customerId: "temp-" + Math.random().toString(36).slice(2),
         customerName: customerInfo.name || "Walk-in Customer",
         customerEmail: customerInfo.email || "",
         items: cart.map((item) => ({

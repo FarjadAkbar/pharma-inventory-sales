@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Plus, Users, Shield, UserCheck } from "lucide-react"
 import { apiService } from "@/services/api.service"
 import type { User } from "@/types/auth"
+import { useStore } from "@/contexts/store.context"
 import {
   Dialog,
   DialogContent,
@@ -25,6 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PermissionGuard } from "@/components/auth/permission-guard"
 import { usePermissions } from "@/hooks/use-permissions"
 import { AccessDenied } from "@/components/ui/access-denied"
+import { formatDateISO } from "@/lib/utils"
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
@@ -36,8 +38,11 @@ export default function UsersPage() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    role: "user" as "admin" | "manager" | "user",
+    role: "employee" as "admin" | "store_manager" | "employee",
+    assignedStores: [] as string[],
+    screenPermissions: [] as { screen: string; actions: string[] }[],
   })
+  const { stores } = useStore()
 
   const { can } = usePermissions()
 
@@ -75,11 +80,7 @@ export default function UsersPage() {
   }
 
   const resetForm = () => {
-    setFormData({
-      name: "",
-      email: "",
-      role: "user",
-    })
+    setFormData({ name: "", email: "", role: "employee", assignedStores: [], screenPermissions: [] })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -100,9 +101,9 @@ export default function UsersPage() {
     switch (role) {
       case "admin":
         return "bg-red-100 text-red-800"
-      case "manager":
+      case "store_manager":
         return "bg-blue-100 text-blue-800"
-      case "user":
+      case "employee":
         return "bg-green-100 text-green-800"
       default:
         return "bg-gray-100 text-gray-800"
@@ -111,8 +112,8 @@ export default function UsersPage() {
 
   const calculateStats = () => {
     const adminCount = users.filter((user) => user.role === "admin").length
-    const managerCount = users.filter((user) => user.role === "manager").length
-    const userCount = users.filter((user) => user.role === "user").length
+    const managerCount = users.filter((user) => user.role === "store_manager").length
+    const userCount = users.filter((user) => user.role === "employee").length
 
     return { adminCount, managerCount, userCount }
   }
@@ -149,16 +150,8 @@ export default function UsersPage() {
         <Badge className={getRoleBadgeColor(user.role)}>{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</Badge>
       ),
     },
-    {
-      key: "createdAt",
-      header: "Joined",
-      render: (user: User) => new Date(user.createdAt).toLocaleDateString(),
-    },
-    {
-      key: "updatedAt",
-      header: "Last Updated",
-      render: (user: User) => new Date(user.updatedAt).toLocaleDateString(),
-    },
+    { key: "createdAt", header: "Joined", render: (user: User) => formatDateISO(user.createdAt) },
+    { key: "updatedAt", header: "Last Updated", render: (user: User) => formatDateISO(user.updatedAt) },
   ]
 
   if (!can("view_users")) {
@@ -175,67 +168,10 @@ export default function UsersPage() {
           </div>
 
           <PermissionGuard permission="create_users">
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={resetForm}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add User
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add New User</DialogTitle>
-                  <DialogDescription>Create a new user account with appropriate permissions</DialogDescription>
-                </DialogHeader>
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="role">Role</Label>
-                    <Select
-                      value={formData.role}
-                      onValueChange={(value: any) => setFormData({ ...formData, role: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="user">User</SelectItem>
-                        <SelectItem value="manager">Manager</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex justify-end gap-2">
-                    <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button type="submit">Add User</Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
+            <Button onClick={() => (window.location.href = "/dashboard/users/new") }>
+              <Plus className="mr-2 h-4 w-4" />
+              Add User
+            </Button>
           </PermissionGuard>
         </div>
 
@@ -299,6 +235,32 @@ export default function UsersPage() {
                 onPageChange: handlePageChange,
               }}
               loading={loading}
+              actions={(user: User) => (
+                <div className="flex gap-2">
+                  <PermissionGuard permissions={["edit_users"]}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => (window.location.href = `/dashboard/users/${user.id}`)}
+                    >
+                      Edit
+                    </Button>
+                  </PermissionGuard>
+                  <PermissionGuard permissions={["delete_users"]}>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={async () => {
+                        if (!confirm(`Delete user ${user.name}?`)) return
+                        await apiService.deleteUser(user.id)
+                        fetchUsers()
+                      }}
+                    >
+                      Delete
+                    </Button>
+                  </PermissionGuard>
+                </div>
+              )}
             />
           </CardContent>
         </Card>

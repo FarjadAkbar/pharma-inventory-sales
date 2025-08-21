@@ -19,58 +19,25 @@ import {
   Users,
   ChevronLeft,
   ChevronRight,
+  Store,
 } from "lucide-react"
 
 interface NavItem {
   title: string
   href: string
   icon: React.ComponentType<{ className?: string }>
-  roles: ("admin" | "manager" | "user")[]
+  roles: ("admin" | "store_manager" | "employee")[]
 }
 
 const navItems: NavItem[] = [
-  {
-    title: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-    roles: ["admin", "manager", "user"],
-  },
-  {
-    title: "Products",
-    href: "/dashboard/products",
-    icon: Package,
-    roles: ["admin", "manager", "user"],
-  },
-  {
-    title: "POS",
-    href: "/dashboard/pos",
-    icon: ShoppingCart,
-    roles: ["admin", "manager", "user"],
-  },
-  {
-    title: "Vendors",
-    href: "/dashboard/vendors",
-    icon: Building2,
-    roles: ["admin", "manager"],
-  },
-  {
-    title: "Categories",
-    href: "/dashboard/categories",
-    icon: FolderOpen,
-    roles: ["admin", "manager"],
-  },
-  {
-    title: "Sales",
-    href: "/dashboard/sales",
-    icon: TrendingUp,
-    roles: ["admin", "manager"],
-  },
-  {
-    title: "Users",
-    href: "/dashboard/users",
-    icon: Users,
-    roles: ["admin"],
-  },
+  { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["admin", "store_manager", "employee"] },
+  { title: "Products", href: "/dashboard/products", icon: Package, roles: ["admin", "store_manager", "employee"] },
+  { title: "POS", href: "/dashboard/pos", icon: ShoppingCart, roles: ["admin", "store_manager", "employee"] },
+  { title: "Vendors", href: "/dashboard/vendors", icon: Building2, roles: ["admin", "store_manager"] },
+  { title: "Categories", href: "/dashboard/categories", icon: FolderOpen, roles: ["admin", "store_manager"] },
+  { title: "Sales", href: "/dashboard/sales", icon: TrendingUp, roles: ["admin", "store_manager"] },
+  { title: "Users", href: "/dashboard/users", icon: Users, roles: ["admin", "store_manager"] },
+  { title: "Stores", href: "/dashboard/stores", icon: Store, roles: ["admin"] },
 ]
 
 export function Sidebar() {
@@ -78,7 +45,8 @@ export function Sidebar() {
   const pathname = usePathname()
   const { user } = useAuth()
 
-  const filteredNavItems = navItems.filter((item) => user?.role && item.roles.includes(user.role))
+  if (!user) return null
+  const filteredNavItems = navItems.filter((item) => item.roles.includes(user.role))
 
   return (
     <div
@@ -117,7 +85,11 @@ export function Sidebar() {
             const isActive = pathname === item.href
 
             return (
-              <Link key={item.href} href={item.href}>
+              <Link key={item.href} href={item.href} onClick={() => {
+                window.dispatchEvent(new Event("api:request:start"))
+                // Failsafe auto-stop in case page has no API calls
+                setTimeout(() => window.dispatchEvent(new Event("api:request:stop")), 800)
+              }}>
                 <Button
                   variant={isActive ? "secondary" : "ghost"}
                   className={cn(

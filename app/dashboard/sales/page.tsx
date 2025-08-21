@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { TrendingUp, DollarSign, ShoppingCart, Users, Eye } from "lucide-react"
 import { mockSales } from "@/lib/mock-data"
+import { formatDateISO } from "@/lib/utils"
 import type { Sale } from "@/lib/mock-data"
 import {
   Dialog,
@@ -101,7 +102,7 @@ export default function SalesPage() {
     {
       key: "createdAt",
       header: "Date",
-      render: (sale: Sale) => new Date(sale.createdAt).toLocaleDateString(),
+      render: (sale: Sale) => formatDateISO(sale.createdAt),
     },
   ]
 
@@ -229,7 +230,7 @@ export default function SalesPage() {
                           </div>
                           <div className="flex justify-between">
                             <span>Order Date:</span>
-                            <span>{new Date(sale.createdAt).toLocaleString()}</span>
+                            <span>{formatDateISO(sale.createdAt)}</span>
                           </div>
                           <div className="flex justify-between font-medium text-base">
                             <span>Total:</span>

@@ -26,8 +26,10 @@ import { useAuth } from "@/contexts/auth.context"
 import { PermissionGuard } from "@/components/auth/permission-guard"
 import { usePermissions } from "@/hooks/use-permissions"
 import { AccessDenied } from "@/components/ui/access-denied"
+import { useMounted } from "@/hooks/use-mounted"
 
 export default function ProductsPage() {
+  const mounted = useMounted()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -178,9 +180,11 @@ export default function ProductsPage() {
     return <AccessDenied title="Products Access Denied" description="You don't have permission to view products." />
   }
 
+  if (!mounted) return null
+
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-6" suppressHydrationWarning>
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Products</h1>

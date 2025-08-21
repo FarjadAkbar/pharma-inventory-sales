@@ -1,4 +1,5 @@
 import type { User } from "@/types/auth"
+import type { Store } from "@/types/tenant"
 
 // Mock users database
 export const mockUsers: User[] = [
@@ -7,6 +8,18 @@ export const mockUsers: User[] = [
     email: "admin@pharma-inventory-sales.com", // Updated email domain
     name: "Admin User",
     role: "admin",
+    assignedStores: ["store-1", "store-2"],
+    defaultStoreId: "store-1",
+    screenPermissions: [
+      { screen: "dashboard", actions: ["view", "create", "edit", "delete"] },
+      { screen: "products", actions: ["view", "create", "edit", "delete"] },
+      { screen: "vendors", actions: ["view", "create", "edit", "delete"] },
+      { screen: "categories", actions: ["view", "create", "edit", "delete"] },
+      { screen: "sales", actions: ["view", "create", "edit", "delete"] },
+      { screen: "pos", actions: ["view", "create", "edit", "delete"] },
+      { screen: "users", actions: ["view", "create", "edit", "delete"] },
+      { screen: "stores", actions: ["view", "create", "edit", "delete"] },
+    ],
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2024-01-01T00:00:00Z",
   },
@@ -14,7 +27,17 @@ export const mockUsers: User[] = [
     id: "2",
     email: "manager@pharma-inventory-sales.com", // Updated email domain
     name: "Manager User",
-    role: "manager",
+    role: "store_manager",
+    assignedStores: ["store-1"],
+    screenPermissions: [
+      { screen: "dashboard", actions: ["view"] },
+      { screen: "products", actions: ["view", "create", "edit", "delete"] },
+      { screen: "vendors", actions: ["view", "create", "edit"] },
+      { screen: "categories", actions: ["view", "create", "edit", "delete"] },
+      { screen: "sales", actions: ["view", "create"] },
+      { screen: "pos", actions: ["view"] },
+      { screen: "users", actions: ["view", "create", "edit", "delete"] },
+    ],
     createdAt: "2024-01-02T00:00:00Z",
     updatedAt: "2024-01-02T00:00:00Z",
   },
@@ -22,9 +45,34 @@ export const mockUsers: User[] = [
     id: "3",
     email: "user@pharma-inventory-sales.com", // Updated email domain
     name: "Regular User",
-    role: "user",
+    role: "employee",
+    assignedStores: ["store-1"],
+    screenPermissions: [
+      { screen: "dashboard", actions: ["view"] },
+      { screen: "products", actions: ["view"] },
+      { screen: "pos", actions: ["view"] },
+      { screen: "sales", actions: ["create"] },
+    ],
     createdAt: "2024-01-03T00:00:00Z",
     updatedAt: "2024-01-03T00:00:00Z",
+  },
+  {
+    id: "4",
+    email: "manager2@pharma-inventory-sales.com", // Updated email domain
+    name: "Manager User",
+    role: "store_manager",
+    assignedStores: ["store-2"],
+    screenPermissions: [
+      { screen: "dashboard", actions: ["view"] },
+      { screen: "products", actions: ["view", "create", "edit", "delete"] },
+      { screen: "vendors", actions: ["view", "create", "edit"] },
+      { screen: "categories", actions: ["view", "create", "edit", "delete"] },
+      { screen: "sales", actions: ["view", "create"] },
+      { screen: "pos", actions: ["view"] },
+      { screen: "users", actions: ["view", "create", "edit", "delete"] },
+    ],
+    createdAt: "2024-01-02T00:00:00Z",
+    updatedAt: "2024-01-02T00:00:00Z",
   },
 ]
 
@@ -33,6 +81,7 @@ export const mockPasswords: Record<string, string> = {
   "admin@pharma-inventory-sales.com": "Admin123!", // Updated email domain
   "manager@pharma-inventory-sales.com": "Manager123!", // Updated email domain
   "user@pharma-inventory-sales.com": "User123!", // Updated email domain
+  "manager2@pharma-inventory-sales.com": "Manager123!", // Updated email domain
 }
 
 // Mock products
@@ -45,6 +94,8 @@ export interface Product {
   vendor: string
   stock: number
   sku: string
+  storeId: string
+  createdBy: string
   createdAt: string
   updatedAt: string
 }
@@ -59,6 +110,8 @@ export const mockProducts: Product[] = [
     vendor: "Tech Corp",
     stock: 25,
     sku: "LP15-001",
+    storeId: "store-1",
+    createdBy: "1",
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2024-01-01T00:00:00Z",
   },
@@ -71,8 +124,33 @@ export const mockProducts: Product[] = [
     vendor: "Peripheral Plus",
     stock: 150,
     sku: "WM-002",
+    storeId: "store-2",
+    createdBy: "1",
     createdAt: "2024-01-02T00:00:00Z",
     updatedAt: "2024-01-02T00:00:00Z",
+  },
+]
+
+export const mockStores: Store[] = [
+  {
+    id: "store-1",
+    name: "Central Pharmacy",
+    city: "Karachi",
+    address: "Main Road 123",
+    image: "",
+    createdAt: "2024-01-01T00:00:00Z",
+    updatedAt: "2024-01-01T00:00:00Z",
+    createdBy: "1",
+  },
+  {
+    id: "store-2",
+    name: "Downtown Pharmacy",
+    city: "Lahore",
+    address: "Market 45",
+    image: "",
+    createdAt: "2024-01-02T00:00:00Z",
+    updatedAt: "2024-01-02T00:00:00Z",
+    createdBy: "1",
   },
 ]
 

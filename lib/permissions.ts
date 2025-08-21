@@ -1,4 +1,4 @@
-export type Role = "admin" | "manager" | "user"
+export type Role = "admin" | "store_manager" | "employee"
 export type Permission =
   | "view_dashboard"
   | "view_products"
@@ -20,6 +20,10 @@ export type Permission =
   | "create_users"
   | "edit_users"
   | "delete_users"
+  | "view_stores"
+  | "create_stores"
+  | "edit_stores"
+  | "delete_stores"
 
 // Role-based permissions mapping
 export const rolePermissions: Record<Role, Permission[]> = {
@@ -44,8 +48,12 @@ export const rolePermissions: Record<Role, Permission[]> = {
     "create_users",
     "edit_users",
     "delete_users",
+    "view_stores",
+    "create_stores",
+    "edit_stores",
+    "delete_stores",
   ],
-  manager: [
+  store_manager: [
     "view_dashboard",
     "view_products",
     "create_products",
@@ -61,8 +69,12 @@ export const rolePermissions: Record<Role, Permission[]> = {
     "view_sales",
     "create_sales",
     "view_pos",
+    "view_users",
+    "create_users",
+    "edit_users",
+    "delete_users",
   ],
-  user: ["view_dashboard", "view_products", "view_pos", "create_sales"],
+  employee: ["view_dashboard", "view_products", "view_pos", "create_sales"],
 }
 
 // Check if a role has a specific permission
@@ -95,6 +107,7 @@ export function canAccessRoute(role: Role, route: string): boolean {
     "/dashboard/sales": ["view_sales"],
     "/dashboard/pos": ["view_pos"],
     "/dashboard/users": ["view_users"],
+    "/dashboard/stores": ["view_stores"],
   }
 
   const requiredPermissions = routePermissions[route]

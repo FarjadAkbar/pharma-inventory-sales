@@ -28,7 +28,7 @@ export const validateUrl = (url: string): boolean => {
 }
 
 export const validatePhone = (phone: string): boolean => {
-  const phoneRegex = /^\+?[\d\s\-$$$$]{10,}$/
+  const phoneRegex = /^\+?[\d\s\-]{10,}$/
   return phoneRegex.test(phone)
 }
 

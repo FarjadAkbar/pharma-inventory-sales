@@ -4,6 +4,9 @@ import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import "./globals.css"
 import { AuthProvider } from "@/contexts/auth.context"
+import { StoreProvider } from "@/contexts/store.context"
+import { GlobalLoader } from "@/components/ui/global-loader"
+import { RouteChangeListener } from "@/components/ui/route-change-listener"
 
 export const metadata: Metadata = {
   title: "Pharma Inventory Sales System", // Updated title from CRM System
@@ -28,7 +31,13 @@ html {
         `}</style>
       </head>
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <StoreProvider>
+            <GlobalLoader />
+            <RouteChangeListener />
+            {children}
+          </StoreProvider>
+        </AuthProvider>
       </body>
     </html>
   )

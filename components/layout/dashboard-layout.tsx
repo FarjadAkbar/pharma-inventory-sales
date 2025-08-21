@@ -8,6 +8,7 @@ import { useEffect } from "react"
 import { Sidebar } from "./sidebar"
 import { Header } from "./header"
 import { RouteGuard } from "@/components/auth/route-guard"
+import { useMounted } from "@/hooks/use-mounted"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -16,14 +17,15 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { isAuthenticated, loading } = useAuth()
   const router = useRouter()
+  const mounted = useMounted()
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      router.push("/auth/login")
+      router.replace("/auth/login")
     }
   }, [isAuthenticated, loading, router])
 
-  if (loading) {
+  if (!mounted || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

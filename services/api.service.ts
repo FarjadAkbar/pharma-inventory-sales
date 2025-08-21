@@ -5,26 +5,37 @@ import type { ApiResponse } from "@/types/auth"
 
 class ApiService {
   private baseUrl = "/api"
+  private getCurrentStoreId(): string | null {
+    if (typeof window === "undefined") return null
+    return localStorage.getItem("current_store_id")
+  }
 
   // Generic request method with authentication
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     const token = authService.getToken()
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       "Content-Type": "application/json",
-      ...options.headers,
+      ...(options.headers as Record<string, string>),
     }
 
     if (token) {
-      headers.Authorization = `Bearer ${token}`
+      headers["Authorization"] = `Bearer ${token}`
+    }
+
+    const storeId = this.getCurrentStoreId()
+    if (storeId) {
+      headers["x-store-id"] = storeId
     }
 
     try {
+      window.dispatchEvent(new Event("api:request:start"))
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
         ...options,
         headers,
       })
 
-      const data = await response.json()
+      const contentType = response.headers.get("content-type") || ""
+      const data = contentType.includes("application/json") ? await response.json() : ({} as any)
 
       if (!response.ok) {
         throw new Error(data.error || "Request failed")
@@ -34,6 +45,9 @@ class ApiService {
     } catch (error) {
       console.error("API request failed:", error)
       throw error
+    }
+    finally {
+      window.dispatchEvent(new Event("api:request:stop"))
     }
   }
 
@@ -52,6 +66,20 @@ class ApiService {
 
     const query = searchParams.toString()
     return this.request(`/products${query ? `?${query}` : ""}`)
+  }
+
+  // Stores API
+  async getStores() {
+    return this.request(`/stores`)
+  }
+  async createStore(payload: any) {
+    return this.request(`/stores`, { method: "POST", body: JSON.stringify(payload) })
+  }
+  async updateStore(id: string, payload: any) {
+    return this.request(`/stores/${id}`, { method: "PUT", body: JSON.stringify(payload) })
+  }
+  async deleteStore(id: string) {
+    return this.request(`/stores/${id}`, { method: "DELETE" })
   }
 
   async getProduct(id: string) {
@@ -122,6 +150,18 @@ class ApiService {
       method: "POST",
       body: JSON.stringify(userData),
     })
+  }
+
+  async updateUser(userData: any) {
+    return this.request("/users", {
+      method: "PUT",
+      body: JSON.stringify(userData),
+    })
+  }
+
+  async deleteUser(id: string) {
+    const sp = new URLSearchParams({ id })
+    return this.request(`/users?${sp.toString()}`, { method: "DELETE" })
   }
 
   // Cache invalidation methods

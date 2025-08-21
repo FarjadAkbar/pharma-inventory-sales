@@ -34,15 +34,12 @@ export async function POST(request: NextRequest) {
       email: user.email,
       name: user.name,
       role: user.role,
+      assignedStores: user.assignedStores,
+      defaultStoreId: (user as any).defaultStoreId,
+      screenPermissions: (user as any).screenPermissions || [],
     })
 
-    return Response.json({
-      success: true,
-      data: {
-        user,
-        token,
-      },
-    })
+    return Response.json({ success: true, data: { user, token } })
   } catch (error) {
     console.error("Login error:", error)
     return Response.json({ success: false, error: "Internal server error" }, { status: 500 })

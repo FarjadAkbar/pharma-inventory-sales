@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { formatDateISO } from "@/lib/utils"
 
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
@@ -173,7 +174,7 @@ export default function VendorsPage() {
     {
       key: "createdAt",
       header: "Added",
-      render: (vendor: Vendor) => new Date(vendor.createdAt).toLocaleDateString(),
+      render: (vendor: Vendor) => formatDateISO(vendor.createdAt),
     },
     {
       key: "actions",

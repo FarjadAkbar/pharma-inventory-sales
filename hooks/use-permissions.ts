@@ -7,7 +7,8 @@ import {
   hasAllPermissions,
   canAccessRoute as checkRouteAccess,
 } from "@/lib/permissions"
-import type { Permission, Role } from "@/lib/permissions"
+import type { Permission } from "@/lib/permissions"
+import type { Role } from "@/types/tenant"
 
 export function usePermissions() {
   const { user } = useAuth()
@@ -43,8 +44,8 @@ export function usePermissions() {
 
     // Check specific roles
     isAdmin: userRole === "admin",
-    isManager: userRole === "manager",
-    isUser: userRole === "user",
+    isStoreManager: userRole === "store_manager",
+    isEmployee: userRole === "employee",
 
     // Check role hierarchy (admin > manager > user)
     isAtLeast: (role: Role): boolean => {

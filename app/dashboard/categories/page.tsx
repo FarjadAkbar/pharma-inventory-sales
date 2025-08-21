@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { formatDateISO } from "@/lib/utils"
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Button } from "@/components/ui/button"
@@ -228,7 +229,7 @@ export default function CategoriesPage() {
                 <CardContent>
                   <p className="text-muted-foreground">{category.description}</p>
                   <div className="mt-4 text-sm text-muted-foreground">
-                    Created: {new Date(category.createdAt).toLocaleDateString()}
+                    Created: {formatDateISO(category.createdAt)}
                   </div>
                 </CardContent>
               </Card>

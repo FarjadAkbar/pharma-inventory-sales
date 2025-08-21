@@ -9,10 +9,7 @@ export async function GET(request: NextRequest) {
       return createAuthResponse("Authentication required")
     }
 
-    return Response.json({
-      success: true,
-      data: user,
-    })
+    return Response.json({ success: true, data: user })
   } catch (error) {
     console.error("Get user error:", error)
     return Response.json({ success: false, error: "Internal server error" }, { status: 500 })

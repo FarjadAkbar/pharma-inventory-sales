@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -42,11 +42,16 @@ export function DataTable<T extends Record<string, any>>({
   const [searchQuery, setSearchQuery] = useState("")
   const debouncedSearch = useDebounce(searchQuery, 300)
 
-  // React.useEffect(() => {
-  //   if (onSearch) {
-  //     onSearch(debouncedSearch)
-  //   }
-  // }, [debouncedSearch, onSearch])
+  const onSearchRef = useRef(onSearch)
+  useEffect(() => {
+    onSearchRef.current = onSearch
+  }, [onSearch])
+
+  useEffect(() => {
+    if (onSearchRef.current) {
+      onSearchRef.current(debouncedSearch)
+    }
+  }, [debouncedSearch])
 
   return (
     <div className="space-y-4">
