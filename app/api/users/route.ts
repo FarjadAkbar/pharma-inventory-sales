@@ -5,7 +5,7 @@ import { validateEmail, validateText } from "@/lib/validations"
 import type { User } from "@/types/auth"
 
 export async function GET(request: NextRequest) {
-  return requireAuth(["admin", "store_manager"])(request, async (req, user) => {
+  return requireAuth(["admin", "client_admin", "store_manager"])(request, async (req, user) => {
     try {
       const { searchParams } = new URL(request.url)
       const search = searchParams.get("search")
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  return requireAuth(["admin", "store_manager"])(request, async (req, user) => {
+  return requireAuth(["admin", "client_admin", "store_manager"])(request, async (req, user) => {
     try {
       const userData = await request.json()
 
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  return requireAuth(["admin", "store_manager"])(request, async (req, user) => {
+  return requireAuth(["admin", "client_admin", "store_manager"])(request, async (req, user) => {
     try {
       const body = await request.json()
       const { id, name, email, role, assignedStores = [], screenPermissions = [] } = body || {}
@@ -164,7 +164,7 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  return requireAuth(["admin", "store_manager"])(request, async (req, user) => {
+  return requireAuth(["admin", "client_admin", "store_manager"])(request, async (req, user) => {
     try {
       const { searchParams } = new URL(request.url)
       const id = searchParams.get("id")

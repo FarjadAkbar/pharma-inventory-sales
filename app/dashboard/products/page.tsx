@@ -24,8 +24,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useAuth } from "@/contexts/auth.context"
 import { PermissionGuard } from "@/components/auth/permission-guard"
-import { usePermissions } from "@/hooks/use-permissions"
-import { AccessDenied } from "@/components/ui/access-denied"
+import { MultiModulePermissionGuard } from "@/components/auth/permission-guard"
 import { useMounted } from "@/hooks/use-mounted"
 
 export default function ProductsPage() {
@@ -37,7 +36,6 @@ export default function ProductsPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const { user } = useAuth()
-  const { can } = usePermissions()
 
   const [formData, setFormData] = useState({
     name: "",
@@ -63,8 +61,13 @@ export default function ProductsPage() {
       })
 
       if (response.success && response.data) {
-        setProducts(response.data.products)
-        setPagination(response.data.pagination)
+        // Type assertion for the response data structure
+        const productData = response.data as {
+          products: Product[]
+          pagination: { page: number; pages: number; total: number }
+        }
+        setProducts(productData.products)
+        setPagination(productData.pagination)
       }
     } catch (error) {
       console.error("Failed to fetch products:", error)
@@ -176,9 +179,7 @@ export default function ProductsPage() {
     },
   ]
 
-  if (!can("view_products")) {
-    return <AccessDenied title="Products Access Denied" description="You don't have permission to view products." />
-  }
+
 
   if (!mounted) return null
 
@@ -191,7 +192,7 @@ export default function ProductsPage() {
             <p className="text-muted-foreground">Manage your product inventory</p>
           </div>
 
-          <PermissionGuard permissions={["create_products", "edit_products"]} requireAll={false}>
+          <MultiModulePermissionGuard modules={["POS", "PHARMA"]} screen="product" action="create">
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button onClick={resetForm}>
@@ -293,7 +294,7 @@ export default function ProductsPage() {
                 </form>
               </DialogContent>
             </Dialog>
-          </PermissionGuard>
+          </MultiModulePermissionGuard>
         </div>
 
         {/* Stats Cards */}
@@ -327,22 +328,20 @@ export default function ProductsPage() {
               }}
               loading={loading}
               actions={
-                can("edit_products") || can("delete_products")
-                  ? (product: Product) => (
-                      <div className="flex items-center gap-2">
-                        <PermissionGuard permission="edit_products">
-                          <Button variant="ghost" size="sm" onClick={() => handleEdit(product)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </PermissionGuard>
-                        <PermissionGuard permission="delete_products">
-                          <Button variant="ghost" size="sm" onClick={() => handleDelete(product)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </PermissionGuard>
-                      </div>
-                    )
-                  : undefined
+                (product: Product) => (
+                  <div className="flex items-center gap-2">
+                    <MultiModulePermissionGuard modules={["POS", "PHARMA"]} screen="product" action="update">
+                      <Button variant="ghost" size="sm" onClick={() => handleEdit(product)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </MultiModulePermissionGuard>
+                    <MultiModulePermissionGuard modules={["POS", "PHARMA"]} screen="product" action="delete">
+                      <Button variant="ghost" size="sm" onClick={() => handleDelete(product)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </MultiModulePermissionGuard>
+                  </div>
+                )
               }
             />
           </CardContent>

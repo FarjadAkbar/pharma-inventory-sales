@@ -21,7 +21,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { PermissionGuard } from "@/components/auth/permission-guard"
-import { usePermissions } from "@/hooks/use-permissions"
+import { MultiModulePermissionGuard } from "@/components/auth/permission-guard"
+import { useAuth } from "@/contexts/auth.context"
 import { AccessDenied } from "@/components/ui/access-denied"
 import { apiService } from "@/services/api.service"
 
@@ -113,14 +114,14 @@ export default function CategoriesPage() {
     }
   }
 
-  const { can } = usePermissions()
+  const { user } = useAuth()
 
   useEffect(() => {
     fetchCategories()
   }, [searchQuery, pagination.page])
 
-  if (!can("view_categories")) {
-    return <AccessDenied title="Categories Access Denied" description="You don't have permission to view categories." />
+  if (!user) {
+    return <AccessDenied title="Access Denied" description="You must be logged in to view this page." />
   }
 
   return (
@@ -132,7 +133,7 @@ export default function CategoriesPage() {
             <p className="text-muted-foreground">Organize your products with categories</p>
           </div>
 
-          <PermissionGuard permissions={["create_categories", "edit_categories"]} requireAll={false}>
+          <MultiModulePermissionGuard modules={["POS", "PHARMA"]} screen="category" action="create">
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button onClick={resetForm}>
@@ -178,7 +179,7 @@ export default function CategoriesPage() {
                 </form>
               </DialogContent>
             </Dialog>
-          </PermissionGuard>
+          </MultiModulePermissionGuard>
         </div>
 
         {/* Stats Cards */}
@@ -213,17 +214,17 @@ export default function CategoriesPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
-                      <PermissionGuard permission="edit_categories">
-                        <Button variant="ghost" size="sm" onClick={() => handleEdit(category)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </PermissionGuard>
-                      <PermissionGuard permission="delete_categories">
-                        <Button variant="ghost" size="sm" onClick={() => handleDelete(category)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </PermissionGuard>
-                    </div>
+                        <MultiModulePermissionGuard modules={["POS", "PHARMA"]} screen="category" action="update">
+                          <Button variant="ghost" size="sm" onClick={() => handleEdit(category)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </MultiModulePermissionGuard>
+                        <MultiModulePermissionGuard modules={["POS", "PHARMA"]} screen="category" action="delete">
+                          <Button variant="ghost" size="sm" onClick={() => handleDelete(category)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </MultiModulePermissionGuard>
+                      </div>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -243,12 +244,12 @@ export default function CategoriesPage() {
               <FolderOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
               <h3 className="text-lg font-medium mb-2">No categories yet</h3>
               <p className="text-muted-foreground mb-4">Create your first product category to get started</p>
-              <PermissionGuard permissions={["create_categories", "edit_categories"]} requireAll={false}>
+              <MultiModulePermissionGuard modules={["POS", "PHARMA"]} screen="category" action="create">
                 <Button onClick={() => setIsAddDialogOpen(true)}>
                   <Plus className="mr-2 h-4 w-4" />
                   Add Category
                 </Button>
-              </PermissionGuard>
+              </MultiModulePermissionGuard>
             </CardContent>
           </Card>
         )}

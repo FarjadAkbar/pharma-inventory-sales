@@ -1,9 +1,40 @@
 import type { ScreenPermission } from "@/types/tenant"
+
+export interface JwtPayload {
+  userId: number
+  clientId: number
+  storeId: number
+  role: string
+  email: string
+  name: string
+  iat: number
+  exp: number
+}
+
+export interface Permission {
+  canView: boolean
+  canCreate: boolean
+  canUpdate: boolean
+  canDelete: boolean
+  canAll: boolean
+}
+
+export interface ModulePermissions {
+  [screenName: string]: Permission
+}
+
+export interface Permissions {
+  [moduleName: string]: ModulePermissions
+}
+
 export interface User {
   id: string
   email: string
   name: string
-  role: "admin" | "store_manager" | "employee"
+  role: string
+  clientId: number
+  storeId: number
+  permissions: Permissions
   assignedStores?: string[]
   defaultStoreId?: string
   screenPermissions?: ScreenPermission[]
@@ -12,7 +43,7 @@ export interface User {
 }
 
 export interface LoginCredentials {
-  email: string
+  username: string
   password: string
 }
 
@@ -20,7 +51,7 @@ export interface RegisterData {
   name: string
   email: string
   password: string
-  role?: "admin" | "store_manager" | "employee"
+  role?: string
   assignedStores?: string[]
 }
 
@@ -34,8 +65,9 @@ export interface ForgotPasswordData {
 }
 
 export interface AuthResponse {
-  user: User
+  success: boolean
   token: string
+  permissions: Permissions
 }
 
 export interface ApiResponse<T = any> {

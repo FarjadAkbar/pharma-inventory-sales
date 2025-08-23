@@ -24,7 +24,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PermissionGuard } from "@/components/auth/permission-guard"
-import { usePermissions } from "@/hooks/use-permissions"
 import { AccessDenied } from "@/components/ui/access-denied"
 import { formatDateISO } from "@/lib/utils"
 
@@ -44,8 +43,6 @@ export default function UsersPage() {
   })
   const { stores } = useStore()
 
-  const { can } = usePermissions()
-
   useEffect(() => {
     fetchUsers()
   }, [searchQuery, pagination.page])
@@ -60,8 +57,13 @@ export default function UsersPage() {
       })
 
       if (response.success && response.data) {
-        setUsers(response.data.users)
-        setPagination(response.data.pagination)
+        // Type assertion for the response data structure
+        const userData = response.data as {
+          users: User[]
+          pagination: { page: number; pages: number; total: number }
+        }
+        setUsers(userData.users || [])
+        setPagination(userData.pagination || { page: 1, pages: 1, total: 0 })
       }
     } catch (error) {
       console.error("Failed to fetch users:", error)
@@ -94,6 +96,30 @@ export default function UsersPage() {
       apiService.invalidateUsers()
     } catch (error) {
       console.error("Failed to create user:", error)
+    }
+  }
+
+  const handleEdit = (user: User) => {
+    // For now, just open the add dialog with user data
+    setFormData({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      assignedStores: user.assignedStores || [],
+      screenPermissions: user.screenPermissions || [],
+    })
+    setIsAddDialogOpen(true)
+  }
+
+  const handleDelete = async (user: User) => {
+    if (confirm(`Are you sure you want to delete ${user.name}?`)) {
+      try {
+        await apiService.deleteUser(user.id)
+        fetchUsers()
+        apiService.invalidateUsers()
+      } catch (error) {
+        console.error("Failed to delete user:", error)
+      }
     }
   }
 
@@ -151,12 +177,8 @@ export default function UsersPage() {
       ),
     },
     { key: "createdAt", header: "Joined", render: (user: User) => formatDateISO(user.createdAt) },
-    { key: "updatedAt", header: "Last Updated", render: (user: User) => formatDateISO(user.updatedAt) },
+    { key: "updatedAt", header: "Last Updated", render: (user: User) => formatDateISO(user.createdAt) },
   ]
-
-  if (!can("view_users")) {
-    return <AccessDenied title="Users Access Denied" description="You don't have permission to view users." />
-  }
 
   return (
     <DashboardLayout>
@@ -167,7 +189,7 @@ export default function UsersPage() {
             <p className="text-muted-foreground">Manage system users and their permissions</p>
           </div>
 
-          <PermissionGuard permission="create_users">
+          <PermissionGuard module="USER_MANAGEMENT" screen="users" action="create">
             <Button onClick={() => (window.location.href = "/dashboard/users/new") }>
               <Plus className="mr-2 h-4 w-4" />
               Add User
@@ -199,7 +221,7 @@ export default function UsersPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Managers</CardTitle>
+              <CardTitle className="text-sm font-medium">Store Managers</CardTitle>
               <UserCheck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -209,7 +231,7 @@ export default function UsersPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Regular Users</CardTitle>
+              <CardTitle className="text-sm font-medium">Employees</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -221,41 +243,31 @@ export default function UsersPage() {
         {/* Users Table */}
         <Card>
           <CardHeader>
-            <CardTitle>User Management</CardTitle>
-            <CardDescription>View and manage all system users</CardDescription>
+            <CardTitle>All Users</CardTitle>
+            <CardDescription>A list of all users in the system with their roles and permissions.</CardDescription>
           </CardHeader>
           <CardContent>
             <DataTable
               data={users}
               columns={columns}
-              searchPlaceholder="Search users..."
+              loading={loading}
               onSearch={handleSearch}
               pagination={{
-                ...pagination,
-                onPageChange: handlePageChange,
+                page: pagination.page,
+                pages: pagination.pages,
+                total: pagination.total,
+                onPageChange: handlePageChange
               }}
-              loading={loading}
+              searchPlaceholder="Search users..."
               actions={(user: User) => (
-                <div className="flex gap-2">
-                  <PermissionGuard permissions={["edit_users"]}>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => (window.location.href = `/dashboard/users/${user.id}`)}
-                    >
+                <div className="flex items-center gap-2">
+                  <PermissionGuard module="USER_MANAGEMENT" screen="users" action="update">
+                    <Button variant="ghost" size="sm" onClick={() => handleEdit(user)}>
                       Edit
                     </Button>
                   </PermissionGuard>
-                  <PermissionGuard permissions={["delete_users"]}>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={async () => {
-                        if (!confirm(`Delete user ${user.name}?`)) return
-                        await apiService.deleteUser(user.id)
-                        fetchUsers()
-                      }}
-                    >
+                  <PermissionGuard module="USER_MANAGEMENT" screen="users" action="delete">
+                    <Button variant="ghost" size="sm" onClick={() => handleDelete(user)}>
                       Delete
                     </Button>
                   </PermissionGuard>
@@ -264,6 +276,66 @@ export default function UsersPage() {
             />
           </CardContent>
         </Card>
+
+        {/* Add User Dialog */}
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Add User
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Add New User</DialogTitle>
+              <DialogDescription>Create a new user account with specific role and permissions.</DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Enter full name"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="Enter email address"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="role">Role</Label>
+                <Select value={formData.role} onValueChange={(value: any) => setFormData({ ...formData, role: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="employee">Employee</SelectItem>
+                    <SelectItem value="store_manager">Store Manager</SelectItem>
+                    <SelectItem value="admin">Administrator</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Create User</Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   )

@@ -3,7 +3,7 @@ import { requireAuth } from "@/lib/auth-middleware"
 import { mockUsers } from "@/lib/mock-data"
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-  return requireAuth(["admin", "store_manager"])(request, async (req, user) => {
+  return requireAuth(["admin", "client_admin", "store_manager"])(request, async (req, user) => {
     const u = mockUsers.find((x) => x.id === params.id)
     if (!u) return Response.json({ success: false, error: "User not found" }, { status: 404 })
 

@@ -5,7 +5,7 @@ import { validateText } from "@/lib/validations"
 import type { Category } from "@/lib/mock-data"
 
 export async function GET(request: NextRequest) {
-  return requireAuth(["admin", "manager", "user"])(request, async (req, user) => {
+  return requireAuth(["admin", "client_admin", "manager", "user"])(request, async (req, user) => {
     try {
       const { searchParams } = new URL(request.url)
       const search = searchParams.get("search")
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  return requireAuth(["admin", "manager"])(request, async (req, user) => {
+  return requireAuth(["admin", "client_admin", "manager"])(request, async (req, user) => {
     try {
       const categoryData = await request.json()
 

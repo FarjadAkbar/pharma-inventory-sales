@@ -11,7 +11,7 @@ export default function NewUserPage() {
 
   return (
     <DashboardLayout>
-      <PermissionGuard permission="create_users" fallback={<div className="p-4">Access denied</div>}>
+      <PermissionGuard module="USER_MANAGEMENT" screen="users" action="create" fallback={<div className="p-4">Access denied</div>}>
         <div className="max-w-3xl mx-auto p-4">
           <UserForm
             submitLabel="Create User"
