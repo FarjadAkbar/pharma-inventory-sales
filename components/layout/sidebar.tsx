@@ -12,7 +12,6 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   LayoutDashboard,
   Package,
-  ShoppingCart,
   Building2,
   FolderOpen,
   TrendingUp,
@@ -20,33 +19,148 @@ import {
   ChevronLeft,
   ChevronRight,
   Store,
+  UserPlus,
 } from "lucide-react"
+import type { Permissions } from "@/types/auth"
 
 interface NavItem {
   title: string
   href: string
   icon: React.ComponentType<{ className?: string }>
-  roles: ("admin" | "store_manager" | "employee")[]
 }
 
-const navItems: NavItem[] = [
-  { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["admin", "store_manager", "employee"] },
-  { title: "Products", href: "/dashboard/products", icon: Package, roles: ["admin", "store_manager", "employee"] },
-  { title: "POS", href: "/dashboard/pos", icon: ShoppingCart, roles: ["admin", "store_manager", "employee"] },
-  { title: "Vendors", href: "/dashboard/vendors", icon: Building2, roles: ["admin", "store_manager"] },
-  { title: "Categories", href: "/dashboard/categories", icon: FolderOpen, roles: ["admin", "store_manager"] },
-  { title: "Sales", href: "/dashboard/sales", icon: TrendingUp, roles: ["admin", "store_manager"] },
-  { title: "Users", href: "/dashboard/users", icon: Users, roles: ["admin", "store_manager"] },
-  { title: "Stores", href: "/dashboard/stores", icon: Store, roles: ["admin"] },
-]
+interface ModuleItem {
+  title: string
+  icon: React.ComponentType<{ className?: string }>
+  screens: NavItem[]
+}
+
+const getScreenIcon = (screenName: string) => {
+  switch (screenName) {
+    case "product":
+      return Package
+    case "category":
+      return FolderOpen
+    case "vendor":
+      return Building2
+    case "store":
+      return Store
+    case "sale":
+      return TrendingUp
+    case "users":
+      return UserPlus
+    default:
+      return LayoutDashboard
+  }
+}
+
+const getScreenTitle = (screenName: string) => {
+  switch (screenName) {
+    case "product":
+      return "Products"
+    case "category":
+      return "Categories"
+    case "vendor":
+      return "Vendors"
+    case "store":
+      return "Stores"
+    case "sale":
+      return "Sales"
+    case "users":
+      return "Users"
+    default:
+      return screenName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+  }
+}
+
+const getScreenHref = (screenName: string) => {
+  switch (screenName) {
+    case "product":
+      return "/dashboard/products"
+    case "category":
+      return "/dashboard/categories"
+    case "vendor":
+      return "/dashboard/vendors"
+    case "store":
+      return "/dashboard/stores"
+    case "sale":
+      return "/dashboard/sales"
+    case "users":
+      return "/dashboard/users"
+    default:
+      return "/dashboard"
+  }
+}
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const pathname = usePathname()
-  const { user } = useAuth()
+  const { user, permissions } = useAuth()
 
-  if (!user) return null
-  const filteredNavItems = navItems.filter((item) => item.roles.includes(user.role))
+  if (!user || !permissions) return null
+
+  const buildNavigation = (): ModuleItem[] => {
+    const modules: ModuleItem[] = []
+
+    // Add Dashboard as first item
+    modules.push({
+      title: "Dashboard",
+      icon: LayoutDashboard,
+      screens: [{ title: "Overview", href: "/dashboard", icon: LayoutDashboard }]
+    })
+
+    // Add Permissions Demo for testing
+    modules.push({
+      title: "Permissions Demo",
+      icon: Users,
+      screens: [{ title: "Demo", href: "/dashboard/permissions-demo", icon: Users }]
+    })
+
+    // Build unified inventory management list
+    const seenScreens = new Set<string>()
+    
+    Object.entries(permissions).forEach(([moduleName, modulePermissions]) => {
+      Object.entries(modulePermissions).forEach(([screenName, permissions]) => {
+        if (permissions.canView) {
+          // Extract the base screen name (remove pos_ or pharma_ prefix)
+          const baseScreenName = screenName.replace(/^(pos_|pharma_)/, '')
+          
+          // Only add if we haven't seen this screen type before
+          if (!seenScreens.has(baseScreenName)) {
+            seenScreens.add(baseScreenName)
+            
+            const screen: NavItem = {
+              title: getScreenTitle(baseScreenName),
+              href: getScreenHref(baseScreenName),
+              icon: getScreenIcon(baseScreenName)
+            }
+            
+            // Add each screen as a separate module (flat list)
+            if (baseScreenName !== "users") {
+              modules.push({
+                title: screen.title,
+                icon: screen.icon,
+                screens: [screen]
+              })
+            }
+          }
+        }
+      })
+    })
+
+    // Add User Management module
+    if (permissions.USER_MANAGEMENT?.users?.canView) {
+      modules.push({
+        title: "User Management",
+        icon: Users,
+        screens: [{ title: "Users", href: "/dashboard/users", icon: UserPlus }]
+      })
+    }
+
+    return modules
+  }
+
+  const navigation = buildNavigation()
 
   return (
     <div
@@ -80,28 +194,26 @@ export function Sidebar() {
       {/* Navigation */}
       <ScrollArea className="flex-1 px-3 py-4">
         <nav className="space-y-2">
-          {filteredNavItems.map((item) => {
-            const Icon = item.icon
-            const isActive = pathname === item.href
+          {navigation.map((module) => {
+            const ModuleIcon = module.icon
+            const isActive = pathname === module.screens[0].href
 
             return (
-              <Link key={item.href} href={item.href} onClick={() => {
-                window.dispatchEvent(new Event("api:request:start"))
-                // Failsafe auto-stop in case page has no API calls
-                setTimeout(() => window.dispatchEvent(new Event("api:request:stop")), 800)
-              }}>
-                <Button
-                  variant={isActive ? "secondary" : "ghost"}
-                  className={cn(
-                    "w-full justify-start gap-3 h-10",
-                    collapsed && "justify-center px-2",
-                    isActive && "bg-sidebar-accent text-sidebar-accent-foreground",
-                  )}
-                >
-                  <Icon className="h-4 w-4 flex-shrink-0" />
-                  {!collapsed && <span>{item.title}</span>}
-                </Button>
-              </Link>
+              <div key={module.title} className="space-y-1">
+                <Link href={module.screens[0].href}>
+                  <Button
+                    variant={isActive ? "secondary" : "ghost"}
+                    className={cn(
+                      "w-full justify-start gap-3 h-10",
+                      collapsed && "justify-center px-2",
+                      isActive && "bg-sidebar-accent text-sidebar-accent-foreground",
+                    )}
+                  >
+                    <ModuleIcon className="h-4 w-4 flex-shrink-0" />
+                    {!collapsed && <span>{module.title}</span>}
+                  </Button>
+                </Link>
+              </div>
             )
           })}
         </nav>

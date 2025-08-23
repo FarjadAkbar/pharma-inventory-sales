@@ -1,24 +1,28 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
-import type { User, LoginCredentials, RegisterData, ChangePasswordData, ForgotPasswordData } from "@/types/auth"
+import type { User, LoginCredentials, RegisterData, ChangePasswordData, ForgotPasswordData, Permissions } from "@/types/auth"
 import { authService } from "@/services/auth.service"
 
 interface AuthContextType {
   user: User | null
   loading: boolean
+  permissions: Permissions | null
   login: (credentials: LoginCredentials) => Promise<void>
   register: (userData: RegisterData) => Promise<void>
   logout: () => Promise<void>
   changePassword: (data: ChangePasswordData) => Promise<void>
   forgotPassword: (data: ForgotPasswordData) => Promise<void>
   isAuthenticated: boolean
+  hasPermission: (module: string, screen: string, action: 'view' | 'create' | 'update' | 'delete') => boolean
+  hasAllPermissions: (module: string, screen: string) => boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [permissions, setPermissions] = useState<Permissions | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -29,25 +33,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       if (authService.isAuthenticated()) {
         const userData = await authService.getCurrentUser()
+        const userPermissions = authService.getPermissions()
         setUser(userData)
+        setPermissions(userPermissions)
       }
     } catch (error) {
       console.error("Auth initialization failed:", error)
       // Clear invalid token and reset state
       authService.removeToken()
       setUser(null)
+      setPermissions(null)
     } finally {
       setLoading(false)
     }
   }
 
   const login = async (credentials: LoginCredentials) => {
+    console.log("Auth context: Starting login process")
     setLoading(true)
     try {
+      console.log("Auth context: Calling authService.login")
       const authResponse = await authService.login(credentials)
-      setUser(authResponse.user)
+      console.log("Auth context: Login successful, authResponse:", authResponse)
+      
+      console.log("Auth context: Getting current user")
+      const userData = await authService.getCurrentUser()
+      console.log("Auth context: User data:", userData)
+      
+      console.log("Auth context: Setting user and permissions")
+      setUser(userData)
+      setPermissions(authResponse.permissions)
+      console.log("Auth context: Login process completed successfully")
+      console.log("Auth context: Current state - user:", !!userData, "permissions:", !!authResponse.permissions)
     } catch (error) {
-      console.error("Login failed:", error)
+      console.error("Auth context: Login failed:", error)
       throw error
     } finally {
       setLoading(false)
@@ -58,7 +77,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(true)
     try {
       const authResponse = await authService.register(userData)
-      setUser(authResponse.user)
+      const user = await authService.getCurrentUser()
+      setUser(user)
+      setPermissions(authResponse.permissions)
     } catch (error) {
       throw error
     } finally {
@@ -71,6 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await authService.logout()
       setUser(null)
+      setPermissions(null)
     } catch (error) {
       console.error("Logout failed:", error)
     } finally {
@@ -86,15 +108,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await authService.forgotPassword(data)
   }
 
+  const hasPermission = (module: string, screen: string, action: 'view' | 'create' | 'update' | 'delete'): boolean => {
+    return authService.hasPermission(module, screen, action)
+  }
+
+  const hasAllPermissions = (module: string, screen: string): boolean => {
+    return authService.hasAllPermissions(module, screen)
+  }
+
   const value: AuthContextType = {
     user,
     loading,
+    permissions,
     login,
     register,
     logout,
     changePassword,
     forgotPassword,
     isAuthenticated: !!user,
+    hasPermission,
+    hasAllPermissions,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

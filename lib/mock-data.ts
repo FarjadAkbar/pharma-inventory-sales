@@ -1,13 +1,100 @@
 import type { User } from "@/types/auth"
 import type { Store } from "@/types/tenant"
 
-// Mock users database
+// Mock users database with new permission structure
 export const mockUsers: User[] = [
   {
     id: "1",
-    email: "admin@pharma-inventory-sales.com", // Updated email domain
+    email: "admin@pharma-inventory-sales.com",
     name: "Admin User",
-    role: "admin",
+    role: "client_admin",
+    clientId: 1,
+    storeId: 1,
+    permissions: {
+      POS: {
+        product: {
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: true,
+          canAll: true
+        },
+        category: {
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: true,
+          canAll: true
+        },
+        vendor: {
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: true,
+          canAll: true
+        },
+        store: {
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: true,
+          canAll: true
+        },
+        sale: {
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: true,
+          canAll: true
+        }
+      },
+      PHARMA: {
+        product: {
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: true,
+          canAll: true
+        },
+        category: {
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: true,
+          canAll: true
+        },
+        vendor: {
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: true,
+          canAll: true
+        },
+        store: {
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: true,
+          canAll: true
+        },
+        sale: {
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: true,
+          canAll: true
+        }
+      },
+      USER_MANAGEMENT: {
+        users: {
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: true,
+          canAll: true
+        }
+      }
+    },
     assignedStores: ["store-1", "store-2"],
     defaultStoreId: "store-1",
     screenPermissions: [
@@ -25,27 +112,106 @@ export const mockUsers: User[] = [
   },
   {
     id: "2",
-    email: "manager@pharma-inventory-sales.com", // Updated email domain
-    name: "Manager User",
-    role: "store_manager",
+    email: "pos_staff@pharma-inventory-sales.com",
+    name: "POS Staff User",
+    role: "pos_staff",
+    clientId: 1,
+    storeId: 1,
+    permissions: {
+      POS: {
+        product: {
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: true,
+          canAll: true
+        },
+        category: {
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: false,
+          canAll: false
+        },
+        vendor: {
+          canView: true,
+          canCreate: false,
+          canUpdate: false,
+          canDelete: false,
+          canAll: false
+        },
+        store: {
+          canView: true,
+          canCreate: false,
+          canUpdate: false,
+          canDelete: false,
+          canAll: false
+        },
+        sale: {
+          canView: true,
+          canCreate: true,
+          canUpdate: false,
+          canDelete: false,
+          canAll: false
+        }
+      }
+    },
     assignedStores: ["store-1"],
     screenPermissions: [
       { screen: "dashboard", actions: ["view"] },
       { screen: "products", actions: ["view", "create", "edit", "delete"] },
-      { screen: "vendors", actions: ["view", "create", "edit"] },
-      { screen: "categories", actions: ["view", "create", "edit", "delete"] },
-      { screen: "sales", actions: ["view", "create"] },
       { screen: "pos", actions: ["view"] },
-      { screen: "users", actions: ["view", "create", "edit", "delete"] },
+      { screen: "sales", actions: ["create"] },
     ],
     createdAt: "2024-01-02T00:00:00Z",
     updatedAt: "2024-01-02T00:00:00Z",
   },
   {
     id: "3",
-    email: "user@pharma-inventory-sales.com", // Updated email domain
-    name: "Regular User",
-    role: "employee",
+    email: "pharma_staff@pharma-inventory-sales.com",
+    name: "Pharma Staff User",
+    role: "pharma_staff",
+    clientId: 1,
+    storeId: 1,
+    permissions: {
+      PHARMA: {
+        product: {
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: false,
+          canAll: false
+        },
+        category: {
+          canView: true,
+          canCreate: false,
+          canUpdate: false,
+          canDelete: false,
+          canAll: false
+        },
+        vendor: {
+          canView: true,
+          canCreate: false,
+          canUpdate: false,
+          canDelete: false,
+          canAll: false
+        },
+        store: {
+          canView: true,
+          canCreate: false,
+          canUpdate: false,
+          canDelete: false,
+          canAll: false
+        },
+        sale: {
+          canView: true,
+          canCreate: false,
+          canUpdate: false,
+          canDelete: false,
+          canAll: false
+        }
+      }
+    },
     assignedStores: ["store-1"],
     screenPermissions: [
       { screen: "dashboard", actions: ["view"] },
@@ -58,9 +224,87 @@ export const mockUsers: User[] = [
   },
   {
     id: "4",
-    email: "manager2@pharma-inventory-sales.com", // Updated email domain
+    email: "manager@pharma-inventory-sales.com",
     name: "Manager User",
     role: "store_manager",
+    clientId: 1,
+    storeId: 2,
+    permissions: {
+      POS: {
+        product: {
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: true,
+          canAll: true
+        },
+        category: {
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: true,
+          canAll: true
+        },
+        vendor: {
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: false,
+          canAll: false
+        },
+        store: {
+          canView: true,
+          canCreate: false,
+          canUpdate: false,
+          canDelete: false,
+          canAll: false
+        },
+        sale: {
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: false,
+          canAll: false
+        }
+      },
+      PHARMA: {
+        product: {
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: false,
+          canAll: false
+        },
+        category: {
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: false,
+          canAll: false
+        },
+        vendor: {
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: false,
+          canAll: false
+        },
+        store: {
+          canView: true,
+          canCreate: false,
+          canUpdate: false,
+          canDelete: false,
+          canAll: false
+        },
+        sale: {
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: false,
+          canAll: false
+        }
+      }
+    },
     assignedStores: ["store-2"],
     screenPermissions: [
       { screen: "dashboard", actions: ["view"] },
@@ -78,10 +322,10 @@ export const mockUsers: User[] = [
 
 // Mock passwords (in real app, these would be hashed)
 export const mockPasswords: Record<string, string> = {
-  "admin@pharma-inventory-sales.com": "Admin123!", // Updated email domain
-  "manager@pharma-inventory-sales.com": "Manager123!", // Updated email domain
-  "user@pharma-inventory-sales.com": "User123!", // Updated email domain
-  "manager2@pharma-inventory-sales.com": "Manager123!", // Updated email domain
+  "admin@pharma-inventory-sales.com": "Admin123!",
+  "pos_staff@pharma-inventory-sales.com": "Pos123!",
+  "pharma_staff@pharma-inventory-sales.com": "Pharma123!",
+  "manager@pharma-inventory-sales.com": "Manager123!",
 }
 
 // Mock products

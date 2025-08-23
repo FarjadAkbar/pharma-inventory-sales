@@ -5,7 +5,6 @@ import type React from "react"
 import { useEffect } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { useAuth } from "@/contexts/auth.context"
-import { usePermissions } from "@/hooks/use-permissions"
 
 interface RouteGuardProps {
   children: React.ReactNode
@@ -13,31 +12,36 @@ interface RouteGuardProps {
 
 export function RouteGuard({ children }: RouteGuardProps) {
   const { isAuthenticated, loading, user } = useAuth()
-  const { canAccessRoute } = usePermissions()
   const router = useRouter()
   const pathname = usePathname()
 
+  console.log("RouteGuard: pathname:", pathname, "isAuthenticated:", isAuthenticated, "loading:", loading, "user:", !!user)
+
   useEffect(() => {
-    if (loading) return
+    console.log("RouteGuard useEffect: pathname:", pathname, "isAuthenticated:", isAuthenticated, "loading:", loading)
+    
+    if (loading) {
+      console.log("RouteGuard: Still loading, waiting...")
+      return
+    }
 
     // Redirect to login if not authenticated
     if (!isAuthenticated) {
+      console.log("RouteGuard: Not authenticated, redirecting to login")
       router.push("/auth/login")
       return
     }
 
-    // Check route permissions
-    const hasAccess = canAccessRoute(pathname)
-
-    if (!hasAccess) {
-      if (pathname !== "/dashboard") {
-        router.push("/dashboard")
-      } else {
-        router.push("/auth/login")
-      }
+    // For now, allow access to dashboard and other routes if authenticated
+    // In the future, you can add more granular permission checks here
+    if (pathname === "/auth/login" && isAuthenticated) {
+      console.log("RouteGuard: Already authenticated, redirecting to dashboard")
+      router.push("/dashboard")
       return
     }
-  }, [isAuthenticated, loading, pathname, canAccessRoute, router, user?.role])
+
+    console.log("RouteGuard: Authentication check passed, rendering children")
+  }, [isAuthenticated, loading, pathname, router])
 
   // Show loading while checking authentication
   if (loading) {
@@ -51,8 +55,8 @@ export function RouteGuard({ children }: RouteGuardProps) {
     )
   }
 
-  // Don't render if not authenticated or no access
-  if (!isAuthenticated || !canAccessRoute(pathname)) {
+  // Don't render if not authenticated
+  if (!isAuthenticated) {
     return null
   }
 

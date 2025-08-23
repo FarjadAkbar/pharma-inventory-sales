@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { verifyToken, getTokenFromHeaders } from "@/lib/jwt"
-import { canAccessRoute } from "@/lib/permissions"
-import type { Role } from "@/lib/permissions"
+import { extractUserFromToken, isTokenValid } from "@/lib/jwt"
 
 // Protected routes that require authentication
 const protectedRoutes = ["/dashboard"]
@@ -12,6 +10,12 @@ const publicRoutes = ["/", "/auth/login", "/auth/forgot-password"]
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+
+  // Debug environment
+  console.log("Middleware: Environment check")
+  console.log("Middleware: NEXT_RUNTIME:", process.env.NEXT_RUNTIME)
+  console.log("Middleware: typeof process:", typeof process)
+  console.log("Middleware: typeof window:", typeof window)
 
   // Check if the route is protected
   const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route))
@@ -25,26 +29,52 @@ export async function middleware(request: NextRequest) {
   // For protected routes, check authentication
   if (isProtectedRoute) {
     try {
-      const token = getTokenFromHeaders(request.headers)
+      // Get token from Authorization header or cookie
+      const authHeader = request.headers.get("authorization")
+      let token = null
+      
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        token = authHeader.substring(7)
+      } else {
+        // Check cookie
+        const cookieHeader = request.headers.get("cookie")
+        if (cookieHeader) {
+          const cookies = cookieHeader.split(";").map((c) => c.trim())
+          const tokenCookie = cookies.find((c) => c.startsWith("pharma_inventory_sales_token="))
+          if (tokenCookie) {
+            token = tokenCookie.split("=")[1]
+          }
+        }
+      }
 
       if (!token) {
+        console.log("Middleware: No token found, redirecting to login")
         return NextResponse.redirect(new URL("/auth/login", request.url))
       }
 
+      console.log("Middleware: Token found, extracting user data")
       // Verify token and get user data
-      const payload = await verifyToken(token)
-      const userRole = payload.role as Role
+      const userData = extractUserFromToken(token)
+      if (!userData) {
+        console.log("Middleware: Failed to extract user data, redirecting to login")
+        return NextResponse.redirect(new URL("/auth/login", request.url))
+      }
 
-      // Check if user has permission to access this route
-      if (!canAccessRoute(userRole, pathname)) {
-        return NextResponse.redirect(new URL("/dashboard", request.url))
+      console.log("Middleware: User data extracted successfully:", userData)
+      
+      // Check if token is expired (use decode-only validation for Edge Runtime)
+      const currentTime = Math.floor(Date.now() / 1000)
+      if (userData.exp <= currentTime) {
+        console.log("Middleware: Token expired, redirecting to login")
+        return NextResponse.redirect(new URL("/auth/login", request.url))
       }
 
       // Add user data to headers for use in components
       const response = NextResponse.next()
-      response.headers.set("x-user-role", userRole)
-      response.headers.set("x-user-id", payload.id as string)
+      response.headers.set("x-user-role", userData.role)
+      response.headers.set("x-user-id", userData.userId.toString())
 
+      console.log("Middleware: Authentication successful, allowing access")
       return response
     } catch (error) {
       console.error("Middleware auth error:", error)

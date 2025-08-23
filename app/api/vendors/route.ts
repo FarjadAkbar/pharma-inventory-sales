@@ -5,7 +5,7 @@ import { validateEmail, validateText } from "@/lib/validations"
 import type { Vendor } from "@/lib/mock-data"
 
 export async function GET(request: NextRequest) {
-  return requireAuth(["admin", "manager"])(request, async (req, user) => {
+  return requireAuth(["admin", "client_admin", "manager"])(request, async (req, user) => {
     try {
       const { searchParams } = new URL(request.url)
       const search = searchParams.get("search")
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  return requireAuth(["admin", "manager"])(request, async (req, user) => {
+  return requireAuth(["admin", "client_admin", "manager"])(request, async (req, user) => {
     try {
       const vendorData = await request.json()
 

@@ -4,7 +4,7 @@ import { mockVendors } from "@/lib/mock-data"
 import { validateEmail, validateText } from "@/lib/validations"
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
-  return requireAuth(["admin", "manager"])(request, async (req, user) => {
+  return requireAuth(["admin", "client_admin", "manager"])(request, async (req, user) => {
     try {
       const vendorData = await request.json()
       const { name, email, phone, address, contactPerson } = vendorData
@@ -54,7 +54,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-  return requireAuth(["admin", "manager"])(request, async (req, user) => {
+  return requireAuth(["admin", "client_admin", "manager"])(request, async (req, user) => {
     try {
       const vendorIndex = mockVendors.findIndex((v) => v.id === params.id)
       if (vendorIndex === -1) {

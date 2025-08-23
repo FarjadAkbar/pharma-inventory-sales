@@ -10,11 +10,11 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuth } from "@/contexts/auth.context"
-import { validateEmail, getValidationError } from "@/lib/validations"
+import { getValidationError } from "@/lib/validations"
 import Link from "next/link"
 
 export function LoginForm() {
-  const [email, setEmail] = useState("")
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -24,10 +24,8 @@ export function LoginForm() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
-    if (!email) {
-      newErrors.email = getValidationError("email", "required")
-    } else if (!validateEmail(email)) {
-      newErrors.email = getValidationError("email", "invalid")
+    if (!username) {
+      newErrors.username = getValidationError("username", "required")
     }
 
     if (!password) {
@@ -45,7 +43,7 @@ export function LoginForm() {
 
     setIsSubmitting(true)
     try {
-      await login({ email, password })
+      await login({ username, password })
       router.push("/dashboard")
     } catch (error) {
       setErrors({ submit: error instanceof Error ? error.message : "Login failed" })
@@ -63,16 +61,16 @@ export function LoginForm() {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="username">Username</Label>
             <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              className={errors.email ? "border-destructive" : ""}
+              id="username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter your username"
+              className={errors.username ? "border-destructive" : ""}
             />
-            {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+            {errors.username && <p className="text-sm text-destructive">{errors.username}</p>}
           </div>
 
           <div className="space-y-2">

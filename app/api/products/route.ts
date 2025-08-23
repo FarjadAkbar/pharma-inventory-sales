@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
       const limit = Number.parseInt(searchParams.get("limit") || "10")
 
       const storeId = req.headers.get("x-store-id")
-      if (user.role !== "admin") {
+      if (user.role !== "admin" && user.role !== "client_admin") {
         if (!storeId || !(user as any).assignedStores?.includes(storeId)) {
           return Response.json({ success: false, error: "Store access denied" }, { status: 403 })
         }
@@ -63,12 +63,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  return requireAuth(["admin", "store_manager", "employee"])(request, async (req, user) => {
+  return requireAuth(["admin", "client_admin", "store_manager", "employee"])(request, async (req, user) => {
     try {
       const productData = await request.json()
 
       const storeId = req.headers.get("x-store-id")
-      if (!storeId || (user.role !== "admin" && !(user as any).assignedStores?.includes(storeId))) {
+      if (!storeId || (user.role !== "admin" && user.role !== "client_admin" && !(user as any).assignedStores?.includes(storeId))) {
         return Response.json({ success: false, error: "Store access denied" }, { status: 403 })
       }
 

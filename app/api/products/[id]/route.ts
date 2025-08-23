@@ -12,7 +12,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       }
 
       const storeId = req.headers.get("x-store-id")
-      if (user.role !== "admin") {
+      if (user.role !== "admin" && user.role !== "client_admin") {
         if (!storeId || !(user as any).assignedStores?.includes(storeId) || product.storeId !== storeId) {
           return Response.json({ success: false, error: "Store access denied" }, { status: 403 })
         }
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
-  return requireAuth(["admin", "store_manager", "employee"])(request, async (req, user) => {
+  return requireAuth(["admin", "client_admin", "store_manager", "employee"])(request, async (req, user) => {
     try {
       const productIndex = mockProducts.findIndex((p) => p.id === params.id)
 
@@ -39,12 +39,12 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       const existingProduct = mockProducts[productIndex]
 
       const storeId = req.headers.get("x-store-id")
-      if (user.role !== "admin") {
+      if (user.role !== "admin" && user.role !== "client_admin") {
         if (!storeId || !(user as any).assignedStores?.includes(storeId) || existingProduct.storeId !== storeId) {
           return Response.json({ success: false, error: "Store access denied" }, { status: 403 })
         }
         if (user.role === "employee" && existingProduct.createdBy !== user.id) {
-          return Response.json({ success: false, error: "Insufficient permissions" }, { status: 403 })
+          return Response.json({ success: false, error: "Store access denied" }, { status: 403 })
         }
       }
 
@@ -67,7 +67,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-  return requireAuth(["admin", "store_manager", "employee"])(request, async (req, user) => {
+  return requireAuth(["admin", "client_admin", "store_manager", "employee"])(request, async (req, user) => {
     try {
       const productIndex = mockProducts.findIndex((p) => p.id === params.id)
 
@@ -77,7 +77,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
 
       const product = mockProducts[productIndex]
       const storeId = req.headers.get("x-store-id")
-      if (user.role !== "admin") {
+      if (user.role !== "admin" && user.role !== "client_admin") {
         if (!storeId || !(user as any).assignedStores?.includes(storeId) || product.storeId !== storeId) {
           return Response.json({ success: false, error: "Store access denied" }, { status: 403 })
         }

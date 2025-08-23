@@ -4,7 +4,7 @@ import { mockCategories } from "@/lib/mock-data"
 import { validateText } from "@/lib/validations"
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
-  return requireAuth(["admin", "manager"])(request, async (req, user) => {
+  return requireAuth(["admin", "client_admin", "manager"])(request, async (req, user) => {
     try {
       const categoryData = await request.json()
       const { name, description } = categoryData
@@ -49,7 +49,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-  return requireAuth(["admin", "manager"])(request, async (req, user) => {
+  return requireAuth(["admin", "client_admin", "manager"])(request, async (req, user) => {
     try {
       const categoryIndex = mockCategories.findIndex((c) => c.id === params.id)
       if (categoryIndex === -1) {
