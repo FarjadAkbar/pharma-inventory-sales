@@ -20,13 +20,22 @@ import {
 } from "@/components/ui/dialog"
 import { usePermissions } from "@/hooks/use-permissions"
 import { AccessDenied } from "@/components/ui/access-denied"
+import { useAuth } from "@/contexts/auth.context"
+import { PermissionGuard } from "@/components/auth/permission-guard"
 
 export default function SalesPage() {
   const [sales] = useState<Sale[]>(mockSales)
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null)
-  const { can } = usePermissions()
+  const { user } = useAuth()
 
-  if (!can("view_sales")) {
+  if (!user) {
+    return <AccessDenied title="Access Denied" description="You must be logged in to view this page." />
+  }
+
+  // Check if user has view permission for sales in either POS or PHARMA module
+  const hasViewPermission = user.permissions?.POS?.sale?.canView || user.permissions?.PHARMA?.sale?.canView
+  
+  if (!hasViewPermission) {
     return <AccessDenied title="Sales Access Denied" description="You don't have permission to view sales data." />
   }
 

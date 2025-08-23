@@ -109,7 +109,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const hasPermission = (module: string, screen: string, action: 'view' | 'create' | 'update' | 'delete'): boolean => {
-    return authService.hasPermission(module, screen, action)
+    console.log('🔐 AuthContext hasPermission Debug:', {
+      module,
+      screen,
+      action,
+      permissions,
+      user
+    })
+    const result = authService.hasPermission(module, screen, action)
+    console.log('🔐 AuthContext hasPermission Result:', result)
+    return result
   }
 
   const hasAllPermissions = (module: string, screen: string): boolean => {

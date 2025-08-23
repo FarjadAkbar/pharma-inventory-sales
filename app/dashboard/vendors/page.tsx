@@ -23,7 +23,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { PermissionGuard } from "@/components/auth/permission-guard"
-import { usePermissions } from "@/hooks/use-permissions"
+import { MultiModulePermissionGuard } from "@/components/auth/permission-guard"
+import { useAuth } from "@/contexts/auth.context"
 import { AccessDenied } from "@/components/ui/access-denied"
 
 export default function VendorsPage() {
@@ -42,11 +43,22 @@ export default function VendorsPage() {
     contactPerson: "",
   })
 
-  const { can } = usePermissions()
+  const { user } = useAuth()
 
   useEffect(() => {
     fetchVendors()
   }, [searchQuery, pagination.page])
+
+  // Check if user has view permission for vendors in either POS or PHARMA module
+  const hasViewPermission = user?.permissions?.POS?.vendor?.canView || user?.permissions?.PHARMA?.vendor?.canView
+  
+  if (!user) {
+    return <AccessDenied title="Access Denied" description="You must be logged in to view this page." />
+  }
+  
+  if (!hasViewPermission) {
+    return <AccessDenied title="Vendors Access Denied" description="You don't have permission to view vendors." />
+  }
 
   const fetchVendors = async () => {
     try {
@@ -181,24 +193,20 @@ export default function VendorsPage() {
       header: "Actions",
       render: (vendor: Vendor) => (
         <div className="flex items-center gap-1">
-          <PermissionGuard permission="edit_vendors">
+          <MultiModulePermissionGuard modules={["POS", "PHARMA"]} screen="vendor" action="update">
             <Button variant="ghost" size="sm" onClick={() => handleEdit(vendor)}>
               <Edit className="h-4 w-4" />
             </Button>
-          </PermissionGuard>
-          <PermissionGuard permission="delete_vendors">
+          </MultiModulePermissionGuard>
+          <MultiModulePermissionGuard modules={["POS", "PHARMA"]} screen="vendor" action="delete">
             <Button variant="ghost" size="sm" onClick={() => handleDelete(vendor)}>
               <Trash2 className="h-4 w-4" />
             </Button>
-          </PermissionGuard>
+          </MultiModulePermissionGuard>
         </div>
       ),
     },
   ]
-
-  if (!can("view_vendors")) {
-    return <AccessDenied title="Vendors Access Denied" description="You don't have permission to view vendors." />
-  }
 
   return (
     <DashboardLayout>
@@ -209,7 +217,7 @@ export default function VendorsPage() {
             <p className="text-muted-foreground">Manage your supplier relationships</p>
           </div>
 
-          <PermissionGuard permission="create_vendors">
+          <MultiModulePermissionGuard modules={["POS", "PHARMA"]} screen="vendor" action="create">
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button onClick={resetForm}>
@@ -289,7 +297,7 @@ export default function VendorsPage() {
                 </form>
               </DialogContent>
             </Dialog>
-          </PermissionGuard>
+          </MultiModulePermissionGuard>
         </div>
 
         {/* Stats Cards */}

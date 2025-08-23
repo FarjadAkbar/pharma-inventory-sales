@@ -107,8 +107,21 @@ export function MultiModulePermissionGuard({
 }) {
   const { hasPermission } = useAuth()
   
+  console.log('🔐 MultiModulePermissionGuard Debug:', {
+    modules,
+    screen,
+    action,
+    hasPermission: hasPermission
+  })
+  
   // Check if user has permission in any of the specified modules
-  const hasAnyPermission = modules.some(module => hasPermission(module, screen, action))
+  const hasAnyPermission = modules.some(module => {
+    const result = hasPermission(module, screen, action)
+    console.log(`🔐 Checking ${module}.${screen}.${action}:`, result)
+    return result
+  })
+  
+  console.log('🔐 MultiModulePermissionGuard Result:', hasAnyPermission)
   
   if (hasAnyPermission) {
     return <>{children}</>
