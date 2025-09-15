@@ -5,14 +5,22 @@ export type Permission =
   | "create_products"
   | "edit_products"
   | "delete_products"
-  | "view_vendors"
-  | "create_vendors"
-  | "edit_vendors"
-  | "delete_vendors"
+  | "view_suppliers"
+  | "create_suppliers"
+  | "edit_suppliers"
+  | "delete_suppliers"
   | "view_categories"
   | "create_categories"
   | "edit_categories"
   | "delete_categories"
+  | "view_units"
+  | "create_units"
+  | "edit_units"
+  | "delete_units"
+  | "view_equipment"
+  | "create_equipment"
+  | "edit_equipment"
+  | "delete_equipment"
   | "view_sales"
   | "create_sales"
   | "view_pos"
@@ -33,14 +41,22 @@ export const rolePermissions: Record<Role, Permission[]> = {
     "create_products",
     "edit_products",
     "delete_products",
-    "view_vendors",
-    "create_vendors",
-    "edit_vendors",
-    "delete_vendors",
+    "view_suppliers",
+    "create_suppliers",
+    "edit_suppliers",
+    "delete_suppliers",
     "view_categories",
     "create_categories",
     "edit_categories",
     "delete_categories",
+    "view_units",
+    "create_units",
+    "edit_units",
+    "delete_units",
+    "view_equipment",
+    "create_equipment",
+    "edit_equipment",
+    "delete_equipment",
     "view_sales",
     "create_sales",
     "view_pos",
@@ -59,13 +75,19 @@ export const rolePermissions: Record<Role, Permission[]> = {
     "create_products",
     "edit_products",
     "delete_products",
-    "view_vendors",
-    "create_vendors",
-    "edit_vendors",
+    "view_suppliers",
+    "create_suppliers",
+    "edit_suppliers",
     "view_categories",
     "create_categories",
     "edit_categories",
     "delete_categories",
+    "view_units",
+    "create_units",
+    "edit_units",
+    "view_equipment",
+    "create_equipment",
+    "edit_equipment",
     "view_sales",
     "create_sales",
     "view_pos",
@@ -102,8 +124,10 @@ export function canAccessRoute(role: Role, route: string): boolean {
   const routePermissions: Record<string, Permission[]> = {
     "/dashboard": ["view_dashboard"],
     "/dashboard/products": ["view_products"],
-    "/dashboard/vendors": ["view_vendors"],
+    "/dashboard/suppliers": ["view_suppliers"],
     "/dashboard/categories": ["view_categories"],
+    "/dashboard/units": ["view_units"],
+    "/dashboard/equipment": ["view_equipment"],
     "/dashboard/sales": ["view_sales"],
     "/dashboard/pos": ["view_pos"],
     "/dashboard/users": ["view_users"],
