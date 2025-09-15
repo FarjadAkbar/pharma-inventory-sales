@@ -217,8 +217,10 @@ export function Sidebar() {
       { title: "Inventory", icon: Store, href: "/dashboard/warehouse/inventory", screen: "inventory" },
       
       // Distribution & Sales
-      { title: "Shipments", icon: Truck, href: "/dashboard/distribution/shipments", screen: "shipments" },
       { title: "Sales Orders", icon: TrendingUp, href: "/dashboard/sales/orders", screen: "sales-orders" },
+      { title: "Shipments", icon: Truck, href: "/dashboard/distribution/shipments", screen: "shipments" },
+      { title: "Cold Chain", icon: AlertTriangle, href: "/dashboard/distribution/cold-chain", screen: "cold-chain" },
+      { title: "Proof of Delivery", icon: ClipboardCheck, href: "/dashboard/distribution/pod", screen: "pod" },
       
       // Reports & Analytics
       { title: "Reports", icon: BarChart3, href: "/dashboard/reports", screen: "reports" },
