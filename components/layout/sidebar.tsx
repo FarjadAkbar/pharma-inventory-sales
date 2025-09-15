@@ -223,7 +223,10 @@ export function Sidebar() {
       { title: "Proof of Delivery", icon: ClipboardCheck, href: "/dashboard/distribution/pod", screen: "pod" },
       
       // Reports & Analytics
-      { title: "Reports", icon: BarChart3, href: "/dashboard/reports", screen: "reports" },
+      { title: "Executive Dashboard", icon: BarChart3, href: "/dashboard/reports/executive", screen: "executive-dashboard" },
+      { title: "Procurement Reports", icon: ShoppingCart, href: "/dashboard/reports/procurement", screen: "procurement-reports" },
+      { title: "Production Reports", icon: Factory, href: "/dashboard/reports/production", screen: "production-reports" },
+      { title: "Audit Trail", icon: Shield, href: "/dashboard/reports/audit", screen: "audit-trail" },
     ]
 
     // Add modules based on user role and permissions
