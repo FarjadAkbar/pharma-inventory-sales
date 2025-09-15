@@ -18,6 +18,14 @@ import {
   Bell,
   Clock,
   RefreshCw,
+  Users,
+  Building2,
+  Factory,
+  TestTube,
+  CheckCircle,
+  Shield,
+  ClipboardCheck,
+  Truck,
 } from "lucide-react"
 
 export default function DashboardPage() {
@@ -68,11 +76,211 @@ export default function DashboardPage() {
     { type: "Payment Due", message: "Invoice #INV-2024-123 payment overdue", time: "1 day ago" },
   ]
 
-  // Filter stats based on user role
-  const getVisibleStats = () => {
-    if (user?.role === "admin") return stats
-    if (user?.role === "manager") return stats
-    return stats.slice(0, 2) // user role
+  // Get role-based dashboard cards
+  const getRoleBasedCards = () => {
+    const baseCards = [
+      {
+        title: "System Health",
+        value: "98.5%",
+        description: "System uptime",
+        icon: AlertTriangle,
+        trend: { value: 2, isPositive: true },
+        color: "text-green-600"
+      },
+      {
+        title: "Active Users",
+        value: "24",
+        description: "Currently online",
+        icon: Users,
+        trend: { value: 5, isPositive: true },
+        color: "text-blue-600"
+      }
+    ]
+
+    switch (user?.role) {
+      case "system_admin":
+        return [
+          ...baseCards,
+          {
+            title: "User Activity",
+            value: "156",
+            description: "Active sessions today",
+            icon: Users,
+            trend: { value: 12, isPositive: true },
+            color: "text-purple-600"
+          },
+          {
+            title: "Audit Logs",
+            value: "2,847",
+            description: "Events logged today",
+            icon: AlertTriangle,
+            trend: { value: 8, isPositive: false },
+            color: "text-orange-600"
+          }
+        ]
+      case "org_admin":
+        return [
+          ...baseCards,
+          {
+            title: "Organization Metrics",
+            value: "4",
+            description: "Active sites",
+            icon: Building2,
+            trend: { value: 0, isPositive: true },
+            color: "text-indigo-600"
+          },
+          {
+            title: "User Management",
+            value: "89",
+            description: "Total users",
+            icon: Users,
+            trend: { value: 3, isPositive: true },
+            color: "text-green-600"
+          }
+        ]
+      case "procurement_manager":
+        return [
+          ...baseCards,
+          {
+            title: "Pending POs",
+            value: "12",
+            description: "Awaiting approval",
+            icon: ShoppingCart,
+            trend: { value: 3, isPositive: false },
+            color: "text-orange-600"
+          },
+          {
+            title: "Supplier Performance",
+            value: "94.2%",
+            description: "On-time delivery",
+            icon: TrendingUp,
+            trend: { value: 2, isPositive: true },
+            color: "text-green-600"
+          }
+        ]
+      case "production_manager":
+        return [
+          ...baseCards,
+          {
+            title: "Active Batches",
+            value: "8",
+            description: "In production",
+            icon: Factory,
+            trend: { value: 1, isPositive: true },
+            color: "text-blue-600"
+          },
+          {
+            title: "Work Orders",
+            value: "15",
+            description: "Scheduled today",
+            icon: Calendar,
+            trend: { value: 4, isPositive: true },
+            color: "text-indigo-600"
+          }
+        ]
+      case "qc_manager":
+        return [
+          ...baseCards,
+          {
+            title: "Sample Queue",
+            value: "23",
+            description: "Awaiting testing",
+            icon: TestTube,
+            trend: { value: 5, isPositive: false },
+            color: "text-yellow-600"
+          },
+          {
+            title: "Test Results",
+            value: "156",
+            description: "Completed today",
+            icon: CheckCircle,
+            trend: { value: 12, isPositive: true },
+            color: "text-green-600"
+          }
+        ]
+      case "qa_manager":
+        return [
+          ...baseCards,
+          {
+            title: "Pending Releases",
+            value: "7",
+            description: "Awaiting QA review",
+            icon: Shield,
+            trend: { value: 2, isPositive: false },
+            color: "text-orange-600"
+          },
+          {
+            title: "Deviations",
+            value: "3",
+            description: "Open investigations",
+            icon: AlertTriangle,
+            trend: { value: 1, isPositive: false },
+            color: "text-red-600"
+          }
+        ]
+      case "warehouse_ops":
+        return [
+          ...baseCards,
+          {
+            title: "Stock Levels",
+            value: "2,847",
+            description: "Total SKUs",
+            icon: Package,
+            trend: { value: 15, isPositive: true },
+            color: "text-blue-600"
+          },
+          {
+            title: "Putaway Queue",
+            value: "45",
+            description: "Items pending storage",
+            icon: ClipboardCheck,
+            trend: { value: 8, isPositive: false },
+            color: "text-orange-600"
+          }
+        ]
+      case "distribution_ops":
+        return [
+          ...baseCards,
+          {
+            title: "Shipment Status",
+            value: "18",
+            description: "In transit",
+            icon: Truck,
+            trend: { value: 3, isPositive: true },
+            color: "text-blue-600"
+          },
+          {
+            title: "Cold Chain Alerts",
+            value: "2",
+            description: "Temperature violations",
+            icon: AlertTriangle,
+            trend: { value: 1, isPositive: false },
+            color: "text-red-600"
+          }
+        ]
+      case "sales_rep":
+        return [
+          ...baseCards,
+          {
+            title: "Order Pipeline",
+            value: "34",
+            description: "Pending orders",
+            icon: TrendingUp,
+            trend: { value: 7, isPositive: true },
+            color: "text-green-600"
+          },
+          {
+            title: "POS Metrics",
+            value: "89.2%",
+            description: "Customer satisfaction",
+            icon: Users,
+            trend: { value: 2, isPositive: true },
+            color: "text-blue-600"
+          }
+        ]
+      default:
+        return stats
+    }
   }
 
   return (
@@ -87,7 +295,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {getVisibleStats().map((stat, index) => (
+          {getRoleBasedCards().map((stat, index) => (
             <StatsCard key={index} {...stat} />
           ))}
         </div>

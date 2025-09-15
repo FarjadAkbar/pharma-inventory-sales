@@ -7,21 +7,21 @@ const JWT_SECRET = 'pharma-inventory-sales-jwt-secret-key-2024'
 
 export async function POST(request: NextRequest) {
   try {
-    const { username, password } = await request.json()
+    const { email, password, rememberMe, organization } = await request.json()
 
     // Validation
-    if (!username || !password) {
-      return Response.json({ success: false, error: "Username and password are required" }, { status: 400 })
+    if (!email || !password || !organization) {
+      return Response.json({ success: false, error: "Email, password, and organization are required" }, { status: 400 })
     }
 
-    // Find user by username (for now, use email as username)
-    const user = mockUsers.find((u) => u.email === username)
+    // Find user by email
+    const user = mockUsers.find((u) => u.email === email)
     if (!user) {
       return Response.json({ success: false, error: "Invalid credentials" }, { status: 401 })
     }
 
     // Check password
-    const storedPassword = mockPasswords[username]
+    const storedPassword = mockPasswords[email]
     if (storedPassword !== password) {
       return Response.json({ success: false, error: "Invalid credentials" }, { status: 401 })
     }
@@ -30,12 +30,13 @@ export async function POST(request: NextRequest) {
     const tokenPayload = {
       userId: parseInt(user.id),
       clientId: 1, // Mock client ID
-      storeId: 1,  // Mock store ID
+      storeId: parseInt(organization), // Use organization as storeId
       role: user.role,
       email: user.email,
       name: user.name,
+      organization: organization,
       iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + (60 * 60), // 1 hour expiry
+      exp: Math.floor(Date.now() / 1000) + (rememberMe ? 30 * 24 * 60 * 60 : 60 * 60), // 30 days if rememberMe, 1 hour otherwise
     }
 
     const token = jwt.sign(tokenPayload, JWT_SECRET)

@@ -52,19 +52,19 @@ export function ForgotPasswordForm() {
 
   if (success) {
     return (
-      <Card className="w-full max-w-md mx-auto">
-        <CardHeader>
-          <CardTitle>Check Your Email</CardTitle>
-          <CardDescription>We've sent a password reset link to your email address</CardDescription>
+      <Card className="w-full max-w-md mx-auto border-orange-200">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-bold text-orange-600">Check Your Email</CardTitle>
+          <CardDescription className="text-gray-600">We've sent a password reset link to your email address</CardDescription>
         </CardHeader>
         <CardContent>
-          <Alert>
-            <AlertDescription>
+          <Alert className="border-green-200 bg-green-50">
+            <AlertDescription className="text-green-800">
               If an account with that email exists, you'll receive a password reset link shortly.
             </AlertDescription>
           </Alert>
           <div className="mt-4 text-center">
-            <Link href="/auth/login" className="text-sm text-muted-foreground hover:text-primary">
+            <Link href="/auth/login" className="text-sm text-orange-600 hover:text-orange-700">
               Back to Sign In
             </Link>
           </div>
@@ -74,24 +74,24 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle>Forgot Password</CardTitle>
-        <CardDescription>Enter your email address to receive a password reset link</CardDescription>
+    <Card className="w-full max-w-md mx-auto border-orange-200">
+      <CardHeader className="text-center">
+        <CardTitle className="text-2xl font-bold text-orange-600">Forgot Password</CardTitle>
+        <CardDescription className="text-gray-600">Enter your email address to receive a password reset link</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className="text-gray-700">Email Address</Label>
             <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              className={errors.email ? "border-destructive" : ""}
+              placeholder="Enter your email address"
+              className={errors.email ? "border-red-500" : "border-gray-300 focus:border-orange-500"}
             />
-            {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+            {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
           </div>
 
           {errors.submit && (
@@ -100,12 +100,16 @@ export function ForgotPasswordForm() {
             </Alert>
           )}
 
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
+          <Button 
+            type="submit" 
+            className="w-full bg-orange-600 hover:bg-orange-700 text-white" 
+            disabled={isSubmitting}
+          >
             {isSubmitting ? "Sending..." : "Send Reset Link"}
           </Button>
 
           <div className="text-center">
-            <Link href="/auth/login" className="text-sm text-muted-foreground hover:text-primary">
+            <Link href="/auth/login" className="text-sm text-orange-600 hover:text-orange-700">
               Back to Sign In
             </Link>
           </div>
