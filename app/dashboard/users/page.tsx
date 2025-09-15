@@ -37,7 +37,7 @@ export default function UsersPage() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    role: "employee" as "admin" | "store_manager" | "employee",
+    role: "warehouse_ops" as "system_admin" | "org_admin" | "procurement_manager" | "production_manager" | "qc_manager" | "qa_manager" | "warehouse_ops" | "distribution_ops" | "sales_rep",
     assignedStores: [] as string[],
     screenPermissions: [] as { screen: string; actions: string[] }[],
   })
@@ -82,7 +82,7 @@ export default function UsersPage() {
   }
 
   const resetForm = () => {
-    setFormData({ name: "", email: "", role: "employee", assignedStores: [], screenPermissions: [] })
+    setFormData({ name: "", email: "", role: "warehouse_ops", assignedStores: [], screenPermissions: [] })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -125,23 +125,69 @@ export default function UsersPage() {
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
-      case "admin":
+      case "system_admin":
         return "bg-red-100 text-red-800"
-      case "store_manager":
+      case "org_admin":
+        return "bg-purple-100 text-purple-800"
+      case "procurement_manager":
         return "bg-blue-100 text-blue-800"
-      case "employee":
+      case "production_manager":
+        return "bg-indigo-100 text-indigo-800"
+      case "qc_manager":
+        return "bg-yellow-100 text-yellow-800"
+      case "qa_manager":
+        return "bg-orange-100 text-orange-800"
+      case "warehouse_ops":
         return "bg-green-100 text-green-800"
+      case "distribution_ops":
+        return "bg-teal-100 text-teal-800"
+      case "sales_rep":
+        return "bg-pink-100 text-pink-800"
       default:
         return "bg-gray-100 text-gray-800"
     }
   }
 
-  const calculateStats = () => {
-    const adminCount = users.filter((user) => user.role === "admin").length
-    const managerCount = users.filter((user) => user.role === "store_manager").length
-    const userCount = users.filter((user) => user.role === "employee").length
+  const getRoleDisplayName = (role: string) => {
+    switch (role) {
+      case "system_admin":
+        return "System Admin"
+      case "org_admin":
+        return "Org Admin"
+      case "procurement_manager":
+        return "Procurement Manager"
+      case "production_manager":
+        return "Production Manager"
+      case "qc_manager":
+        return "QC Manager"
+      case "qa_manager":
+        return "QA Manager"
+      case "warehouse_ops":
+        return "Warehouse Ops"
+      case "distribution_ops":
+        return "Distribution Ops"
+      case "sales_rep":
+        return "Sales Rep"
+      default:
+        return role.charAt(0).toUpperCase() + role.slice(1)
+    }
+  }
 
-    return { adminCount, managerCount, userCount }
+  const calculateStats = () => {
+    const adminCount = users.filter((user) => user.role === "system_admin" || user.role === "org_admin").length
+    const managerCount = users.filter((user) => 
+      user.role === "procurement_manager" || 
+      user.role === "production_manager" || 
+      user.role === "qc_manager" || 
+      user.role === "qa_manager"
+    ).length
+    const opsCount = users.filter((user) => 
+      user.role === "warehouse_ops" || 
+      user.role === "distribution_ops" || 
+      user.role === "sales_rep"
+    ).length
+
+    return { adminCount, managerCount, opsCount }
   }
 
   const stats = calculateStats()
@@ -173,7 +219,7 @@ export default function UsersPage() {
       key: "role",
       header: "Role",
       render: (user: User) => (
-        <Badge className={getRoleBadgeColor(user.role)}>{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</Badge>
+        <Badge className={getRoleBadgeColor(user.role)}>{getRoleDisplayName(user.role)}</Badge>
       ),
     },
     { key: "createdAt", header: "Joined", render: (user: User) => formatDateISO(user.createdAt) },
@@ -221,7 +267,7 @@ export default function UsersPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Store Managers</CardTitle>
+              <CardTitle className="text-sm font-medium">Managers</CardTitle>
               <UserCheck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -231,11 +277,11 @@ export default function UsersPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Employees</CardTitle>
+              <CardTitle className="text-sm font-medium">Operations</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.userCount}</div>
+              <div className="text-2xl font-bold">{stats.opsCount}</div>
             </CardContent>
           </Card>
         </div>
@@ -321,9 +367,15 @@ export default function UsersPage() {
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="employee">Employee</SelectItem>
-                    <SelectItem value="store_manager">Store Manager</SelectItem>
-                    <SelectItem value="admin">Administrator</SelectItem>
+                    <SelectItem value="system_admin">System Admin</SelectItem>
+                    <SelectItem value="org_admin">Org Admin</SelectItem>
+                    <SelectItem value="procurement_manager">Procurement Manager</SelectItem>
+                    <SelectItem value="production_manager">Production Manager</SelectItem>
+                    <SelectItem value="qc_manager">QC Manager</SelectItem>
+                    <SelectItem value="qa_manager">QA Manager</SelectItem>
+                    <SelectItem value="warehouse_ops">Warehouse Ops</SelectItem>
+                    <SelectItem value="distribution_ops">Distribution Ops</SelectItem>
+                    <SelectItem value="sales_rep">Sales Rep</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

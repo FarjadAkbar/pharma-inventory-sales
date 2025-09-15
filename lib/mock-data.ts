@@ -1,13 +1,13 @@
 import type { User } from "@/types/auth"
 import type { Store } from "@/types/tenant"
 
-// Mock users database with new permission structure
+// Mock users database with pharmaceutical roles
 export const mockUsers: User[] = [
   {
     id: "1",
-    email: "admin@pharma-inventory-sales.com",
-    name: "Admin User",
-    role: "client_admin",
+    email: "admin@ziauddin.com",
+    name: "Dr. Ahmed Khan",
+    role: "system_admin",
     clientId: 1,
     storeId: 1,
     permissions: {
@@ -112,9 +112,9 @@ export const mockUsers: User[] = [
   },
   {
     id: "2",
-    email: "pos_staff@pharma-inventory-sales.com",
-    name: "POS Staff User",
-    role: "pos_staff",
+    email: "procurement@ziauddin.com",
+    name: "Sarah Ahmed",
+    role: "procurement_manager",
     clientId: 1,
     storeId: 1,
     permissions: {
@@ -168,9 +168,9 @@ export const mockUsers: User[] = [
   },
   {
     id: "3",
-    email: "pharma_staff@pharma-inventory-sales.com",
-    name: "Pharma Staff User",
-    role: "pharma_staff",
+    email: "qc@ziauddin.com",
+    name: "Dr. Fatima Ali",
+    role: "qc_manager",
     clientId: 1,
     storeId: 1,
     permissions: {
@@ -224,9 +224,9 @@ export const mockUsers: User[] = [
   },
   {
     id: "4",
-    email: "manager@pharma-inventory-sales.com",
-    name: "Manager User",
-    role: "store_manager",
+    email: "warehouse@ziauddin.com",
+    name: "Hassan Raza",
+    role: "warehouse_ops",
     clientId: 1,
     storeId: 2,
     permissions: {
@@ -322,10 +322,10 @@ export const mockUsers: User[] = [
 
 // Mock passwords (in real app, these would be hashed)
 export const mockPasswords: Record<string, string> = {
-  "admin@pharma-inventory-sales.com": "Admin123!",
-  "pos_staff@pharma-inventory-sales.com": "Pos123!",
-  "pharma_staff@pharma-inventory-sales.com": "Pharma123!",
-  "manager@pharma-inventory-sales.com": "Manager123!",
+  "admin@ziauddin.com": "Admin123!",
+  "procurement@ziauddin.com": "Proc123!",
+  "qc@ziauddin.com": "Qc123!",
+  "warehouse@ziauddin.com": "Ware123!",
 }
 
 // Mock products
@@ -377,23 +377,43 @@ export const mockProducts: Product[] = [
 
 export const mockStores: Store[] = [
   {
-    id: "store-1",
-    name: "Central Pharmacy",
+    id: "1",
+    name: "Ziauddin Hospital - Main Campus",
     city: "Karachi",
-    address: "Main Road 123",
+    address: "4/B, Shahrah-e-Ghalib, Block 6, PECHS, Karachi",
     image: "",
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2024-01-01T00:00:00Z",
     createdBy: "1",
   },
   {
-    id: "store-2",
-    name: "Downtown Pharmacy",
-    city: "Lahore",
-    address: "Market 45",
+    id: "2",
+    name: "Ziauddin Hospital - Clifton",
+    city: "Karachi",
+    address: "Plot 1, Block 2, Clifton, Karachi",
     image: "",
     createdAt: "2024-01-02T00:00:00Z",
     updatedAt: "2024-01-02T00:00:00Z",
+    createdBy: "1",
+  },
+  {
+    id: "3",
+    name: "Ziauddin Hospital - North Nazimabad",
+    city: "Karachi",
+    address: "Plot 1, Block 1, North Nazimabad, Karachi",
+    image: "",
+    createdAt: "2024-01-03T00:00:00Z",
+    updatedAt: "2024-01-03T00:00:00Z",
+    createdBy: "1",
+  },
+  {
+    id: "4",
+    name: "Ziauddin Hospital - Korangi",
+    city: "Karachi",
+    address: "Plot 1, Block 1, Korangi, Karachi",
+    image: "",
+    createdAt: "2024-01-04T00:00:00Z",
+    updatedAt: "2024-01-04T00:00:00Z",
     createdBy: "1",
   },
 ]

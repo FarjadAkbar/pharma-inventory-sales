@@ -20,6 +20,15 @@ import {
   ChevronRight,
   Store,
   UserPlus,
+  ShoppingCart,
+  TestTube,
+  Shield,
+  Factory,
+  Truck,
+  ClipboardCheck,
+  AlertTriangle,
+  BarChart3,
+  Settings,
 } from "lucide-react"
 import type { Permissions } from "@/types/auth"
 
@@ -37,18 +46,42 @@ interface ModuleItem {
 
 const getScreenIcon = (screenName: string) => {
   switch (screenName) {
-    case "product":
+    case "dashboard":
+      return LayoutDashboard
+    case "drugs":
       return Package
-    case "category":
-      return FolderOpen
-    case "vendor":
+    case "raw-materials":
+      return Package
+    case "suppliers":
       return Building2
-    case "store":
+    case "purchase-orders":
+      return ShoppingCart
+    case "goods-receipts":
+      return ClipboardCheck
+    case "qc-tests":
+      return TestTube
+    case "samples":
+      return TestTube
+    case "qa-releases":
+      return Shield
+    case "boms":
+      return Factory
+    case "work-orders":
+      return Factory
+    case "batches":
+      return Factory
+    case "inventory":
       return Store
-    case "sale":
+    case "shipments":
+      return Truck
+    case "sales-orders":
       return TrendingUp
     case "users":
       return UserPlus
+    case "reports":
+      return BarChart3
+    case "settings":
+      return Settings
     default:
       return LayoutDashboard
   }
@@ -56,18 +89,42 @@ const getScreenIcon = (screenName: string) => {
 
 const getScreenTitle = (screenName: string) => {
   switch (screenName) {
-    case "product":
-      return "Products"
-    case "category":
-      return "Categories"
-    case "vendor":
-      return "Vendors"
-    case "store":
-      return "Stores"
-    case "sale":
-      return "Sales"
+    case "dashboard":
+      return "Dashboard"
+    case "drugs":
+      return "Drugs"
+    case "raw-materials":
+      return "Raw Materials"
+    case "suppliers":
+      return "Suppliers"
+    case "purchase-orders":
+      return "Purchase Orders"
+    case "goods-receipts":
+      return "Goods Receipts"
+    case "qc-tests":
+      return "QC Tests"
+    case "samples":
+      return "Samples"
+    case "qa-releases":
+      return "QA Releases"
+    case "boms":
+      return "BOMs"
+    case "work-orders":
+      return "Work Orders"
+    case "batches":
+      return "Batches"
+    case "inventory":
+      return "Inventory"
+    case "shipments":
+      return "Shipments"
+    case "sales-orders":
+      return "Sales Orders"
     case "users":
       return "Users"
+    case "reports":
+      return "Reports"
+    case "settings":
+      return "Settings"
     default:
       return screenName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
   }
@@ -75,18 +132,42 @@ const getScreenTitle = (screenName: string) => {
 
 const getScreenHref = (screenName: string) => {
   switch (screenName) {
-    case "product":
-      return "/dashboard/products"
-    case "category":
-      return "/dashboard/categories"
-    case "vendor":
-      return "/dashboard/vendors"
-    case "store":
-      return "/dashboard/stores"
-    case "sale":
-      return "/dashboard/sales"
+    case "dashboard":
+      return "/dashboard"
+    case "drugs":
+      return "/dashboard/drugs"
+    case "raw-materials":
+      return "/dashboard/raw-materials"
+    case "suppliers":
+      return "/dashboard/suppliers"
+    case "purchase-orders":
+      return "/dashboard/procurement/purchase-orders"
+    case "goods-receipts":
+      return "/dashboard/procurement/goods-receipts"
+    case "qc-tests":
+      return "/dashboard/quality/qc-tests"
+    case "samples":
+      return "/dashboard/quality/samples"
+    case "qa-releases":
+      return "/dashboard/quality/qa-releases"
+    case "boms":
+      return "/dashboard/manufacturing/boms"
+    case "work-orders":
+      return "/dashboard/manufacturing/work-orders"
+    case "batches":
+      return "/dashboard/manufacturing/batches"
+    case "inventory":
+      return "/dashboard/warehouse/inventory"
+    case "shipments":
+      return "/dashboard/distribution/shipments"
+    case "sales-orders":
+      return "/dashboard/sales/orders"
     case "users":
       return "/dashboard/users"
+    case "reports":
+      return "/dashboard/reports"
+    case "settings":
+      return "/dashboard/settings"
     default:
       return "/dashboard"
   }
@@ -109,53 +190,56 @@ export function Sidebar() {
       screens: [{ title: "Overview", href: "/dashboard", icon: LayoutDashboard }]
     })
 
-    // Add Permissions Demo for testing
-    modules.push({
-      title: "Permissions Demo",
-      icon: Users,
-      screens: [{ title: "Demo", href: "/dashboard/permissions-demo", icon: Users }]
-    })
+    // Define pharmaceutical modules based on user role
+    const pharmaceuticalModules = [
+      // Master Data Management
+      { title: "Drugs", icon: Package, href: "/dashboard/drugs", screen: "drugs" },
+      { title: "Raw Materials", icon: Package, href: "/dashboard/raw-materials", screen: "raw-materials" },
+      { title: "Suppliers", icon: Building2, href: "/dashboard/suppliers", screen: "suppliers" },
+      
+      // Procurement Module
+      { title: "Purchase Orders", icon: ShoppingCart, href: "/dashboard/procurement/purchase-orders", screen: "purchase-orders" },
+      { title: "Goods Receipts", icon: ClipboardCheck, href: "/dashboard/procurement/goods-receipts", screen: "goods-receipts" },
+      
+      // Quality Control Module
+      { title: "QC Tests", icon: TestTube, href: "/dashboard/quality/qc-tests", screen: "qc-tests" },
+      { title: "Samples", icon: TestTube, href: "/dashboard/quality/samples", screen: "samples" },
+      
+      // Quality Assurance Module
+      { title: "QA Releases", icon: Shield, href: "/dashboard/quality/qa-releases", screen: "qa-releases" },
+      
+      // Manufacturing Module
+      { title: "BOMs", icon: Factory, href: "/dashboard/manufacturing/boms", screen: "boms" },
+      { title: "Work Orders", icon: Factory, href: "/dashboard/manufacturing/work-orders", screen: "work-orders" },
+      { title: "Batches", icon: Factory, href: "/dashboard/manufacturing/batches", screen: "batches" },
+      
+      // Warehouse Operations
+      { title: "Inventory", icon: Store, href: "/dashboard/warehouse/inventory", screen: "inventory" },
+      
+      // Distribution & Sales
+      { title: "Shipments", icon: Truck, href: "/dashboard/distribution/shipments", screen: "shipments" },
+      { title: "Sales Orders", icon: TrendingUp, href: "/dashboard/sales/orders", screen: "sales-orders" },
+      
+      // Reports & Analytics
+      { title: "Reports", icon: BarChart3, href: "/dashboard/reports", screen: "reports" },
+    ]
 
-    // Build unified inventory management list
-    const seenScreens = new Set<string>()
-    
-    Object.entries(permissions).forEach(([moduleName, modulePermissions]) => {
-      Object.entries(modulePermissions).forEach(([screenName, permissions]) => {
-        if (permissions.canView) {
-          // Extract the base screen name (remove pos_ or pharma_ prefix)
-          const baseScreenName = screenName.replace(/^(pos_|pharma_)/, '')
-          
-          // Only add if we haven't seen this screen type before
-          if (!seenScreens.has(baseScreenName)) {
-            seenScreens.add(baseScreenName)
-            
-            const screen: NavItem = {
-              title: getScreenTitle(baseScreenName),
-              href: getScreenHref(baseScreenName),
-              icon: getScreenIcon(baseScreenName)
-            }
-            
-            // Add each screen as a separate module (flat list)
-            if (baseScreenName !== "users") {
-              modules.push({
-                title: screen.title,
-                icon: screen.icon,
-                screens: [screen]
-              })
-            }
-          }
-        }
+    // Add modules based on user role and permissions
+    pharmaceuticalModules.forEach(module => {
+      // For now, show all modules - in real app, check permissions
+      modules.push({
+        title: module.title,
+        icon: module.icon,
+        screens: [{ title: module.title, href: module.href, icon: module.icon }]
       })
     })
 
     // Add User Management module
-    if (permissions.USER_MANAGEMENT?.users?.canView) {
-      modules.push({
-        title: "User Management",
-        icon: Users,
-        screens: [{ title: "Users", href: "/dashboard/users", icon: UserPlus }]
-      })
-    }
+    modules.push({
+      title: "User Management",
+      icon: Users,
+      screens: [{ title: "Users", href: "/dashboard/users", icon: UserPlus }]
+    })
 
     return modules
   }

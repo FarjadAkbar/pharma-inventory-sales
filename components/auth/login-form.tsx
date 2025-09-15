@@ -9,27 +9,49 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/contexts/auth.context"
 import { getValidationError } from "@/lib/validations"
 import Link from "next/link"
+import { Eye, EyeOff } from "lucide-react"
 
 export function LoginForm() {
-  const [username, setUsername] = useState("")
+  const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [rememberMe, setRememberMe] = useState(false)
+  const [organization, setOrganization] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { login } = useAuth()
   const router = useRouter()
 
+  // Mock organizations - in real app, this would come from API
+  const organizations = [
+    { id: "1", name: "Ziauddin Hospital - Main Campus" },
+    { id: "2", name: "Ziauddin Hospital - Clifton" },
+    { id: "3", name: "Ziauddin Hospital - North Nazimabad" },
+    { id: "4", name: "Ziauddin Hospital - Korangi" }
+  ]
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
-    if (!username) {
-      newErrors.username = getValidationError("username", "required")
+    if (!email) {
+      newErrors.email = "Email is required"
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = "Please enter a valid email address"
     }
 
     if (!password) {
-      newErrors.password = getValidationError("password", "required")
+      newErrors.password = "Password is required"
+    } else if (password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters"
+    }
+
+    if (!organization) {
+      newErrors.organization = "Please select an organization"
     }
 
     setErrors(newErrors)
@@ -43,7 +65,7 @@ export function LoginForm() {
 
     setIsSubmitting(true)
     try {
-      await login({ username, password })
+      await login({ email, password, rememberMe, organization })
       router.push("/dashboard")
     } catch (error) {
       setErrors({ submit: error instanceof Error ? error.message : "Login failed" })
@@ -53,37 +75,74 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle>Sign In</CardTitle>
-        <CardDescription>Enter your credentials to access your account</CardDescription>
+    <Card className="w-full max-w-md mx-auto border-orange-200">
+      <CardHeader className="text-center">
+        <CardTitle className="text-2xl font-bold text-orange-600">Ziauddin Hospital</CardTitle>
+        <CardDescription className="text-gray-600">Pharma Sales & Inventory System</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
+            <Label htmlFor="email" className="text-gray-700">Email Address</Label>
             <Input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter your username"
-              className={errors.username ? "border-destructive" : ""}
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email address"
+              className={errors.email ? "border-red-500" : "border-gray-300 focus:border-orange-500"}
             />
-            {errors.username && <p className="text-sm text-destructive">{errors.username}</p>}
+            {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              className={errors.password ? "border-destructive" : ""}
+            <Label htmlFor="password" className="text-gray-700">Password</Label>
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                className={errors.password ? "border-red-500 pr-10" : "border-gray-300 focus:border-orange-500 pr-10"}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="organization" className="text-gray-700">Organization</Label>
+            <Select value={organization} onValueChange={setOrganization}>
+              <SelectTrigger className={errors.organization ? "border-red-500" : "border-gray-300 focus:border-orange-500"}>
+                <SelectValue placeholder="Select your organization" />
+              </SelectTrigger>
+              <SelectContent>
+                {organizations.map((org) => (
+                  <SelectItem key={org.id} value={org.id}>
+                    {org.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.organization && <p className="text-sm text-red-500">{errors.organization}</p>}
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="rememberMe"
+              checked={rememberMe}
+              onCheckedChange={(checked) => setRememberMe(checked as boolean)}
             />
-            {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
+            <Label htmlFor="rememberMe" className="text-sm text-gray-600">
+              Remember me
+            </Label>
           </div>
 
           {errors.submit && (
@@ -92,12 +151,16 @@ export function LoginForm() {
             </Alert>
           )}
 
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
+          <Button 
+            type="submit" 
+            className="w-full bg-orange-600 hover:bg-orange-700 text-white" 
+            disabled={isSubmitting}
+          >
             {isSubmitting ? "Signing in..." : "Sign In"}
           </Button>
 
           <div className="text-center space-y-2">
-            <Link href="/auth/forgot-password" className="text-sm text-muted-foreground hover:text-primary">
+            <Link href="/auth/forgot-password" className="text-sm text-orange-600 hover:text-orange-700">
               Forgot your password?
             </Link>
           </div>

@@ -43,8 +43,10 @@ export interface User {
 }
 
 export interface LoginCredentials {
-  username: string
+  email: string
   password: string
+  rememberMe?: boolean
+  organization?: string
 }
 
 export interface RegisterData {
