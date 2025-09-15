@@ -20,6 +20,8 @@ import {
   ChevronRight,
   Store,
   UserPlus,
+  Ruler,
+  Settings,
 } from "lucide-react"
 import type { Permissions } from "@/types/auth"
 
@@ -41,8 +43,12 @@ const getScreenIcon = (screenName: string) => {
       return Package
     case "category":
       return FolderOpen
-    case "vendor":
+    case "supplier":
       return Building2
+    case "unit":
+      return Ruler
+    case "equipment":
+      return Settings
     case "store":
       return Store
     case "sale":
@@ -60,8 +66,12 @@ const getScreenTitle = (screenName: string) => {
       return "Products"
     case "category":
       return "Categories"
-    case "vendor":
-      return "Vendors"
+    case "supplier":
+      return "Suppliers"
+    case "unit":
+      return "Units"
+    case "equipment":
+      return "Equipment"
     case "store":
       return "Stores"
     case "sale":
@@ -79,8 +89,12 @@ const getScreenHref = (screenName: string) => {
       return "/dashboard/products"
     case "category":
       return "/dashboard/categories"
-    case "vendor":
-      return "/dashboard/vendors"
+    case "supplier":
+      return "/dashboard/suppliers"
+    case "unit":
+      return "/dashboard/units"
+    case "equipment":
+      return "/dashboard/equipment"
     case "store":
       return "/dashboard/stores"
     case "sale":
