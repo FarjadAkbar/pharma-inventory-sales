@@ -3,17 +3,13 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { DataTable } from "@/components/ui/data-table"
+import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { 
   Plus, 
   Beaker, 
-  Search, 
-  Filter,
   CheckCircle,
   Clock,
   XCircle,
@@ -28,8 +24,7 @@ import {
   Target,
   Play,
   Pause,
-  AlertCircle,
-  FileText
+  AlertCircle
 } from "lucide-react"
 import { apiService } from "@/services/api.service"
 import type { Batch, BatchFilters } from "@/types/manufacturing"
@@ -72,11 +67,8 @@ export default function BatchesPage() {
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
-  const handleFilterChange = (key: keyof BatchFilters, value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value
-    }))
+  const handleFiltersChange = (newFilters: Record<string, any>) => {
+    setFilters(newFilters)
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
@@ -144,6 +136,7 @@ export default function BatchesPage() {
     {
       key: "batchNumber",
       header: "Batch #",
+      sortable: true,
       render: (batch: Batch) => (
         <div className="font-mono text-sm font-medium text-orange-600">
           {batch.batchNumber}
@@ -153,6 +146,7 @@ export default function BatchesPage() {
     {
       key: "drug",
       header: "Drug",
+      sortable: true,
       render: (batch: Batch) => (
         <div>
           <div className="flex items-center gap-2">
@@ -166,6 +160,7 @@ export default function BatchesPage() {
     {
       key: "workOrder",
       header: "Work Order",
+      sortable: true,
       render: (batch: Batch) => (
         <div className="text-sm">
           <div className="font-medium">{batch.workOrderNumber}</div>
@@ -176,6 +171,7 @@ export default function BatchesPage() {
     {
       key: "quantity",
       header: "Quantity",
+      sortable: true,
       render: (batch: Batch) => (
         <div className="text-sm">
           <div className="font-medium">{batch.plannedQuantity.toLocaleString()} {batch.unit}</div>
@@ -190,6 +186,7 @@ export default function BatchesPage() {
     {
       key: "site",
       header: "Production Site",
+      sortable: true,
       render: (batch: Batch) => (
         <div className="text-sm">
           <div className="font-medium">{batch.siteName}</div>
@@ -199,16 +196,19 @@ export default function BatchesPage() {
     {
       key: "priority",
       header: "Priority",
+      sortable: true,
       render: (batch: Batch) => getPriorityBadge(batch.priority),
     },
     {
       key: "status",
       header: "Status",
+      sortable: true,
       render: (batch: Batch) => getStatusBadge(batch.status),
     },
     {
       key: "startedBy",
       header: "Started By",
+      sortable: true,
       render: (batch: Batch) => (
         <div className="text-sm">
           {batch.startedByName ? (
@@ -225,6 +225,7 @@ export default function BatchesPage() {
     {
       key: "plannedDates",
       header: "Planned Dates",
+      sortable: true,
       render: (batch: Batch) => (
         <div className="text-sm">
           <div className="flex items-center gap-1">
@@ -240,6 +241,7 @@ export default function BatchesPage() {
     {
       key: "actualDates",
       header: "Actual Dates",
+      sortable: true,
       render: (batch: Batch) => (
         <div className="text-sm">
           {batch.actualStartDate ? (
@@ -263,9 +265,81 @@ export default function BatchesPage() {
     {
       key: "createdAt",
       header: "Created",
+      sortable: true,
       render: (batch: Batch) => formatDateISO(batch.createdAt),
     },
   ]
+
+  const filterOptions = [
+    {
+      key: "drugId",
+      label: "Drug",
+      type: "select" as const,
+      options: [
+        { value: "1", label: "Paracetamol Tablets" },
+        { value: "2", label: "Ibuprofen Tablets" },
+        { value: "3", label: "Aspirin Tablets" },
+      ],
+    },
+    {
+      key: "siteId",
+      label: "Site",
+      type: "select" as const,
+      options: [
+        { value: "1", label: "Main Production Facility" },
+        { value: "2", label: "Secondary Production Facility" },
+      ],
+    },
+    {
+      key: "status",
+      label: "Status",
+      type: "select" as const,
+      options: [
+        { value: "Planned", label: "Planned" },
+        { value: "In Progress", label: "In Progress" },
+        { value: "QC Pending", label: "QC Pending" },
+        { value: "QA Pending", label: "QA Pending" },
+        { value: "Completed", label: "Completed" },
+        { value: "Failed", label: "Failed" },
+        { value: "Cancelled", label: "Cancelled" },
+      ],
+    },
+    {
+      key: "priority",
+      label: "Priority",
+      type: "select" as const,
+      options: [
+        { value: "Low", label: "Low" },
+        { value: "Normal", label: "Normal" },
+        { value: "High", label: "High" },
+        { value: "Urgent", label: "Urgent" },
+      ],
+    },
+  ]
+
+  const actions = (batch: Batch) => (
+    <div className="flex items-center gap-2">
+      <Button variant="ghost" size="sm">
+        <Eye className="h-4 w-4" />
+      </Button>
+      <Button variant="ghost" size="sm">
+        <Edit className="h-4 w-4" />
+      </Button>
+      {batch.status === "Planned" && (
+        <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+          <Play className="h-4 w-4" />
+        </Button>
+      )}
+      {batch.status === "In Progress" && (
+        <Button variant="ghost" size="sm" className="text-orange-600 hover:text-orange-700">
+          <Pause className="h-4 w-4" />
+        </Button>
+      )}
+      <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  )
 
   return (
     <DashboardLayout>
@@ -344,137 +418,27 @@ export default function BatchesPage() {
           </Card>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Filters
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Search</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search batches..."
-                    value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Drug</label>
-                <Select value={filters.drugId || ""} onValueChange={(value) => handleFilterChange("drugId", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Drugs" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">Paracetamol Tablets</SelectItem>
-                    <SelectItem value="2">Ibuprofen Tablets</SelectItem>
-                    <SelectItem value="3">Aspirin Tablets</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Site</label>
-                <Select value={filters.siteId || ""} onValueChange={(value) => handleFilterChange("siteId", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Sites" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">Main Production Facility</SelectItem>
-                    <SelectItem value="2">Secondary Production Facility</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status</label>
-                <Select value={filters.status || ""} onValueChange={(value) => handleFilterChange("status", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Planned">Planned</SelectItem>
-                    <SelectItem value="In Progress">In Progress</SelectItem>
-                    <SelectItem value="QC Pending">QC Pending</SelectItem>
-                    <SelectItem value="QA Pending">QA Pending</SelectItem>
-                    <SelectItem value="Completed">Completed</SelectItem>
-                    <SelectItem value="Failed">Failed</SelectItem>
-                    <SelectItem value="Cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Priority</label>
-                <Select value={filters.priority || ""} onValueChange={(value) => handleFilterChange("priority", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Priorities" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Low">Low</SelectItem>
-                    <SelectItem value="Normal">Normal</SelectItem>
-                    <SelectItem value="High">High</SelectItem>
-                    <SelectItem value="Urgent">Urgent</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Batches Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Production Batches</CardTitle>
-            <CardDescription>A comprehensive view of all production batches and their Electronic Batch Records.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              data={batches}
-              columns={columns}
-              loading={loading}
-              onSearch={handleSearch}
-              pagination={{
-                page: pagination.page,
-                pages: pagination.pages,
-                total: pagination.total,
-                onPageChange: handlePageChange
-              }}
-              searchPlaceholder="Search batches..."
-              actions={(batch: Batch) => (
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  {batch.status === "Planned" && (
-                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
-                      <Play className="h-4 w-4" />
-                    </Button>
-                  )}
-                  {batch.status === "In Progress" && (
-                    <Button variant="ghost" size="sm" className="text-orange-600 hover:text-orange-700">
-                      <FileText className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            />
-          </CardContent>
-        </Card>
+        <UnifiedDataTable
+          data={batches}
+          columns={columns}
+          loading={loading}
+          searchPlaceholder="Search batches..."
+          searchValue={searchQuery}
+          onSearch={handleSearch}
+          filters={filterOptions}
+          onFiltersChange={handleFiltersChange}
+          pagination={{
+            page: pagination.page,
+            pages: pagination.pages,
+            total: pagination.total,
+            onPageChange: handlePageChange
+          }}
+          actions={actions}
+          onRefresh={fetchBatches}
+          onExport={() => console.log("Export batches")}
+          emptyMessage="No batches found. Create your first batch to get started."
+        />
       </div>
     </DashboardLayout>
   )

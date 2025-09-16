@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { DataTable } from "@/components/ui/data-table"
+import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -43,32 +43,26 @@ export default function RegulatoryDocumentsPage() {
   const [documents, setDocuments] = useState<RegulatoryDocument[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
+  const [filters, setFilters] = useState<Record<string, any>>({})
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
-  const [typeFilter, setTypeFilter] = useState("all")
-  const [statusFilter, setStatusFilter] = useState("all")
 
   useEffect(() => {
     fetchDocuments()
-  }, [searchQuery, pagination.page, typeFilter, statusFilter])
+  }, [searchQuery, pagination.page, filters])
 
   const fetchDocuments = async () => {
     try {
       setLoading(true)
       const response = await apiService.getRegulatoryDocuments({
         search: searchQuery,
-        type: typeFilter !== "all" ? typeFilter : undefined,
-        status: statusFilter !== "all" ? statusFilter : undefined,
+        ...filters,
         page: pagination.page,
         limit: 10,
       })
 
       if (response.success && response.data) {
-        const documentData = response.data as {
-          documents: RegulatoryDocument[]
-          pagination: { page: number; pages: number; total: number }
-        }
-        setDocuments(documentData.documents || [])
-        setPagination(documentData.pagination || { page: 1, pages: 1, total: 0 })
+        setDocuments(response.data.documents || [])
+        setPagination(response.data.pagination || { page: 1, pages: 1, total: 0 })
       }
     } catch (error) {
       console.error("Failed to fetch regulatory documents:", error)
@@ -82,23 +76,21 @@ export default function RegulatoryDocumentsPage() {
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
+  const handleFiltersChange = (newFilters: Record<string, any>) => {
+    setFilters(newFilters)
+    setPagination((prev) => ({ ...prev, page: 1 }))
+  }
+
   const handlePageChange = (page: number) => {
     setPagination((prev) => ({ ...prev, page }))
   }
 
-  const handleEdit = (document: RegulatoryDocument) => {
-    window.location.href = `/dashboard/regulatory/documents/${document.id}`
+  const handleView = (document: RegulatoryDocument) => {
+    console.log("View document:", document)
   }
 
-  const handleDelete = async (document: RegulatoryDocument) => {
-    if (confirm(`Are you sure you want to delete document "${document.documentNumber}"?`)) {
-      try {
-        await apiService.deleteRegulatoryDocument(document.id)
-        fetchDocuments()
-      } catch (error) {
-        console.error("Failed to delete regulatory document:", error)
-      }
-    }
+  const handleEdit = (document: RegulatoryDocument) => {
+    console.log("Edit document:", document)
   }
 
   const handleDownload = async (document: RegulatoryDocument) => {
@@ -199,14 +191,15 @@ export default function RegulatoryDocumentsPage() {
     {
       key: "document",
       header: "Document",
+      sortable: true,
       render: (document: RegulatoryDocument) => (
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
             <FileText className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <div className="font-medium">{document.documentNumber}</div>
-            <div className="text-sm text-muted-foreground">{document.title}</div>
+            <div className="font-medium">{document.title}</div>
+            <div className="text-sm text-muted-foreground">{document.documentNumber}</div>
           </div>
         </div>
       ),
@@ -214,6 +207,7 @@ export default function RegulatoryDocumentsPage() {
     {
       key: "type",
       header: "Type",
+      sortable: true,
       render: (document: RegulatoryDocument) => (
         <Badge className={getTypeBadgeColor(document.type)}>
           {document.type.charAt(0).toUpperCase() + document.type.slice(1)}
@@ -221,8 +215,9 @@ export default function RegulatoryDocumentsPage() {
       ),
     },
     {
-      key: "authority",
+      key: "issuingAuthority",
       header: "Issuing Authority",
+      sortable: true,
       render: (document: RegulatoryDocument) => (
         <div className="text-sm">
           <div className="font-medium">{document.issuingAuthority}</div>
@@ -231,64 +226,53 @@ export default function RegulatoryDocumentsPage() {
       ),
     },
     {
-      key: "dates",
-      header: "Dates",
-      render: (document: RegulatoryDocument) => {
-        const isExpired = isDocumentExpired(document.expiryDate)
-        const isExpiringSoon = isDocumentExpiringSoon(document.expiryDate)
-        
-        return (
-          <div className="space-y-1 text-sm">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-3 w-3 text-muted-foreground" />
-              <span>Issued: {formatDateISO(document.issueDate)}</span>
-            </div>
-            <div className={`flex items-center gap-2 ${
-              isExpired ? "text-red-600" : isExpiringSoon ? "text-yellow-600" : "text-green-600"
-            }`}>
-              <span>Expires: {formatDateISO(document.expiryDate)}</span>
-              {isExpired && <AlertTriangle className="h-3 w-3" />}
-              {isExpiringSoon && !isExpired && <AlertTriangle className="h-3 w-3" />}
-            </div>
-          </div>
-        )
-      },
-    },
-    {
       key: "status",
       header: "Status",
+      sortable: true,
       render: (document: RegulatoryDocument) => (
         <div className="space-y-1">
           <Badge className={getStatusBadgeColor(document.status)}>
             {document.status.charAt(0).toUpperCase() + document.status.slice(1)}
           </Badge>
           <Badge className={getComplianceBadgeColor(document.complianceStatus)}>
-            {document.complianceStatus.charAt(0).toUpperCase() + document.complianceStatus.slice(1).replace("_", " ")}
+            {document.complianceStatus.replace("_", " ").charAt(0).toUpperCase() + document.complianceStatus.replace("_", " ").slice(1)}
           </Badge>
         </div>
       ),
     },
     {
-      key: "version",
-      header: "Version",
+      key: "dates",
+      header: "Dates",
+      sortable: true,
       render: (document: RegulatoryDocument) => (
-        <div className="text-sm">
-          <div className="font-medium">v{document.version}</div>
+        <div className="text-sm space-y-1">
+          <div className="flex items-center gap-1">
+            <Calendar className="h-3 w-3" />
+            <span>Issue: {formatDateISO(document.issueDate)}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Calendar className="h-3 w-3" />
+            <span className={isDocumentExpired(document.expiryDate) ? "text-red-600" : isDocumentExpiringSoon(document.expiryDate) ? "text-yellow-600" : ""}>
+              Expiry: {formatDateISO(document.expiryDate)}
+            </span>
+          </div>
+          {document.renewalDate && (
+            <div className="flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              <span>Renewal: {formatDateISO(document.renewalDate)}</span>
+            </div>
+          )}
         </div>
       ),
     },
     {
-      key: "assigned",
+      key: "assignedTo",
       header: "Assigned To",
+      sortable: true,
       render: (document: RegulatoryDocument) => (
         <div className="text-sm">
           {document.assignedToName ? (
-            <div>
-              <div className="font-medium">{document.assignedToName}</div>
-              {document.reviewedByName && (
-                <div className="text-muted-foreground">Reviewed: {document.reviewedByName}</div>
-              )}
-            </div>
+            <div className="font-medium">{document.assignedToName}</div>
           ) : (
             <span className="text-muted-foreground">Unassigned</span>
           )}
@@ -296,26 +280,85 @@ export default function RegulatoryDocumentsPage() {
       ),
     },
     {
-      key: "file",
-      header: "Document",
+      key: "version",
+      header: "Version",
+      sortable: true,
       render: (document: RegulatoryDocument) => (
-        <div className="flex items-center gap-2">
-          {document.fileUrl ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleDownload(document)}
-            >
-              <Download className="h-3 w-3 mr-1" />
-              Download
-            </Button>
-          ) : (
-            <span className="text-sm text-muted-foreground">No file</span>
-          )}
+        <div className="text-sm">
+          <div className="font-medium">v{document.version}</div>
+          <div className="text-muted-foreground">
+            {document.fileSize ? `${(document.fileSize / 1024).toFixed(1)} KB` : "No file"}
+          </div>
         </div>
       ),
     },
   ]
+
+  const filterOptions = [
+    {
+      key: "type",
+      label: "Type",
+      type: "select" as const,
+      options: [
+        { value: "license", label: "License" },
+        { value: "permit", label: "Permit" },
+        { value: "certificate", label: "Certificate" },
+        { value: "approval", label: "Approval" },
+        { value: "registration", label: "Registration" },
+        { value: "compliance", label: "Compliance" },
+        { value: "policy", label: "Policy" },
+      ],
+    },
+    {
+      key: "status",
+      label: "Status",
+      type: "select" as const,
+      options: [
+        { value: "draft", label: "Draft" },
+        { value: "pending", label: "Pending" },
+        { value: "approved", label: "Approved" },
+        { value: "rejected", label: "Rejected" },
+        { value: "expired", label: "Expired" },
+        { value: "renewed", label: "Renewed" },
+      ],
+    },
+  ]
+
+  const actions = (document: RegulatoryDocument) => (
+    <div className="flex items-center gap-2">
+      <PermissionGuard module="REGULATORY" screen="documents" action="view">
+        <Button variant="ghost" size="sm" onClick={() => handleView(document)}>
+          <Eye className="h-4 w-4" />
+        </Button>
+      </PermissionGuard>
+      <PermissionGuard module="REGULATORY" screen="documents" action="update">
+        <Button variant="ghost" size="sm" onClick={() => handleEdit(document)}>
+          Edit
+        </Button>
+      </PermissionGuard>
+      {document.status === "pending" && (
+        <PermissionGuard module="REGULATORY" screen="documents" action="approve">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => handleApprove(document)}
+            className="text-green-600 hover:text-green-700"
+          >
+            Approve
+          </Button>
+        </PermissionGuard>
+      )}
+      {document.fileUrl && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => handleDownload(document)}
+        >
+          <Download className="h-4 w-4" />
+        </Button>
+      )}
+    </div>
+  )
 
   return (
     <DashboardLayout>
@@ -377,113 +420,27 @@ export default function RegulatoryDocumentsPage() {
           </Card>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Filters</CardTitle>
-            <CardDescription>Filter documents by type and status</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Type</label>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { value: "all", label: "All Types" },
-                    { value: "license", label: "License" },
-                    { value: "permit", label: "Permit" },
-                    { value: "certificate", label: "Certificate" },
-                    { value: "approval", label: "Approval" },
-                    { value: "registration", label: "Registration" },
-                    { value: "compliance", label: "Compliance" },
-                    { value: "policy", label: "Policy" },
-                  ].map((type) => (
-                    <Button
-                      key={type.value}
-                      variant={typeFilter === type.value ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setTypeFilter(type.value)}
-                    >
-                      {type.label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">Status</label>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { value: "all", label: "All Status" },
-                    { value: "draft", label: "Draft" },
-                    { value: "pending", label: "Pending" },
-                    { value: "approved", label: "Approved" },
-                    { value: "rejected", label: "Rejected" },
-                    { value: "expired", label: "Expired" },
-                    { value: "renewed", label: "Renewed" },
-                  ].map((status) => (
-                    <Button
-                      key={status.value}
-                      variant={statusFilter === status.value ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setStatusFilter(status.value)}
-                    >
-                      {status.label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Documents Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>All Regulatory Documents</CardTitle>
-            <CardDescription>A list of all regulatory documents with their compliance status.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              data={documents}
-              columns={columns}
-              loading={loading}
-              onSearch={handleSearch}
-              pagination={{
-                page: pagination.page,
-                pages: pagination.pages,
-                total: pagination.total,
-                onPageChange: handlePageChange
-              }}
-              searchPlaceholder="Search documents..."
-              actions={(document: RegulatoryDocument) => (
-                <div className="flex items-center gap-2">
-                  <PermissionGuard module="REGULATORY" screen="documents" action="update">
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(document)}>
-                      Edit
-                    </Button>
-                  </PermissionGuard>
-                  {document.status === "pending" && (
-                    <PermissionGuard module="REGULATORY" screen="documents" action="approve">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleApprove(document)}
-                        className="text-green-600"
-                      >
-                        Approve
-                      </Button>
-                    </PermissionGuard>
-                  )}
-                  <PermissionGuard module="REGULATORY" screen="documents" action="delete">
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(document)}>
-                      Delete
-                    </Button>
-                  </PermissionGuard>
-                </div>
-              )}
-            />
-          </CardContent>
-        </Card>
+        <UnifiedDataTable
+          data={documents}
+          columns={columns}
+          loading={loading}
+          searchPlaceholder="Search documents..."
+          searchValue={searchQuery}
+          onSearch={handleSearch}
+          filters={filterOptions}
+          onFiltersChange={handleFiltersChange}
+          pagination={{
+            page: pagination.page,
+            pages: pagination.pages,
+            total: pagination.total,
+            onPageChange: handlePageChange
+          }}
+          actions={actions}
+          onRefresh={fetchDocuments}
+          onExport={() => console.log("Export documents")}
+          emptyMessage="No regulatory documents found. Add your first document to get started."
+        />
       </div>
     </DashboardLayout>
   )

@@ -3,12 +3,10 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { DataTable } from "@/components/ui/data-table"
+import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { 
   Plus, 
   Truck, 
@@ -234,6 +232,7 @@ export default function ShipmentsPage() {
     {
       key: "shipmentNumber",
       header: "Shipment #",
+      sortable: true,
       render: (shipment: Shipment) => (
         <div className="font-mono text-sm font-medium text-orange-600">
           {shipment.shipmentNumber}
@@ -243,6 +242,7 @@ export default function ShipmentsPage() {
     {
       key: "salesOrder",
       header: "Sales Order",
+      sortable: true,
       render: (shipment: Shipment) => (
         <div className="text-sm">
           <div className="font-medium">{shipment.salesOrderNumber}</div>
@@ -253,6 +253,7 @@ export default function ShipmentsPage() {
     {
       key: "customer",
       header: "Customer",
+      sortable: true,
       render: (shipment: Shipment) => (
         <div>
           <div className="font-medium">{shipment.accountName}</div>
@@ -263,6 +264,7 @@ export default function ShipmentsPage() {
     {
       key: "items",
       header: "Items",
+      sortable: true,
       render: (shipment: Shipment) => (
         <div className="space-y-1">
           <div className="text-sm font-medium">{shipment.items.length} items</div>
@@ -275,6 +277,7 @@ export default function ShipmentsPage() {
     {
       key: "carrier",
       header: "Carrier",
+      sortable: true,
       render: (shipment: Shipment) => (
         <div className="text-sm">
           <div className="font-medium">{shipment.carrier}</div>
@@ -290,16 +293,19 @@ export default function ShipmentsPage() {
     {
       key: "priority",
       header: "Priority",
+      sortable: true,
       render: (shipment: Shipment) => getPriorityBadge(shipment.priority),
     },
     {
       key: "status",
       header: "Status",
+      sortable: true,
       render: (shipment: Shipment) => getStatusBadge(shipment.status),
     },
     {
       key: "temperature",
       header: "Temperature",
+      sortable: true,
       render: (shipment: Shipment) => (
         <div className="text-sm">
           <div className="flex items-center gap-1">
@@ -315,6 +321,7 @@ export default function ShipmentsPage() {
     {
       key: "dates",
       header: "Dates",
+      sortable: true,
       render: (shipment: Shipment) => (
         <div className="text-sm">
           <div className="flex items-center gap-1">
@@ -335,6 +342,7 @@ export default function ShipmentsPage() {
     {
       key: "shipping",
       header: "Shipping",
+      sortable: true,
       render: (shipment: Shipment) => (
         <div className="text-sm">
           <div className="flex items-center gap-1">
@@ -348,6 +356,80 @@ export default function ShipmentsPage() {
       ),
     },
   ]
+
+  const filterOptions = [
+    {
+      key: "status",
+      label: "Status",
+      type: "select" as const,
+      options: [
+        { value: "Draft", label: "Draft" },
+        { value: "Pending", label: "Pending" },
+        { value: "In Progress", label: "In Progress" },
+        { value: "Picked", label: "Picked" },
+        { value: "Packed", label: "Packed" },
+        { value: "Shipped", label: "Shipped" },
+        { value: "In Transit", label: "In Transit" },
+        { value: "Delivered", label: "Delivered" },
+        { value: "Returned", label: "Returned" },
+        { value: "Cancelled", label: "Cancelled" },
+      ],
+    },
+    {
+      key: "priority",
+      label: "Priority",
+      type: "select" as const,
+      options: [
+        { value: "Low", label: "Low" },
+        { value: "Normal", label: "Normal" },
+        { value: "High", label: "High" },
+        { value: "Urgent", label: "Urgent" },
+        { value: "Emergency", label: "Emergency" },
+      ],
+    },
+    {
+      key: "carrier",
+      label: "Carrier",
+      type: "select" as const,
+      options: [
+        { value: "Express Logistics", label: "Express Logistics" },
+        { value: "Fast Track", label: "Fast Track" },
+        { value: "Reliable Transport", label: "Reliable Transport" },
+      ],
+    },
+  ]
+
+  const handleFiltersChange = (newFilters: Record<string, any>) => {
+    setFilters(newFilters)
+    setPagination((prev) => ({ ...prev, page: 1 }))
+  }
+
+  const actions = (shipment: Shipment) => (
+    <div className="flex items-center gap-2">
+      <Button variant="ghost" size="sm" onClick={() => handleView(shipment)}>
+        <Eye className="h-4 w-4" />
+      </Button>
+      <Button variant="ghost" size="sm" onClick={() => handleEdit(shipment)}>
+        <Edit className="h-4 w-4" />
+      </Button>
+      {shipment.status === "Pending" && (
+        <Button variant="ghost" size="sm" onClick={() => handleProcess(shipment)}>
+          <Play className="h-4 w-4" />
+        </Button>
+      )}
+      {shipment.status === "In Progress" && (
+        <Button variant="ghost" size="sm" onClick={() => handlePack(shipment)}>
+          <Package className="h-4 w-4" />
+        </Button>
+      )}
+      <Button variant="ghost" size="sm" onClick={() => handleGenerateDocs(shipment)}>
+        <FileText className="h-4 w-4" />
+      </Button>
+      <Button variant="ghost" size="sm" onClick={() => handleDownloadDocs(shipment)}>
+        <Download className="h-4 w-4" />
+      </Button>
+    </div>
+  )
 
   return (
     <DashboardLayout>
@@ -443,152 +525,27 @@ export default function ShipmentsPage() {
           </Card>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Filters
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Search</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search shipments..."
-                    value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status</label>
-                <Select value={filters.status || ""} onValueChange={(value) => handleFilterChange("status", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Draft">Draft</SelectItem>
-                    <SelectItem value="Pending">Pending</SelectItem>
-                    <SelectItem value="In Progress">In Progress</SelectItem>
-                    <SelectItem value="Picked">Picked</SelectItem>
-                    <SelectItem value="Packed">Packed</SelectItem>
-                    <SelectItem value="Shipped">Shipped</SelectItem>
-                    <SelectItem value="In Transit">In Transit</SelectItem>
-                    <SelectItem value="Delivered">Delivered</SelectItem>
-                    <SelectItem value="Returned">Returned</SelectItem>
-                    <SelectItem value="Cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Priority</label>
-                <Select value={filters.priority || ""} onValueChange={(value) => handleFilterChange("priority", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Priorities" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Low">Low</SelectItem>
-                    <SelectItem value="Normal">Normal</SelectItem>
-                    <SelectItem value="High">High</SelectItem>
-                    <SelectItem value="Urgent">Urgent</SelectItem>
-                    <SelectItem value="Emergency">Emergency</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Carrier</label>
-                <Select value={filters.carrier || ""} onValueChange={(value) => handleFilterChange("carrier", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Carriers" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Express Logistics">Express Logistics</SelectItem>
-                    <SelectItem value="Fast Track">Fast Track</SelectItem>
-                    <SelectItem value="Reliable Transport">Reliable Transport</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Date From</label>
-                <Input
-                  type="date"
-                  value={filters.dateFrom || ""}
-                  onChange={(e) => handleFilterChange("dateFrom", e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Date To</label>
-                <Input
-                  type="date"
-                  value={filters.dateTo || ""}
-                  onChange={(e) => handleFilterChange("dateTo", e.target.value)}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Shipments Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Shipments</CardTitle>
-            <CardDescription>A comprehensive view of all shipments with FEFO allocation and pick list generation.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              data={shipments}
-              columns={columns}
-              loading={loading}
-              onSearch={handleSearch}
-              pagination={{
-                page: pagination.page,
-                pages: pagination.pages,
-                total: pagination.total,
-                onPageChange: handlePageChange
-              }}
-              searchPlaceholder="Search shipments..."
-              actions={(shipment: Shipment) => (
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => handleView(shipment)}>
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleEdit(shipment)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  {shipment.status === "Pending" && (
-                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700" onClick={() => handleProcess(shipment)}>
-                      <Play className="h-4 w-4" />
-                    </Button>
-                  )}
-                  {shipment.status === "Picked" && (
-                    <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700" onClick={() => handlePack(shipment)}>
-                      <Package className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700" onClick={() => handleGenerateDocs(shipment)}>
-                    <FileText className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700" onClick={() => handleDownloadDocs(shipment)}>
-                    <Download className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={() => handleDelete(shipment)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            />
-          </CardContent>
-        </Card>
+        <UnifiedDataTable
+          data={shipments}
+          columns={columns}
+          loading={loading}
+          searchPlaceholder="Search shipments..."
+          searchValue={searchQuery}
+          onSearch={handleSearch}
+          filters={filterOptions}
+          onFiltersChange={handleFiltersChange}
+          pagination={{
+            page: pagination.page,
+            pages: pagination.pages,
+            total: pagination.total,
+            onPageChange: handlePageChange
+          }}
+          actions={actions}
+          onRefresh={fetchShipments}
+          onExport={() => console.log("Export shipments")}
+          emptyMessage="No shipments found. Create your first shipment to get started."
+        />
       </div>
     </DashboardLayout>
   )

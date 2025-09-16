@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { DataTable } from "@/components/ui/data-table"
+import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -43,18 +43,18 @@ export default function DistributorsPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
-  const [statusFilter, setStatusFilter] = useState("all")
+  const [filters, setFilters] = useState<Record<string, any>>({})
 
   useEffect(() => {
     fetchDistributors()
-  }, [searchQuery, pagination.page, statusFilter])
+  }, [searchQuery, pagination.page, filters])
 
   const fetchDistributors = async () => {
     try {
       setLoading(true)
       const response = await apiService.getDistributors({
         search: searchQuery,
-        status: statusFilter !== "all" ? statusFilter : undefined,
+        ...filters,
         page: pagination.page,
         limit: 10,
       })
@@ -150,6 +150,7 @@ export default function DistributorsPage() {
     {
       key: "name",
       header: "Distributor",
+      sortable: true,
       render: (distributor: Distributor) => (
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -165,6 +166,7 @@ export default function DistributorsPage() {
     {
       key: "contact",
       header: "Contact",
+      sortable: true,
       render: (distributor: Distributor) => (
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-sm">
@@ -181,6 +183,7 @@ export default function DistributorsPage() {
     {
       key: "location",
       header: "Location",
+      sortable: true,
       render: (distributor: Distributor) => (
         <div className="flex items-center gap-2 text-sm">
           <MapPin className="h-3 w-3 text-muted-foreground" />
@@ -191,6 +194,7 @@ export default function DistributorsPage() {
     {
       key: "rating",
       header: "Rating",
+      sortable: true,
       render: (distributor: Distributor) => (
         <div className="flex items-center gap-2">
           <div className="flex">{getRatingStars(distributor.rating)}</div>
@@ -201,6 +205,7 @@ export default function DistributorsPage() {
     {
       key: "performance",
       header: "Performance",
+      sortable: true,
       render: (distributor: Distributor) => (
         <div className="space-y-1 text-sm">
           <div>OTD: {distributor.performance.onTimeDelivery}%</div>
@@ -211,6 +216,7 @@ export default function DistributorsPage() {
     {
       key: "contractStatus",
       header: "Contract",
+      sortable: true,
       render: (distributor: Distributor) => (
         <Badge className={getContractStatusBadgeColor(distributor.contractStatus)}>
           {distributor.contractStatus.charAt(0).toUpperCase() + distributor.contractStatus.slice(1)}
@@ -220,6 +226,7 @@ export default function DistributorsPage() {
     {
       key: "status",
       header: "Status",
+      sortable: true,
       render: (distributor: Distributor) => (
         <Badge variant={distributor.isActive ? "default" : "secondary"}>
           {distributor.isActive ? "Active" : "Inactive"}
@@ -227,6 +234,58 @@ export default function DistributorsPage() {
       ),
     },
   ]
+
+  const filterOptions = [
+    {
+      key: "status",
+      label: "Status",
+      type: "select" as const,
+      options: [
+        { value: "active", label: "Active" },
+        { value: "inactive", label: "Inactive" },
+      ],
+    },
+    {
+      key: "contractStatus",
+      label: "Contract Status",
+      type: "select" as const,
+      options: [
+        { value: "active", label: "Active" },
+        { value: "expired", label: "Expired" },
+        { value: "pending", label: "Pending" },
+        { value: "terminated", label: "Terminated" },
+      ],
+    },
+  ]
+
+  const handleFiltersChange = (newFilters: Record<string, any>) => {
+    setFilters(newFilters)
+    setPagination((prev) => ({ ...prev, page: 1 }))
+  }
+
+  const actions = (distributor: Distributor) => (
+    <div className="flex items-center gap-2">
+      <PermissionGuard module="MASTER_DATA" screen="distributors" action="update">
+        <Button variant="ghost" size="sm" onClick={() => handleEdit(distributor)}>
+          Edit
+        </Button>
+      </PermissionGuard>
+      <PermissionGuard module="MASTER_DATA" screen="distributors" action="update">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => handleToggleStatus(distributor)}
+        >
+          {distributor.isActive ? "Deactivate" : "Activate"}
+        </Button>
+      </PermissionGuard>
+      <PermissionGuard module="MASTER_DATA" screen="distributors" action="delete">
+        <Button variant="ghost" size="sm" onClick={() => handleDelete(distributor)}>
+          Delete
+        </Button>
+      </PermissionGuard>
+    </div>
+  )
 
   return (
     <DashboardLayout>
@@ -288,79 +347,27 @@ export default function DistributorsPage() {
           </Card>
         </div>
 
-        {/* Status Filter */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Filter by Status</CardTitle>
-            <CardDescription>Select a status to filter distributors</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { value: "all", label: "All Distributors" },
-                { value: "active", label: "Active" },
-                { value: "inactive", label: "Inactive" },
-                { value: "contract_active", label: "Active Contracts" },
-                { value: "contract_expired", label: "Expired Contracts" },
-              ].map((status) => (
-                <Button
-                  key={status.value}
-                  variant={statusFilter === status.value ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setStatusFilter(status.value)}
-                >
-                  {status.label}
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Distributors Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>All Distributors</CardTitle>
-            <CardDescription>A list of all distributors with their contact information and performance metrics.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              data={distributors}
-              columns={columns}
-              loading={loading}
-              onSearch={handleSearch}
-              pagination={{
-                page: pagination.page,
-                pages: pagination.pages,
-                total: pagination.total,
-                onPageChange: handlePageChange
-              }}
-              searchPlaceholder="Search distributors..."
-              actions={(distributor: Distributor) => (
-                <div className="flex items-center gap-2">
-                  <PermissionGuard module="MASTER_DATA" screen="distributors" action="update">
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(distributor)}>
-                      Edit
-                    </Button>
-                  </PermissionGuard>
-                  <PermissionGuard module="MASTER_DATA" screen="distributors" action="update">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handleToggleStatus(distributor)}
-                    >
-                      {distributor.isActive ? "Deactivate" : "Activate"}
-                    </Button>
-                  </PermissionGuard>
-                  <PermissionGuard module="MASTER_DATA" screen="distributors" action="delete">
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(distributor)}>
-                      Delete
-                    </Button>
-                  </PermissionGuard>
-                </div>
-              )}
-            />
-          </CardContent>
-        </Card>
+        <UnifiedDataTable
+          data={distributors}
+          columns={columns}
+          loading={loading}
+          searchPlaceholder="Search distributors..."
+          searchValue={searchQuery}
+          onSearch={handleSearch}
+          filters={filterOptions}
+          onFiltersChange={handleFiltersChange}
+          pagination={{
+            page: pagination.page,
+            pages: pagination.pages,
+            total: pagination.total,
+            onPageChange: handlePageChange
+          }}
+          actions={actions}
+          onRefresh={fetchDistributors}
+          onExport={() => console.log("Export distributors")}
+          emptyMessage="No distributors found. Add your first distributor to get started."
+        />
       </div>
     </DashboardLayout>
   )

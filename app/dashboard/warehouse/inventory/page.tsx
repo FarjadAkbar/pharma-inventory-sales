@@ -3,17 +3,12 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { DataTable } from "@/components/ui/data-table"
+import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { 
-  Plus, 
   Package, 
-  Search, 
-  Filter,
   CheckCircle,
   Clock,
   XCircle,
@@ -74,11 +69,8 @@ export default function InventoryPage() {
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
-  const handleFilterChange = (key: keyof InventoryFilters, value: string | number) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value
-    }))
+  const handleFiltersChange = (newFilters: Record<string, any>) => {
+    setFilters(newFilters)
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
@@ -172,6 +164,7 @@ export default function InventoryPage() {
     {
       key: "itemCode",
       header: "Item Code",
+      sortable: true,
       render: (item: InventoryItem) => (
         <div className="font-mono text-sm font-medium text-orange-600">
           {item.itemCode}
@@ -181,6 +174,7 @@ export default function InventoryPage() {
     {
       key: "material",
       header: "Material",
+      sortable: true,
       render: (item: InventoryItem) => (
         <div>
           <div className="flex items-center gap-2">
@@ -194,6 +188,7 @@ export default function InventoryPage() {
     {
       key: "batch",
       header: "Batch",
+      sortable: true,
       render: (item: InventoryItem) => (
         <div className="text-sm">
           <div className="font-medium">{item.batchNumber}</div>
@@ -204,6 +199,7 @@ export default function InventoryPage() {
     {
       key: "quantity",
       header: "Quantity",
+      sortable: true,
       render: (item: InventoryItem) => (
         <div className="text-sm">
           <div className="font-medium">{item.quantity.toLocaleString()} {item.unit}</div>
@@ -213,6 +209,7 @@ export default function InventoryPage() {
     {
       key: "location",
       header: "Location",
+      sortable: true,
       render: (item: InventoryItem) => (
         <div className="text-sm">
           <div className="flex items-center gap-1">
@@ -226,11 +223,13 @@ export default function InventoryPage() {
     {
       key: "status",
       header: "Status",
+      sortable: true,
       render: (item: InventoryItem) => getStatusBadge(item.status),
     },
     {
       key: "conditions",
       header: "Conditions",
+      sortable: true,
       render: (item: InventoryItem) => (
         <div className="text-sm">
           <div className="flex items-center gap-1">
@@ -247,6 +246,7 @@ export default function InventoryPage() {
     {
       key: "expiry",
       header: "Expiry Status",
+      sortable: true,
       render: (item: InventoryItem) => {
         const expiryStatus = getExpiryStatus(item.expiryDate)
         return (
@@ -259,6 +259,7 @@ export default function InventoryPage() {
     {
       key: "lastUpdated",
       header: "Last Updated",
+      sortable: true,
       render: (item: InventoryItem) => (
         <div className="text-sm">
           <div className="flex items-center gap-1">
@@ -272,6 +273,91 @@ export default function InventoryPage() {
       ),
     },
   ]
+
+  const filterOptions = [
+    {
+      key: "materialId",
+      label: "Material",
+      type: "select" as const,
+      options: [
+        { value: "1", label: "Paracetamol API" },
+        { value: "2", label: "Microcrystalline Cellulose" },
+        { value: "3", label: "Sodium Starch Glycolate" },
+        { value: "4", label: "Paracetamol Tablets" },
+        { value: "5", label: "Ibuprofen Tablets" },
+      ],
+    },
+    {
+      key: "status",
+      label: "Status",
+      type: "select" as const,
+      options: [
+        { value: "Available", label: "Available" },
+        { value: "Quarantine", label: "Quarantine" },
+        { value: "Hold", label: "Hold" },
+        { value: "Rejected", label: "Rejected" },
+        { value: "Reserved", label: "Reserved" },
+        { value: "In Transit", label: "In Transit" },
+      ],
+    },
+    {
+      key: "zone",
+      label: "Zone",
+      type: "select" as const,
+      options: [
+        { value: "A", label: "Zone A (Raw Materials)" },
+        { value: "B", label: "Zone B (Finished Goods)" },
+        { value: "C", label: "Zone C (Quarantine)" },
+      ],
+    },
+    {
+      key: "expiryDateFrom",
+      label: "Expiry From",
+      type: "date" as const,
+    },
+    {
+      key: "expiryDateTo",
+      label: "Expiry To",
+      type: "date" as const,
+    },
+  ]
+
+  const actions = (item: InventoryItem) => (
+    <div className="flex items-center gap-2">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => handleView(item)}
+      >
+        <Eye className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => handleEdit(item)}
+      >
+        <Edit className="h-4 w-4" />
+      </Button>
+      {item.status === "Available" && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-blue-600 hover:text-blue-700"
+          onClick={() => handleMove(item)}
+        >
+          <RotateCcw className="h-4 w-4" />
+        </Button>
+      )}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="text-red-600 hover:text-red-700"
+        onClick={() => handleDelete(item)}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  )
 
   return (
     <DashboardLayout>
@@ -347,137 +433,27 @@ export default function InventoryPage() {
           </Card>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Filters
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Search</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search inventory..."
-                    value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Material</label>
-                <Select value={filters.materialId || ""} onValueChange={(value) => handleFilterChange("materialId", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Materials" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">Paracetamol API</SelectItem>
-                    <SelectItem value="2">Microcrystalline Cellulose</SelectItem>
-                    <SelectItem value="3">Sodium Starch Glycolate</SelectItem>
-                    <SelectItem value="4">Paracetamol Tablets</SelectItem>
-                    <SelectItem value="5">Ibuprofen Tablets</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status</label>
-                <Select value={filters.status || ""} onValueChange={(value) => handleFilterChange("status", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Available">Available</SelectItem>
-                    <SelectItem value="Quarantine">Quarantine</SelectItem>
-                    <SelectItem value="Hold">Hold</SelectItem>
-                    <SelectItem value="Rejected">Rejected</SelectItem>
-                    <SelectItem value="Reserved">Reserved</SelectItem>
-                    <SelectItem value="In Transit">In Transit</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Zone</label>
-                <Select value={filters.zone || ""} onValueChange={(value) => handleFilterChange("zone", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Zones" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="A">Zone A (Raw Materials)</SelectItem>
-                    <SelectItem value="B">Zone B (Finished Goods)</SelectItem>
-                    <SelectItem value="C">Zone C (Quarantine)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Expiry From</label>
-                <Input
-                  type="date"
-                  value={filters.expiryDateFrom || ""}
-                  onChange={(e) => handleFilterChange("expiryDateFrom", e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Expiry To</label>
-                <Input
-                  type="date"
-                  value={filters.expiryDateTo || ""}
-                  onChange={(e) => handleFilterChange("expiryDateTo", e.target.value)}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Inventory Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Inventory Items</CardTitle>
-            <CardDescription>A comprehensive view of all warehouse inventory items with FEFO display and location mapping.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              data={inventoryItems}
-              columns={columns}
-              loading={loading}
-              onSearch={handleSearch}
-              pagination={{
-                page: pagination.page,
-                pages: pagination.pages,
-                total: pagination.total,
-                onPageChange: handlePageChange
-              }}
-              searchPlaceholder="Search inventory items..."
-              actions={(item: InventoryItem) => (
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => handleView(item)}>
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  {item.status === "Available" && (
-                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700" onClick={() => handleMove(item)}>
-                      <RotateCcw className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={() => handleDelete(item)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            />
-          </CardContent>
-        </Card>
+        <UnifiedDataTable
+          data={inventoryItems}
+          columns={columns}
+          loading={loading}
+          searchPlaceholder="Search inventory items..."
+          searchValue={searchQuery}
+          onSearch={handleSearch}
+          filters={filterOptions}
+          onFiltersChange={handleFiltersChange}
+          pagination={{
+            page: pagination.page,
+            pages: pagination.pages,
+            total: pagination.total,
+            onPageChange: handlePageChange
+          }}
+          actions={actions}
+          onRefresh={fetchInventoryItems}
+          onExport={() => console.log("Export inventory")}
+          emptyMessage="No inventory items found. Add your first item to get started."
+        />
       </div>
     </DashboardLayout>
   )

@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { DataTable } from "@/components/ui/data-table"
+import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -44,20 +44,18 @@ export default function ExportsPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
-  const [typeFilter, setTypeFilter] = useState("all")
-  const [statusFilter, setStatusFilter] = useState("all")
+  const [filters, setFilters] = useState<Record<string, any>>({})
 
   useEffect(() => {
     fetchExports()
-  }, [searchQuery, pagination.page, typeFilter, statusFilter])
+  }, [searchQuery, pagination.page, filters])
 
   const fetchExports = async () => {
     try {
       setLoading(true)
       const response = await apiService.getExports({
         search: searchQuery,
-        type: typeFilter !== "all" ? typeFilter : undefined,
-        status: statusFilter !== "all" ? statusFilter : undefined,
+        ...filters,
         page: pagination.page,
         limit: 10,
       })

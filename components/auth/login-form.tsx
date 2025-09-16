@@ -10,30 +10,24 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/contexts/auth.context"
 import { getValidationError } from "@/lib/validations"
+import { OrganizationSelector } from "@/components/auth/organization-selector"
 import Link from "next/link"
-import { Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff, ArrowLeft } from "lucide-react"
 
 export function LoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [rememberMe, setRememberMe] = useState(false)
-  const [organization, setOrganization] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showOrgSelector, setShowOrgSelector] = useState(false)
+  const [selectedOrg, setSelectedOrg] = useState<any>(null)
+  const [selectedSite, setSelectedSite] = useState<any>(null)
   const { login } = useAuth()
   const router = useRouter()
-
-  // Mock organizations - in real app, this would come from API
-  const organizations = [
-    { id: "1", name: "Ziauddin Hospital - Main Campus" },
-    { id: "2", name: "Ziauddin Hospital - Clifton" },
-    { id: "3", name: "Ziauddin Hospital - North Nazimabad" },
-    { id: "4", name: "Ziauddin Hospital - Korangi" }
-  ]
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -50,7 +44,7 @@ export function LoginForm() {
       newErrors.password = "Password must be at least 8 characters"
     }
 
-    if (!organization) {
+    if (!selectedOrg) {
       newErrors.organization = "Please select an organization"
     }
 
@@ -65,13 +59,35 @@ export function LoginForm() {
 
     setIsSubmitting(true)
     try {
-      await login({ email, password, rememberMe, organization })
+      await login({ 
+        email, 
+        password, 
+        rememberMe, 
+        organization: selectedOrg?.id,
+        site: selectedSite?.id 
+      })
       router.push("/dashboard")
     } catch (error) {
       setErrors({ submit: error instanceof Error ? error.message : "Login failed" })
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handleOrgSelect = (org: any, site?: any) => {
+    setSelectedOrg(org)
+    setSelectedSite(site)
+    setShowOrgSelector(false)
+  }
+
+  if (showOrgSelector) {
+    return (
+      <OrganizationSelector
+        onSelect={handleOrgSelect}
+        onBack={() => setShowOrgSelector(false)}
+        className="w-full max-w-4xl mx-auto"
+      />
+    )
   }
 
   return (
@@ -118,19 +134,22 @@ export function LoginForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="organization" className="text-gray-700">Organization</Label>
-            <Select value={organization} onValueChange={setOrganization}>
-              <SelectTrigger className={errors.organization ? "border-red-500" : "border-gray-300 focus:border-orange-500"}>
-                <SelectValue placeholder="Select your organization" />
-              </SelectTrigger>
-              <SelectContent>
-                {organizations.map((org) => (
-                  <SelectItem key={org.id} value={org.id}>
-                    {org.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label className="text-gray-700">Organization & Site</Label>
+            <div 
+              className="p-3 border rounded-md cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => setShowOrgSelector(true)}
+            >
+              {selectedOrg ? (
+                <div>
+                  <div className="font-medium text-sm">{selectedOrg.name}</div>
+                  {selectedSite && (
+                    <div className="text-xs text-muted-foreground">{selectedSite.name}</div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-muted-foreground text-sm">Select organization and site</div>
+              )}
+            </div>
             {errors.organization && <p className="text-sm text-red-500">{errors.organization}</p>}
           </div>
 
