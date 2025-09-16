@@ -1062,7 +1062,27 @@ interface PermissionAwareProps {
 - **Efficient Checks**: Optimize permission checking algorithms
 - **Memory Management**: Manage permission data efficiently
 
+
+
 ---
+## Phase 14: Updating UI
+-in all pages of all modules we have table with search and files card. the filters should be with table search. in case we have more filters then show filter icon on click of show filter on dropdown.
+-there is no option for organization on login
+-sites will show on header so admin can change and see diffrent sites data
+-in case of site manager. it can change only the assign store. 
+-in sales order we have so many cards. make it nicely.
+
+---
+## Phase 15: Connecting modules
+This overview outlines the core flows in pharmaceutical manufacturing and distribution, spanning procurement, supplier management, warehousing, quality control, manufacturing, sales, and distribution.
+
+The process begins with procurement creating and approving purchase orders, which are sent to suppliers for fulfillment. Suppliers ship materials to the warehouse, where goods are received, verified, and stored. Quality control samples are taken upon receipt, with QC and QA teams conducting tests and making release decisions. Only released materials are made available for production.
+
+Manufacturing uses released materials to produce finished goods, which undergo further QC and QA before being stored as available inventory. Sales orders are created and approved based on available stock, triggering distribution activities such as shipment planning, stock allocation, and delivery to customers. Throughout, invoicing and proof of delivery ensure completion of the sales and distribution cycle.
+
+This end-to-end flow ensures regulatory compliance, product quality, and efficient fulfillment in the pharmaceutical supply chain.
+
+----
 ```typescript
 interface APIResponse<T> {
   success: boolean;
