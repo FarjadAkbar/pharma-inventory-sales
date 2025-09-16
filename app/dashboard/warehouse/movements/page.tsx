@@ -33,6 +33,8 @@ import {
 import { apiService } from "@/services/api.service"
 import type { MovementRecord, MovementFilters } from "@/types/warehouse"
 import { formatDateISO } from "@/lib/utils"
+import { InventoryMovementForm } from "@/components/warehouse/inventory-movement-form"
+import { toast } from "sonner"
 
 export default function MovementsPage() {
   const [movements, setMovements] = useState<MovementRecord[]>([])
@@ -81,6 +83,33 @@ export default function MovementsPage() {
 
   const handlePageChange = (page: number) => {
     setPagination((prev) => ({ ...prev, page }))
+  }
+
+  const handleView = (movement: MovementRecord) => {
+    // TODO: Implement view functionality
+    console.log("View movement:", movement)
+  }
+
+  const handleEdit = (movement: MovementRecord) => {
+    // TODO: Implement edit functionality
+    console.log("Edit movement:", movement)
+  }
+
+  const handleDelete = async (movement: MovementRecord) => {
+    if (confirm("Are you sure you want to delete this movement record?")) {
+      try {
+        const response = await apiService.deleteMovementRecord(movement.id)
+        if (response.success) {
+          toast.success("Movement record deleted successfully")
+          fetchMovements()
+        } else {
+          toast.error("Failed to delete movement record")
+        }
+      } catch (error) {
+        console.error("Error deleting movement record:", error)
+        toast.error("An error occurred while deleting the movement record")
+      }
+    }
   }
 
   const getMovementTypeBadge = (type: string) => {
@@ -268,10 +297,7 @@ export default function MovementsPage() {
             <h1 className="text-3xl font-bold tracking-tight">Movement History</h1>
             <p className="text-muted-foreground">Track all warehouse movements with complete traceability</p>
           </div>
-          <Button className="bg-orange-600 hover:bg-orange-700">
-            <Plus className="mr-2 h-4 w-4" />
-            New Movement
-          </Button>
+          <InventoryMovementForm onSuccess={fetchMovements} />
         </div>
 
         {/* Stats Cards */}
@@ -457,13 +483,13 @@ export default function MovementsPage() {
               searchPlaceholder="Search movement records..."
               actions={(movement: MovementRecord) => (
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => handleView(movement)}>
                     <Eye className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => handleEdit(movement)}>
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={() => handleDelete(movement)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>

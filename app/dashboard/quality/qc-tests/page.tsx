@@ -26,6 +26,7 @@ import {
   Activity,
   Target
 } from "lucide-react"
+import Link from "next/link"
 import { apiService } from "@/services/api.service"
 import type { QCTest, QCTestFilters } from "@/types/quality-control"
 import { formatDateISO } from "@/lib/utils"
@@ -77,6 +78,22 @@ export default function QCTestsPage() {
 
   const handlePageChange = (page: number) => {
     setPagination((prev) => ({ ...prev, page }))
+  }
+
+  const handleDeleteQCTest = async (test: QCTest) => {
+    if (confirm(`Are you sure you want to delete QC Test ${test.code}?`)) {
+      try {
+        const response = await apiService.deleteQCTest(test.id)
+        if (response.success) {
+          fetchQCTests() // Refresh the list
+        } else {
+          alert("Failed to delete QC test")
+        }
+      } catch (error) {
+        console.error("Failed to delete QC test:", error)
+        alert("Failed to delete QC test")
+      }
+    }
   }
 
   const getCategoryIcon = (category: string) => {
@@ -216,10 +233,12 @@ export default function QCTestsPage() {
             <h1 className="text-3xl font-bold tracking-tight">QC Tests Library</h1>
             <p className="text-muted-foreground">Manage quality control test methods and specifications</p>
           </div>
-          <Button className="bg-orange-600 hover:bg-orange-700">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Test Method
-          </Button>
+          <Link href="/dashboard/quality/qc-tests/new">
+            <Button className="bg-orange-600 hover:bg-orange-700">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Test Method
+            </Button>
+          </Link>
         </div>
 
         {/* Stats Cards */}
@@ -343,19 +362,28 @@ export default function QCTestsPage() {
                 onPageChange: handlePageChange
               }}
               searchPlaceholder="Search QC tests..."
-              actions={(test: QCTest) => (
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
+              actions={[
+                {
+                  label: "View",
+                  icon: <Eye className="h-4 w-4" />,
+                  onClick: (test: QCTest) => {
+                    window.location.href = `/dashboard/quality/qc-tests/${test.id}`
+                  }
+                },
+                {
+                  label: "Edit",
+                  icon: <Edit className="h-4 w-4" />,
+                  onClick: (test: QCTest) => {
+                    window.location.href = `/dashboard/quality/qc-tests/${test.id}/edit`
+                  }
+                },
+                {
+                  label: "Delete",
+                  icon: <Trash2 className="h-4 w-4" />,
+                  onClick: handleDeleteQCTest,
+                  variant: "destructive" as const
+                }
+              ]}
             />
           </CardContent>
         </Card>

@@ -33,6 +33,8 @@ import {
 import { apiService } from "@/services/api.service"
 import type { CycleCount, CycleCountFilters } from "@/types/warehouse"
 import { formatDateISO } from "@/lib/utils"
+import { CycleCountForm } from "@/components/warehouse/cycle-count-form"
+import { toast } from "sonner"
 
 export default function CycleCountsPage() {
   const [cycleCounts, setCycleCounts] = useState<CycleCount[]>([])
@@ -81,6 +83,43 @@ export default function CycleCountsPage() {
 
   const handlePageChange = (page: number) => {
     setPagination((prev) => ({ ...prev, page }))
+  }
+
+  const handleView = (cycleCount: CycleCount) => {
+    // TODO: Implement view functionality
+    console.log("View cycle count:", cycleCount)
+  }
+
+  const handleEdit = (cycleCount: CycleCount) => {
+    // TODO: Implement edit functionality
+    console.log("Edit cycle count:", cycleCount)
+  }
+
+  const handleDelete = async (cycleCount: CycleCount) => {
+    if (confirm("Are you sure you want to delete this cycle count?")) {
+      try {
+        const response = await apiService.deleteCycleCount(cycleCount.id)
+        if (response.success) {
+          toast.success("Cycle count deleted successfully")
+          fetchCycleCounts()
+        } else {
+          toast.error("Failed to delete cycle count")
+        }
+      } catch (error) {
+        console.error("Error deleting cycle count:", error)
+        toast.error("An error occurred while deleting the cycle count")
+      }
+    }
+  }
+
+  const handleStart = (cycleCount: CycleCount) => {
+    // TODO: Implement start functionality
+    console.log("Start cycle count:", cycleCount)
+  }
+
+  const handleComplete = (cycleCount: CycleCount) => {
+    // TODO: Implement complete functionality
+    console.log("Complete cycle count:", cycleCount)
   }
 
   const getStatusBadge = (status: string) => {
@@ -269,10 +308,7 @@ export default function CycleCountsPage() {
             <h1 className="text-3xl font-bold tracking-tight">Cycle Count Management</h1>
             <p className="text-muted-foreground">Manage inventory cycle counts with variance reporting and adjustments</p>
           </div>
-          <Button className="bg-orange-600 hover:bg-orange-700">
-            <Plus className="mr-2 h-4 w-4" />
-            New Cycle Count
-          </Button>
+          <CycleCountForm onSuccess={fetchCycleCounts} />
         </div>
 
         {/* Stats Cards */}
@@ -434,23 +470,23 @@ export default function CycleCountsPage() {
               searchPlaceholder="Search cycle counts..."
               actions={(cycleCount: CycleCount) => (
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => handleView(cycleCount)}>
                     <Eye className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => handleEdit(cycleCount)}>
                     <Edit className="h-4 w-4" />
                   </Button>
                   {cycleCount.status === "Scheduled" && (
-                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700" onClick={() => handleStart(cycleCount)}>
                       <Play className="h-4 w-4" />
                     </Button>
                   )}
                   {cycleCount.status === "In Progress" && (
-                    <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700">
+                    <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700" onClick={() => handleComplete(cycleCount)}>
                       <CheckCircle className="h-4 w-4" />
                     </Button>
                   )}
-                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={() => handleDelete(cycleCount)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>

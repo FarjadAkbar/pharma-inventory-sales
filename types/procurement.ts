@@ -1,7 +1,7 @@
 // Procurement Module Types
 
 export interface PurchaseOrder {
-  id: string
+  id?: string
   poNumber: string
   supplierId: string
   supplierName: string
@@ -13,8 +13,9 @@ export interface PurchaseOrder {
   currency: string
   items: POItem[]
   notes?: string
-  createdBy: string
-  createdByName: string
+  createdById?: string
+  createdByName?: string
+  createdBy?: string
   approvedBy?: string
   approvedByName?: string
   approvedAt?: string
@@ -23,22 +24,22 @@ export interface PurchaseOrder {
 }
 
 export interface POItem {
-  id: string
+  id?: string
   materialId: string
   materialName: string
   materialCode: string
   quantity: number
   unitId: string
-  unitName: string
+  unitOfMeasure: string
   unitPrice: number
   totalPrice: number
   receivedQuantity?: number
   pendingQuantity?: number
-  status: POItemStatus
+  status?: POItemStatus
 }
 
 export interface GoodsReceipt {
-  id: string
+  id?: string
   grnNumber: string
   poId: string
   poNumber: string
@@ -47,8 +48,9 @@ export interface GoodsReceipt {
   siteId: string
   siteName: string
   receivedDate: string
-  receivedBy: string
-  receivedByName: string
+  receivedById?: string
+  receivedByName?: string
+  receivedBy?: string
   status: GRNStatus
   items: GRNItem[]
   notes?: string
@@ -59,20 +61,19 @@ export interface GoodsReceipt {
 }
 
 export interface GRNItem {
-  id: string
-  poItemId: string
+  id?: string
+  poItemId?: string
   materialId: string
   materialName: string
   materialCode: string
   orderedQuantity: number
   receivedQuantity: number
-  unitId: string
-  unitName: string
+  unitOfMeasure: string
   batchNumber?: string
   expiryDate?: string
-  condition: 'Good' | 'Damaged' | 'Expired' | 'Short'
+  condition?: string
   remarks?: string
-  qcSampleRequired: boolean
+  qcSampleRequired?: boolean
   qcSampleId?: string
 }
 

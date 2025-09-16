@@ -34,6 +34,8 @@ import {
 import { apiService } from "@/services/api.service"
 import type { InventoryItem, InventoryFilters } from "@/types/warehouse"
 import { formatDateISO } from "@/lib/utils"
+import { InventoryMovementForm } from "@/components/warehouse/inventory-movement-form"
+import { toast } from "sonner"
 
 export default function InventoryPage() {
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([])
@@ -82,6 +84,38 @@ export default function InventoryPage() {
 
   const handlePageChange = (page: number) => {
     setPagination((prev) => ({ ...prev, page }))
+  }
+
+  const handleView = (item: InventoryItem) => {
+    // TODO: Implement view functionality
+    console.log("View item:", item)
+  }
+
+  const handleEdit = (item: InventoryItem) => {
+    // TODO: Implement edit functionality
+    console.log("Edit item:", item)
+  }
+
+  const handleDelete = async (item: InventoryItem) => {
+    if (confirm("Are you sure you want to delete this inventory item?")) {
+      try {
+        const response = await apiService.deleteInventoryItem(item.id)
+        if (response.success) {
+          toast.success("Inventory item deleted successfully")
+          fetchInventoryItems()
+        } else {
+          toast.error("Failed to delete inventory item")
+        }
+      } catch (error) {
+        console.error("Error deleting inventory item:", error)
+        toast.error("An error occurred while deleting the inventory item")
+      }
+    }
+  }
+
+  const handleMove = (item: InventoryItem) => {
+    // TODO: Implement move functionality
+    console.log("Move item:", item)
   }
 
   const getStatusBadge = (status: string) => {
@@ -247,10 +281,7 @@ export default function InventoryPage() {
             <h1 className="text-3xl font-bold tracking-tight">Inventory Management</h1>
             <p className="text-muted-foreground">Manage warehouse inventory with FEFO display and location mapping</p>
           </div>
-          <Button className="bg-orange-600 hover:bg-orange-700">
-            <Plus className="mr-2 h-4 w-4" />
-            New Item
-          </Button>
+          <InventoryMovementForm onSuccess={fetchInventoryItems} />
         </div>
 
         {/* Stats Cards */}
@@ -428,18 +459,18 @@ export default function InventoryPage() {
               searchPlaceholder="Search inventory items..."
               actions={(item: InventoryItem) => (
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => handleView(item)}>
                     <Eye className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
                     <Edit className="h-4 w-4" />
                   </Button>
                   {item.status === "Available" && (
-                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700" onClick={() => handleMove(item)}>
                       <RotateCcw className="h-4 w-4" />
                     </Button>
                   )}
-                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={() => handleDelete(item)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>

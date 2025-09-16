@@ -34,6 +34,8 @@ import {
   Download
 } from "lucide-react"
 import { apiService } from "@/services/api.service"
+import { ShipmentForm } from "@/components/sales/shipment-form"
+import { toast } from "sonner"
 import type { Shipment, ShipmentFilters } from "@/types/distribution"
 import { formatDateISO } from "@/lib/utils"
 
@@ -84,6 +86,82 @@ export default function ShipmentsPage() {
 
   const handlePageChange = (page: number) => {
     setPagination((prev) => ({ ...prev, page }))
+  }
+
+  const handleView = (shipment: Shipment) => {
+    console.log("View shipment:", shipment)
+    // TODO: Implement view shipment functionality
+  }
+
+  const handleEdit = (shipment: Shipment) => {
+    console.log("Edit shipment:", shipment)
+    // TODO: Implement edit shipment functionality
+  }
+
+  const handleProcess = async (shipment: Shipment) => {
+    try {
+      const response = await apiService.updateShipment(shipment.id, {
+        ...shipment,
+        status: "In Progress"
+      })
+      
+      if (response.success) {
+        toast.success("Shipment processing started")
+        fetchShipments()
+      } else {
+        toast.error("Failed to start processing")
+      }
+    } catch (error) {
+      console.error("Error processing shipment:", error)
+      toast.error("Failed to start processing")
+    }
+  }
+
+  const handlePack = async (shipment: Shipment) => {
+    try {
+      const response = await apiService.updateShipment(shipment.id, {
+        ...shipment,
+        status: "Packed"
+      })
+      
+      if (response.success) {
+        toast.success("Shipment packed successfully")
+        fetchShipments()
+      } else {
+        toast.error("Failed to pack shipment")
+      }
+    } catch (error) {
+      console.error("Error packing shipment:", error)
+      toast.error("Failed to pack shipment")
+    }
+  }
+
+  const handleGenerateDocs = (shipment: Shipment) => {
+    console.log("Generate docs for shipment:", shipment)
+    // TODO: Implement generate docs functionality
+  }
+
+  const handleDownloadDocs = (shipment: Shipment) => {
+    console.log("Download docs for shipment:", shipment)
+    // TODO: Implement download docs functionality
+  }
+
+  const handleDelete = async (shipment: Shipment) => {
+    if (window.confirm("Are you sure you want to delete this shipment?")) {
+      try {
+        const response = await apiService.deleteShipment(shipment.id)
+        
+        if (response.success) {
+          toast.success("Shipment deleted successfully")
+          fetchShipments()
+        } else {
+          toast.error("Failed to delete shipment")
+        }
+      } catch (error) {
+        console.error("Error deleting shipment:", error)
+        toast.error("Failed to delete shipment")
+      }
+    }
   }
 
   const getStatusBadge = (status: string) => {
@@ -279,10 +357,7 @@ export default function ShipmentsPage() {
             <h1 className="text-3xl font-bold tracking-tight">Shipment Management</h1>
             <p className="text-muted-foreground">Manage shipments with FEFO allocation and pick list generation</p>
           </div>
-          <Button className="bg-orange-600 hover:bg-orange-700">
-            <Plus className="mr-2 h-4 w-4" />
-            New Shipment
-          </Button>
+          <ShipmentForm onSuccess={fetchShipments} />
         </div>
 
         {/* Stats Cards */}
@@ -484,29 +559,29 @@ export default function ShipmentsPage() {
               searchPlaceholder="Search shipments..."
               actions={(shipment: Shipment) => (
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => handleView(shipment)}>
                     <Eye className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => handleEdit(shipment)}>
                     <Edit className="h-4 w-4" />
                   </Button>
                   {shipment.status === "Pending" && (
-                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700" onClick={() => handleProcess(shipment)}>
                       <Play className="h-4 w-4" />
                     </Button>
                   )}
                   {shipment.status === "Picked" && (
-                    <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700">
+                    <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700" onClick={() => handlePack(shipment)}>
                       <Package className="h-4 w-4" />
                     </Button>
                   )}
-                  <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+                  <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700" onClick={() => handleGenerateDocs(shipment)}>
                     <FileText className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700">
+                  <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700" onClick={() => handleDownloadDocs(shipment)}>
                     <Download className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={() => handleDelete(shipment)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>

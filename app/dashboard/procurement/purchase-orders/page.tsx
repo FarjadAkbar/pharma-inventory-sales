@@ -26,6 +26,7 @@ import {
   Building2,
   User
 } from "lucide-react"
+import Link from "next/link"
 import { apiService } from "@/services/api.service"
 import type { PurchaseOrder, POFilters } from "@/types/procurement"
 import { formatDateISO } from "@/lib/utils"
@@ -77,6 +78,38 @@ export default function PurchaseOrdersPage() {
 
   const handlePageChange = (page: number) => {
     setPagination((prev) => ({ ...prev, page }))
+  }
+
+  const handleDeletePurchaseOrder = async (po: PurchaseOrder) => {
+    if (confirm(`Are you sure you want to delete Purchase Order ${po.poNumber}?`)) {
+      try {
+        const response = await apiService.deletePurchaseOrder(po.id)
+        if (response.success) {
+          fetchPurchaseOrders() // Refresh the list
+        } else {
+          alert("Failed to delete purchase order")
+        }
+      } catch (error) {
+        console.error("Failed to delete purchase order:", error)
+        alert("Failed to delete purchase order")
+      }
+    }
+  }
+
+  const handleApprovePurchaseOrder = async (po: PurchaseOrder) => {
+    if (confirm(`Are you sure you want to approve Purchase Order ${po.poNumber}?`)) {
+      try {
+        const response = await apiService.approvePurchaseOrder(po.id)
+        if (response.success) {
+          fetchPurchaseOrders() // Refresh the list
+        } else {
+          alert("Failed to approve purchase order")
+        }
+      } catch (error) {
+        console.error("Failed to approve purchase order:", error)
+        alert("Failed to approve purchase order")
+      }
+    }
   }
 
   const getStatusBadge = (status: string) => {
@@ -197,10 +230,12 @@ export default function PurchaseOrdersPage() {
             <h1 className="text-3xl font-bold tracking-tight">Purchase Orders</h1>
             <p className="text-muted-foreground">Manage pharmaceutical purchase orders and procurement</p>
           </div>
-          <Button className="bg-orange-600 hover:bg-orange-700">
-            <Plus className="mr-2 h-4 w-4" />
-            Create PO
-          </Button>
+          <Link href="/dashboard/procurement/purchase-orders/new">
+            <Button className="bg-orange-600 hover:bg-orange-700">
+              <Plus className="mr-2 h-4 w-4" />
+              Create PO
+            </Button>
+          </Link>
         </div>
 
         {/* Stats Cards */}
@@ -340,24 +375,35 @@ export default function PurchaseOrdersPage() {
                 onPageChange: handlePageChange
               }}
               searchPlaceholder="Search purchase orders..."
-              actions={(po: PurchaseOrder) => (
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  {po.status === "Pending Approval" && (
-                    <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700">
-                      <CheckCircle className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
+              actions={[
+                {
+                  label: "View",
+                  icon: <Eye className="h-4 w-4" />,
+                  onClick: (po: PurchaseOrder) => {
+                    window.location.href = `/dashboard/procurement/purchase-orders/${po.id}`
+                  }
+                },
+                {
+                  label: "Edit",
+                  icon: <Edit className="h-4 w-4" />,
+                  onClick: (po: PurchaseOrder) => {
+                    window.location.href = `/dashboard/procurement/purchase-orders/${po.id}/edit`
+                  }
+                },
+                {
+                  label: "Approve",
+                  icon: <CheckCircle className="h-4 w-4" />,
+                  onClick: handleApprovePurchaseOrder,
+                  hidden: (po: PurchaseOrder) => po.status !== "Pending Approval",
+                  variant: "default" as const
+                },
+                {
+                  label: "Delete",
+                  icon: <Trash2 className="h-4 w-4" />,
+                  onClick: handleDeletePurchaseOrder,
+                  variant: "destructive" as const
+                }
+              ]}
             />
           </CardContent>
         </Card>

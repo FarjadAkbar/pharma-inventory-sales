@@ -432,9 +432,637 @@ interface SOItem {
 
 ---
 
-## API Integration Patterns
+## Phase 11: Critical Bug Fixes & Form/Table Actions
+### 11.1 Form Action Fixes
+#### Universal Form Issues
+- **Form Validation**: Implement real-time validation across all forms
+- **Error Handling**: Standardize error messages and display mechanisms
+- **Loading States**: Add proper loading indicators for all form submissions
+- **Success Feedback**: Implement consistent success notifications
+- **Form Reset**: Ensure forms reset properly after successful submission
 
-### Standard API Response Format
+#### Specific Form Fixes by Module
+- **User Management Forms**:
+  - Fix user creation/editing form validation
+  - Implement proper role assignment functionality
+  - Fix permission matrix updates
+  - Add password strength validation
+
+- **Product Management Forms**:
+  - Fix product creation/editing with proper validation
+  - Implement category selection dropdown
+  - Add vendor selection with search
+  - Fix SKU validation and uniqueness checks
+
+- **Category Management Forms**:
+  - Fix category creation/editing validation
+  - Implement parent category selection
+  - Add category hierarchy validation
+
+- **Vendor Management Forms**:
+  - Fix vendor creation/editing with contact validation
+  - Implement address validation
+  - Add email format validation
+  - Fix phone number format validation
+
+- **Drug Management Forms**:
+  - Fix drug creation/editing with chemical formula validation
+  - Implement dosage form selection
+  - Add strength validation
+  - Fix approval status workflow
+
+- **Raw Materials Forms**:
+  - Fix material creation/editing validation
+  - Implement grade specification validation
+  - Add unit of measure selection
+  - Fix supplier association
+
+- **Purchase Order Forms**:
+  - Fix PO creation with item validation
+  - Implement supplier selection with search
+  - Add quantity and price validation
+  - Fix approval workflow integration
+
+- **Quality Control Forms**:
+  - Fix sample request creation
+  - Implement test result entry validation
+  - Add specification compliance checking
+  - Fix QA release workflow
+
+- **Manufacturing Forms**:
+  - Fix BOM creation with item validation
+  - Implement work order creation
+  - Add batch execution forms
+  - Fix material consumption tracking
+
+- **Warehouse Forms**:
+  - Fix inventory movement forms
+  - Implement putaway assignment
+  - Add cycle count forms
+  - Fix location assignment
+
+### 11.2 Table Action Fixes
+#### Universal Table Issues
+- **Action Buttons**: Fix all view, edit, delete action buttons
+- **Bulk Actions**: Implement bulk operations (select all, bulk delete, bulk update)
+- **Row Selection**: Fix single and multiple row selection
+- **Action Confirmation**: Add confirmation dialogs for destructive actions
+- **Action Loading**: Implement loading states for all table actions
+
+#### Specific Table Action Fixes
+- **Data Table Component**:
+  - Fix generic data table action handlers
+  - Implement proper action button rendering
+  - Add action permission checks
+  - Fix pagination with actions
+
+- **User Management Tables**:
+  - Fix user list view/edit/delete actions
+  - Implement bulk user operations
+  - Add user status toggle actions
+  - Fix role assignment actions
+
+- **Product Management Tables**:
+  - Fix product list CRUD actions
+  - Implement bulk product operations
+  - Add product status management
+  - Fix category assignment actions
+
+- **Category Management Tables**:
+  - Fix category list CRUD actions
+  - Implement category hierarchy actions
+  - Add bulk category operations
+  - Fix category activation/deactivation
+
+- **Vendor Management Tables**:
+  - Fix vendor list CRUD actions
+  - Implement vendor status management
+  - Add bulk vendor operations
+  - Fix vendor contact management
+
+- **Drug Management Tables**:
+  - Fix drug list CRUD actions
+  - Implement approval workflow actions
+  - Add bulk drug operations
+  - Fix drug status management
+
+- **Procurement Tables**:
+  - Fix PO list CRUD actions
+  - Implement PO approval actions
+  - Add GRN creation actions
+  - Fix supplier performance tracking
+
+- **Quality Control Tables**:
+  - Fix sample list actions
+  - Implement test result entry actions
+  - Add QA release actions
+  - Fix deviation management actions
+
+- **Manufacturing Tables**:
+  - Fix BOM list CRUD actions
+  - Implement work order actions
+  - Add batch execution actions
+  - Fix material consumption actions
+
+- **Warehouse Tables**:
+  - Fix inventory list actions
+  - Implement movement tracking actions
+  - Add putaway actions
+  - Fix cycle count actions
+
+### 11.3 API Integration Fixes
+#### Standardize API Responses
+- **Error Handling**: Implement consistent error response handling
+- **Loading States**: Add proper loading state management
+- **Success Responses**: Standardize success response handling
+- **Validation Errors**: Implement field-specific validation error display
+
+#### Fix API Service Methods
+- **CRUD Operations**: Fix all create, read, update, delete operations
+- **Search & Filter**: Implement proper search and filtering
+- **Pagination**: Fix pagination across all modules
+- **Bulk Operations**: Implement bulk API operations
+
+### 11.4 UI/UX Improvements
+#### Form Improvements
+- **Field Validation**: Add real-time field validation
+- **Error Display**: Implement inline error messages
+- **Success Feedback**: Add success notifications
+- **Form Reset**: Implement proper form reset functionality
+
+#### Table Improvements
+- **Action Buttons**: Fix all action button functionality
+- **Row Selection**: Implement proper row selection
+- **Bulk Actions**: Add bulk operation capabilities
+- **Action Confirmation**: Implement confirmation dialogs
+
+---
+
+## Phase 12: Missing Pages Implementation
+### 12.1 Identity & Authentication Pages
+#### Roles Management (`/dashboard/roles`)
+- **Role List Screen**: Display all system roles with permissions
+- **Role Form**: Create/edit roles with permission assignment
+- **Permission Matrix**: Visual permission assignment interface
+- **Role Hierarchy**: Define role hierarchy and inheritance
+
+#### Permissions Management (`/dashboard/permissions`)
+- **Permission List**: Display all system permissions
+- **Permission Groups**: Organize permissions by modules
+- **Permission Assignment**: Assign permissions to roles
+- **Permission Audit**: Track permission changes and usage
+
+#### Refresh Tokens Management (`/dashboard/refresh-tokens`)
+- **Token List**: Display active refresh tokens
+- **Token Management**: Revoke/regenerate tokens
+- **Token Security**: Monitor token usage and security
+- **Token Audit**: Track token creation and revocation
+
+### 12.2 Master Data Pages
+#### Distributors Management (`/dashboard/distributors`)
+- **Distributor List**: Display all distributors with performance metrics
+- **Distributor Form**: Create/edit distributor information
+- **Performance Dashboard**: Track distributor performance
+- **Contract Management**: Manage distributor contracts
+
+#### Sites Management (`/dashboard/sites`)
+- **Site List**: Display all company sites and facilities
+- **Site Form**: Create/edit site information
+- **Site Hierarchy**: Define site relationships
+- **Site Configuration**: Configure site-specific settings
+
+#### Storage Locations (`/dashboard/storage-locations`)
+- **Location List**: Display all storage locations
+- **Location Form**: Create/edit storage locations
+- **Location Mapping**: Visual location layout
+- **Temperature Zones**: Define temperature-controlled areas
+
+#### Equipment Management (`/dashboard/equipment`)
+- **Equipment List**: Display all manufacturing equipment
+- **Equipment Form**: Create/edit equipment information
+- **Maintenance Schedule**: Track equipment maintenance
+- **Calibration Records**: Manage equipment calibration
+
+#### Units of Measure (`/dashboard/units`)
+- **Unit List**: Display all units of measure
+- **Unit Form**: Create/edit units with conversions
+- **Unit Categories**: Organize units by type
+- **Conversion Matrix**: Define unit conversions
+
+### 12.3 Procurement Pages
+#### Certificate of Analysis (`/dashboard/procurement/coa`)
+- **CoA List**: Display all certificates of analysis
+- **CoA Upload**: Upload and manage CoA documents
+- **CoA Validation**: Validate CoA against specifications
+- **CoA Tracking**: Track CoA status and expiration
+
+### 12.4 Manufacturing Pages
+#### Batch Consumptions (`/dashboard/manufacturing/consumptions`)
+- **Consumption List**: Display material consumption records
+- **Consumption Form**: Record material consumption
+- **Batch Tracking**: Track consumption by batch
+- **Variance Analysis**: Analyze consumption variances
+
+#### Electronic Batch Records (`/dashboard/manufacturing/ebr`)
+- **EBR List**: Display all electronic batch records
+- **EBR Form**: Create/edit batch records
+- **Step Execution**: Execute manufacturing steps
+- **Digital Signatures**: Implement electronic signatures
+
+### 12.5 Warehouse Pages
+#### Storage Locations (`/dashboard/warehouse/locations`)
+- **Location List**: Display warehouse storage locations
+- **Location Form**: Create/edit storage locations
+- **Location Status**: Track location availability
+- **Location Assignment**: Assign items to locations
+
+#### Temperature Logs (`/dashboard/warehouse/temperature`)
+- **Temperature Dashboard**: Real-time temperature monitoring
+- **Temperature History**: Historical temperature data
+- **Alert Management**: Temperature excursion alerts
+- **Compliance Reporting**: Temperature compliance reports
+
+#### Labels & Barcodes (`/dashboard/warehouse/labels`)
+- **Label Generator**: Generate product labels and barcodes
+- **Label Templates**: Manage label templates
+- **Barcode Scanner**: Integration with barcode scanners
+- **Label History**: Track label printing history
+
+### 12.6 Distribution Pages
+#### Shipment Items (`/dashboard/distribution/shipment-items`)
+- **Item List**: Display all shipment items
+- **Item Form**: Create/edit shipment items
+- **Item Tracking**: Track item status in shipment
+- **Item Validation**: Validate items against orders
+
+### 12.7 Sales/CRM Pages
+#### Accounts Management (`/dashboard/sales/accounts`)
+- **Account List**: Display all customer accounts
+- **Account Form**: Create/edit customer accounts
+- **Account Hierarchy**: Define account relationships
+- **Account Performance**: Track account performance
+
+#### Activities Management (`/dashboard/sales/activities`)
+- **Activity List**: Display all sales activities
+- **Activity Form**: Create/edit activities
+- **Activity Calendar**: Calendar view of activities
+- **Activity Tracking**: Track activity completion
+
+#### Contracts Management (`/dashboard/sales/contracts`)
+- **Contract List**: Display all sales contracts
+- **Contract Form**: Create/edit contracts
+- **Contract Terms**: Manage contract terms and conditions
+- **Contract Renewal**: Track contract renewals
+
+#### Point of Sale (`/dashboard/sales/pos`)
+- **POS Dashboard**: Real-time POS operations
+- **Transaction List**: Display all POS transactions
+- **Payment Processing**: Process payments
+- **Receipt Management**: Generate and manage receipts
+
+### 12.8 Regulatory & Documents Pages
+#### Documents Management (`/dashboard/regulatory/documents`)
+- **Document List**: Display all regulatory documents
+- **Document Upload**: Upload and manage documents
+- **Document Categories**: Organize documents by type
+- **Document Versioning**: Manage document versions
+
+#### Document Approvals (`/dashboard/regulatory/approvals`)
+- **Approval Queue**: Display pending approvals
+- **Approval Form**: Process document approvals
+- **Approval Workflow**: Define approval workflows
+- **Approval History**: Track approval history
+
+#### Training Records (`/dashboard/regulatory/training`)
+- **Training List**: Display all training records
+- **Training Form**: Create/edit training records
+- **Training Schedule**: Manage training schedules
+- **Certification Tracking**: Track certifications and renewals
+
+### 12.9 Reporting & Analytics Pages
+#### Exports Management (`/dashboard/reports/exports`)
+- **Export List**: Display all data exports
+- **Export Generator**: Generate custom exports
+- **Export Templates**: Manage export templates
+- **Export History**: Track export history
+
+#### Scheduled Reports (`/dashboard/reports/scheduled`)
+- **Schedule List**: Display scheduled reports
+- **Schedule Form**: Create/edit report schedules
+- **Report Templates**: Manage report templates
+- **Delivery Management**: Manage report delivery
+
+#### Recall Coverage (`/dashboard/reports/recall`)
+- **Recall List**: Display product recalls
+- **Recall Form**: Create/edit recall records
+- **Coverage Analysis**: Analyze recall coverage
+- **Compliance Tracking**: Track recall compliance
+
+### 12.10 Page Implementation Standards
+#### Common Page Structure
+- **List View**: Data table with search, filter, and pagination
+- **Form View**: Create/edit forms with validation
+- **Detail View**: Read-only detail pages
+- **Action Buttons**: Standard CRUD operations
+
+#### Navigation Integration
+- **Sidebar Integration**: Add all pages to sidebar navigation
+- **Breadcrumb Navigation**: Implement breadcrumb navigation
+- **Page Permissions**: Implement page-level permissions
+- **Role-based Access**: Show/hide pages based on user role
+
+#### API Integration
+- **RESTful APIs**: Implement standard REST endpoints
+- **Error Handling**: Consistent error handling across pages
+- **Loading States**: Implement loading states
+- **Success Feedback**: Provide user feedback for actions
+
+---
+
+## Phase 13: Permission-Based Module & Action Visibility
+### 13.1 Enhanced Permission System
+#### Permission Structure Redesign
+```typescript
+interface PermissionSystem {
+  modules: {
+    [moduleName: string]: {
+      screens: {
+        [screenName: string]: {
+          actions: {
+            view: boolean;
+            create: boolean;
+            edit: boolean;
+            delete: boolean;
+            approve?: boolean;
+            reject?: boolean;
+            export?: boolean;
+            import?: boolean;
+          };
+          fields?: {
+            [fieldName: string]: boolean;
+          };
+        };
+      };
+    };
+  };
+}
+```
+
+#### Role-Based Module Access
+- **System Admin**: Full access to all modules and actions
+- **Org Admin**: Access to organizational modules with limited system functions
+- **Module Managers**: Access to specific modules with full permissions
+- **Operators**: Limited access to assigned modules and actions
+- **Viewers**: Read-only access to assigned modules
+
+### 13.2 Dynamic Sidebar Navigation
+#### Permission-Based Menu Generation
+- **Module Visibility**: Show/hide entire modules based on permissions
+- **Screen Visibility**: Show/hide screens within modules
+- **Action Visibility**: Show/hide action buttons based on permissions
+- **Hierarchical Access**: Implement permission inheritance
+
+#### Navigation Implementation
+```typescript
+interface NavigationItem {
+  title: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  permissions: {
+    module: string;
+    screen: string;
+    action: string;
+  };
+  children?: NavigationItem[];
+  visible: boolean; // Computed based on permissions
+}
+```
+
+### 13.3 Module-Specific Permissions
+#### Identity & Authentication Module
+- **Users Management**:
+  - View: `identity.users.view`
+  - Create: `identity.users.create`
+  - Edit: `identity.users.edit`
+  - Delete: `identity.users.delete`
+  - Reset Password: `identity.users.reset_password`
+
+- **Roles Management**:
+  - View: `identity.roles.view`
+  - Create: `identity.roles.create`
+  - Edit: `identity.roles.edit`
+  - Delete: `identity.roles.delete`
+  - Assign Permissions: `identity.roles.assign_permissions`
+
+- **Permissions Management**:
+  - View: `identity.permissions.view`
+  - Create: `identity.permissions.create`
+  - Edit: `identity.permissions.edit`
+  - Delete: `identity.permissions.delete`
+
+#### Master Data Module
+- **Drugs Management**:
+  - View: `master.drugs.view`
+  - Create: `master.drugs.create`
+  - Edit: `master.drugs.edit`
+  - Delete: `master.drugs.delete`
+  - Approve: `master.drugs.approve`
+  - Reject: `master.drugs.reject`
+
+- **Raw Materials Management**:
+  - View: `master.raw_materials.view`
+  - Create: `master.raw_materials.create`
+  - Edit: `master.raw_materials.edit`
+  - Delete: `master.raw_materials.delete`
+  - Import: `master.raw_materials.import`
+
+- **Suppliers Management**:
+  - View: `master.suppliers.view`
+  - Create: `master.suppliers.create`
+  - Edit: `master.suppliers.edit`
+  - Delete: `master.suppliers.delete`
+  - Rate: `master.suppliers.rate`
+
+#### Procurement Module
+- **Purchase Orders**:
+  - View: `procurement.purchase_orders.view`
+  - Create: `procurement.purchase_orders.create`
+  - Edit: `procurement.purchase_orders.edit`
+  - Delete: `procurement.purchase_orders.delete`
+  - Approve: `procurement.purchase_orders.approve`
+  - Reject: `procurement.purchase_orders.reject`
+
+- **Goods Receipts**:
+  - View: `procurement.goods_receipts.view`
+  - Create: `procurement.goods_receipts.create`
+  - Edit: `procurement.goods_receipts.edit`
+  - Delete: `procurement.goods_receipts.delete`
+  - Verify: `procurement.goods_receipts.verify`
+
+#### Manufacturing Module
+- **Bill of Materials**:
+  - View: `manufacturing.boms.view`
+  - Create: `manufacturing.boms.create`
+  - Edit: `manufacturing.boms.edit`
+  - Delete: `manufacturing.boms.delete`
+  - Version: `manufacturing.boms.version`
+
+- **Work Orders**:
+  - View: `manufacturing.work_orders.view`
+  - Create: `manufacturing.work_orders.create`
+  - Edit: `manufacturing.work_orders.edit`
+  - Delete: `manufacturing.work_orders.delete`
+  - Start: `manufacturing.work_orders.start`
+  - Complete: `manufacturing.work_orders.complete`
+
+- **Batches**:
+  - View: `manufacturing.batches.view`
+  - Create: `manufacturing.batches.create`
+  - Edit: `manufacturing.batches.edit`
+  - Delete: `manufacturing.batches.delete`
+  - Execute: `manufacturing.batches.execute`
+  - Release: `manufacturing.batches.release`
+
+#### Quality Control Module
+- **QC Tests**:
+  - View: `quality.qc_tests.view`
+  - Create: `quality.qc_tests.create`
+  - Edit: `quality.qc_tests.edit`
+  - Delete: `quality.qc_tests.delete`
+  - Execute: `quality.qc_tests.execute`
+
+- **Sample Results**:
+  - View: `quality.sample_results.view`
+  - Create: `quality.sample_results.create`
+  - Edit: `quality.sample_results.edit`
+  - Delete: `quality.sample_results.delete`
+  - Approve: `quality.sample_results.approve`
+
+#### Quality Assurance Module
+- **QA Releases**:
+  - View: `quality.qa_releases.view`
+  - Create: `quality.qa_releases.create`
+  - Edit: `quality.qa_releases.edit`
+  - Delete: `quality.qa_releases.delete`
+  - Approve: `quality.qa_releases.approve`
+  - Reject: `quality.qa_releases.reject`
+
+- **Deviations**:
+  - View: `quality.deviations.view`
+  - Create: `quality.deviations.create`
+  - Edit: `quality.deviations.edit`
+  - Delete: `quality.deviations.delete`
+  - Investigate: `quality.deviations.investigate`
+  - Close: `quality.deviations.close`
+
+#### Warehouse Module
+- **Inventory Management**:
+  - View: `warehouse.inventory.view`
+  - Create: `warehouse.inventory.create`
+  - Edit: `warehouse.inventory.edit`
+  - Delete: `warehouse.inventory.delete`
+  - Move: `warehouse.inventory.move`
+  - Adjust: `warehouse.inventory.adjust`
+
+- **Stock Movements**:
+  - View: `warehouse.movements.view`
+  - Create: `warehouse.movements.create`
+  - Edit: `warehouse.movements.edit`
+  - Delete: `warehouse.movements.delete`
+  - Reverse: `warehouse.movements.reverse`
+
+#### Distribution Module
+- **Sales Orders**:
+  - View: `distribution.sales_orders.view`
+  - Create: `distribution.sales_orders.create`
+  - Edit: `distribution.sales_orders.edit`
+  - Delete: `distribution.sales_orders.delete`
+  - Process: `distribution.sales_orders.process`
+
+- **Shipments**:
+  - View: `distribution.shipments.view`
+  - Create: `distribution.shipments.create`
+  - Edit: `distribution.shipments.edit`
+  - Delete: `distribution.shipments.delete`
+  - Ship: `distribution.shipments.ship`
+  - Track: `distribution.shipments.track`
+
+### 13.4 Field-Level Permissions
+#### Sensitive Data Protection
+- **Financial Data**: Price, cost, margin fields
+- **Personal Data**: User contact information
+- **Confidential Data**: Trade secrets, formulas
+- **Regulatory Data**: Compliance information
+
+#### Field Permission Implementation
+```typescript
+interface FieldPermissions {
+  [fieldName: string]: {
+    view: boolean;
+    edit: boolean;
+    required: boolean;
+  };
+}
+```
+
+### 13.5 Action-Based UI Components
+#### Permission-Aware Components
+- **ActionButton**: Only render if user has permission
+- **FormField**: Show/hide fields based on permissions
+- **DataTable**: Show/hide columns based on permissions
+- **NavigationItem**: Show/hide menu items based on permissions
+
+#### Component Implementation
+```typescript
+interface PermissionAwareProps {
+  module: string;
+  screen: string;
+  action: string;
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
+}
+```
+
+### 13.6 Permission Management Interface
+#### Role Permission Matrix
+- **Visual Matrix**: Grid showing role vs permission assignments
+- **Bulk Assignment**: Assign multiple permissions at once
+- **Permission Inheritance**: Define permission inheritance rules
+- **Permission Audit**: Track permission changes
+
+#### User Permission Override
+- **Individual Overrides**: Override role permissions for specific users
+- **Temporary Permissions**: Time-limited permission grants
+- **Emergency Access**: Emergency permission escalation
+- **Permission History**: Track all permission changes
+
+### 13.7 Security Implementation
+#### Permission Validation
+- **Frontend Validation**: Client-side permission checks
+- **Backend Validation**: Server-side permission verification
+- **API Security**: Secure API endpoints with permission checks
+- **Route Protection**: Protect routes based on permissions
+
+#### Audit & Compliance
+- **Permission Logging**: Log all permission checks
+- **Access Auditing**: Track user access patterns
+- **Compliance Reporting**: Generate permission compliance reports
+- **Security Monitoring**: Monitor for permission violations
+
+### 13.8 Performance Optimization
+#### Permission Caching
+- **Client-Side Caching**: Cache permissions in browser
+- **Server-Side Caching**: Cache permissions on server
+- **Permission Preloading**: Preload permissions for better performance
+- **Lazy Loading**: Load permissions as needed
+
+#### UI Optimization
+- **Conditional Rendering**: Only render components when needed
+- **Permission Bundling**: Group related permissions
+- **Efficient Checks**: Optimize permission checking algorithms
+- **Memory Management**: Manage permission data efficiently
+
+---
 ```typescript
 interface APIResponse<T> {
   success: boolean;

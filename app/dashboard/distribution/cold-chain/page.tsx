@@ -35,6 +35,8 @@ import {
   Shield
 } from "lucide-react"
 import { apiService } from "@/services/api.service"
+import { TemperatureExcursionForm } from "@/components/sales/temperature-excursion-form"
+import { toast } from "sonner"
 import type { ColdChainRecord, TemperatureExcursion } from "@/types/distribution"
 import { formatDateISO } from "@/lib/utils"
 
@@ -76,6 +78,58 @@ export default function ColdChainPage() {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
+  }
+
+  const handleView = (item: any) => {
+    console.log("View item:", item)
+    // TODO: Implement view functionality
+  }
+
+  const handleEdit = (item: any) => {
+    console.log("Edit item:", item)
+    // TODO: Implement edit functionality
+  }
+
+  const handleResolve = async (excursion: TemperatureExcursion) => {
+    try {
+      const response = await apiService.updateTemperatureExcursion(excursion.id, {
+        ...excursion,
+        status: "Resolved"
+      })
+      
+      if (response.success) {
+        toast.success("Temperature excursion resolved")
+        fetchColdChainData()
+      } else {
+        toast.error("Failed to resolve excursion")
+      }
+    } catch (error) {
+      console.error("Error resolving excursion:", error)
+      toast.error("Failed to resolve excursion")
+    }
+  }
+
+  const handleDelete = async (item: any) => {
+    if (window.confirm("Are you sure you want to delete this item?")) {
+      try {
+        let response
+        if (activeTab === "records") {
+          response = await apiService.deleteColdChainRecord(item.id)
+        } else {
+          response = await apiService.deleteTemperatureExcursion(item.id)
+        }
+        
+        if (response.success) {
+          toast.success("Item deleted successfully")
+          fetchColdChainData()
+        } else {
+          toast.error("Failed to delete item")
+        }
+      } catch (error) {
+        console.error("Error deleting item:", error)
+        toast.error("Failed to delete item")
+      }
+    }
   }
 
   const getStatusBadge = (status: string) => {
@@ -319,10 +373,7 @@ export default function ColdChainPage() {
             <h1 className="text-3xl font-bold tracking-tight">Cold Chain Monitoring</h1>
             <p className="text-muted-foreground">Monitor temperature and humidity with excursion alerts</p>
           </div>
-          <Button className="bg-orange-600 hover:bg-orange-700">
-            <Plus className="mr-2 h-4 w-4" />
-            New Alert
-          </Button>
+          <TemperatureExcursionForm onSuccess={fetchColdChainData} />
         </div>
 
         {/* Stats Cards */}
@@ -453,18 +504,18 @@ export default function ColdChainPage() {
               searchPlaceholder={`Search ${activeTab === "records" ? "temperature records" : "excursions"}...`}
               actions={(item: any) => (
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => handleView(item)}>
                     <Eye className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
                     <Edit className="h-4 w-4" />
                   </Button>
                   {activeTab === "excursions" && item.status === "Active" && (
-                    <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700">
+                    <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700" onClick={() => handleResolve(item)}>
                       <CheckCircle className="h-4 w-4" />
                     </Button>
                   )}
-                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={() => handleDelete(item)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>

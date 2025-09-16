@@ -33,6 +33,8 @@ import {
 import { apiService } from "@/services/api.service"
 import type { PutawayTask, PutawayFilters } from "@/types/warehouse"
 import { formatDateISO } from "@/lib/utils"
+import { PutawayTaskForm } from "@/components/warehouse/putaway-task-form"
+import { toast } from "sonner"
 
 export default function PutawayPage() {
   const [putawayTasks, setPutawayTasks] = useState<PutawayTask[]>([])
@@ -81,6 +83,43 @@ export default function PutawayPage() {
 
   const handlePageChange = (page: number) => {
     setPagination((prev) => ({ ...prev, page }))
+  }
+
+  const handleView = (task: PutawayTask) => {
+    // TODO: Implement view functionality
+    console.log("View task:", task)
+  }
+
+  const handleEdit = (task: PutawayTask) => {
+    // TODO: Implement edit functionality
+    console.log("Edit task:", task)
+  }
+
+  const handleDelete = async (task: PutawayTask) => {
+    if (confirm("Are you sure you want to delete this putaway task?")) {
+      try {
+        const response = await apiService.deletePutawayTask(task.id)
+        if (response.success) {
+          toast.success("Putaway task deleted successfully")
+          fetchPutawayTasks()
+        } else {
+          toast.error("Failed to delete putaway task")
+        }
+      } catch (error) {
+        console.error("Error deleting putaway task:", error)
+        toast.error("An error occurred while deleting the putaway task")
+      }
+    }
+  }
+
+  const handleStart = (task: PutawayTask) => {
+    // TODO: Implement start functionality
+    console.log("Start task:", task)
+  }
+
+  const handleComplete = (task: PutawayTask) => {
+    // TODO: Implement complete functionality
+    console.log("Complete task:", task)
   }
 
   const getStatusBadge = (status: string) => {
@@ -263,10 +302,7 @@ export default function PutawayPage() {
             <h1 className="text-3xl font-bold tracking-tight">Putaway Management</h1>
             <p className="text-muted-foreground">Manage putaway tasks with location assignment and temperature compliance</p>
           </div>
-          <Button className="bg-orange-600 hover:bg-orange-700">
-            <Plus className="mr-2 h-4 w-4" />
-            New Task
-          </Button>
+          <PutawayTaskForm onSuccess={fetchPutawayTasks} />
         </div>
 
         {/* Stats Cards */}
@@ -439,23 +475,23 @@ export default function PutawayPage() {
               searchPlaceholder="Search putaway tasks..."
               actions={(task: PutawayTask) => (
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => handleView(task)}>
                     <Eye className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => handleEdit(task)}>
                     <Edit className="h-4 w-4" />
                   </Button>
                   {task.status === "Pending" && (
-                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700" onClick={() => handleStart(task)}>
                       <Play className="h-4 w-4" />
                     </Button>
                   )}
                   {task.status === "In Progress" && (
-                    <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700">
+                    <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700" onClick={() => handleComplete(task)}>
                       <CheckCircle className="h-4 w-4" />
                     </Button>
                   )}
-                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={() => handleDelete(task)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>

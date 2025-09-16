@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -9,28 +8,37 @@ import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/auth.context"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import {
   LayoutDashboard,
   Package,
   Building2,
-  FolderOpen,
-  TrendingUp,
   Users,
-  ChevronLeft,
-  ChevronRight,
-  Store,
-  UserPlus,
-  ShoppingCart,
-  TestTube,
   Shield,
+  ShoppingCart,
   Factory,
+  TestTube,
+  Store,
   Truck,
-  ClipboardCheck,
-  AlertTriangle,
+  TrendingUp,
+  FileText,
   BarChart3,
+  ChevronDown,
+  ChevronRight,
+  ChevronLeft,
+  User,
+  Key,
+  Eye,
   Settings,
+  ClipboardCheck,
+  Thermometer,
+  Barcode,
+  FileCheck,
+  GraduationCap,
+  Download,
+  Calendar,
+  AlertTriangle
 } from "lucide-react"
-import type { Permissions } from "@/types/auth"
 
 interface NavItem {
   title: string
@@ -38,218 +46,138 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>
 }
 
-interface ModuleItem {
+interface NavGroup {
   title: string
   icon: React.ComponentType<{ className?: string }>
-  screens: NavItem[]
-}
-
-const getScreenIcon = (screenName: string) => {
-  switch (screenName) {
-    case "dashboard":
-      return LayoutDashboard
-    case "drugs":
-      return Package
-    case "raw-materials":
-      return Package
-    case "suppliers":
-      return Building2
-    case "purchase-orders":
-      return ShoppingCart
-    case "goods-receipts":
-      return ClipboardCheck
-    case "qc-tests":
-      return TestTube
-    case "samples":
-      return TestTube
-    case "qa-releases":
-      return Shield
-    case "boms":
-      return Factory
-    case "work-orders":
-      return Factory
-    case "batches":
-      return Factory
-    case "inventory":
-      return Store
-    case "shipments":
-      return Truck
-    case "sales-orders":
-      return TrendingUp
-    case "users":
-      return UserPlus
-    case "reports":
-      return BarChart3
-    case "settings":
-      return Settings
-    default:
-      return LayoutDashboard
-  }
-}
-
-const getScreenTitle = (screenName: string) => {
-  switch (screenName) {
-    case "dashboard":
-      return "Dashboard"
-    case "drugs":
-      return "Drugs"
-    case "raw-materials":
-      return "Raw Materials"
-    case "suppliers":
-      return "Suppliers"
-    case "purchase-orders":
-      return "Purchase Orders"
-    case "goods-receipts":
-      return "Goods Receipts"
-    case "qc-tests":
-      return "QC Tests"
-    case "samples":
-      return "Samples"
-    case "qa-releases":
-      return "QA Releases"
-    case "boms":
-      return "BOMs"
-    case "work-orders":
-      return "Work Orders"
-    case "batches":
-      return "Batches"
-    case "inventory":
-      return "Inventory"
-    case "shipments":
-      return "Shipments"
-    case "sales-orders":
-      return "Sales Orders"
-    case "users":
-      return "Users"
-    case "reports":
-      return "Reports"
-    case "settings":
-      return "Settings"
-    default:
-      return screenName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-  }
-}
-
-const getScreenHref = (screenName: string) => {
-  switch (screenName) {
-    case "dashboard":
-      return "/dashboard"
-    case "drugs":
-      return "/dashboard/drugs"
-    case "raw-materials":
-      return "/dashboard/raw-materials"
-    case "suppliers":
-      return "/dashboard/suppliers"
-    case "purchase-orders":
-      return "/dashboard/procurement/purchase-orders"
-    case "goods-receipts":
-      return "/dashboard/procurement/goods-receipts"
-    case "qc-tests":
-      return "/dashboard/quality/qc-tests"
-    case "samples":
-      return "/dashboard/quality/samples"
-    case "qa-releases":
-      return "/dashboard/quality/qa-releases"
-    case "boms":
-      return "/dashboard/manufacturing/boms"
-    case "work-orders":
-      return "/dashboard/manufacturing/work-orders"
-    case "batches":
-      return "/dashboard/manufacturing/batches"
-    case "inventory":
-      return "/dashboard/warehouse/inventory"
-    case "shipments":
-      return "/dashboard/distribution/shipments"
-    case "sales-orders":
-      return "/dashboard/sales/orders"
-    case "users":
-      return "/dashboard/users"
-    case "reports":
-      return "/dashboard/reports"
-    case "settings":
-      return "/dashboard/settings"
-    default:
-      return "/dashboard"
-  }
+  items: NavItem[]
 }
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
+  const [openGroups, setOpenGroups] = useState<string[]>([])
   const pathname = usePathname()
-  const { user, permissions } = useAuth()
+  const { user } = useAuth()
 
-  if (!user || !permissions) return null
+  if (!user) return null
 
-  const buildNavigation = (): ModuleItem[] => {
-    const modules: ModuleItem[] = []
-
-    // Add Dashboard as first item
-    modules.push({
-      title: "Dashboard",
-      icon: LayoutDashboard,
-      screens: [{ title: "Overview", href: "/dashboard", icon: LayoutDashboard }]
-    })
-
-    // Define pharmaceutical modules based on user role
-    const pharmaceuticalModules = [
-      // Master Data Management
-      { title: "Drugs", icon: Package, href: "/dashboard/drugs", screen: "drugs" },
-      { title: "Raw Materials", icon: Package, href: "/dashboard/raw-materials", screen: "raw-materials" },
-      { title: "Suppliers", icon: Building2, href: "/dashboard/suppliers", screen: "suppliers" },
-      
-      // Procurement Module
-      { title: "Purchase Orders", icon: ShoppingCart, href: "/dashboard/procurement/purchase-orders", screen: "purchase-orders" },
-      { title: "Goods Receipts", icon: ClipboardCheck, href: "/dashboard/procurement/goods-receipts", screen: "goods-receipts" },
-      
-      // Quality Control Module
-      { title: "QC Tests", icon: TestTube, href: "/dashboard/quality/qc-tests", screen: "qc-tests" },
-      { title: "Samples", icon: TestTube, href: "/dashboard/quality/samples", screen: "samples" },
-      
-      // Quality Assurance Module
-      { title: "QA Releases", icon: Shield, href: "/dashboard/quality/qa-releases", screen: "qa-releases" },
-      
-      // Manufacturing Module
-      { title: "BOMs", icon: Factory, href: "/dashboard/manufacturing/boms", screen: "boms" },
-      { title: "Work Orders", icon: Factory, href: "/dashboard/manufacturing/work-orders", screen: "work-orders" },
-      { title: "Batches", icon: Factory, href: "/dashboard/manufacturing/batches", screen: "batches" },
-      
-      // Warehouse Operations
-      { title: "Inventory", icon: Store, href: "/dashboard/warehouse/inventory", screen: "inventory" },
-      
-      // Distribution & Sales
-      { title: "Sales Orders", icon: TrendingUp, href: "/dashboard/sales/orders", screen: "sales-orders" },
-      { title: "Shipments", icon: Truck, href: "/dashboard/distribution/shipments", screen: "shipments" },
-      { title: "Cold Chain", icon: AlertTriangle, href: "/dashboard/distribution/cold-chain", screen: "cold-chain" },
-      { title: "Proof of Delivery", icon: ClipboardCheck, href: "/dashboard/distribution/pod", screen: "pod" },
-      
-      // Reports & Analytics
-      { title: "Executive Dashboard", icon: BarChart3, href: "/dashboard/reports/executive", screen: "executive-dashboard" },
-      { title: "Procurement Reports", icon: ShoppingCart, href: "/dashboard/reports/procurement", screen: "procurement-reports" },
-      { title: "Production Reports", icon: Factory, href: "/dashboard/reports/production", screen: "production-reports" },
-      { title: "Audit Trail", icon: Shield, href: "/dashboard/reports/audit", screen: "audit-trail" },
-    ]
-
-    // Add modules based on user role and permissions
-    pharmaceuticalModules.forEach(module => {
-      // For now, show all modules - in real app, check permissions
-      modules.push({
-        title: module.title,
-        icon: module.icon,
-        screens: [{ title: module.title, href: module.href, icon: module.icon }]
-      })
-    })
-
-    // Add User Management module
-    modules.push({
-      title: "User Management",
-      icon: Users,
-      screens: [{ title: "Users", href: "/dashboard/users", icon: UserPlus }]
-    })
-
-    return modules
+  const toggleGroup = (groupTitle: string) => {
+    setOpenGroups(prev => 
+      prev.includes(groupTitle) 
+        ? prev.filter(g => g !== groupTitle)
+        : [...prev, groupTitle]
+    )
   }
 
-  const navigation = buildNavigation()
+  const navigationGroups: NavGroup[] = [
+    {
+      title: "Identity & Authentication",
+      icon: Shield,
+      items: [
+        { title: "Users", href: "/dashboard/users", icon: Users },
+        { title: "Roles", href: "/dashboard/roles", icon: Key },
+        { title: "Permissions", href: "/dashboard/permissions", icon: Shield },
+        { title: "Refresh Tokens", href: "/dashboard/refresh-tokens", icon: Key },
+        { title: "Audit Logs", href: "/dashboard/reports/audit", icon: Eye },
+      ]
+    },
+    {
+      title: "Master Data",
+      icon: Package,
+      items: [
+        { title: "Drugs", href: "/dashboard/drugs", icon: Package },
+        { title: "Raw Materials", href: "/dashboard/raw-materials", icon: Package },
+        { title: "Suppliers", href: "/dashboard/suppliers", icon: Building2 },
+        { title: "Distributors", href: "/dashboard/distributors", icon: Building2 },
+        { title: "Sites", href: "/dashboard/sites", icon: Building2 },
+        { title: "Storage Locations", href: "/dashboard/storage-locations", icon: Store },
+        { title: "Equipment", href: "/dashboard/equipment", icon: Settings },
+        { title: "Units of Measure", href: "/dashboard/units", icon: Package },
+      ]
+    },
+    {
+      title: "Procurement",
+      icon: ShoppingCart,
+      items: [
+        { title: "Purchase Orders", href: "/dashboard/procurement/purchase-orders", icon: ShoppingCart },
+        { title: "Goods Receipts", href: "/dashboard/procurement/goods-receipts", icon: ClipboardCheck },
+        { title: "Certificate of Analysis", href: "/dashboard/procurement/coa", icon: FileCheck },
+      ]
+    },
+    {
+      title: "Manufacturing",
+      icon: Factory,
+      items: [
+        { title: "Bill of Materials", href: "/dashboard/manufacturing/boms", icon: Factory },
+        { title: "Work Orders", href: "/dashboard/manufacturing/work-orders", icon: Factory },
+        { title: "Batches", href: "/dashboard/manufacturing/batches", icon: Factory },
+        { title: "Batch Consumptions", href: "/dashboard/manufacturing/consumptions", icon: Package },
+        { title: "Electronic Batch Records", href: "/dashboard/manufacturing/ebr", icon: FileText },
+      ]
+    },
+    {
+      title: "Quality (QC/QA)",
+      icon: TestTube,
+      items: [
+        { title: "Quality Control Tests", href: "/dashboard/quality/qc-tests", icon: TestTube },
+        { title: "Sample Requests", href: "/dashboard/quality/samples", icon: TestTube },
+        { title: "Sample Results", href: "/dashboard/quality/sample-results", icon: TestTube },
+        { title: "Quality Assurance Releases", href: "/dashboard/quality/qa-releases", icon: Shield },
+        { title: "Deviations / CAPA", href: "/dashboard/quality/deviations", icon: AlertTriangle },
+      ]
+    },
+    {
+      title: "Warehouse",
+      icon: Store,
+      items: [
+        { title: "Inventory Lots", href: "/dashboard/warehouse/inventory", icon: Store },
+        { title: "Stock Movements", href: "/dashboard/warehouse/movements", icon: Store },
+        { title: "Storage Locations", href: "/dashboard/warehouse/locations", icon: Store },
+        { title: "Temperature Logs", href: "/dashboard/warehouse/temperature", icon: Thermometer },
+        { title: "Cycle Counts", href: "/dashboard/warehouse/cycle-counts", icon: Store },
+        { title: "Labels & Barcodes", href: "/dashboard/warehouse/labels", icon: Barcode },
+      ]
+    },
+    {
+      title: "Distribution",
+      icon: Truck,
+      items: [
+        { title: "Sales Orders", href: "/dashboard/sales/orders", icon: TrendingUp },
+        { title: "Shipments", href: "/dashboard/distribution/shipments", icon: Truck },
+        { title: "Shipment Items", href: "/dashboard/distribution/shipment-items", icon: Package },
+        { title: "Cold Chain Sensors", href: "/dashboard/distribution/cold-chain", icon: Thermometer },
+        { title: "Proof of Delivery", href: "/dashboard/distribution/pod", icon: ClipboardCheck },
+      ]
+    },
+    {
+      title: "Sales / CRM",
+      icon: TrendingUp,
+      items: [
+        { title: "Accounts", href: "/dashboard/sales/accounts", icon: Building2 },
+        { title: "Activities", href: "/dashboard/sales/activities", icon: Calendar },
+        { title: "Contracts", href: "/dashboard/sales/contracts", icon: FileText },
+        { title: "Point of Sale", href: "/dashboard/sales/pos", icon: TrendingUp },
+      ]
+    },
+    {
+      title: "Regulatory & Documents",
+      icon: FileText,
+      items: [
+        { title: "Documents", href: "/dashboard/regulatory/documents", icon: FileText },
+        { title: "Document Approvals", href: "/dashboard/regulatory/approvals", icon: FileCheck },
+        { title: "Training Records", href: "/dashboard/regulatory/training", icon: GraduationCap },
+      ]
+    },
+    {
+      title: "Reporting & Analytics",
+      icon: BarChart3,
+      items: [
+        { title: "Dashboards", href: "/dashboard/reports/executive", icon: BarChart3 },
+        { title: "Exports", href: "/dashboard/reports/exports", icon: Download },
+        { title: "Scheduled Reports", href: "/dashboard/reports/scheduled", icon: Calendar },
+        { title: "Recall Coverage", href: "/dashboard/reports/recall", icon: AlertTriangle },
+      ]
+    }
+  ]
 
   return (
     <div
@@ -275,34 +203,86 @@ export function Sidebar() {
         </div>
         {!collapsed && (
           <div>
-            <h2 className="text-lg font-semibold text-sidebar-foreground">Pharma Inventory Sales</h2>
+            <h2 className="text-lg font-semibold text-sidebar-foreground">Ziauddin Pharma</h2>
           </div>
         )}
       </div>
 
       {/* Navigation */}
       <ScrollArea className="flex-1 px-3 py-4">
-        <nav className="space-y-2">
-          {navigation.map((module) => {
-            const ModuleIcon = module.icon
-            const isActive = pathname === module.screens[0].href
+        <nav className="space-y-1">
+          {/* Dashboard Link */}
+          <Link href="/dashboard">
+            <Button
+              variant={pathname === "/dashboard" ? "secondary" : "ghost"}
+              className={cn(
+                "w-full justify-start gap-3 h-10 mb-2",
+                collapsed && "justify-center px-2",
+                pathname === "/dashboard" && "bg-sidebar-accent text-sidebar-accent-foreground",
+              )}
+            >
+              <LayoutDashboard className="h-4 w-4 flex-shrink-0" />
+              {!collapsed && <span>Dashboard</span>}
+            </Button>
+          </Link>
+
+          {/* Navigation Groups */}
+          {navigationGroups.map((group) => {
+            const GroupIcon = group.icon
+            const isGroupOpen = openGroups.includes(group.title)
 
             return (
-              <div key={module.title} className="space-y-1">
-                <Link href={module.screens[0].href}>
+              <Collapsible
+                key={group.title}
+                open={isGroupOpen}
+                onOpenChange={() => toggleGroup(group.title)}
+              >
+                <CollapsibleTrigger asChild>
                   <Button
-                    variant={isActive ? "secondary" : "ghost"}
+                    variant="ghost"
                     className={cn(
-                      "w-full justify-start gap-3 h-10",
-                      collapsed && "justify-center px-2",
-                      isActive && "bg-sidebar-accent text-sidebar-accent-foreground",
+                      "w-full justify-start gap-3 h-10 text-left",
+                      collapsed && "justify-center px-2"
                     )}
                   >
-                    <ModuleIcon className="h-4 w-4 flex-shrink-0" />
-                    {!collapsed && <span>{module.title}</span>}
+                    <GroupIcon className="h-4 w-4 flex-shrink-0" />
+                    {!collapsed && (
+                      <>
+                        <span className="flex-1">{group.title}</span>
+                        {isGroupOpen ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                      </>
+                    )}
                   </Button>
-                </Link>
-              </div>
+                </CollapsibleTrigger>
+                
+                {!collapsed && (
+                  <CollapsibleContent className="space-y-1 ml-4">
+                    {group.items.map((item) => {
+                      const ItemIcon = item.icon
+                      const isActive = pathname === item.href
+
+                      return (
+                        <Link key={item.href} href={item.href}>
+                          <Button
+                            variant={isActive ? "secondary" : "ghost"}
+                            className={cn(
+                              "w-full justify-start gap-3 h-8 text-sm",
+                              isActive && "bg-sidebar-accent text-sidebar-accent-foreground",
+                            )}
+                          >
+                            <ItemIcon className="h-3 w-3 flex-shrink-0" />
+                            <span>{item.title}</span>
+                          </Button>
+                        </Link>
+                      )
+                    })}
+                  </CollapsibleContent>
+                )}
+              </Collapsible>
             )
           })}
         </nav>
@@ -311,7 +291,9 @@ export function Sidebar() {
       {/* User Role Badge */}
       {!collapsed && user && (
         <div className="p-4 border-t border-sidebar-border">
-          <div className="text-xs text-sidebar-foreground/60 uppercase tracking-wide">Role: {user.role}</div>
+          <div className="text-xs text-sidebar-foreground/60 uppercase tracking-wide">
+            Role: {user.role}
+          </div>
         </div>
       )}
     </div>

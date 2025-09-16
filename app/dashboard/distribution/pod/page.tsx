@@ -36,6 +36,8 @@ import {
   Signature
 } from "lucide-react"
 import { apiService } from "@/services/api.service"
+import { ProofOfDeliveryForm } from "@/components/sales/proof-of-delivery-form"
+import { toast } from "sonner"
 import type { ProofOfDelivery, PODFilters } from "@/types/distribution"
 import { formatDateISO } from "@/lib/utils"
 
@@ -86,6 +88,49 @@ export default function PODPage() {
 
   const handlePageChange = (page: number) => {
     setPagination((prev) => ({ ...prev, page }))
+  }
+
+  const handleView = (pod: ProofOfDelivery) => {
+    console.log("View POD:", pod)
+    // TODO: Implement view POD functionality
+  }
+
+  const handleEdit = (pod: ProofOfDelivery) => {
+    console.log("Edit POD:", pod)
+    // TODO: Implement edit POD functionality
+  }
+
+  const handleCapturePhotos = (pod: ProofOfDelivery) => {
+    console.log("Capture photos for POD:", pod)
+    // TODO: Implement photo capture functionality
+  }
+
+  const handleDownloadPOD = (pod: ProofOfDelivery) => {
+    console.log("Download POD:", pod)
+    // TODO: Implement download POD functionality
+  }
+
+  const handleUploadPOD = (pod: ProofOfDelivery) => {
+    console.log("Upload POD:", pod)
+    // TODO: Implement upload POD functionality
+  }
+
+  const handleDelete = async (pod: ProofOfDelivery) => {
+    if (window.confirm("Are you sure you want to delete this POD?")) {
+      try {
+        const response = await apiService.deleteProofOfDelivery(pod.id)
+        
+        if (response.success) {
+          toast.success("POD deleted successfully")
+          fetchPODs()
+        } else {
+          toast.error("Failed to delete POD")
+        }
+      } catch (error) {
+        console.error("Error deleting POD:", error)
+        toast.error("Failed to delete POD")
+      }
+    }
   }
 
   const getDeliveryStatusBadge = (status: string) => {
@@ -281,10 +326,7 @@ export default function PODPage() {
             <h1 className="text-3xl font-bold tracking-tight">Proof of Delivery</h1>
             <p className="text-muted-foreground">Manage delivery confirmations with signature capture and photo documentation</p>
           </div>
-          <Button className="bg-orange-600 hover:bg-orange-700">
-            <Plus className="mr-2 h-4 w-4" />
-            New POD
-          </Button>
+          <ProofOfDeliveryForm onSuccess={fetchPODs} />
         </div>
 
         {/* Stats Cards */}
@@ -455,22 +497,22 @@ export default function PODPage() {
               searchPlaceholder="Search PODs..."
               actions={(pod: ProofOfDelivery) => (
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => handleView(pod)}>
                     <Eye className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => handleEdit(pod)}>
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+                  <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700" onClick={() => handleCapturePhotos(pod)}>
                     <Camera className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700">
+                  <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700" onClick={() => handleDownloadPOD(pod)}>
                     <Download className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+                  <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700" onClick={() => handleUploadPOD(pod)}>
                     <Upload className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={() => handleDelete(pod)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>

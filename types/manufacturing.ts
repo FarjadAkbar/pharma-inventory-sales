@@ -1,17 +1,21 @@
 // Manufacturing Module Types
 
 export interface BOM {
-  id: string
+  id?: string
   bomNumber: string
   drugId: string
   drugName: string
   drugCode: string
   version: number
   status: BOMStatus
-  description: string
+  description?: string
   items: BOMItem[]
-  createdBy: string
-  createdByName: string
+  batchSize?: string
+  yield?: string
+  notes?: string
+  createdById?: string
+  createdByName?: string
+  createdBy?: string
   createdAt: string
   updatedAt: string
   approvedBy?: string
@@ -23,15 +27,15 @@ export interface BOM {
 }
 
 export interface BOMItem {
-  id: string
+  id?: string
   materialId: string
   materialName: string
   materialCode: string
   quantityPerBatch: number
-  unit: string
+  unitOfMeasure: string
   tolerance: number
   isCritical: boolean
-  sequence: number
+  sequence?: number
   remarks?: string
 }
 
