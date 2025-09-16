@@ -3,21 +3,16 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { DataTable } from "@/components/ui/data-table"
+import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { 
   Plus, 
   FileText, 
-  Search, 
-  Filter,
   CheckCircle,
   Clock,
   XCircle,
-  AlertTriangle,
   Eye,
   Edit,
   Trash2,
@@ -27,8 +22,7 @@ import {
   Beaker,
   Activity,
   Target,
-  FileCheck,
-  AlertCircle
+  FileCheck
 } from "lucide-react"
 import Link from "next/link"
 import { apiService } from "@/services/api.service"
@@ -72,11 +66,8 @@ export default function BOMsPage() {
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
-  const handleFilterChange = (key: keyof BOMFilters, value: string | number) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value
-    }))
+  const handleFiltersChange = (newFilters: Record<string, any>) => {
+    setFilters(newFilters)
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
@@ -156,6 +147,7 @@ export default function BOMsPage() {
     {
       key: "bomNumber",
       header: "BOM #",
+      sortable: true,
       render: (bom: BOM) => (
         <div className="font-mono text-sm font-medium text-orange-600">
           {bom.bomNumber}
@@ -165,6 +157,7 @@ export default function BOMsPage() {
     {
       key: "drug",
       header: "Drug",
+      sortable: true,
       render: (bom: BOM) => (
         <div>
           <div className="flex items-center gap-2">
@@ -178,6 +171,7 @@ export default function BOMsPage() {
     {
       key: "version",
       header: "Version",
+      sortable: true,
       render: (bom: BOM) => (
         <div className="text-center">
           <Badge variant="outline" className="font-mono">v{bom.version}</Badge>
@@ -187,6 +181,7 @@ export default function BOMsPage() {
     {
       key: "items",
       header: "Items",
+      sortable: true,
       render: (bom: BOM) => (
         <div className="space-y-1">
           <div className="text-sm font-medium">{bom.items.length} materials</div>
@@ -199,11 +194,13 @@ export default function BOMsPage() {
     {
       key: "status",
       header: "Status",
+      sortable: true,
       render: (bom: BOM) => getStatusBadge(bom.status),
     },
     {
       key: "effectiveDate",
       header: "Effective Date",
+      sortable: true,
       render: (bom: BOM) => (
         <div className="text-sm flex items-center gap-1">
           <Calendar className="h-3 w-3" />
@@ -214,6 +211,7 @@ export default function BOMsPage() {
     {
       key: "createdBy",
       header: "Created By",
+      sortable: true,
       render: (bom: BOM) => (
         <div className="text-sm">
           <div className="flex items-center gap-1">
@@ -226,9 +224,82 @@ export default function BOMsPage() {
     {
       key: "createdAt",
       header: "Created",
+      sortable: true,
       render: (bom: BOM) => formatDateISO(bom.createdAt),
     },
   ]
+
+  const filterOptions = [
+    {
+      key: "drugId",
+      label: "Drug",
+      type: "select" as const,
+      options: [
+        { value: "1", label: "Paracetamol Tablets" },
+        { value: "2", label: "Ibuprofen Tablets" },
+        { value: "3", label: "Aspirin Tablets" },
+      ],
+    },
+    {
+      key: "status",
+      label: "Status",
+      type: "select" as const,
+      options: [
+        { value: "Draft", label: "Draft" },
+        { value: "Under Review", label: "Under Review" },
+        { value: "Approved", label: "Approved" },
+        { value: "Active", label: "Active" },
+        { value: "Obsolete", label: "Obsolete" },
+      ],
+    },
+    {
+      key: "version",
+      label: "Version",
+      type: "select" as const,
+      options: [
+        { value: "1", label: "Version 1" },
+        { value: "2", label: "Version 2" },
+        { value: "3", label: "Version 3" },
+      ],
+    },
+  ]
+
+  const actions = (bom: BOM) => (
+    <div className="flex items-center gap-2">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => window.location.href = `/dashboard/manufacturing/boms/${bom.id}`}
+      >
+        <Eye className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => window.location.href = `/dashboard/manufacturing/boms/${bom.id}/edit`}
+      >
+        <Edit className="h-4 w-4" />
+      </Button>
+      {bom.status === "Draft" && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-green-600 hover:text-green-700"
+          onClick={() => handleApproveBOM(bom)}
+        >
+          <FileCheck className="h-4 w-4" />
+        </Button>
+      )}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => handleDeleteBOM(bom)}
+        className="text-red-600 hover:text-red-700"
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  )
 
   return (
     <DashboardLayout>
@@ -299,127 +370,27 @@ export default function BOMsPage() {
           </Card>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Filters
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Search</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search BOMs..."
-                    value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Drug</label>
-                <Select value={filters.drugId || ""} onValueChange={(value) => handleFilterChange("drugId", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Drugs" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">Paracetamol Tablets</SelectItem>
-                    <SelectItem value="2">Ibuprofen Tablets</SelectItem>
-                    <SelectItem value="3">Aspirin Tablets</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status</label>
-                <Select value={filters.status || ""} onValueChange={(value) => handleFilterChange("status", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Draft">Draft</SelectItem>
-                    <SelectItem value="Under Review">Under Review</SelectItem>
-                    <SelectItem value="Approved">Approved</SelectItem>
-                    <SelectItem value="Active">Active</SelectItem>
-                    <SelectItem value="Obsolete">Obsolete</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Version</label>
-                <Select value={filters.version?.toString() || ""} onValueChange={(value) => handleFilterChange("version", Number(value))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Versions" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">Version 1</SelectItem>
-                    <SelectItem value="2">Version 2</SelectItem>
-                    <SelectItem value="3">Version 3</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* BOMs Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Bill of Materials</CardTitle>
-            <CardDescription>A comprehensive library of manufacturing recipes and material requirements.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              data={boms}
-              columns={columns}
-              loading={loading}
-              onSearch={handleSearch}
-              pagination={{
-                page: pagination.page,
-                pages: pagination.pages,
-                total: pagination.total,
-                onPageChange: handlePageChange
-              }}
-              searchPlaceholder="Search BOMs..."
-              actions={[
-                {
-                  label: "View",
-                  icon: <Eye className="h-4 w-4" />,
-                  onClick: (bom: BOM) => {
-                    window.location.href = `/dashboard/manufacturing/boms/${bom.id}`
-                  }
-                },
-                {
-                  label: "Edit",
-                  icon: <Edit className="h-4 w-4" />,
-                  onClick: (bom: BOM) => {
-                    window.location.href = `/dashboard/manufacturing/boms/${bom.id}/edit`
-                  }
-                },
-                {
-                  label: "Approve",
-                  icon: <FileCheck className="h-4 w-4" />,
-                  onClick: handleApproveBOM,
-                  hidden: (bom: BOM) => bom.status !== "Draft",
-                  variant: "default" as const
-                },
-                {
-                  label: "Delete",
-                  icon: <Trash2 className="h-4 w-4" />,
-                  onClick: handleDeleteBOM,
-                  variant: "destructive" as const
-                }
-              ]}
-            />
-          </CardContent>
-        </Card>
+        <UnifiedDataTable
+          data={boms}
+          columns={columns}
+          loading={loading}
+          searchPlaceholder="Search BOMs..."
+          searchValue={searchQuery}
+          onSearch={handleSearch}
+          filters={filterOptions}
+          onFiltersChange={handleFiltersChange}
+          pagination={{
+            page: pagination.page,
+            pages: pagination.pages,
+            total: pagination.total,
+            onPageChange: handlePageChange
+          }}
+          actions={actions}
+          onRefresh={fetchBOMs}
+          onExport={() => console.log("Export BOMs")}
+          emptyMessage="No BOMs found. Create your first BOM to get started."
+        />
       </div>
     </DashboardLayout>
   )

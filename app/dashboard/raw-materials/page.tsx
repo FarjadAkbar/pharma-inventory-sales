@@ -3,17 +3,13 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { DataTable } from "@/components/ui/data-table"
+import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { 
   Plus, 
   Package, 
-  Search, 
-  Filter,
   AlertTriangle,
   CheckCircle,
   Eye,
@@ -64,11 +60,8 @@ export default function RawMaterialsPage() {
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
-  const handleFilterChange = (key: keyof RawMaterialFilters, value: string | boolean) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value
-    }))
+  const handleFiltersChange = (newFilters: Record<string, any>) => {
+    setFilters(newFilters)
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
@@ -128,6 +121,7 @@ export default function RawMaterialsPage() {
     {
       key: "code",
       header: "Code",
+      sortable: true,
       render: (rm: RawMaterial) => (
         <div className="font-mono text-sm font-medium text-orange-600">
           {rm.code}
@@ -137,6 +131,7 @@ export default function RawMaterialsPage() {
     {
       key: "name",
       header: "Material Name",
+      sortable: true,
       render: (rm: RawMaterial) => (
         <div>
           <div className="font-medium">{rm.name}</div>
@@ -147,11 +142,13 @@ export default function RawMaterialsPage() {
     {
       key: "grade",
       header: "Grade",
+      sortable: true,
       render: (rm: RawMaterial) => getGradeBadge(rm.grade),
     },
     {
       key: "supplier",
       header: "Supplier",
+      sortable: true,
       render: (rm: RawMaterial) => (
         <div className="text-sm">
           <div className="font-medium">{rm.supplierName}</div>
@@ -162,6 +159,7 @@ export default function RawMaterialsPage() {
     {
       key: "stock",
       header: "Stock Level",
+      sortable: true,
       render: (rm: RawMaterial) => {
         const stockStatus = getStockStatus(rm.currentStock, rm.reorderLevel)
         const StockIcon = stockStatus.icon
@@ -181,6 +179,7 @@ export default function RawMaterialsPage() {
     {
       key: "cost",
       header: "Cost",
+      sortable: true,
       render: (rm: RawMaterial) => (
         <div className="text-sm">
           <div className="font-medium">${rm.costPerUnit.toFixed(2)}</div>
@@ -193,6 +192,7 @@ export default function RawMaterialsPage() {
     {
       key: "shelfLife",
       header: "Shelf Life",
+      sortable: true,
       render: (rm: RawMaterial) => (
         <div className="text-sm">
           {rm.shelfLife ? `${rm.shelfLife} days` : "N/A"}
@@ -202,6 +202,7 @@ export default function RawMaterialsPage() {
     {
       key: "status",
       header: "Status",
+      sortable: true,
       render: (rm: RawMaterial) => (
         <Badge className={rm.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
           {rm.isActive ? "Active" : "Inactive"}
@@ -209,6 +210,73 @@ export default function RawMaterialsPage() {
       ),
     },
   ]
+
+  const filterOptions = [
+    {
+      key: "grade",
+      label: "Grade",
+      type: "select" as const,
+      options: [
+        { value: "USP", label: "USP" },
+        { value: "Pharmaceutical", label: "Pharmaceutical" },
+        { value: "Food Grade", label: "Food Grade" },
+        { value: "Industrial", label: "Industrial" },
+        { value: "Analytical", label: "Analytical" },
+      ],
+    },
+    {
+      key: "supplierId",
+      label: "Supplier",
+      type: "select" as const,
+      options: [
+        { value: "1", label: "MediChem Supplies" },
+        { value: "2", label: "PharmaExcipients Ltd" },
+        { value: "3", label: "Global Pharma Ingredients" },
+        { value: "4", label: "Chemical Solutions Inc" },
+      ],
+    },
+    {
+      key: "isActive",
+      label: "Status",
+      type: "select" as const,
+      options: [
+        { value: "true", label: "Active" },
+        { value: "false", label: "Inactive" },
+      ],
+    },
+    {
+      key: "lowStock",
+      label: "Low Stock Only",
+      type: "boolean" as const,
+    },
+  ]
+
+  const actions = (rm: RawMaterial) => (
+    <div className="flex items-center gap-2">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => window.location.href = `/dashboard/raw-materials/${rm.id}`}
+      >
+        <Eye className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => window.location.href = `/dashboard/raw-materials/${rm.id}/edit`}
+      >
+        <Edit className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => handleDeleteRawMaterial(rm)}
+        className="text-red-600 hover:text-red-700"
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  )
 
   return (
     <DashboardLayout>
@@ -269,132 +337,27 @@ export default function RawMaterialsPage() {
           </Card>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Filters
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Search</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search materials..."
-                    value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Grade</label>
-                <Select value={filters.grade || ""} onValueChange={(value) => handleFilterChange("grade", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Grades" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="USP">USP</SelectItem>
-                    <SelectItem value="Pharmaceutical">Pharmaceutical</SelectItem>
-                    <SelectItem value="Food Grade">Food Grade</SelectItem>
-                    <SelectItem value="Industrial">Industrial</SelectItem>
-                    <SelectItem value="Analytical">Analytical</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Supplier</label>
-                <Select value={filters.supplierId || ""} onValueChange={(value) => handleFilterChange("supplierId", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Suppliers" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">MediChem Supplies</SelectItem>
-                    <SelectItem value="2">PharmaExcipients Ltd</SelectItem>
-                    <SelectItem value="3">Global Pharma Ingredients</SelectItem>
-                    <SelectItem value="4">Chemical Solutions Inc</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status</label>
-                <Select value={filters.isActive?.toString() || ""} onValueChange={(value) => handleFilterChange("isActive", value === "true")}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="true">Active</SelectItem>
-                    <SelectItem value="false">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <label className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={filters.lowStock || false}
-                  onChange={(e) => handleFilterChange("lowStock", e.target.checked)}
-                  className="rounded border-gray-300"
-                />
-                <span className="text-sm font-medium">Show only low stock items</span>
-              </label>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Raw Materials Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Raw Materials List</CardTitle>
-            <CardDescription>A comprehensive list of all raw materials and excipients in the system.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              data={rawMaterials}
-              columns={columns}
-              loading={loading}
-              onSearch={handleSearch}
-              pagination={{
-                page: pagination.page,
-                pages: pagination.pages,
-                total: pagination.total,
-                onPageChange: handlePageChange
-              }}
-              searchPlaceholder="Search raw materials..."
-              actions={[
-                {
-                  label: "View",
-                  icon: <Eye className="h-4 w-4" />,
-                  onClick: (rm: RawMaterial) => {
-                    window.location.href = `/dashboard/raw-materials/${rm.id}`
-                  }
-                },
-                {
-                  label: "Edit",
-                  icon: <Edit className="h-4 w-4" />,
-                  onClick: (rm: RawMaterial) => {
-                    window.location.href = `/dashboard/raw-materials/${rm.id}/edit`
-                  }
-                },
-                {
-                  label: "Delete",
-                  icon: <Trash2 className="h-4 w-4" />,
-                  onClick: handleDeleteRawMaterial,
-                  variant: "destructive" as const
-                }
-              ]}
-            />
-          </CardContent>
-        </Card>
+        <UnifiedDataTable
+          data={rawMaterials}
+          columns={columns}
+          loading={loading}
+          searchPlaceholder="Search raw materials..."
+          searchValue={searchQuery}
+          onSearch={handleSearch}
+          filters={filterOptions}
+          onFiltersChange={handleFiltersChange}
+          pagination={{
+            page: pagination.page,
+            pages: pagination.pages,
+            total: pagination.total,
+            onPageChange: handlePageChange
+          }}
+          actions={actions}
+          onRefresh={fetchRawMaterials}
+          onExport={() => console.log("Export raw materials")}
+          emptyMessage="No raw materials found. Add your first raw material to get started."
+        />
       </div>
     </DashboardLayout>
   )

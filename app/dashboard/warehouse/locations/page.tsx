@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { DataTable } from "@/components/ui/data-table"
+import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -58,18 +58,18 @@ export default function WarehouseLocationsPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
-  const [typeFilter, setTypeFilter] = useState("all")
+  const [filters, setFilters] = useState<Record<string, any>>({})
 
   useEffect(() => {
     fetchLocations()
-  }, [searchQuery, pagination.page, typeFilter])
+  }, [searchQuery, pagination.page, filters])
 
   const fetchLocations = async () => {
     try {
       setLoading(true)
       const response = await apiService.getWarehouseLocations({
         search: searchQuery,
-        type: typeFilter !== "all" ? typeFilter : undefined,
+        ...filters,
         page: pagination.page,
         limit: 10,
       })
@@ -171,6 +171,7 @@ export default function WarehouseLocationsPage() {
     {
       key: "name",
       header: "Location",
+      sortable: true,
       render: (location: WarehouseLocation) => (
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -186,6 +187,7 @@ export default function WarehouseLocationsPage() {
     {
       key: "type",
       header: "Type",
+      sortable: true,
       render: (location: WarehouseLocation) => (
         <Badge className={getTypeBadgeColor(location.type)}>
           {location.type.charAt(0).toUpperCase() + location.type.slice(1)}
@@ -195,6 +197,7 @@ export default function WarehouseLocationsPage() {
     {
       key: "site",
       header: "Site",
+      sortable: true,
       render: (location: WarehouseLocation) => (
         <div className="text-sm">
           <div className="font-medium">{location.siteName}</div>
@@ -205,6 +208,7 @@ export default function WarehouseLocationsPage() {
     {
       key: "capacity",
       header: "Capacity",
+      sortable: true,
       render: (location: WarehouseLocation) => (
         <div className="space-y-1 text-sm">
           <div>Volume: {location.capacity.volume} {location.capacity.unit}</div>
@@ -215,6 +219,7 @@ export default function WarehouseLocationsPage() {
     {
       key: "utilization",
       header: "Utilization",
+      sortable: true,
       render: (location: WarehouseLocation) => (
         <div className="space-y-1">
           <div className="flex items-center gap-2">
@@ -236,6 +241,7 @@ export default function WarehouseLocationsPage() {
     {
       key: "items",
       header: "Items",
+      sortable: true,
       render: (location: WarehouseLocation) => (
         <div className="text-sm">
           <div className="font-medium">{location.itemsCount} items</div>
@@ -246,6 +252,7 @@ export default function WarehouseLocationsPage() {
     {
       key: "accessLevel",
       header: "Access",
+      sortable: true,
       render: (location: WarehouseLocation) => (
         <Badge className={getAccessLevelBadgeColor(location.accessLevel)}>
           {location.accessLevel.charAt(0).toUpperCase() + location.accessLevel.slice(1)}
@@ -255,6 +262,7 @@ export default function WarehouseLocationsPage() {
     {
       key: "status",
       header: "Status",
+      sortable: true,
       render: (location: WarehouseLocation) => (
         <div className="space-y-1">
           <Badge variant={location.isActive ? "default" : "secondary"}>
@@ -269,6 +277,51 @@ export default function WarehouseLocationsPage() {
       ),
     },
   ]
+
+  const filterOptions = [
+    {
+      key: "type",
+      label: "Type",
+      type: "select" as const,
+      options: [
+        { value: "zone", label: "Zone" },
+        { value: "aisle", label: "Aisle" },
+        { value: "rack", label: "Rack" },
+        { value: "shelf", label: "Shelf" },
+        { value: "bin", label: "Bin" },
+        { value: "floor", label: "Floor" },
+      ],
+    },
+  ]
+
+  const handleFiltersChange = (newFilters: Record<string, any>) => {
+    setFilters(newFilters)
+    setPagination((prev) => ({ ...prev, page: 1 }))
+  }
+
+  const actions = (location: WarehouseLocation) => (
+    <div className="flex items-center gap-2">
+      <PermissionGuard module="WAREHOUSE" screen="locations" action="update">
+        <Button variant="ghost" size="sm" onClick={() => handleEdit(location)}>
+          Edit
+        </Button>
+      </PermissionGuard>
+      <PermissionGuard module="WAREHOUSE" screen="locations" action="update">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => handleToggleStatus(location)}
+        >
+          {location.isActive ? "Deactivate" : "Activate"}
+        </Button>
+      </PermissionGuard>
+      <PermissionGuard module="WAREHOUSE" screen="locations" action="delete">
+        <Button variant="ghost" size="sm" onClick={() => handleDelete(location)}>
+          Delete
+        </Button>
+      </PermissionGuard>
+    </div>
+  )
 
   return (
     <DashboardLayout>
@@ -330,81 +383,27 @@ export default function WarehouseLocationsPage() {
           </Card>
         </div>
 
-        {/* Type Filter */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Filter by Type</CardTitle>
-            <CardDescription>Select a location type to filter results</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { value: "all", label: "All Types" },
-                { value: "zone", label: "Zone" },
-                { value: "aisle", label: "Aisle" },
-                { value: "rack", label: "Rack" },
-                { value: "shelf", label: "Shelf" },
-                { value: "bin", label: "Bin" },
-                { value: "floor", label: "Floor" },
-              ].map((type) => (
-                <Button
-                  key={type.value}
-                  variant={typeFilter === type.value ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setTypeFilter(type.value)}
-                >
-                  {type.label}
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Locations Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>All Warehouse Locations</CardTitle>
-            <CardDescription>A list of all warehouse locations with their capacity and utilization.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              data={locations}
-              columns={columns}
-              loading={loading}
-              onSearch={handleSearch}
-              pagination={{
-                page: pagination.page,
-                pages: pagination.pages,
-                total: pagination.total,
-                onPageChange: handlePageChange
-              }}
-              searchPlaceholder="Search locations..."
-              actions={(location: WarehouseLocation) => (
-                <div className="flex items-center gap-2">
-                  <PermissionGuard module="WAREHOUSE" screen="locations" action="update">
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(location)}>
-                      Edit
-                    </Button>
-                  </PermissionGuard>
-                  <PermissionGuard module="WAREHOUSE" screen="locations" action="update">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handleToggleStatus(location)}
-                    >
-                      {location.isActive ? "Deactivate" : "Activate"}
-                    </Button>
-                  </PermissionGuard>
-                  <PermissionGuard module="WAREHOUSE" screen="locations" action="delete">
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(location)}>
-                      Delete
-                    </Button>
-                  </PermissionGuard>
-                </div>
-              )}
-            />
-          </CardContent>
-        </Card>
+        <UnifiedDataTable
+          data={locations}
+          columns={columns}
+          loading={loading}
+          searchPlaceholder="Search locations..."
+          searchValue={searchQuery}
+          onSearch={handleSearch}
+          filters={filterOptions}
+          onFiltersChange={handleFiltersChange}
+          pagination={{
+            page: pagination.page,
+            pages: pagination.pages,
+            total: pagination.total,
+            onPageChange: handlePageChange
+          }}
+          actions={actions}
+          onRefresh={fetchLocations}
+          onExport={() => console.log("Export locations")}
+          emptyMessage="No warehouse locations found. Add your first location to get started."
+        />
       </div>
     </DashboardLayout>
   )

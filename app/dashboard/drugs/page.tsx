@@ -3,17 +3,13 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { DataTable } from "@/components/ui/data-table"
+import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { 
   Plus, 
   Package, 
-  Search, 
-  Filter,
   CheckCircle,
   Clock,
   XCircle,
@@ -64,11 +60,8 @@ export default function DrugsPage() {
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
-  const handleFilterChange = (key: keyof DrugFilters, value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value || undefined
-    }))
+  const handleFiltersChange = (newFilters: Record<string, any>) => {
+    setFilters(newFilters)
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
@@ -139,6 +132,7 @@ export default function DrugsPage() {
     {
       key: "code",
       header: "Code",
+      sortable: true,
       render: (drug: Drug) => (
         <div className="font-mono text-sm font-medium text-orange-600">
           {drug.code}
@@ -148,6 +142,7 @@ export default function DrugsPage() {
     {
       key: "name",
       header: "Drug Name",
+      sortable: true,
       render: (drug: Drug) => (
         <div>
           <div className="font-medium">{drug.name}</div>
@@ -158,6 +153,7 @@ export default function DrugsPage() {
     {
       key: "strength",
       header: "Strength",
+      sortable: true,
       render: (drug: Drug) => (
         <div className="text-sm">
           <div className="font-medium">{drug.strength}</div>
@@ -168,6 +164,7 @@ export default function DrugsPage() {
     {
       key: "route",
       header: "Route",
+      sortable: true,
       render: (drug: Drug) => (
         <Badge variant="outline">{drug.route}</Badge>
       ),
@@ -175,11 +172,13 @@ export default function DrugsPage() {
     {
       key: "approvalStatus",
       header: "Status",
+      sortable: true,
       render: (drug: Drug) => getApprovalStatusBadge(drug.approvalStatus),
     },
     {
       key: "therapeuticClass",
       header: "Class",
+      sortable: true,
       render: (drug: Drug) => (
         <div className="text-sm text-muted-foreground">
           {drug.therapeuticClass || "N/A"}
@@ -189,6 +188,7 @@ export default function DrugsPage() {
     {
       key: "manufacturer",
       header: "Manufacturer",
+      sortable: true,
       render: (drug: Drug) => (
         <div className="text-sm">
           {drug.manufacturer || "N/A"}
@@ -198,9 +198,88 @@ export default function DrugsPage() {
     {
       key: "createdAt",
       header: "Created",
+      sortable: true,
       render: (drug: Drug) => formatDateISO(drug.createdAt),
     },
   ]
+
+  const filterOptions = [
+    {
+      key: "dosageForm",
+      label: "Dosage Form",
+      type: "select" as const,
+      options: [
+        { value: "Tablet", label: "Tablet" },
+        { value: "Capsule", label: "Capsule" },
+        { value: "Syrup", label: "Syrup" },
+        { value: "Injection", label: "Injection" },
+        { value: "Ointment", label: "Ointment" },
+        { value: "Cream", label: "Cream" },
+        { value: "Drops", label: "Drops" },
+        { value: "Powder", label: "Powder" },
+        { value: "Suspension", label: "Suspension" },
+        { value: "Patch", label: "Patch" },
+        { value: "Inhaler", label: "Inhaler" },
+      ],
+    },
+    {
+      key: "route",
+      label: "Route",
+      type: "select" as const,
+      options: [
+        { value: "Oral", label: "Oral" },
+        { value: "IV", label: "IV" },
+        { value: "IM", label: "IM" },
+        { value: "SC", label: "SC" },
+        { value: "Topical", label: "Topical" },
+        { value: "Inhalation", label: "Inhalation" },
+        { value: "Rectal", label: "Rectal" },
+        { value: "Vaginal", label: "Vaginal" },
+        { value: "Ophthalmic", label: "Ophthalmic" },
+        { value: "Otic", label: "Otic" },
+        { value: "Nasal", label: "Nasal" },
+      ],
+    },
+    {
+      key: "approvalStatus",
+      label: "Status",
+      type: "select" as const,
+      options: [
+        { value: "Draft", label: "Draft" },
+        { value: "Pending", label: "Pending" },
+        { value: "Approved", label: "Approved" },
+        { value: "Rejected", label: "Rejected" },
+        { value: "Under Review", label: "Under Review" },
+      ],
+    },
+  ]
+
+  const actions = (drug: Drug) => (
+    <div className="flex items-center gap-2">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => window.location.href = `/dashboard/drugs/${drug.id}`}
+      >
+        <Eye className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => window.location.href = `/dashboard/drugs/${drug.id}/edit`}
+      >
+        <Edit className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => handleDeleteDrug(drug)}
+        className="text-red-600 hover:text-red-700"
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  )
 
   return (
     <DashboardLayout>
@@ -261,136 +340,27 @@ export default function DrugsPage() {
           </Card>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Filters
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Search</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search drugs..."
-                    value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Dosage Form</label>
-                <Select value={filters.dosageForm || ""} onValueChange={(value) => handleFilterChange("dosageForm", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Forms" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Tablet">Tablet</SelectItem>
-                    <SelectItem value="Capsule">Capsule</SelectItem>
-                    <SelectItem value="Syrup">Syrup</SelectItem>
-                    <SelectItem value="Injection">Injection</SelectItem>
-                    <SelectItem value="Ointment">Ointment</SelectItem>
-                    <SelectItem value="Cream">Cream</SelectItem>
-                    <SelectItem value="Drops">Drops</SelectItem>
-                    <SelectItem value="Powder">Powder</SelectItem>
-                    <SelectItem value="Suspension">Suspension</SelectItem>
-                    <SelectItem value="Patch">Patch</SelectItem>
-                    <SelectItem value="Inhaler">Inhaler</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Route</label>
-                <Select value={filters.route || ""} onValueChange={(value) => handleFilterChange("route", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Routes" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Oral">Oral</SelectItem>
-                    <SelectItem value="IV">IV</SelectItem>
-                    <SelectItem value="IM">IM</SelectItem>
-                    <SelectItem value="SC">SC</SelectItem>
-                    <SelectItem value="Topical">Topical</SelectItem>
-                    <SelectItem value="Inhalation">Inhalation</SelectItem>
-                    <SelectItem value="Rectal">Rectal</SelectItem>
-                    <SelectItem value="Vaginal">Vaginal</SelectItem>
-                    <SelectItem value="Ophthalmic">Ophthalmic</SelectItem>
-                    <SelectItem value="Otic">Otic</SelectItem>
-                    <SelectItem value="Nasal">Nasal</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status</label>
-                <Select value={filters.approvalStatus || ""} onValueChange={(value) => handleFilterChange("approvalStatus", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Draft">Draft</SelectItem>
-                    <SelectItem value="Pending">Pending</SelectItem>
-                    <SelectItem value="Approved">Approved</SelectItem>
-                    <SelectItem value="Rejected">Rejected</SelectItem>
-                    <SelectItem value="Under Review">Under Review</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Drugs Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Drugs List</CardTitle>
-            <CardDescription>A comprehensive list of all pharmaceutical drugs in the system.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              data={drugs}
-              columns={columns}
-              loading={loading}
-              onSearch={handleSearch}
-              pagination={{
-                page: pagination.page,
-                pages: pagination.pages,
-                total: pagination.total,
-                onPageChange: handlePageChange
-              }}
-              searchPlaceholder="Search drugs..."
-              actions={[
-                {
-                  label: "View",
-                  icon: <Eye className="h-4 w-4" />,
-                  onClick: (drug: Drug) => {
-                    window.location.href = `/dashboard/drugs/${drug.id}`
-                  }
-                },
-                {
-                  label: "Edit",
-                  icon: <Edit className="h-4 w-4" />,
-                  onClick: (drug: Drug) => {
-                    window.location.href = `/dashboard/drugs/${drug.id}/edit`
-                  }
-                },
-                {
-                  label: "Delete",
-                  icon: <Trash2 className="h-4 w-4" />,
-                  onClick: handleDeleteDrug,
-                  variant: "destructive" as const
-                }
-              ]}
-            />
-          </CardContent>
-        </Card>
+        <UnifiedDataTable
+          data={drugs}
+          columns={columns}
+          loading={loading}
+          searchPlaceholder="Search drugs..."
+          searchValue={searchQuery}
+          onSearch={handleSearch}
+          filters={filterOptions}
+          onFiltersChange={handleFiltersChange}
+          pagination={{
+            page: pagination.page,
+            pages: pagination.pages,
+            total: pagination.total,
+            onPageChange: handlePageChange
+          }}
+          actions={actions}
+          onRefresh={fetchDrugs}
+          onExport={() => console.log("Export drugs")}
+          emptyMessage="No drugs found. Add your first drug to get started."
+        />
       </div>
     </DashboardLayout>
   )

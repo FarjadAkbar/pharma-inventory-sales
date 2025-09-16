@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { DataTable } from "@/components/ui/data-table"
+import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -44,18 +44,18 @@ export default function SitesPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
-  const [typeFilter, setTypeFilter] = useState("all")
+  const [filters, setFilters] = useState<Record<string, any>>({})
 
   useEffect(() => {
     fetchSites()
-  }, [searchQuery, pagination.page, typeFilter])
+  }, [searchQuery, pagination.page, filters])
 
   const fetchSites = async () => {
     try {
       setLoading(true)
       const response = await apiService.getSites({
         search: searchQuery,
-        type: typeFilter !== "all" ? typeFilter : undefined,
+        ...filters,
         page: pagination.page,
         limit: 10,
       })
@@ -157,6 +157,7 @@ export default function SitesPage() {
     {
       key: "name",
       header: "Site",
+      sortable: true,
       render: (site: Site) => (
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -172,6 +173,7 @@ export default function SitesPage() {
     {
       key: "type",
       header: "Type",
+      sortable: true,
       render: (site: Site) => (
         <Badge className={getTypeBadgeColor(site.type)}>
           {site.type.charAt(0).toUpperCase() + site.type.slice(1)}
@@ -181,6 +183,7 @@ export default function SitesPage() {
     {
       key: "location",
       header: "Location",
+      sortable: true,
       render: (site: Site) => (
         <div className="flex items-center gap-2 text-sm">
           <MapPin className="h-3 w-3 text-muted-foreground" />
@@ -191,6 +194,7 @@ export default function SitesPage() {
     {
       key: "contact",
       header: "Contact",
+      sortable: true,
       render: (site: Site) => (
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-sm">
@@ -207,6 +211,7 @@ export default function SitesPage() {
     {
       key: "capacity",
       header: "Capacity",
+      sortable: true,
       render: (site: Site) => (
         <div className="space-y-1 text-sm">
           <div className="flex items-center gap-2">
@@ -220,6 +225,7 @@ export default function SitesPage() {
     {
       key: "facilities",
       header: "Facilities",
+      sortable: true,
       render: (site: Site) => (
         <div className="flex flex-wrap gap-1">
           {site.facilities.slice(0, 2).map((facility) => (
@@ -238,6 +244,7 @@ export default function SitesPage() {
     {
       key: "parentSite",
       header: "Parent Site",
+      sortable: true,
       render: (site: Site) => (
         <span className="text-sm text-muted-foreground">
           {site.parentSiteName || "Root Site"}
@@ -247,6 +254,7 @@ export default function SitesPage() {
     {
       key: "status",
       header: "Status",
+      sortable: true,
       render: (site: Site) => (
         <Badge variant={site.isActive ? "default" : "secondary"}>
           {site.isActive ? "Active" : "Inactive"}
@@ -254,6 +262,59 @@ export default function SitesPage() {
       ),
     },
   ]
+
+  const filterOptions = [
+    {
+      key: "type",
+      label: "Site Type",
+      type: "select" as const,
+      options: [
+        { value: "manufacturing", label: "Manufacturing" },
+        { value: "warehouse", label: "Warehouse" },
+        { value: "distribution", label: "Distribution" },
+        { value: "office", label: "Office" },
+        { value: "laboratory", label: "Laboratory" },
+      ],
+    },
+    {
+      key: "isActive",
+      label: "Status",
+      type: "select" as const,
+      options: [
+        { value: "true", label: "Active" },
+        { value: "false", label: "Inactive" },
+      ],
+    },
+  ]
+
+  const handleFiltersChange = (newFilters: Record<string, any>) => {
+    setFilters(newFilters)
+    setPagination((prev) => ({ ...prev, page: 1 }))
+  }
+
+  const actions = (site: Site) => (
+    <div className="flex items-center gap-2">
+      <PermissionGuard module="MASTER_DATA" screen="sites" action="update">
+        <Button variant="ghost" size="sm" onClick={() => handleEdit(site)}>
+          Edit
+        </Button>
+      </PermissionGuard>
+      <PermissionGuard module="MASTER_DATA" screen="sites" action="update">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => handleToggleStatus(site)}
+        >
+          {site.isActive ? "Deactivate" : "Activate"}
+        </Button>
+      </PermissionGuard>
+      <PermissionGuard module="MASTER_DATA" screen="sites" action="delete">
+        <Button variant="ghost" size="sm" onClick={() => handleDelete(site)}>
+          Delete
+        </Button>
+      </PermissionGuard>
+    </div>
+  )
 
   return (
     <DashboardLayout>
@@ -315,80 +376,27 @@ export default function SitesPage() {
           </Card>
         </div>
 
-        {/* Type Filter */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Filter by Type</CardTitle>
-            <CardDescription>Select a site type to filter results</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { value: "all", label: "All Sites" },
-                { value: "manufacturing", label: "Manufacturing" },
-                { value: "warehouse", label: "Warehouse" },
-                { value: "distribution", label: "Distribution" },
-                { value: "office", label: "Office" },
-                { value: "laboratory", label: "Laboratory" },
-              ].map((type) => (
-                <Button
-                  key={type.value}
-                  variant={typeFilter === type.value ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setTypeFilter(type.value)}
-                >
-                  {type.label}
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Sites Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>All Sites</CardTitle>
-            <CardDescription>A list of all company sites with their details and capabilities.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              data={sites}
-              columns={columns}
-              loading={loading}
-              onSearch={handleSearch}
-              pagination={{
-                page: pagination.page,
-                pages: pagination.pages,
-                total: pagination.total,
-                onPageChange: handlePageChange
-              }}
-              searchPlaceholder="Search sites..."
-              actions={(site: Site) => (
-                <div className="flex items-center gap-2">
-                  <PermissionGuard module="MASTER_DATA" screen="sites" action="update">
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(site)}>
-                      Edit
-                    </Button>
-                  </PermissionGuard>
-                  <PermissionGuard module="MASTER_DATA" screen="sites" action="update">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handleToggleStatus(site)}
-                    >
-                      {site.isActive ? "Deactivate" : "Activate"}
-                    </Button>
-                  </PermissionGuard>
-                  <PermissionGuard module="MASTER_DATA" screen="sites" action="delete">
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(site)}>
-                      Delete
-                    </Button>
-                  </PermissionGuard>
-                </div>
-              )}
-            />
-          </CardContent>
-        </Card>
+        <UnifiedDataTable
+          data={sites}
+          columns={columns}
+          loading={loading}
+          searchPlaceholder="Search sites..."
+          searchValue={searchQuery}
+          onSearch={handleSearch}
+          filters={filterOptions}
+          onFiltersChange={handleFiltersChange}
+          pagination={{
+            page: pagination.page,
+            pages: pagination.pages,
+            total: pagination.total,
+            onPageChange: handlePageChange
+          }}
+          actions={actions}
+          onRefresh={fetchSites}
+          onExport={() => console.log("Export sites")}
+          emptyMessage="No sites found. Add your first site to get started."
+        />
       </div>
     </DashboardLayout>
   )

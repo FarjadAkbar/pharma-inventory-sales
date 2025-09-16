@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { DataTable } from "@/components/ui/data-table"
+import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -47,20 +47,18 @@ export default function AccountsPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
-  const [typeFilter, setTypeFilter] = useState("all")
-  const [statusFilter, setStatusFilter] = useState("all")
+  const [filters, setFilters] = useState<Record<string, any>>({})
 
   useEffect(() => {
     fetchAccounts()
-  }, [searchQuery, pagination.page, typeFilter, statusFilter])
+  }, [searchQuery, pagination.page, filters])
 
   const fetchAccounts = async () => {
     try {
       setLoading(true)
       const response = await apiService.getAccounts({
         search: searchQuery,
-        type: typeFilter !== "all" ? typeFilter : undefined,
-        status: statusFilter !== "all" ? statusFilter : undefined,
+        ...filters,
         page: pagination.page,
         limit: 10,
       })
@@ -191,6 +189,7 @@ export default function AccountsPage() {
     {
       key: "name",
       header: "Account",
+      sortable: true,
       render: (account: Account) => (
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -206,6 +205,7 @@ export default function AccountsPage() {
     {
       key: "type",
       header: "Type & Size",
+      sortable: true,
       render: (account: Account) => (
         <div className="space-y-1">
           <Badge className={getTypeBadgeColor(account.type)}>
@@ -220,6 +220,7 @@ export default function AccountsPage() {
     {
       key: "contact",
       header: "Contact",
+      sortable: true,
       render: (account: Account) => (
         <div className="space-y-1 text-sm">
           <div className="flex items-center gap-2">
@@ -236,6 +237,7 @@ export default function AccountsPage() {
     {
       key: "location",
       header: "Location",
+      sortable: true,
       render: (account: Account) => (
         <div className="flex items-center gap-2 text-sm">
           <MapPin className="h-3 w-3 text-muted-foreground" />
@@ -246,6 +248,7 @@ export default function AccountsPage() {
     {
       key: "rating",
       header: "Rating",
+      sortable: true,
       render: (account: Account) => (
         <div className="flex items-center gap-2">
           <div className="flex">{getRatingStars(account.rating)}</div>
@@ -256,6 +259,7 @@ export default function AccountsPage() {
     {
       key: "performance",
       header: "Performance",
+      sortable: true,
       render: (account: Account) => (
         <div className="space-y-1 text-sm">
           <div className="flex items-center gap-2">
@@ -272,6 +276,7 @@ export default function AccountsPage() {
     {
       key: "status",
       header: "Status",
+      sortable: true,
       render: (account: Account) => (
         <Badge className={getStatusBadgeColor(account.status)}>
           {account.status.charAt(0).toUpperCase() + account.status.slice(1)}
@@ -279,6 +284,62 @@ export default function AccountsPage() {
       ),
     },
   ]
+
+  const filterOptions = [
+    {
+      key: "type",
+      label: "Type",
+      type: "select" as const,
+      options: [
+        { value: "hospital", label: "Hospital" },
+        { value: "pharmacy", label: "Pharmacy" },
+        { value: "clinic", label: "Clinic" },
+        { value: "distributor", label: "Distributor" },
+        { value: "government", label: "Government" },
+        { value: "other", label: "Other" },
+      ],
+    },
+    {
+      key: "status",
+      label: "Status",
+      type: "select" as const,
+      options: [
+        { value: "active", label: "Active" },
+        { value: "inactive", label: "Inactive" },
+        { value: "suspended", label: "Suspended" },
+        { value: "prospect", label: "Prospect" },
+      ],
+    },
+  ]
+
+  const handleFiltersChange = (newFilters: Record<string, any>) => {
+    setFilters(newFilters)
+    setPagination((prev) => ({ ...prev, page: 1 }))
+  }
+
+  const actions = (account: Account) => (
+    <div className="flex items-center gap-2">
+      <PermissionGuard module="SALES" screen="accounts" action="update">
+        <Button variant="ghost" size="sm" onClick={() => handleEdit(account)}>
+          Edit
+        </Button>
+      </PermissionGuard>
+      <PermissionGuard module="SALES" screen="accounts" action="update">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => handleToggleStatus(account)}
+        >
+          {account.status === "active" ? "Deactivate" : "Activate"}
+        </Button>
+      </PermissionGuard>
+      <PermissionGuard module="SALES" screen="accounts" action="delete">
+        <Button variant="ghost" size="sm" onClick={() => handleDelete(account)}>
+          Delete
+        </Button>
+      </PermissionGuard>
+    </div>
+  )
 
   return (
     <DashboardLayout>
@@ -340,107 +401,27 @@ export default function AccountsPage() {
           </Card>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Filters</CardTitle>
-            <CardDescription>Filter accounts by type and status</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Type</label>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { value: "all", label: "All Types" },
-                    { value: "hospital", label: "Hospital" },
-                    { value: "pharmacy", label: "Pharmacy" },
-                    { value: "clinic", label: "Clinic" },
-                    { value: "distributor", label: "Distributor" },
-                    { value: "government", label: "Government" },
-                    { value: "other", label: "Other" },
-                  ].map((type) => (
-                    <Button
-                      key={type.value}
-                      variant={typeFilter === type.value ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setTypeFilter(type.value)}
-                    >
-                      {type.label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">Status</label>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { value: "all", label: "All Status" },
-                    { value: "active", label: "Active" },
-                    { value: "inactive", label: "Inactive" },
-                    { value: "suspended", label: "Suspended" },
-                    { value: "prospect", label: "Prospect" },
-                  ].map((status) => (
-                    <Button
-                      key={status.value}
-                      variant={statusFilter === status.value ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setStatusFilter(status.value)}
-                    >
-                      {status.label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Accounts Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>All Accounts</CardTitle>
-            <CardDescription>A list of all customer accounts with their contact information and performance.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              data={accounts}
-              columns={columns}
-              loading={loading}
-              onSearch={handleSearch}
-              pagination={{
-                page: pagination.page,
-                pages: pagination.pages,
-                total: pagination.total,
-                onPageChange: handlePageChange
-              }}
-              searchPlaceholder="Search accounts..."
-              actions={(account: Account) => (
-                <div className="flex items-center gap-2">
-                  <PermissionGuard module="SALES" screen="accounts" action="update">
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(account)}>
-                      Edit
-                    </Button>
-                  </PermissionGuard>
-                  <PermissionGuard module="SALES" screen="accounts" action="update">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handleToggleStatus(account)}
-                    >
-                      {account.status === "active" ? "Deactivate" : "Activate"}
-                    </Button>
-                  </PermissionGuard>
-                  <PermissionGuard module="SALES" screen="accounts" action="delete">
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(account)}>
-                      Delete
-                    </Button>
-                  </PermissionGuard>
-                </div>
-              )}
-            />
-          </CardContent>
-        </Card>
+        <UnifiedDataTable
+          data={accounts}
+          columns={columns}
+          loading={loading}
+          searchPlaceholder="Search accounts..."
+          searchValue={searchQuery}
+          onSearch={handleSearch}
+          filters={filterOptions}
+          onFiltersChange={handleFiltersChange}
+          pagination={{
+            page: pagination.page,
+            pages: pagination.pages,
+            total: pagination.total,
+            onPageChange: handlePageChange
+          }}
+          actions={actions}
+          onRefresh={fetchAccounts}
+          onExport={() => console.log("Export accounts")}
+          emptyMessage="No accounts found. Add your first account to get started."
+        />
       </div>
     </DashboardLayout>
   )

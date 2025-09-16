@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { DataTable } from "@/components/ui/data-table"
+import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -56,20 +56,18 @@ export default function StorageLocationsPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
-  const [typeFilter, setTypeFilter] = useState("all")
-  const [siteFilter, setSiteFilter] = useState("all")
+  const [filters, setFilters] = useState<Record<string, any>>({})
 
   useEffect(() => {
     fetchLocations()
-  }, [searchQuery, pagination.page, typeFilter, siteFilter])
+  }, [searchQuery, pagination.page, filters])
 
   const fetchLocations = async () => {
     try {
       setLoading(true)
       const response = await apiService.getStorageLocations({
         search: searchQuery,
-        type: typeFilter !== "all" ? typeFilter : undefined,
-        siteId: siteFilter !== "all" ? siteFilter : undefined,
+        ...filters,
         page: pagination.page,
         limit: 10,
       })
@@ -195,6 +193,7 @@ export default function StorageLocationsPage() {
     {
       key: "name",
       header: "Location",
+      sortable: true,
       render: (location: StorageLocation) => (
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -210,6 +209,7 @@ export default function StorageLocationsPage() {
     {
       key: "type",
       header: "Type",
+      sortable: true,
       render: (location: StorageLocation) => (
         <Badge className={getTypeBadgeColor(location.type)}>
           {location.type.charAt(0).toUpperCase() + location.type.slice(1)}
@@ -219,6 +219,7 @@ export default function StorageLocationsPage() {
     {
       key: "site",
       header: "Site",
+      sortable: true,
       render: (location: StorageLocation) => (
         <div className="flex items-center gap-2 text-sm">
           <MapPin className="h-3 w-3 text-muted-foreground" />
@@ -229,6 +230,7 @@ export default function StorageLocationsPage() {
     {
       key: "temperature",
       header: "Temperature",
+      sortable: true,
       render: (location: StorageLocation) => {
         const status = getTemperatureStatus(location)
         return (
@@ -247,6 +249,7 @@ export default function StorageLocationsPage() {
     {
       key: "capacity",
       header: "Capacity",
+      sortable: true,
       render: (location: StorageLocation) => (
         <div className="space-y-1 text-sm">
           <div>Volume: {location.capacity.volume} {location.capacity.unit}</div>
@@ -257,6 +260,7 @@ export default function StorageLocationsPage() {
     {
       key: "utilization",
       header: "Utilization",
+      sortable: true,
       render: (location: StorageLocation) => (
         <div className="space-y-1">
           <div className="flex items-center gap-2">
@@ -278,6 +282,7 @@ export default function StorageLocationsPage() {
     {
       key: "accessLevel",
       header: "Access",
+      sortable: true,
       render: (location: StorageLocation) => (
         <Badge className={getAccessLevelBadgeColor(location.accessLevel)}>
           {location.accessLevel.charAt(0).toUpperCase() + location.accessLevel.slice(1)}
@@ -287,6 +292,7 @@ export default function StorageLocationsPage() {
     {
       key: "status",
       header: "Status",
+      sortable: true,
       render: (location: StorageLocation) => (
         <div className="space-y-1">
           <Badge variant={location.isActive ? "default" : "secondary"}>
@@ -301,6 +307,71 @@ export default function StorageLocationsPage() {
       ),
     },
   ]
+
+  const filterOptions = [
+    {
+      key: "type",
+      label: "Type",
+      type: "select" as const,
+      options: [
+        { value: "room", label: "Room" },
+        { value: "rack", label: "Rack" },
+        { value: "shelf", label: "Shelf" },
+        { value: "bin", label: "Bin" },
+        { value: "freezer", label: "Freezer" },
+        { value: "refrigerator", label: "Refrigerator" },
+      ],
+    },
+    {
+      key: "siteId",
+      label: "Site",
+      type: "select" as const,
+      options: [
+        { value: "1", label: "Main Manufacturing Plant" },
+        { value: "2", label: "Central Warehouse" },
+        { value: "3", label: "Distribution Center" },
+        { value: "4", label: "Quality Lab" },
+      ],
+    },
+    {
+      key: "isActive",
+      label: "Status",
+      type: "select" as const,
+      options: [
+        { value: "true", label: "Active" },
+        { value: "false", label: "Inactive" },
+      ],
+    },
+  ]
+
+  const handleFiltersChange = (newFilters: Record<string, any>) => {
+    setFilters(newFilters)
+    setPagination((prev) => ({ ...prev, page: 1 }))
+  }
+
+  const actions = (location: StorageLocation) => (
+    <div className="flex items-center gap-2">
+      <PermissionGuard module="MASTER_DATA" screen="storage_locations" action="update">
+        <Button variant="ghost" size="sm" onClick={() => handleEdit(location)}>
+          Edit
+        </Button>
+      </PermissionGuard>
+      <PermissionGuard module="MASTER_DATA" screen="storage_locations" action="update">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => handleToggleStatus(location)}
+        >
+          {location.isActive ? "Deactivate" : "Activate"}
+        </Button>
+      </PermissionGuard>
+      <PermissionGuard module="MASTER_DATA" screen="storage_locations" action="delete">
+        <Button variant="ghost" size="sm" onClick={() => handleDelete(location)}>
+          Delete
+        </Button>
+      </PermissionGuard>
+    </div>
+  )
 
   return (
     <DashboardLayout>
@@ -362,86 +433,27 @@ export default function StorageLocationsPage() {
           </Card>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Filters</CardTitle>
-            <CardDescription>Filter storage locations by type and site</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Type</label>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { value: "all", label: "All Types" },
-                    { value: "room", label: "Room" },
-                    { value: "rack", label: "Rack" },
-                    { value: "shelf", label: "Shelf" },
-                    { value: "bin", label: "Bin" },
-                    { value: "freezer", label: "Freezer" },
-                    { value: "refrigerator", label: "Refrigerator" },
-                  ].map((type) => (
-                    <Button
-                      key={type.value}
-                      variant={typeFilter === type.value ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setTypeFilter(type.value)}
-                    >
-                      {type.label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Locations Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>All Storage Locations</CardTitle>
-            <CardDescription>A list of all storage locations with their conditions and utilization.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              data={locations}
-              columns={columns}
-              loading={loading}
-              onSearch={handleSearch}
-              pagination={{
-                page: pagination.page,
-                pages: pagination.pages,
-                total: pagination.total,
-                onPageChange: handlePageChange
-              }}
-              searchPlaceholder="Search locations..."
-              actions={(location: StorageLocation) => (
-                <div className="flex items-center gap-2">
-                  <PermissionGuard module="MASTER_DATA" screen="storage_locations" action="update">
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(location)}>
-                      Edit
-                    </Button>
-                  </PermissionGuard>
-                  <PermissionGuard module="MASTER_DATA" screen="storage_locations" action="update">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handleToggleStatus(location)}
-                    >
-                      {location.isActive ? "Deactivate" : "Activate"}
-                    </Button>
-                  </PermissionGuard>
-                  <PermissionGuard module="MASTER_DATA" screen="storage_locations" action="delete">
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(location)}>
-                      Delete
-                    </Button>
-                  </PermissionGuard>
-                </div>
-              )}
-            />
-          </CardContent>
-        </Card>
+        <UnifiedDataTable
+          data={locations}
+          columns={columns}
+          loading={loading}
+          searchPlaceholder="Search locations..."
+          searchValue={searchQuery}
+          onSearch={handleSearch}
+          filters={filterOptions}
+          onFiltersChange={handleFiltersChange}
+          pagination={{
+            page: pagination.page,
+            pages: pagination.pages,
+            total: pagination.total,
+            onPageChange: handlePageChange
+          }}
+          actions={actions}
+          onRefresh={fetchLocations}
+          onExport={() => console.log("Export storage locations")}
+          emptyMessage="No storage locations found. Add your first location to get started."
+        />
       </div>
     </DashboardLayout>
   )
