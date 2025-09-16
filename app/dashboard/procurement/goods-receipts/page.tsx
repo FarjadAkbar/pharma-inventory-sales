@@ -28,6 +28,7 @@ import {
   Building2,
   User
 } from "lucide-react"
+import Link from "next/link"
 import { apiService } from "@/services/api.service"
 import type { GoodsReceipt, GRNFilters } from "@/types/procurement"
 import { formatDateISO } from "@/lib/utils"
@@ -79,6 +80,38 @@ export default function GoodsReceiptsPage() {
 
   const handlePageChange = (page: number) => {
     setPagination((prev) => ({ ...prev, page }))
+  }
+
+  const handleDeleteGoodsReceipt = async (grn: GoodsReceipt) => {
+    if (confirm(`Are you sure you want to delete GRN ${grn.grnNumber}?`)) {
+      try {
+        const response = await apiService.deleteGoodsReceipt(grn.id)
+        if (response.success) {
+          fetchGoodsReceipts() // Refresh the list
+        } else {
+          alert("Failed to delete goods receipt")
+        }
+      } catch (error) {
+        console.error("Failed to delete goods receipt:", error)
+        alert("Failed to delete goods receipt")
+      }
+    }
+  }
+
+  const handleRequestQCSample = async (grn: GoodsReceipt) => {
+    if (confirm(`Are you sure you want to request QC sample for GRN ${grn.grnNumber}?`)) {
+      try {
+        const response = await apiService.requestQCSample(grn.id)
+        if (response.success) {
+          fetchGoodsReceipts() // Refresh the list
+        } else {
+          alert("Failed to request QC sample")
+        }
+      } catch (error) {
+        console.error("Failed to request QC sample:", error)
+        alert("Failed to request QC sample")
+      }
+    }
   }
 
   const getStatusBadge = (status: string) => {
@@ -217,10 +250,12 @@ export default function GoodsReceiptsPage() {
             <h1 className="text-3xl font-bold tracking-tight">Goods Receipts</h1>
             <p className="text-muted-foreground">Manage goods receipts and quality control samples</p>
           </div>
-          <Button className="bg-orange-600 hover:bg-orange-700">
-            <Plus className="mr-2 h-4 w-4" />
-            Create GRN
-          </Button>
+          <Link href="/dashboard/procurement/goods-receipts/new">
+            <Button className="bg-orange-600 hover:bg-orange-700">
+              <Plus className="mr-2 h-4 w-4" />
+              Create GRN
+            </Button>
+          </Link>
         </div>
 
         {/* Stats Cards */}
@@ -352,24 +387,35 @@ export default function GoodsReceiptsPage() {
                 onPageChange: handlePageChange
               }}
               searchPlaceholder="Search goods receipts..."
-              actions={(grn: GoodsReceipt) => (
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  {grn.status === "Pending QC" && (
-                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
-                      <TestTube className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
+              actions={[
+                {
+                  label: "View",
+                  icon: <Eye className="h-4 w-4" />,
+                  onClick: (grn: GoodsReceipt) => {
+                    window.location.href = `/dashboard/procurement/goods-receipts/${grn.id}`
+                  }
+                },
+                {
+                  label: "Edit",
+                  icon: <Edit className="h-4 w-4" />,
+                  onClick: (grn: GoodsReceipt) => {
+                    window.location.href = `/dashboard/procurement/goods-receipts/${grn.id}/edit`
+                  }
+                },
+                {
+                  label: "Request QC Sample",
+                  icon: <TestTube className="h-4 w-4" />,
+                  onClick: handleRequestQCSample,
+                  hidden: (grn: GoodsReceipt) => grn.status !== "Pending QC" || grn.qcSampleRequested,
+                  variant: "default" as const
+                },
+                {
+                  label: "Delete",
+                  icon: <Trash2 className="h-4 w-4" />,
+                  onClick: handleDeleteGoodsReceipt,
+                  variant: "destructive" as const
+                }
+              ]}
             />
           </CardContent>
         </Card>

@@ -34,6 +34,8 @@ import {
   Mail
 } from "lucide-react"
 import { apiService } from "@/services/api.service"
+import { SalesOrderForm } from "@/components/sales/sales-order-form"
+import { toast } from "sonner"
 import type { SalesOrder, SalesOrderFilters } from "@/types/distribution"
 import { formatDateISO } from "@/lib/utils"
 
@@ -84,6 +86,72 @@ export default function SalesOrdersPage() {
 
   const handlePageChange = (page: number) => {
     setPagination((prev) => ({ ...prev, page }))
+  }
+
+  const handleView = (order: SalesOrder) => {
+    console.log("View order:", order)
+    // TODO: Implement view order functionality
+  }
+
+  const handleEdit = (order: SalesOrder) => {
+    console.log("Edit order:", order)
+    // TODO: Implement edit order functionality
+  }
+
+  const handleApprove = async (order: SalesOrder) => {
+    try {
+      const response = await apiService.updateSalesOrder(order.id, {
+        ...order,
+        status: "Approved"
+      })
+      
+      if (response.success) {
+        toast.success("Order approved successfully")
+        fetchSalesOrders()
+      } else {
+        toast.error("Failed to approve order")
+      }
+    } catch (error) {
+      console.error("Error approving order:", error)
+      toast.error("Failed to approve order")
+    }
+  }
+
+  const handleProcess = async (order: SalesOrder) => {
+    try {
+      const response = await apiService.updateSalesOrder(order.id, {
+        ...order,
+        status: "In Progress"
+      })
+      
+      if (response.success) {
+        toast.success("Order processing started")
+        fetchSalesOrders()
+      } else {
+        toast.error("Failed to start processing")
+      }
+    } catch (error) {
+      console.error("Error processing order:", error)
+      toast.error("Failed to start processing")
+    }
+  }
+
+  const handleDelete = async (order: SalesOrder) => {
+    if (window.confirm("Are you sure you want to delete this order?")) {
+      try {
+        const response = await apiService.deleteSalesOrder(order.id)
+        
+        if (response.success) {
+          toast.success("Order deleted successfully")
+          fetchSalesOrders()
+        } else {
+          toast.error("Failed to delete order")
+        }
+      } catch (error) {
+        console.error("Error deleting order:", error)
+        toast.error("Failed to delete order")
+      }
+    }
   }
 
   const getStatusBadge = (status: string) => {
@@ -265,10 +333,7 @@ export default function SalesOrdersPage() {
             <h1 className="text-3xl font-bold tracking-tight">Sales Orders</h1>
             <p className="text-muted-foreground">Manage sales orders and customer relationships</p>
           </div>
-          <Button className="bg-orange-600 hover:bg-orange-700">
-            <Plus className="mr-2 h-4 w-4" />
-            New Order
-          </Button>
+          <SalesOrderForm onSuccess={fetchSalesOrders} />
         </div>
 
         {/* Stats Cards */}
@@ -459,23 +524,23 @@ export default function SalesOrdersPage() {
               searchPlaceholder="Search sales orders..."
               actions={(order: SalesOrder) => (
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => handleView(order)}>
                     <Eye className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => handleEdit(order)}>
                     <Edit className="h-4 w-4" />
                   </Button>
                   {order.status === "Pending Approval" && (
-                    <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700">
+                    <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700" onClick={() => handleApprove(order)}>
                       <CheckCircle className="h-4 w-4" />
                     </Button>
                   )}
                   {order.status === "Approved" && (
-                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700" onClick={() => handleProcess(order)}>
                       <Play className="h-4 w-4" />
                     </Button>
                   )}
-                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={() => handleDelete(order)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>

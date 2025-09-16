@@ -22,6 +22,7 @@ import {
   TrendingUp,
   TrendingDown
 } from "lucide-react"
+import Link from "next/link"
 import { apiService } from "@/services/api.service"
 import type { RawMaterial, RawMaterialFilters } from "@/types/pharma"
 import { formatDateISO } from "@/lib/utils"
@@ -73,6 +74,22 @@ export default function RawMaterialsPage() {
 
   const handlePageChange = (page: number) => {
     setPagination((prev) => ({ ...prev, page }))
+  }
+
+  const handleDeleteRawMaterial = async (rawMaterial: RawMaterial) => {
+    if (confirm(`Are you sure you want to delete ${rawMaterial.name}?`)) {
+      try {
+        const response = await apiService.deleteRawMaterial(rawMaterial.id)
+        if (response.success) {
+          fetchRawMaterials() // Refresh the list
+        } else {
+          alert("Failed to delete raw material")
+        }
+      } catch (error) {
+        console.error("Failed to delete raw material:", error)
+        alert("Failed to delete raw material")
+      }
+    }
   }
 
   const getStockStatus = (current: number, reorderLevel: number) => {
@@ -201,10 +218,12 @@ export default function RawMaterialsPage() {
             <h1 className="text-3xl font-bold tracking-tight">Raw Materials Management</h1>
             <p className="text-muted-foreground">Manage pharmaceutical raw materials and excipients</p>
           </div>
-          <Button className="bg-orange-600 hover:bg-orange-700">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Raw Material
-          </Button>
+          <Link href="/dashboard/raw-materials/new">
+            <Button className="bg-orange-600 hover:bg-orange-700">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Raw Material
+            </Button>
+          </Link>
         </div>
 
         {/* Stats Cards */}
@@ -351,19 +370,28 @@ export default function RawMaterialsPage() {
                 onPageChange: handlePageChange
               }}
               searchPlaceholder="Search raw materials..."
-              actions={(rm: RawMaterial) => (
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
+              actions={[
+                {
+                  label: "View",
+                  icon: <Eye className="h-4 w-4" />,
+                  onClick: (rm: RawMaterial) => {
+                    window.location.href = `/dashboard/raw-materials/${rm.id}`
+                  }
+                },
+                {
+                  label: "Edit",
+                  icon: <Edit className="h-4 w-4" />,
+                  onClick: (rm: RawMaterial) => {
+                    window.location.href = `/dashboard/raw-materials/${rm.id}/edit`
+                  }
+                },
+                {
+                  label: "Delete",
+                  icon: <Trash2 className="h-4 w-4" />,
+                  onClick: handleDeleteRawMaterial,
+                  variant: "destructive" as const
+                }
+              ]}
             />
           </CardContent>
         </Card>

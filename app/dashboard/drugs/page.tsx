@@ -22,6 +22,7 @@ import {
   Edit,
   Trash2
 } from "lucide-react"
+import Link from "next/link"
 import { apiService } from "@/services/api.service"
 import type { Drug, DrugFilters } from "@/types/pharma"
 import { formatDateISO } from "@/lib/utils"
@@ -73,6 +74,22 @@ export default function DrugsPage() {
 
   const handlePageChange = (page: number) => {
     setPagination((prev) => ({ ...prev, page }))
+  }
+
+  const handleDeleteDrug = async (drug: Drug) => {
+    if (confirm(`Are you sure you want to delete ${drug.name}?`)) {
+      try {
+        const response = await apiService.deleteDrug(drug.id)
+        if (response.success) {
+          fetchDrugs() // Refresh the list
+        } else {
+          alert("Failed to delete drug")
+        }
+      } catch (error) {
+        console.error("Failed to delete drug:", error)
+        alert("Failed to delete drug")
+      }
+    }
   }
 
   const getApprovalStatusBadge = (status: string) => {
@@ -193,10 +210,12 @@ export default function DrugsPage() {
             <h1 className="text-3xl font-bold tracking-tight">Drugs Management</h1>
             <p className="text-muted-foreground">Manage pharmaceutical drugs and their specifications</p>
           </div>
-          <Button className="bg-orange-600 hover:bg-orange-700">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Drug
-          </Button>
+          <Link href="/dashboard/drugs/new">
+            <Button className="bg-orange-600 hover:bg-orange-700">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Drug
+            </Button>
+          </Link>
         </div>
 
         {/* Stats Cards */}
@@ -347,19 +366,28 @@ export default function DrugsPage() {
                 onPageChange: handlePageChange
               }}
               searchPlaceholder="Search drugs..."
-              actions={(drug: Drug) => (
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
+              actions={[
+                {
+                  label: "View",
+                  icon: <Eye className="h-4 w-4" />,
+                  onClick: (drug: Drug) => {
+                    window.location.href = `/dashboard/drugs/${drug.id}`
+                  }
+                },
+                {
+                  label: "Edit",
+                  icon: <Edit className="h-4 w-4" />,
+                  onClick: (drug: Drug) => {
+                    window.location.href = `/dashboard/drugs/${drug.id}/edit`
+                  }
+                },
+                {
+                  label: "Delete",
+                  icon: <Trash2 className="h-4 w-4" />,
+                  onClick: handleDeleteDrug,
+                  variant: "destructive" as const
+                }
+              ]}
             />
           </CardContent>
         </Card>

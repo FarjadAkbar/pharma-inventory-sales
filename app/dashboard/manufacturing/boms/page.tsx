@@ -30,6 +30,7 @@ import {
   FileCheck,
   AlertCircle
 } from "lucide-react"
+import Link from "next/link"
 import { apiService } from "@/services/api.service"
 import type { BOM, BOMFilters } from "@/types/manufacturing"
 import { formatDateISO } from "@/lib/utils"
@@ -81,6 +82,38 @@ export default function BOMsPage() {
 
   const handlePageChange = (page: number) => {
     setPagination((prev) => ({ ...prev, page }))
+  }
+
+  const handleDeleteBOM = async (bom: BOM) => {
+    if (confirm(`Are you sure you want to delete BOM ${bom.bomNumber}?`)) {
+      try {
+        const response = await apiService.deleteBOM(bom.id)
+        if (response.success) {
+          fetchBOMs() // Refresh the list
+        } else {
+          alert("Failed to delete BOM")
+        }
+      } catch (error) {
+        console.error("Failed to delete BOM:", error)
+        alert("Failed to delete BOM")
+      }
+    }
+  }
+
+  const handleApproveBOM = async (bom: BOM) => {
+    if (confirm(`Are you sure you want to approve BOM ${bom.bomNumber}?`)) {
+      try {
+        const response = await apiService.approveBOM(bom.id)
+        if (response.success) {
+          fetchBOMs() // Refresh the list
+        } else {
+          alert("Failed to approve BOM")
+        }
+      } catch (error) {
+        console.error("Failed to approve BOM:", error)
+        alert("Failed to approve BOM")
+      }
+    }
   }
 
   const getStatusBadge = (status: string) => {
@@ -205,10 +238,12 @@ export default function BOMsPage() {
             <h1 className="text-3xl font-bold tracking-tight">Bill of Materials</h1>
             <p className="text-muted-foreground">Manage manufacturing recipes and material requirements</p>
           </div>
-          <Button className="bg-orange-600 hover:bg-orange-700">
-            <Plus className="mr-2 h-4 w-4" />
-            New BOM
-          </Button>
+          <Link href="/dashboard/manufacturing/boms/new">
+            <Button className="bg-orange-600 hover:bg-orange-700">
+              <Plus className="mr-2 h-4 w-4" />
+              New BOM
+            </Button>
+          </Link>
         </div>
 
         {/* Stats Cards */}
@@ -353,24 +388,35 @@ export default function BOMsPage() {
                 onPageChange: handlePageChange
               }}
               searchPlaceholder="Search BOMs..."
-              actions={(bom: BOM) => (
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  {bom.status === "Draft" && (
-                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
-                      <FileCheck className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
+              actions={[
+                {
+                  label: "View",
+                  icon: <Eye className="h-4 w-4" />,
+                  onClick: (bom: BOM) => {
+                    window.location.href = `/dashboard/manufacturing/boms/${bom.id}`
+                  }
+                },
+                {
+                  label: "Edit",
+                  icon: <Edit className="h-4 w-4" />,
+                  onClick: (bom: BOM) => {
+                    window.location.href = `/dashboard/manufacturing/boms/${bom.id}/edit`
+                  }
+                },
+                {
+                  label: "Approve",
+                  icon: <FileCheck className="h-4 w-4" />,
+                  onClick: handleApproveBOM,
+                  hidden: (bom: BOM) => bom.status !== "Draft",
+                  variant: "default" as const
+                },
+                {
+                  label: "Delete",
+                  icon: <Trash2 className="h-4 w-4" />,
+                  onClick: handleDeleteBOM,
+                  variant: "destructive" as const
+                }
+              ]}
             />
           </CardContent>
         </Card>

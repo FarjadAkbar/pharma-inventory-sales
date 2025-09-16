@@ -1,7 +1,7 @@
 // Quality Control Module Types
 
 export interface QCTest {
-  id: string
+  id?: string
   code: string
   name: string
   description: string
@@ -10,21 +10,29 @@ export interface QCTest {
   specifications: QCTestSpecification[]
   unit: string
   isActive: boolean
-  createdBy: string
-  createdByName: string
+  equipmentRequired?: string
+  duration?: string
+  temperature?: string
+  notes?: string
+  createdById?: string
+  createdByName?: string
+  createdBy?: string
   createdAt: string
   updatedAt: string
 }
 
 export interface QCTestSpecification {
-  id: string
+  id?: string
   parameter: string
+  specification: string
+  unit: string
+  type: string
+  description?: string
   minValue?: number
   maxValue?: number
   targetValue?: number
-  unit: string
-  criteria: string
-  isRequired: boolean
+  criteria?: string
+  isRequired?: boolean
 }
 
 export interface QCSample {
