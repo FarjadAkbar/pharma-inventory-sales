@@ -1,11 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Form, FormField, FormInput, FormSelect, FormCheckbox, FormActions } from "@/components/ui/form"
+import { useFormState } from "@/lib/api-response"
+import { useFormValidation, commonValidationRules } from "@/lib/form-validation"
 import type { User } from "@/types/auth"
 import { useStore } from "@/contexts/store.context"
 
@@ -25,22 +24,49 @@ interface UserFormProps {
 
 export function UserForm({ initialData, onSubmit, submitLabel = "Save" }: UserFormProps) {
   const { stores } = useStore()
-  const [formData, setFormData] = useState({
+  
+  const initialFormData = {
     name: initialData?.name || "",
     email: initialData?.email || "",
     role: (initialData?.role as any) || ("employee" as const),
     assignedStores: (initialData as any)?.assignedStores || ([] as string[]),
     screenPermissions: (initialData as any)?.screenPermissions || ([] as ScreenPermission[]),
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+  const formState = useFormState(initialFormData)
+  const validation = useFormValidation({
+    ...commonValidationRules,
+    role: {
+      required: true,
+      message: "Please select a role"
+    }
+  })
+
+  const handleSubmit = async (data: any) => {
+    formState.setLoading(true)
+    formState.clearErrors()
+    
     try {
-      await onSubmit(formData)
+      // Validate form
+      const errors = validation.validateForm(data)
+      if (validation.hasErrors()) {
+        formState.setErrors(errors)
+        return
+      }
+
+      await onSubmit({
+        name: data.name,
+        email: data.email,
+        role: data.role,
+        assignedStores: data.assignedStores ? [data.assignedStores] : [],
+        screenPermissions: formState.data.screenPermissions
+      })
+      
+      formState.setSuccess("User saved successfully")
+    } catch (error: any) {
+      formState.setError(error.message || "Failed to save user")
     } finally {
-      setIsSubmitting(false)
+      formState.setLoading(false)
     }
   }
 
@@ -50,53 +76,59 @@ export function UserForm({ initialData, onSubmit, submitLabel = "Save" }: UserFo
         <CardTitle>User Details</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <Form 
+          onSubmit={handleSubmit} 
+          loading={formState.isLoading}
+          error={formState.error}
+          success={formState.success}
+        >
           <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input id="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
-            </div>
+            <FormInput
+              name="name"
+              label="Full Name"
+              value={formState.data.name}
+              onChange={(e) => formState.updateField('name', e.target.value)}
+              error={formState.errors.name}
+              required
+            />
+            <FormInput
+              name="email"
+              label="Email"
+              type="email"
+              value={formState.data.email}
+              onChange={(e) => formState.updateField('email', e.target.value)}
+              error={formState.errors.email}
+              required
+            />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="role">Role</Label>
-            <Select value={formData.role} onValueChange={(value: any) => setFormData({ ...formData, role: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="employee">Employee</SelectItem>
-                <SelectItem value="store_manager">Store Manager</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <FormSelect
+            name="role"
+            label="Role"
+            value={formState.data.role}
+            onChange={(e) => formState.updateField('role', e.target.value)}
+            error={formState.errors.role}
+            required
+            options={[
+              { value: "employee", label: "Employee" },
+              { value: "store_manager", label: "Store Manager" },
+              { value: "admin", label: "Admin" }
+            ]}
+            placeholder="Select a role"
+          />
 
-          <div className="space-y-2">
-            <Label>Assign Store</Label>
-            <Select
-              value={formData.assignedStores[0] || ""}
-              onValueChange={(value: string) => setFormData((prev) => ({ ...prev, assignedStores: value ? [value] : [] }))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a store" />
-              </SelectTrigger>
-              <SelectContent>
-                {stores.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {s.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <FormSelect
+            name="assignedStores"
+            label="Assign Store"
+            value={formState.data.assignedStores[0] || ""}
+            onChange={(e) => formState.updateField('assignedStores', e.target.value ? [e.target.value] : [])}
+            error={formState.errors.assignedStores}
+            options={stores.map(store => ({ value: store.id, label: store.name }))}
+            placeholder="Select a store"
+          />
 
           <div className="space-y-3">
-            <Label>Screen Permissions</Label>
+            <label className="text-sm font-medium">Screen Permissions</label>
             <div className="space-y-2">
               {[
                 "dashboard",
@@ -108,7 +140,7 @@ export function UserForm({ initialData, onSubmit, submitLabel = "Save" }: UserFo
                 "users",
                 "stores",
               ].map((screen) => {
-                const current = (formData.screenPermissions || []).find((sp) => sp.screen === screen)
+                const current = (formState.data.screenPermissions || []).find((sp) => sp.screen === screen)
                 const actions = ["view", "create", "edit", "delete"]
                 return (
                   <div key={screen} className="flex items-center gap-4">
@@ -117,28 +149,24 @@ export function UserForm({ initialData, onSubmit, submitLabel = "Save" }: UserFo
                       {actions.map((action) => {
                         const checked = current?.actions.includes(action)
                         return (
-                          <label key={action} className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={!!checked}
-                              onChange={(e) => {
-                                setFormData((prev) => {
-                                  const existing = prev.screenPermissions.find((sp) => sp.screen === screen)
-                                  let next = [...prev.screenPermissions]
-                                  if (!existing) {
-                                    next.push({ screen, actions: e.target.checked ? [action] : [] })
-                                  } else {
-                                    existing.actions = e.target.checked
-                                      ? Array.from(new Set([...(existing.actions || []), action]))
-                                      : (existing.actions || []).filter((a: string) => a !== action)
-                                    next = next.map((sp) => (sp.screen === screen ? existing : sp))
-                                  }
-                                  return { ...prev, screenPermissions: next }
-                                })
-                              }}
-                            />
-                            {action}
-                          </label>
+                          <FormCheckbox
+                            key={action}
+                            checked={!!checked}
+                            onChange={(e) => {
+                              const existing = formState.data.screenPermissions.find((sp) => sp.screen === screen)
+                              let next = [...formState.data.screenPermissions]
+                              if (!existing) {
+                                next.push({ screen, actions: e.target.checked ? [action] : [] })
+                              } else {
+                                existing.actions = e.target.checked
+                                  ? Array.from(new Set([...(existing.actions || []), action]))
+                                  : (existing.actions || []).filter((a: string) => a !== action)
+                                next = next.map((sp) => (sp.screen === screen ? existing : sp))
+                              }
+                              formState.updateField('screenPermissions', next)
+                            }}
+                            label={action}
+                          />
                         )
                       })}
                     </div>
@@ -148,12 +176,11 @@ export function UserForm({ initialData, onSubmit, submitLabel = "Save" }: UserFo
             </div>
           </div>
 
-          <div className="flex justify-end">
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : submitLabel}
-            </Button>
-          </div>
-        </form>
+          <FormActions 
+            loading={formState.isLoading}
+            submitLabel={submitLabel}
+          />
+        </Form>
       </CardContent>
     </Card>
   )
