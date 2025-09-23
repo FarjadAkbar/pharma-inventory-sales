@@ -37,6 +37,7 @@ import { TemperatureExcursionForm } from "@/components/sales/temperature-excursi
 import { toast } from "sonner"
 import type { ColdChainRecord, TemperatureExcursion } from "@/types/distribution"
 import { formatDateISO } from "@/lib/utils"
+import { Input } from "@/components/ui/input"
 
 export default function ColdChainPage() {
   const [coldChainRecords, setColdChainRecords] = useState<ColdChainRecord[]>([])
