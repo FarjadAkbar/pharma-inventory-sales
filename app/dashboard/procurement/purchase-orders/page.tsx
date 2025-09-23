@@ -3,17 +3,13 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { DataTable } from "@/components/ui/data-table"
+import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { 
   Plus, 
   ShoppingCart, 
-  Search, 
-  Filter,
   CheckCircle,
   Clock,
   XCircle,
@@ -68,11 +64,8 @@ export default function PurchaseOrdersPage() {
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
-  const handleFilterChange = (key: keyof POFilters, value: string | number) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value
-    }))
+  const handleFiltersChange = (newFilters: Record<string, any>) => {
+    setFilters(newFilters)
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
@@ -147,6 +140,7 @@ export default function PurchaseOrdersPage() {
     {
       key: "poNumber",
       header: "PO Number",
+      sortable: true,
       render: (po: PurchaseOrder) => (
         <div className="font-mono text-sm font-medium text-orange-600">
           {po.poNumber}
@@ -156,6 +150,7 @@ export default function PurchaseOrdersPage() {
     {
       key: "supplier",
       header: "Supplier",
+      sortable: true,
       render: (po: PurchaseOrder) => (
         <div>
           <div className="font-medium">{po.supplierName}</div>
@@ -169,6 +164,7 @@ export default function PurchaseOrdersPage() {
     {
       key: "items",
       header: "Items",
+      sortable: true,
       render: (po: PurchaseOrder) => (
         <div className="text-sm">
           <div className="font-medium">{po.items.length} items</div>
@@ -181,6 +177,7 @@ export default function PurchaseOrdersPage() {
     {
       key: "amount",
       header: "Amount",
+      sortable: true,
       render: (po: PurchaseOrder) => (
         <div className="text-sm">
           <div className="font-medium flex items-center gap-1">
@@ -193,6 +190,7 @@ export default function PurchaseOrdersPage() {
     {
       key: "expectedDate",
       header: "Expected Date",
+      sortable: true,
       render: (po: PurchaseOrder) => (
         <div className="text-sm flex items-center gap-1">
           <Calendar className="h-3 w-3" />
@@ -203,11 +201,13 @@ export default function PurchaseOrdersPage() {
     {
       key: "status",
       header: "Status",
+      sortable: true,
       render: (po: PurchaseOrder) => getStatusBadge(po.status),
     },
     {
       key: "createdBy",
       header: "Created By",
+      sortable: true,
       render: (po: PurchaseOrder) => (
         <div className="text-sm flex items-center gap-1">
           <User className="h-3 w-3" />
@@ -218,9 +218,85 @@ export default function PurchaseOrdersPage() {
     {
       key: "createdAt",
       header: "Created",
+      sortable: true,
       render: (po: PurchaseOrder) => formatDateISO(po.createdAt),
     },
   ]
+
+  const filterOptions = [
+    {
+      key: "supplierId",
+      label: "Supplier",
+      type: "select" as const,
+      options: [
+        { value: "1", label: "MediChem Supplies" },
+        { value: "2", label: "PharmaExcipients Ltd" },
+        { value: "3", label: "Global Pharma Ingredients" },
+      ],
+    },
+    {
+      key: "status",
+      label: "Status",
+      type: "select" as const,
+      options: [
+        { value: "Draft", label: "Draft" },
+        { value: "Pending Approval", label: "Pending Approval" },
+        { value: "Approved", label: "Approved" },
+        { value: "Partially Received", label: "Partially Received" },
+        { value: "Fully Received", label: "Fully Received" },
+        { value: "Cancelled", label: "Cancelled" },
+        { value: "Rejected", label: "Rejected" },
+      ],
+    },
+    {
+      key: "siteId",
+      label: "Site",
+      type: "select" as const,
+      options: [
+        { value: "1", label: "Main Campus" },
+        { value: "2", label: "Clifton" },
+        { value: "3", label: "North Nazimabad" },
+        { value: "4", label: "Korangi" },
+      ],
+    },
+  ]
+
+  const actions = (po: PurchaseOrder) => (
+    <div className="flex items-center gap-2">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => window.location.href = `/dashboard/procurement/purchase-orders/${po.id}`}
+      >
+        <Eye className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => window.location.href = `/dashboard/procurement/purchase-orders/${po.id}/edit`}
+      >
+        <Edit className="h-4 w-4" />
+      </Button>
+      {po.status === "Pending Approval" && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => handleApprovePurchaseOrder(po)}
+          className="text-green-600 hover:text-green-700"
+        >
+          <CheckCircle className="h-4 w-4" />
+        </Button>
+      )}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => handleDeletePurchaseOrder(po)}
+        className="text-red-600 hover:text-red-700"
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  )
 
   return (
     <DashboardLayout>
@@ -283,130 +359,27 @@ export default function PurchaseOrdersPage() {
           </Card>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Filters
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Search</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search POs..."
-                    value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Supplier</label>
-                <Select value={filters.supplierId || ""} onValueChange={(value) => handleFilterChange("supplierId", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Suppliers" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">MediChem Supplies</SelectItem>
-                    <SelectItem value="2">PharmaExcipients Ltd</SelectItem>
-                    <SelectItem value="3">Global Pharma Ingredients</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status</label>
-                <Select value={filters.status || ""} onValueChange={(value) => handleFilterChange("status", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Draft">Draft</SelectItem>
-                    <SelectItem value="Pending Approval">Pending Approval</SelectItem>
-                    <SelectItem value="Approved">Approved</SelectItem>
-                    <SelectItem value="Partially Received">Partially Received</SelectItem>
-                    <SelectItem value="Fully Received">Fully Received</SelectItem>
-                    <SelectItem value="Cancelled">Cancelled</SelectItem>
-                    <SelectItem value="Rejected">Rejected</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Site</label>
-                <Select value={filters.siteId || ""} onValueChange={(value) => handleFilterChange("siteId", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Sites" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">Main Campus</SelectItem>
-                    <SelectItem value="2">Clifton</SelectItem>
-                    <SelectItem value="3">North Nazimabad</SelectItem>
-                    <SelectItem value="4">Korangi</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Purchase Orders Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Purchase Orders List</CardTitle>
-            <CardDescription>A comprehensive list of all purchase orders in the system.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              data={purchaseOrders}
-              columns={columns}
-              loading={loading}
-              onSearch={handleSearch}
-              pagination={{
-                page: pagination.page,
-                pages: pagination.pages,
-                total: pagination.total,
-                onPageChange: handlePageChange
-              }}
-              searchPlaceholder="Search purchase orders..."
-              actions={[
-                {
-                  label: "View",
-                  icon: <Eye className="h-4 w-4" />,
-                  onClick: (po: PurchaseOrder) => {
-                    window.location.href = `/dashboard/procurement/purchase-orders/${po.id}`
-                  }
-                },
-                {
-                  label: "Edit",
-                  icon: <Edit className="h-4 w-4" />,
-                  onClick: (po: PurchaseOrder) => {
-                    window.location.href = `/dashboard/procurement/purchase-orders/${po.id}/edit`
-                  }
-                },
-                {
-                  label: "Approve",
-                  icon: <CheckCircle className="h-4 w-4" />,
-                  onClick: handleApprovePurchaseOrder,
-                  hidden: (po: PurchaseOrder) => po.status !== "Pending Approval",
-                  variant: "default" as const
-                },
-                {
-                  label: "Delete",
-                  icon: <Trash2 className="h-4 w-4" />,
-                  onClick: handleDeletePurchaseOrder,
-                  variant: "destructive" as const
-                }
-              ]}
-            />
-          </CardContent>
-        </Card>
+        <UnifiedDataTable
+          data={purchaseOrders}
+          columns={columns}
+          loading={loading}
+          searchPlaceholder="Search purchase orders..."
+          searchValue={searchQuery}
+          onSearch={handleSearch}
+          filters={filterOptions}
+          onFiltersChange={handleFiltersChange}
+          pagination={{
+            page: pagination.page,
+            pages: pagination.pages,
+            total: pagination.total,
+            onPageChange: handlePageChange
+          }}
+          actions={actions}
+          onRefresh={fetchPurchaseOrders}
+          onExport={() => console.log("Export purchase orders")}
+          emptyMessage="No purchase orders found. Create your first purchase order to get started."
+        />
       </div>
     </DashboardLayout>
   )

@@ -1062,7 +1062,342 @@ interface PermissionAwareProps {
 - **Efficient Checks**: Optimize permission checking algorithms
 - **Memory Management**: Manage permission data efficiently
 
+
+
 ---
+
+## Phase 13: Permission-Based Module & Action Visibility
+### 13.1 Enhanced Permission System
+#### Permission Structure Redesign
+```typescript
+interface PermissionSystem {
+  modules: {
+    [moduleName: string]: {
+      screens: {
+        [screenName: string]: {
+          actions: {
+            view: boolean;
+            create: boolean;
+            edit: boolean;
+            delete: boolean;
+            approve?: boolean;
+            reject?: boolean;
+            export?: boolean;
+            import?: boolean;
+          };
+          fields?: {
+            [fieldName: string]: boolean;
+          };
+        };
+      };
+    };
+  };
+}
+```
+
+#### Role-Based Module Access
+- **System Admin**: Full access to all modules and actions
+- **Org Admin**: Access to organizational modules with limited system functions
+- **Module Managers**: Access to specific modules with full permissions
+- **Operators**: Limited access to assigned modules and actions
+- **Viewers**: Read-only access to assigned modules
+
+### 13.2 Dynamic Sidebar Navigation
+#### Permission-Based Menu Generation
+- **Module Visibility**: Show/hide entire modules based on permissions
+- **Screen Visibility**: Show/hide screens within modules
+- **Action Visibility**: Show/hide action buttons based on permissions
+- **Hierarchical Access**: Implement permission inheritance
+
+#### Navigation Implementation
+```typescript
+interface NavigationItem {
+  title: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  permissions: {
+    module: string;
+    screen: string;
+    action: string;
+  };
+  children?: NavigationItem[];
+  visible: boolean; // Computed based on permissions
+}
+```
+
+### 13.3 Module-Specific Permissions
+#### Identity & Authentication Module
+- **Users Management**:
+  - View: `identity.users.view`
+  - Create: `identity.users.create`
+  - Edit: `identity.users.edit`
+  - Delete: `identity.users.delete`
+  - Reset Password: `identity.users.reset_password`
+
+- **Roles Management**:
+  - View: `identity.roles.view`
+  - Create: `identity.roles.create`
+  - Edit: `identity.roles.edit`
+  - Delete: `identity.roles.delete`
+  - Assign Permissions: `identity.roles.assign_permissions`
+
+- **Permissions Management**:
+  - View: `identity.permissions.view`
+  - Create: `identity.permissions.create`
+  - Edit: `identity.permissions.edit`
+  - Delete: `identity.permissions.delete`
+
+#### Master Data Module
+- **Drugs Management**:
+  - View: `master.drugs.view`
+  - Create: `master.drugs.create`
+  - Edit: `master.drugs.edit`
+  - Delete: `master.drugs.delete`
+  - Approve: `master.drugs.approve`
+  - Reject: `master.drugs.reject`
+
+- **Raw Materials Management**:
+  - View: `master.raw_materials.view`
+  - Create: `master.raw_materials.create`
+  - Edit: `master.raw_materials.edit`
+  - Delete: `master.raw_materials.delete`
+  - Import: `master.raw_materials.import`
+
+- **Suppliers Management**:
+  - View: `master.suppliers.view`
+  - Create: `master.suppliers.create`
+  - Edit: `master.suppliers.edit`
+  - Delete: `master.suppliers.delete`
+  - Rate: `master.suppliers.rate`
+
+#### Procurement Module
+- **Purchase Orders**:
+  - View: `procurement.purchase_orders.view`
+  - Create: `procurement.purchase_orders.create`
+  - Edit: `procurement.purchase_orders.edit`
+  - Delete: `procurement.purchase_orders.delete`
+  - Approve: `procurement.purchase_orders.approve`
+  - Reject: `procurement.purchase_orders.reject`
+
+- **Goods Receipts**:
+  - View: `procurement.goods_receipts.view`
+  - Create: `procurement.goods_receipts.create`
+  - Edit: `procurement.goods_receipts.edit`
+  - Delete: `procurement.goods_receipts.delete`
+  - Verify: `procurement.goods_receipts.verify`
+
+#### Manufacturing Module
+- **Bill of Materials**:
+  - View: `manufacturing.boms.view`
+  - Create: `manufacturing.boms.create`
+  - Edit: `manufacturing.boms.edit`
+  - Delete: `manufacturing.boms.delete`
+  - Version: `manufacturing.boms.version`
+
+- **Work Orders**:
+  - View: `manufacturing.work_orders.view`
+  - Create: `manufacturing.work_orders.create`
+  - Edit: `manufacturing.work_orders.edit`
+  - Delete: `manufacturing.work_orders.delete`
+  - Start: `manufacturing.work_orders.start`
+  - Complete: `manufacturing.work_orders.complete`
+
+- **Batches**:
+  - View: `manufacturing.batches.view`
+  - Create: `manufacturing.batches.create`
+  - Edit: `manufacturing.batches.edit`
+  - Delete: `manufacturing.batches.delete`
+  - Execute: `manufacturing.batches.execute`
+  - Release: `manufacturing.batches.release`
+
+#### Quality Control Module
+- **QC Tests**:
+  - View: `quality.qc_tests.view`
+  - Create: `quality.qc_tests.create`
+  - Edit: `quality.qc_tests.edit`
+  - Delete: `quality.qc_tests.delete`
+  - Execute: `quality.qc_tests.execute`
+
+- **Sample Results**:
+  - View: `quality.sample_results.view`
+  - Create: `quality.sample_results.create`
+  - Edit: `quality.sample_results.edit`
+  - Delete: `quality.sample_results.delete`
+  - Approve: `quality.sample_results.approve`
+
+#### Quality Assurance Module
+- **QA Releases**:
+  - View: `quality.qa_releases.view`
+  - Create: `quality.qa_releases.create`
+  - Edit: `quality.qa_releases.edit`
+  - Delete: `quality.qa_releases.delete`
+  - Approve: `quality.qa_releases.approve`
+  - Reject: `quality.qa_releases.reject`
+
+- **Deviations**:
+  - View: `quality.deviations.view`
+  - Create: `quality.deviations.create`
+  - Edit: `quality.deviations.edit`
+  - Delete: `quality.deviations.delete`
+  - Investigate: `quality.deviations.investigate`
+  - Close: `quality.deviations.close`
+
+#### Warehouse Module
+- **Inventory Management**:
+  - View: `warehouse.inventory.view`
+  - Create: `warehouse.inventory.create`
+  - Edit: `warehouse.inventory.edit`
+  - Delete: `warehouse.inventory.delete`
+  - Move: `warehouse.inventory.move`
+  - Adjust: `warehouse.inventory.adjust`
+
+- **Stock Movements**:
+  - View: `warehouse.movements.view`
+  - Create: `warehouse.movements.create`
+  - Edit: `warehouse.movements.edit`
+  - Delete: `warehouse.movements.delete`
+  - Reverse: `warehouse.movements.reverse`
+
+#### Distribution Module
+- **Sales Orders**:
+  - View: `distribution.sales_orders.view`
+  - Create: `distribution.sales_orders.create`
+  - Edit: `distribution.sales_orders.edit`
+  - Delete: `distribution.sales_orders.delete`
+  - Process: `distribution.sales_orders.process`
+
+- **Shipments**:
+  - View: `distribution.shipments.view`
+  - Create: `distribution.shipments.create`
+  - Edit: `distribution.shipments.edit`
+  - Delete: `distribution.shipments.delete`
+  - Ship: `distribution.shipments.ship`
+  - Track: `distribution.shipments.track`
+
+### 13.4 Field-Level Permissions
+#### Sensitive Data Protection
+- **Financial Data**: Price, cost, margin fields
+- **Personal Data**: User contact information
+- **Confidential Data**: Trade secrets, formulas
+- **Regulatory Data**: Compliance information
+
+#### Field Permission Implementation
+```typescript
+interface FieldPermissions {
+  [fieldName: string]: {
+    view: boolean;
+    edit: boolean;
+    required: boolean;
+  };
+}
+```
+
+### 13.5 Action-Based UI Components
+#### Permission-Aware Components
+- **ActionButton**: Only render if user has permission
+- **FormField**: Show/hide fields based on permissions
+- **DataTable**: Show/hide columns based on permissions
+- **NavigationItem**: Show/hide menu items based on permissions
+
+#### Component Implementation
+```typescript
+interface PermissionAwareProps {
+  module: string;
+  screen: string;
+  action: string;
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
+}
+```
+
+### 13.6 Permission Management Interface
+#### Role Permission Matrix
+- **Visual Matrix**: Grid showing role vs permission assignments
+- **Bulk Assignment**: Assign multiple permissions at once
+- **Permission Inheritance**: Define permission inheritance rules
+- **Permission Audit**: Track permission changes
+
+#### User Permission Override
+- **Individual Overrides**: Override role permissions for specific users
+- **Temporary Permissions**: Time-limited permission grants
+- **Emergency Access**: Emergency permission escalation
+- **Permission History**: Track all permission changes
+
+### 13.7 Security Implementation
+#### Permission Validation
+- **Frontend Validation**: Client-side permission checks
+- **Backend Validation**: Server-side permission verification
+- **API Security**: Secure API endpoints with permission checks
+- **Route Protection**: Protect routes based on permissions
+
+#### Audit & Compliance
+- **Permission Logging**: Log all permission checks
+- **Access Auditing**: Track user access patterns
+- **Compliance Reporting**: Generate permission compliance reports
+- **Security Monitoring**: Monitor for permission violations
+
+### 13.8 Performance Optimization
+#### Permission Caching
+- **Client-Side Caching**: Cache permissions in browser
+- **Server-Side Caching**: Cache permissions on server
+- **Permission Preloading**: Preload permissions for better performance
+- **Lazy Loading**: Load permissions as needed
+
+#### UI Optimization
+- **Conditional Rendering**: Only render components when needed
+- **Permission Bundling**: Group related permissions
+- **Efficient Checks**: Optimize permission checking algorithms
+- **Memory Management**: Manage permission data efficiently
+
+
+
+---
+## Phase 14: Unified UI Enhancements
+This phase focuses on improving consistency, usability, and navigation across all modules:
+
+### Search & Filters Integration
+-Standardize the table layout across all pages with a search bar integrated with filters.
+-If advanced filters are available, display a filter icon that opens a dropdown panel with additional filter options.
+
+### Organization & Site Management
+=Add organization selection at the login stage (currently missing).
+-Display site selection in the header, allowing admins to switch between sites and view data accordingly.
+-Site Managers will only be able to access and switch within their assigned store(s).
+
+### Sales Order UI Optimization
+-Redesign sales order cards for better readability, grouping, and alignment.
+-Ensure large data sets or multiple cards are displayed in a structured, user-friendly layout.
+
+---
+## Phase 15: End-to-End Module Integration
+This phase ensures smooth connectivity across all modules in the pharmaceutical supply chain, enabling an integrated workflow:
+
+### Procurement → Supplier
+-Procurement team creates and approves purchase orders.
+-Approved POs are sent to suppliers for fulfillment.
+
+### Supplier → Warehouse
+-Suppliers deliver raw materials to warehouses.
+-Goods are received, verified, and stored.
+
+### Warehouse → Quality Control (QC & QA)
+-Samples are taken at receipt for quality testing.
+-QC and QA teams conduct tests and provide release decisions.
+-Only released materials become available for production.
+
+### Manufacturing → Finished Goods
+-Manufacturing uses released materials to produce finished goods.
+-Finished goods undergo QC and QA before being released as available inventory.
+
+### Sales & Distribution
+-Sales orders are created and approved based on stock availability.
+-Distribution handles shipment planning, stock allocation, delivery, and proof of delivery.
+-Invoicing is linked to completed deliveries for financial closure.
+
+###Compliance & Efficiency
+-End-to-end integration ensures regulatory compliance, quality assurance, and optimized fulfillment across the pharmaceutical supply chain.
+
+----
 ```typescript
 interface APIResponse<T> {
   success: boolean;

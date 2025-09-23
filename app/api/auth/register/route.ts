@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server"
-import { signToken } from "@/lib/jwt"
+// import { signToken } from "@/lib/jwt"
 import { mockUsers } from "@/lib/mock-data"
 import { validateEmail, validatePassword, validateText } from "@/lib/validations"
 import type { User } from "@/types/auth"
@@ -35,31 +35,31 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new user
-    const newUser: User = {
-      id: (mockUsers.length + 1).toString(),
-      name,
-      email,
-      role: role as "admin" | "manager" | "user",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
+    // const newUser: User = {
+    //   id: (mockUsers.length + 1).toString(),
+    //   name,
+    //   email,
+    //   role: role as "admin" | "manager" | "user",
+    //   createdAt: new Date().toISOString(),
+    //   updatedAt: new Date().toISOString(),
+    // }
 
-    mockUsers.push(newUser)
+    // mockUsers.push(newUser)
 
-    // Generate JWT token
-    const token = await signToken({
-      id: newUser.id,
-      email: newUser.email,
-      name: newUser.name,
-      role: newUser.role,
-    })
+    // // Generate JWT token
+    // const token = await signToken({
+    //   id: newUser.id,
+    //   email: newUser.email,
+    //   name: newUser.name,
+    //   role: newUser.role,
+    // })
 
     return Response.json({
       success: true,
-      data: {
-        user: newUser,
-        token,
-      },
+      // data: {
+      //   user: newUser,
+      //   token,
+      // },
     })
   } catch (error) {
     console.error("Registration error:", error)

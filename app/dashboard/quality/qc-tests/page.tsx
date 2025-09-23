@@ -3,17 +3,13 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { DataTable } from "@/components/ui/data-table"
+import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { 
   Plus, 
   TestTube, 
-  Search, 
-  Filter,
   CheckCircle,
   Clock,
   XCircle,
@@ -68,11 +64,8 @@ export default function QCTestsPage() {
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
-  const handleFilterChange = (key: keyof QCTestFilters, value: string | boolean) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value
-    }))
+  const handleFiltersChange = (newFilters: Record<string, any>) => {
+    setFilters(newFilters)
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
@@ -151,6 +144,7 @@ export default function QCTestsPage() {
     {
       key: "code",
       header: "Test Code",
+      sortable: true,
       render: (test: QCTest) => (
         <div className="font-mono text-sm font-medium text-orange-600">
           {test.code}
@@ -160,6 +154,7 @@ export default function QCTestsPage() {
     {
       key: "name",
       header: "Test Name",
+      sortable: true,
       render: (test: QCTest) => (
         <div>
           <div className="font-medium">{test.name}</div>
@@ -170,6 +165,7 @@ export default function QCTestsPage() {
     {
       key: "category",
       header: "Category",
+      sortable: true,
       render: (test: QCTest) => (
         <div className="flex items-center gap-2">
           {getCategoryIcon(test.category)}
@@ -180,6 +176,7 @@ export default function QCTestsPage() {
     {
       key: "method",
       header: "Method",
+      sortable: true,
       render: (test: QCTest) => (
         <div className="text-sm">
           <div className="font-medium">{test.method}</div>
@@ -190,6 +187,7 @@ export default function QCTestsPage() {
     {
       key: "specifications",
       header: "Specifications",
+      sortable: true,
       render: (test: QCTest) => (
         <div className="text-sm">
           <div className="font-medium">{test.specifications.length} parameters</div>
@@ -203,6 +201,7 @@ export default function QCTestsPage() {
     {
       key: "status",
       header: "Status",
+      sortable: true,
       render: (test: QCTest) => (
         <Badge className={test.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
           {test.isActive ? "Active" : "Inactive"}
@@ -212,6 +211,7 @@ export default function QCTestsPage() {
     {
       key: "createdBy",
       header: "Created By",
+      sortable: true,
       render: (test: QCTest) => (
         <div className="text-sm">
           {test.createdByName}
@@ -221,9 +221,65 @@ export default function QCTestsPage() {
     {
       key: "createdAt",
       header: "Created",
+      sortable: true,
       render: (test: QCTest) => formatDateISO(test.createdAt),
     },
   ]
+
+  const filterOptions = [
+    {
+      key: "category",
+      label: "Category",
+      type: "select" as const,
+      options: [
+        { value: "Physical", label: "Physical" },
+        { value: "Chemical", label: "Chemical" },
+        { value: "Microbiological", label: "Microbiological" },
+        { value: "Stability", label: "Stability" },
+        { value: "Dissolution", label: "Dissolution" },
+        { value: "Content Uniformity", label: "Content Uniformity" },
+        { value: "Assay", label: "Assay" },
+        { value: "Impurities", label: "Impurities" },
+        { value: "Identification", label: "Identification" },
+      ],
+    },
+    {
+      key: "isActive",
+      label: "Status",
+      type: "select" as const,
+      options: [
+        { value: "true", label: "Active" },
+        { value: "false", label: "Inactive" },
+      ],
+    },
+  ]
+
+  const actions = (test: QCTest) => (
+    <div className="flex items-center gap-2">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => window.location.href = `/dashboard/quality/qc-tests/${test.id}`}
+      >
+        <Eye className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => window.location.href = `/dashboard/quality/qc-tests/${test.id}/edit`}
+      >
+        <Edit className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => handleDeleteQCTest(test)}
+        className="text-red-600 hover:text-red-700"
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  )
 
   return (
     <DashboardLayout>
@@ -284,109 +340,27 @@ export default function QCTestsPage() {
           </Card>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Filters
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Search</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search tests..."
-                    value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Category</label>
-                <Select value={filters.category || ""} onValueChange={(value) => handleFilterChange("category", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Categories" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Physical">Physical</SelectItem>
-                    <SelectItem value="Chemical">Chemical</SelectItem>
-                    <SelectItem value="Microbiological">Microbiological</SelectItem>
-                    <SelectItem value="Stability">Stability</SelectItem>
-                    <SelectItem value="Dissolution">Dissolution</SelectItem>
-                    <SelectItem value="Content Uniformity">Content Uniformity</SelectItem>
-                    <SelectItem value="Assay">Assay</SelectItem>
-                    <SelectItem value="Impurities">Impurities</SelectItem>
-                    <SelectItem value="Identification">Identification</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status</label>
-                <Select value={filters.isActive?.toString() || ""} onValueChange={(value) => handleFilterChange("isActive", value === "true")}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="true">Active</SelectItem>
-                    <SelectItem value="false">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* QC Tests Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>QC Tests Library</CardTitle>
-            <CardDescription>A comprehensive library of quality control test methods and specifications.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              data={qcTests}
-              columns={columns}
-              loading={loading}
-              onSearch={handleSearch}
-              pagination={{
-                page: pagination.page,
-                pages: pagination.pages,
-                total: pagination.total,
-                onPageChange: handlePageChange
-              }}
-              searchPlaceholder="Search QC tests..."
-              actions={[
-                {
-                  label: "View",
-                  icon: <Eye className="h-4 w-4" />,
-                  onClick: (test: QCTest) => {
-                    window.location.href = `/dashboard/quality/qc-tests/${test.id}`
-                  }
-                },
-                {
-                  label: "Edit",
-                  icon: <Edit className="h-4 w-4" />,
-                  onClick: (test: QCTest) => {
-                    window.location.href = `/dashboard/quality/qc-tests/${test.id}/edit`
-                  }
-                },
-                {
-                  label: "Delete",
-                  icon: <Trash2 className="h-4 w-4" />,
-                  onClick: handleDeleteQCTest,
-                  variant: "destructive" as const
-                }
-              ]}
-            />
-          </CardContent>
-        </Card>
+        <UnifiedDataTable
+          data={qcTests}
+          columns={columns}
+          loading={loading}
+          searchPlaceholder="Search QC tests..."
+          searchValue={searchQuery}
+          onSearch={handleSearch}
+          filters={filterOptions}
+          onFiltersChange={handleFiltersChange}
+          pagination={{
+            page: pagination.page,
+            pages: pagination.pages,
+            total: pagination.total,
+            onPageChange: handlePageChange
+          }}
+          actions={actions}
+          onRefresh={fetchQCTests}
+          onExport={() => console.log("Export QC tests")}
+          emptyMessage="No QC tests found. Add your first test method to get started."
+        />
       </div>
     </DashboardLayout>
   )

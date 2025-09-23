@@ -3,17 +3,13 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { DataTable } from "@/components/ui/data-table"
+import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { 
   Plus, 
   Calendar, 
-  Search, 
-  Filter,
   CheckCircle,
   Clock,
   XCircle,
@@ -71,11 +67,8 @@ export default function WorkOrdersPage() {
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
-  const handleFilterChange = (key: keyof WorkOrderFilters, value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value
-    }))
+  const handleFiltersChange = (newFilters: Record<string, any>) => {
+    setFilters(newFilters)
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
@@ -141,6 +134,7 @@ export default function WorkOrdersPage() {
     {
       key: "workOrderNumber",
       header: "Work Order #",
+      sortable: true,
       render: (workOrder: WorkOrder) => (
         <div className="font-mono text-sm font-medium text-orange-600">
           {workOrder.workOrderNumber}
@@ -150,6 +144,7 @@ export default function WorkOrdersPage() {
     {
       key: "drug",
       header: "Drug",
+      sortable: true,
       render: (workOrder: WorkOrder) => (
         <div>
           <div className="flex items-center gap-2">
@@ -163,6 +158,7 @@ export default function WorkOrdersPage() {
     {
       key: "quantity",
       header: "Quantity",
+      sortable: true,
       render: (workOrder: WorkOrder) => (
         <div className="text-sm">
           <div className="font-medium">{workOrder.plannedQuantity.toLocaleString()} {workOrder.unit}</div>
@@ -177,6 +173,7 @@ export default function WorkOrdersPage() {
     {
       key: "site",
       header: "Production Site",
+      sortable: true,
       render: (workOrder: WorkOrder) => (
         <div className="text-sm">
           <div className="font-medium">{workOrder.siteName}</div>
@@ -187,16 +184,19 @@ export default function WorkOrdersPage() {
     {
       key: "priority",
       header: "Priority",
+      sortable: true,
       render: (workOrder: WorkOrder) => getPriorityBadge(workOrder.priority),
     },
     {
       key: "status",
       header: "Status",
+      sortable: true,
       render: (workOrder: WorkOrder) => getStatusBadge(workOrder.status),
     },
     {
       key: "assignedTo",
       header: "Assigned To",
+      sortable: true,
       render: (workOrder: WorkOrder) => (
         <div className="text-sm">
           <div className="flex items-center gap-1">
@@ -209,6 +209,7 @@ export default function WorkOrdersPage() {
     {
       key: "plannedDates",
       header: "Planned Dates",
+      sortable: true,
       render: (workOrder: WorkOrder) => (
         <div className="text-sm">
           <div className="flex items-center gap-1">
@@ -224,6 +225,7 @@ export default function WorkOrdersPage() {
     {
       key: "actualDates",
       header: "Actual Dates",
+      sortable: true,
       render: (workOrder: WorkOrder) => (
         <div className="text-sm">
           {workOrder.actualStartDate ? (
@@ -247,9 +249,80 @@ export default function WorkOrdersPage() {
     {
       key: "createdAt",
       header: "Created",
+      sortable: true,
       render: (workOrder: WorkOrder) => formatDateISO(workOrder.createdAt),
     },
   ]
+
+  const filterOptions = [
+    {
+      key: "drugId",
+      label: "Drug",
+      type: "select" as const,
+      options: [
+        { value: "1", label: "Paracetamol Tablets" },
+        { value: "2", label: "Ibuprofen Tablets" },
+        { value: "3", label: "Aspirin Tablets" },
+      ],
+    },
+    {
+      key: "siteId",
+      label: "Site",
+      type: "select" as const,
+      options: [
+        { value: "1", label: "Main Production Facility" },
+        { value: "2", label: "Secondary Production Facility" },
+      ],
+    },
+    {
+      key: "status",
+      label: "Status",
+      type: "select" as const,
+      options: [
+        { value: "Draft", label: "Draft" },
+        { value: "Planned", label: "Planned" },
+        { value: "In Progress", label: "In Progress" },
+        { value: "On Hold", label: "On Hold" },
+        { value: "Completed", label: "Completed" },
+        { value: "Cancelled", label: "Cancelled" },
+      ],
+    },
+    {
+      key: "priority",
+      label: "Priority",
+      type: "select" as const,
+      options: [
+        { value: "Low", label: "Low" },
+        { value: "Normal", label: "Normal" },
+        { value: "High", label: "High" },
+        { value: "Urgent", label: "Urgent" },
+      ],
+    },
+  ]
+
+  const actions = (workOrder: WorkOrder) => (
+    <div className="flex items-center gap-2">
+      <Button variant="ghost" size="sm">
+        <Eye className="h-4 w-4" />
+      </Button>
+      <Button variant="ghost" size="sm">
+        <Edit className="h-4 w-4" />
+      </Button>
+      {workOrder.status === "Planned" && (
+        <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+          <Play className="h-4 w-4" />
+        </Button>
+      )}
+      {workOrder.status === "In Progress" && (
+        <Button variant="ghost" size="sm" className="text-orange-600 hover:text-orange-700">
+          <Pause className="h-4 w-4" />
+        </Button>
+      )}
+      <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  )
 
   return (
     <DashboardLayout>
@@ -328,136 +401,27 @@ export default function WorkOrdersPage() {
           </Card>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Filters
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Search</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search work orders..."
-                    value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Drug</label>
-                <Select value={filters.drugId || ""} onValueChange={(value) => handleFilterChange("drugId", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Drugs" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">Paracetamol Tablets</SelectItem>
-                    <SelectItem value="2">Ibuprofen Tablets</SelectItem>
-                    <SelectItem value="3">Aspirin Tablets</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Site</label>
-                <Select value={filters.siteId || ""} onValueChange={(value) => handleFilterChange("siteId", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Sites" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">Main Production Facility</SelectItem>
-                    <SelectItem value="2">Secondary Production Facility</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status</label>
-                <Select value={filters.status || ""} onValueChange={(value) => handleFilterChange("status", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Draft">Draft</SelectItem>
-                    <SelectItem value="Planned">Planned</SelectItem>
-                    <SelectItem value="In Progress">In Progress</SelectItem>
-                    <SelectItem value="On Hold">On Hold</SelectItem>
-                    <SelectItem value="Completed">Completed</SelectItem>
-                    <SelectItem value="Cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Priority</label>
-                <Select value={filters.priority || ""} onValueChange={(value) => handleFilterChange("priority", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Priorities" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Low">Low</SelectItem>
-                    <SelectItem value="Normal">Normal</SelectItem>
-                    <SelectItem value="High">High</SelectItem>
-                    <SelectItem value="Urgent">Urgent</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Work Orders Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Work Orders</CardTitle>
-            <CardDescription>A comprehensive view of all production work orders and their status.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              data={workOrders}
-              columns={columns}
-              loading={loading}
-              onSearch={handleSearch}
-              pagination={{
-                page: pagination.page,
-                pages: pagination.pages,
-                total: pagination.total,
-                onPageChange: handlePageChange
-              }}
-              searchPlaceholder="Search work orders..."
-              actions={(workOrder: WorkOrder) => (
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  {workOrder.status === "Planned" && (
-                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
-                      <Play className="h-4 w-4" />
-                    </Button>
-                  )}
-                  {workOrder.status === "In Progress" && (
-                    <Button variant="ghost" size="sm" className="text-orange-600 hover:text-orange-700">
-                      <Pause className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            />
-          </CardContent>
-        </Card>
+        <UnifiedDataTable
+          data={workOrders}
+          columns={columns}
+          loading={loading}
+          searchPlaceholder="Search work orders..."
+          searchValue={searchQuery}
+          onSearch={handleSearch}
+          filters={filterOptions}
+          onFiltersChange={handleFiltersChange}
+          pagination={{
+            page: pagination.page,
+            pages: pagination.pages,
+            total: pagination.total,
+            onPageChange: handlePageChange
+          }}
+          actions={actions}
+          onRefresh={fetchWorkOrders}
+          onExport={() => console.log("Export work orders")}
+          emptyMessage="No work orders found. Create your first work order to get started."
+        />
       </div>
     </DashboardLayout>
   )

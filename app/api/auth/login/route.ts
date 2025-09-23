@@ -7,11 +7,11 @@ const JWT_SECRET = 'pharma-inventory-sales-jwt-secret-key-2024'
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, rememberMe, organization } = await request.json()
+    const { email, password, rememberMe } = await request.json()
 
     // Validation
-    if (!email || !password || !organization) {
-      return Response.json({ success: false, error: "Email, password, and organization are required" }, { status: 400 })
+    if (!email || !password) {
+      return Response.json({ success: false, error: "Email and password are required" }, { status: 400 })
     }
 
     // Find user by email
@@ -30,11 +30,11 @@ export async function POST(request: NextRequest) {
     const tokenPayload = {
       userId: parseInt(user.id),
       clientId: 1, // Mock client ID
-      storeId: parseInt(organization), // Use organization as storeId
+      storeId: 1, // Default store ID for single organization
       role: user.role,
       email: user.email,
       name: user.name,
-      organization: organization,
+      organization: "1", // Default organization ID
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + (rememberMe ? 30 * 24 * 60 * 60 : 60 * 60), // 30 days if rememberMe, 1 hour otherwise
     }

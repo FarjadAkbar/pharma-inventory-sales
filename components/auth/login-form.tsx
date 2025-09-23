@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/contexts/auth.context"
 import { getValidationError } from "@/lib/validations"
 import Link from "next/link"
@@ -20,20 +19,11 @@ export function LoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [rememberMe, setRememberMe] = useState(false)
-  const [organization, setOrganization] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { login } = useAuth()
   const router = useRouter()
-
-  // Mock organizations - in real app, this would come from API
-  const organizations = [
-    { id: "1", name: "Ziauddin Hospital - Main Campus" },
-    { id: "2", name: "Ziauddin Hospital - Clifton" },
-    { id: "3", name: "Ziauddin Hospital - North Nazimabad" },
-    { id: "4", name: "Ziauddin Hospital - Korangi" }
-  ]
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -50,10 +40,6 @@ export function LoginForm() {
       newErrors.password = "Password must be at least 8 characters"
     }
 
-    if (!organization) {
-      newErrors.organization = "Please select an organization"
-    }
-
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -65,7 +51,11 @@ export function LoginForm() {
 
     setIsSubmitting(true)
     try {
-      await login({ email, password, rememberMe, organization })
+      await login({ 
+        email, 
+        password, 
+        rememberMe
+      })
       router.push("/dashboard")
     } catch (error) {
       setErrors({ submit: error instanceof Error ? error.message : "Login failed" })
@@ -73,6 +63,7 @@ export function LoginForm() {
       setIsSubmitting(false)
     }
   }
+
 
   return (
     <Card className="w-full max-w-md mx-auto border-orange-200">
@@ -117,22 +108,6 @@ export function LoginForm() {
             {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="organization" className="text-gray-700">Organization</Label>
-            <Select value={organization} onValueChange={setOrganization}>
-              <SelectTrigger className={errors.organization ? "border-red-500" : "border-gray-300 focus:border-orange-500"}>
-                <SelectValue placeholder="Select your organization" />
-              </SelectTrigger>
-              <SelectContent>
-                {organizations.map((org) => (
-                  <SelectItem key={org.id} value={org.id}>
-                    {org.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.organization && <p className="text-sm text-red-500">{errors.organization}</p>}
-          </div>
 
           <div className="flex items-center space-x-2">
             <Checkbox

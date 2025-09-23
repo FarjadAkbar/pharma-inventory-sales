@@ -3,21 +3,16 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { DataTable } from "@/components/ui/data-table"
+import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { 
   Plus, 
   Building2, 
-  Search, 
-  Filter,
   Star,
   Clock,
   CheckCircle,
-  XCircle,
   Eye,
   Edit,
   Trash2,
@@ -67,11 +62,8 @@ export default function SuppliersPage() {
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
-  const handleFilterChange = (key: keyof SupplierFilters, value: string | number) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value
-    }))
+  const handleFiltersChange = (newFilters: Record<string, any>) => {
+    setFilters(newFilters)
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
@@ -132,6 +124,7 @@ export default function SuppliersPage() {
     {
       key: "code",
       header: "Code",
+      sortable: true,
       render: (supplier: Supplier) => (
         <div className="font-mono text-sm font-medium text-orange-600">
           {supplier.code}
@@ -141,6 +134,7 @@ export default function SuppliersPage() {
     {
       key: "name",
       header: "Supplier",
+      sortable: true,
       render: (supplier: Supplier) => (
         <div>
           <div className="font-medium">{supplier.name}</div>
@@ -154,6 +148,7 @@ export default function SuppliersPage() {
     {
       key: "contact",
       header: "Contact",
+      sortable: true,
       render: (supplier: Supplier) => (
         <div className="text-sm">
           <div className="flex items-center gap-1 mb-1">
@@ -170,6 +165,7 @@ export default function SuppliersPage() {
     {
       key: "rating",
       header: "Rating",
+      sortable: true,
       render: (supplier: Supplier) => (
         <div className="flex items-center gap-2">
           <div className="flex">{getRatingStars(supplier.rating)}</div>
@@ -180,6 +176,7 @@ export default function SuppliersPage() {
     {
       key: "performance",
       header: "Performance",
+      sortable: true,
       render: (supplier: Supplier) => {
         const performance = getPerformanceLevel(supplier)
         return (
@@ -195,6 +192,7 @@ export default function SuppliersPage() {
     {
       key: "orders",
       header: "Orders",
+      sortable: true,
       render: (supplier: Supplier) => (
         <div className="text-sm">
           <div className="font-medium">{supplier.performance.successfulOrders}</div>
@@ -207,6 +205,7 @@ export default function SuppliersPage() {
     {
       key: "delivery",
       header: "Delivery",
+      sortable: true,
       render: (supplier: Supplier) => (
         <div className="text-sm">
           <div className="flex items-center gap-1">
@@ -222,6 +221,7 @@ export default function SuppliersPage() {
     {
       key: "certifications",
       header: "Certifications",
+      sortable: true,
       render: (supplier: Supplier) => (
         <div className="flex flex-wrap gap-1">
           {supplier.certifications.slice(0, 2).map((cert, index) => (
@@ -240,6 +240,7 @@ export default function SuppliersPage() {
     {
       key: "status",
       header: "Status",
+      sortable: true,
       render: (supplier: Supplier) => (
         <Badge className={supplier.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
           {supplier.isActive ? "Active" : "Inactive"}
@@ -247,6 +248,68 @@ export default function SuppliersPage() {
       ),
     },
   ]
+
+  const filterOptions = [
+    {
+      key: "rating",
+      label: "Rating",
+      type: "select" as const,
+      options: [
+        { value: "5", label: "5 Stars" },
+        { value: "4", label: "4+ Stars" },
+        { value: "3", label: "3+ Stars" },
+        { value: "2", label: "2+ Stars" },
+        { value: "1", label: "1+ Stars" },
+      ],
+    },
+    {
+      key: "performance",
+      label: "Performance",
+      type: "select" as const,
+      options: [
+        { value: "excellent", label: "Excellent" },
+        { value: "good", label: "Good" },
+        { value: "average", label: "Average" },
+        { value: "poor", label: "Poor" },
+      ],
+    },
+    {
+      key: "isActive",
+      label: "Status",
+      type: "select" as const,
+      options: [
+        { value: "true", label: "Active" },
+        { value: "false", label: "Inactive" },
+      ],
+    },
+  ]
+
+  const actions = (supplier: Supplier) => (
+    <div className="flex items-center gap-2">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => window.location.href = `/dashboard/suppliers/${supplier.id}`}
+      >
+        <Eye className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => window.location.href = `/dashboard/suppliers/${supplier.id}/edit`}
+      >
+        <Edit className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => console.log("Delete supplier", supplier.id)}
+        className="text-red-600 hover:text-red-700"
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  )
 
   return (
     <DashboardLayout>
@@ -305,111 +368,27 @@ export default function SuppliersPage() {
           </Card>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Filters
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Search</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search suppliers..."
-                    value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Rating</label>
-                <Select value={filters.rating?.toString() || ""} onValueChange={(value) => handleFilterChange("rating", Number(value))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Ratings" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="5">5 Stars</SelectItem>
-                    <SelectItem value="4">4+ Stars</SelectItem>
-                    <SelectItem value="3">3+ Stars</SelectItem>
-                    <SelectItem value="2">2+ Stars</SelectItem>
-                    <SelectItem value="1">1+ Stars</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Performance</label>
-                <Select value={filters.performance || ""} onValueChange={(value) => handleFilterChange("performance", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Performance" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="excellent">Excellent</SelectItem>
-                    <SelectItem value="good">Good</SelectItem>
-                    <SelectItem value="average">Average</SelectItem>
-                    <SelectItem value="poor">Poor</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status</label>
-                <Select value={filters.isActive?.toString() || ""} onValueChange={(value) => handleFilterChange("isActive", value === "true")}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="true">Active</SelectItem>
-                    <SelectItem value="false">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Suppliers Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Suppliers List</CardTitle>
-            <CardDescription>A comprehensive list of all pharmaceutical suppliers and their performance metrics.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              data={suppliers}
-              columns={columns}
-              loading={loading}
-              onSearch={handleSearch}
-              pagination={{
-                page: pagination.page,
-                pages: pagination.pages,
-                total: pagination.total,
-                onPageChange: handlePageChange
-              }}
-              searchPlaceholder="Search suppliers..."
-              actions={(supplier: Supplier) => (
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            />
-          </CardContent>
-        </Card>
+        <UnifiedDataTable
+          data={suppliers}
+          columns={columns}
+          loading={loading}
+          searchPlaceholder="Search suppliers..."
+          searchValue={searchQuery}
+          onSearch={handleSearch}
+          filters={filterOptions}
+          onFiltersChange={handleFiltersChange}
+          pagination={{
+            page: pagination.page,
+            pages: pagination.pages,
+            total: pagination.total,
+            onPageChange: handlePageChange
+          }}
+          actions={actions}
+          onRefresh={fetchSuppliers}
+          onExport={() => console.log("Export suppliers")}
+          emptyMessage="No suppliers found. Add your first supplier to get started."
+        />
       </div>
     </DashboardLayout>
   )

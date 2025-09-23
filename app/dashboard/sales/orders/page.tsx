@@ -3,17 +3,12 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { DataTable } from "@/components/ui/data-table"
+import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { 
-  Plus, 
   ShoppingCart, 
-  Search, 
-  Filter,
   CheckCircle,
   Clock,
   XCircle,
@@ -26,12 +21,9 @@ import {
   Package,
   AlertCircle,
   Play,
-  Pause,
   RotateCcw,
   DollarSign,
-  MapPin,
-  Phone,
-  Mail
+  MapPin
 } from "lucide-react"
 import { apiService } from "@/services/api.service"
 import { SalesOrderForm } from "@/components/sales/sales-order-form"
@@ -76,11 +68,8 @@ export default function SalesOrdersPage() {
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
-  const handleFilterChange = (key: keyof SalesOrderFilters, value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value
-    }))
+  const handleFiltersChange = (newFilters: Record<string, any>) => {
+    setFilters(newFilters)
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
@@ -221,6 +210,7 @@ export default function SalesOrdersPage() {
     {
       key: "orderNumber",
       header: "Order #",
+      sortable: true,
       render: (order: SalesOrder) => (
         <div className="font-mono text-sm font-medium text-orange-600">
           {order.orderNumber}
@@ -230,6 +220,7 @@ export default function SalesOrdersPage() {
     {
       key: "customer",
       header: "Customer",
+      sortable: true,
       render: (order: SalesOrder) => (
         <div>
           <div className="font-medium">{order.accountName}</div>
@@ -240,6 +231,7 @@ export default function SalesOrdersPage() {
     {
       key: "items",
       header: "Items",
+      sortable: true,
       render: (order: SalesOrder) => (
         <div className="space-y-1">
           <div className="text-sm font-medium">{order.items.length} items</div>
@@ -252,6 +244,7 @@ export default function SalesOrdersPage() {
     {
       key: "amount",
       header: "Amount",
+      sortable: true,
       render: (order: SalesOrder) => (
         <div className="text-sm">
           <div className="font-medium flex items-center gap-1">
@@ -264,16 +257,19 @@ export default function SalesOrdersPage() {
     {
       key: "priority",
       header: "Priority",
+      sortable: true,
       render: (order: SalesOrder) => getPriorityBadge(order.priority),
     },
     {
       key: "status",
       header: "Status",
+      sortable: true,
       render: (order: SalesOrder) => getStatusBadge(order.status),
     },
     {
       key: "dates",
       header: "Dates",
+      sortable: true,
       render: (order: SalesOrder) => (
         <div className="text-sm">
           <div className="flex items-center gap-1">
@@ -296,6 +292,7 @@ export default function SalesOrdersPage() {
     {
       key: "shipping",
       header: "Shipping",
+      sortable: true,
       render: (order: SalesOrder) => (
         <div className="text-sm">
           <div className="flex items-center gap-1">
@@ -311,6 +308,7 @@ export default function SalesOrdersPage() {
     {
       key: "createdBy",
       header: "Created By",
+      sortable: true,
       render: (order: SalesOrder) => (
         <div className="text-sm">
           <div className="flex items-center gap-1">
@@ -324,6 +322,104 @@ export default function SalesOrdersPage() {
       ),
     },
   ]
+
+  const filterOptions = [
+    {
+      key: "accountId",
+      label: "Customer",
+      type: "select" as const,
+      options: [
+        { value: "1", label: "Ziauddin Hospital - Clifton" },
+        { value: "2", label: "Aga Khan University Hospital" },
+        { value: "3", label: "Liaquat National Hospital" },
+      ],
+    },
+    {
+      key: "status",
+      label: "Status",
+      type: "select" as const,
+      options: [
+        { value: "Draft", label: "Draft" },
+        { value: "Pending Approval", label: "Pending Approval" },
+        { value: "Approved", label: "Approved" },
+        { value: "In Progress", label: "In Progress" },
+        { value: "Allocated", label: "Allocated" },
+        { value: "Shipped", label: "Shipped" },
+        { value: "Delivered", label: "Delivered" },
+        { value: "Cancelled", label: "Cancelled" },
+        { value: "Returned", label: "Returned" },
+      ],
+    },
+    {
+      key: "priority",
+      label: "Priority",
+      type: "select" as const,
+      options: [
+        { value: "Low", label: "Low" },
+        { value: "Normal", label: "Normal" },
+        { value: "High", label: "High" },
+        { value: "Urgent", label: "Urgent" },
+        { value: "Emergency", label: "Emergency" },
+      ],
+    },
+    {
+      key: "dateFrom",
+      label: "Date From",
+      type: "date" as const,
+    },
+    {
+      key: "dateTo",
+      label: "Date To",
+      type: "date" as const,
+    },
+  ]
+
+  const actions = (order: SalesOrder) => (
+    <div className="flex items-center gap-2">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => handleView(order)}
+      >
+        <Eye className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => handleEdit(order)}
+      >
+        <Edit className="h-4 w-4" />
+      </Button>
+      {order.status === "Pending Approval" && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-green-600 hover:text-green-700"
+          onClick={() => handleApprove(order)}
+        >
+          <CheckCircle className="h-4 w-4" />
+        </Button>
+      )}
+      {order.status === "Approved" && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-blue-600 hover:text-blue-700"
+          onClick={() => handleProcess(order)}
+        >
+          <Play className="h-4 w-4" />
+        </Button>
+      )}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="text-red-600 hover:text-red-700"
+        onClick={() => handleDelete(order)}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  )
 
   return (
     <DashboardLayout>
@@ -409,145 +505,27 @@ export default function SalesOrdersPage() {
           </Card>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Filters
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Search</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search orders..."
-                    value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Customer</label>
-                <Select value={filters.accountId || ""} onValueChange={(value) => handleFilterChange("accountId", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Customers" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">Ziauddin Hospital - Clifton</SelectItem>
-                    <SelectItem value="2">Aga Khan University Hospital</SelectItem>
-                    <SelectItem value="3">Liaquat National Hospital</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status</label>
-                <Select value={filters.status || ""} onValueChange={(value) => handleFilterChange("status", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Draft">Draft</SelectItem>
-                    <SelectItem value="Pending Approval">Pending Approval</SelectItem>
-                    <SelectItem value="Approved">Approved</SelectItem>
-                    <SelectItem value="In Progress">In Progress</SelectItem>
-                    <SelectItem value="Allocated">Allocated</SelectItem>
-                    <SelectItem value="Shipped">Shipped</SelectItem>
-                    <SelectItem value="Delivered">Delivered</SelectItem>
-                    <SelectItem value="Cancelled">Cancelled</SelectItem>
-                    <SelectItem value="Returned">Returned</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Priority</label>
-                <Select value={filters.priority || ""} onValueChange={(value) => handleFilterChange("priority", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Priorities" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Low">Low</SelectItem>
-                    <SelectItem value="Normal">Normal</SelectItem>
-                    <SelectItem value="High">High</SelectItem>
-                    <SelectItem value="Urgent">Urgent</SelectItem>
-                    <SelectItem value="Emergency">Emergency</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Date From</label>
-                <Input
-                  type="date"
-                  value={filters.dateFrom || ""}
-                  onChange={(e) => handleFilterChange("dateFrom", e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Date To</label>
-                <Input
-                  type="date"
-                  value={filters.dateTo || ""}
-                  onChange={(e) => handleFilterChange("dateTo", e.target.value)}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Sales Orders Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Sales Orders</CardTitle>
-            <CardDescription>A comprehensive view of all sales orders and customer relationships.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              data={salesOrders}
-              columns={columns}
-              loading={loading}
-              onSearch={handleSearch}
-              pagination={{
-                page: pagination.page,
-                pages: pagination.pages,
-                total: pagination.total,
-                onPageChange: handlePageChange
-              }}
-              searchPlaceholder="Search sales orders..."
-              actions={(order: SalesOrder) => (
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => handleView(order)}>
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleEdit(order)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  {order.status === "Pending Approval" && (
-                    <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700" onClick={() => handleApprove(order)}>
-                      <CheckCircle className="h-4 w-4" />
-                    </Button>
-                  )}
-                  {order.status === "Approved" && (
-                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700" onClick={() => handleProcess(order)}>
-                      <Play className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={() => handleDelete(order)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            />
-          </CardContent>
-        </Card>
+        <UnifiedDataTable
+          data={salesOrders}
+          columns={columns}
+          loading={loading}
+          searchPlaceholder="Search sales orders..."
+          searchValue={searchQuery}
+          onSearch={handleSearch}
+          filters={filterOptions}
+          onFiltersChange={handleFiltersChange}
+          pagination={{
+            page: pagination.page,
+            pages: pagination.pages,
+            total: pagination.total,
+            onPageChange: handlePageChange
+          }}
+          actions={actions}
+          onRefresh={fetchSalesOrders}
+          onExport={() => console.log("Export sales orders")}
+          emptyMessage="No sales orders found. Create your first sales order to get started."
+        />
       </div>
     </DashboardLayout>
   )

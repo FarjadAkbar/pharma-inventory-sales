@@ -37,7 +37,9 @@ import {
   GraduationCap,
   Download,
   Calendar,
-  AlertTriangle
+  AlertTriangle,
+  Workflow,
+  Zap
 } from "lucide-react"
 
 interface NavItem {
@@ -165,6 +167,16 @@ export function Sidebar() {
         { title: "Documents", href: "/dashboard/regulatory/documents", icon: FileText },
         { title: "Document Approvals", href: "/dashboard/regulatory/approvals", icon: FileCheck },
         { title: "Training Records", href: "/dashboard/regulatory/training", icon: GraduationCap },
+      ]
+    },
+    {
+      title: "Integration & Workflows",
+      icon: Workflow,
+      items: [
+        { title: "Integration Dashboard", href: "/dashboard/integration", icon: Zap },
+        { title: "Workflow Manager", href: "/dashboard/integration/workflows", icon: Workflow },
+        { title: "Compliance Metrics", href: "/dashboard/integration/metrics", icon: Shield },
+        { title: "Analytics", href: "/dashboard/integration/analytics", icon: BarChart3 },
       ]
     },
     {

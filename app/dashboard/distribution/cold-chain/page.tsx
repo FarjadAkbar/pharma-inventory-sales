@@ -3,12 +3,10 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { DataTable } from "@/components/ui/data-table"
+import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { 
   Plus, 
   Thermometer, 
@@ -39,6 +37,7 @@ import { TemperatureExcursionForm } from "@/components/sales/temperature-excursi
 import { toast } from "sonner"
 import type { ColdChainRecord, TemperatureExcursion } from "@/types/distribution"
 import { formatDateISO } from "@/lib/utils"
+import { Input } from "@/components/ui/input"
 
 export default function ColdChainPage() {
   const [coldChainRecords, setColdChainRecords] = useState<ColdChainRecord[]>([])
@@ -496,7 +495,7 @@ export default function ColdChainPage() {
             </div>
 
             {/* Data Table */}
-            <DataTable
+            <UnifiedDataTable
               data={activeTab === "records" ? coldChainRecords : temperatureExcursions}
               columns={activeTab === "records" ? coldChainColumns : excursionColumns}
               loading={loading}
