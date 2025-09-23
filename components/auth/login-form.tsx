@@ -12,9 +12,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useAuth } from "@/contexts/auth.context"
 import { getValidationError } from "@/lib/validations"
-import { OrganizationSelector } from "@/components/auth/organization-selector"
 import Link from "next/link"
-import { Eye, EyeOff, ArrowLeft } from "lucide-react"
+import { Eye, EyeOff } from "lucide-react"
 
 export function LoginForm() {
   const [email, setEmail] = useState("")
@@ -23,9 +22,6 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showOrgSelector, setShowOrgSelector] = useState(false)
-  const [selectedOrg, setSelectedOrg] = useState<any>(null)
-  const [selectedSite, setSelectedSite] = useState<any>(null)
   const { login } = useAuth()
   const router = useRouter()
 
@@ -44,10 +40,6 @@ export function LoginForm() {
       newErrors.password = "Password must be at least 8 characters"
     }
 
-    if (!selectedOrg) {
-      newErrors.organization = "Please select an organization"
-    }
-
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -62,9 +54,7 @@ export function LoginForm() {
       await login({ 
         email, 
         password, 
-        rememberMe, 
-        organization: selectedOrg?.id,
-        site: selectedSite?.id 
+        rememberMe
       })
       router.push("/dashboard")
     } catch (error) {
@@ -74,21 +64,6 @@ export function LoginForm() {
     }
   }
 
-  const handleOrgSelect = (org: any, site?: any) => {
-    setSelectedOrg(org)
-    setSelectedSite(site)
-    setShowOrgSelector(false)
-  }
-
-  if (showOrgSelector) {
-    return (
-      <OrganizationSelector
-        onSelect={handleOrgSelect}
-        onBack={() => setShowOrgSelector(false)}
-        className="w-full max-w-4xl mx-auto"
-      />
-    )
-  }
 
   return (
     <Card className="w-full max-w-md mx-auto border-orange-200">
@@ -133,25 +108,6 @@ export function LoginForm() {
             {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-gray-700">Organization & Site</Label>
-            <div 
-              className="p-3 border rounded-md cursor-pointer hover:bg-gray-50 transition-colors"
-              onClick={() => setShowOrgSelector(true)}
-            >
-              {selectedOrg ? (
-                <div>
-                  <div className="font-medium text-sm">{selectedOrg.name}</div>
-                  {selectedSite && (
-                    <div className="text-xs text-muted-foreground">{selectedSite.name}</div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-muted-foreground text-sm">Select organization and site</div>
-              )}
-            </div>
-            {errors.organization && <p className="text-sm text-red-500">{errors.organization}</p>}
-          </div>
 
           <div className="flex items-center space-x-2">
             <Checkbox

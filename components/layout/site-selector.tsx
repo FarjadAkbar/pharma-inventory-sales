@@ -56,20 +56,23 @@ export function SiteSelector({
     setIsOpen(false)
   }
 
-  const getSiteIcon = (type: string) => {
+  const getSiteIcon = (type: string, isHovered: boolean = false) => {
+    const baseClasses = "h-4 w-4 transition-colors duration-200"
+    const hoverClasses = isHovered ? "text-white" : ""
+    
     switch (type) {
       case 'hospital':
-        return <Building2 className="h-4 w-4 text-blue-500" />
+        return <Building2 className={`${baseClasses} text-blue-500 group-hover:text-white ${hoverClasses}`} />
       case 'clinic':
-        return <Building2 className="h-4 w-4 text-green-500" />
+        return <Building2 className={`${baseClasses} text-green-500 group-hover:text-white ${hoverClasses}`} />
       case 'pharmacy':
-        return <Package className="h-4 w-4 text-purple-500" />
+        return <Package className={`${baseClasses} text-purple-500 group-hover:text-white ${hoverClasses}`} />
       case 'warehouse':
-        return <Package className="h-4 w-4 text-orange-500" />
+        return <Package className={`${baseClasses} text-orange-500 group-hover:text-white ${hoverClasses}`} />
       case 'manufacturing':
-        return <Settings className="h-4 w-4 text-red-500" />
+        return <Settings className={`${baseClasses} text-red-500 group-hover:text-white ${hoverClasses}`} />
       default:
-        return <Building2 className="h-4 w-4 text-gray-500" />
+        return <Building2 className={`${baseClasses} text-gray-500 group-hover:text-white ${hoverClasses}`} />
     }
   }
 
@@ -106,7 +109,7 @@ export function SiteSelector({
 
   if (!canChangeSite() || availableSites.length <= 1) {
     return (
-      <div className={cn("flex items-center gap-2", className)}>
+      <div className={cn("flex items-center gap-3 p-3 rounded-md bg-muted/30 border", className)}>
         {getSiteIcon(currentSite?.type || 'warehouse')}
         <div className="flex flex-col">
           <span className="text-sm font-medium">{currentSite?.name || 'No Site'}</span>
@@ -124,64 +127,67 @@ export function SiteSelector({
         <Button
           variant="outline"
           className={cn(
-            "h-auto p-2 hover:bg-muted/50",
+            "h-auto p-3 hover:bg-amber-800 hover:border-amber-700 hover:text-white transition-all duration-200 group",
             className
           )}
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {getSiteIcon(currentSite?.type || 'warehouse')}
             <div className="flex flex-col items-start">
-              <span className="text-sm font-medium">{currentSite?.name || 'Select Site'}</span>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-sm font-medium group-hover:text-white">{currentSite?.name || 'Select Site'}</span>
+              <span className="text-xs text-muted-foreground group-hover:text-white/80">
                 {currentSite?.city || 'Unknown Location'}
               </span>
             </div>
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            <ChevronDown className={cn(
+              "h-4 w-4 text-muted-foreground group-hover:text-white transition-all duration-200",
+              isOpen && "rotate-180"
+            )} />
           </div>
         </Button>
       </DropdownMenuTrigger>
       
-      <DropdownMenuContent className="w-80" align="end">
-        <DropdownMenuLabel>Switch Site</DropdownMenuLabel>
-        <DropdownMenuSeparator />
+      <DropdownMenuContent className="w-80 p-2" align="end">
+        <DropdownMenuLabel className="px-2 py-1.5 text-sm font-semibold">Switch Site</DropdownMenuLabel>
+        <DropdownMenuSeparator className="my-2" />
         
         {availableSites.map((site) => (
           <DropdownMenuItem
             key={site.id}
             onClick={() => handleSiteSelect(site)}
-            className="p-3 cursor-pointer"
+            className="p-0 cursor-pointer focus:bg-accent focus:text-accent-foreground rounded-md"
           >
-            <div className="flex items-start gap-3 w-full">
+            <div className="flex items-start gap-3 w-full p-3 hover:bg-amber-800 hover:text-white rounded-md transition-colors duration-150 group">
               <div className="flex-shrink-0 mt-0.5">
                 {getSiteIcon(site.type)}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-medium text-sm truncate">{site.name}</span>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="font-medium text-sm truncate group-hover:text-white">{site.name}</span>
                   {currentSite?.id === site.id && (
-                    <Check className="h-3 w-3 text-primary" />
+                    <Check className="h-3 w-3 text-primary group-hover:text-white flex-shrink-0" />
                   )}
                 </div>
-                <div className="flex items-center gap-1 mb-1">
-                  <MapPin className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">
+                <div className="flex items-center gap-1 mb-2">
+                  <MapPin className="h-3 w-3 text-muted-foreground group-hover:text-white flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground group-hover:text-white/80 truncate">
                     {site.address}, {site.city}
                   </span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Badge variant="outline" className="text-xs">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <Badge variant="outline" className="text-xs px-2 py-0.5 group-hover:border-white group-hover:text-white">
                     {getSiteTypeLabel(site.type)}
                   </Badge>
                   <div className="flex items-center gap-1">
-                    <Users className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">
-                      {site.userCount} users
+                    <Users className="h-3 w-3 text-muted-foreground group-hover:text-white" />
+                    <span className="text-xs text-muted-foreground group-hover:text-white/80">
+                      {site.userCount}
                     </span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Package className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">
-                      {site.inventoryCount} items
+                    <Package className="h-3 w-3 text-muted-foreground group-hover:text-white" />
+                    <span className="text-xs text-muted-foreground group-hover:text-white/80">
+                      {site.inventoryCount}
                     </span>
                   </div>
                 </div>
@@ -190,12 +196,12 @@ export function SiteSelector({
           </DropdownMenuItem>
         ))}
         
-        <DropdownMenuSeparator />
-        <DropdownMenuItem className="text-center text-muted-foreground">
-          <span className="text-xs">
+        <DropdownMenuSeparator className="my-2" />
+        <div className="px-2 py-1.5 text-center">
+          <span className="text-xs text-muted-foreground">
             {availableSites.length} site{availableSites.length !== 1 ? 's' : ''} available
           </span>
-        </DropdownMenuItem>
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   )
