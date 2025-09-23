@@ -495,7 +495,7 @@ export default function ColdChainPage() {
             </div>
 
             {/* Data Table */}
-            <DataTable
+            <UnifiedDataTable
               data={activeTab === "records" ? coldChainRecords : temperatureExcursions}
               columns={activeTab === "records" ? coldChainColumns : excursionColumns}
               loading={loading}
