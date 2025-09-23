@@ -466,7 +466,7 @@ export default function MovementsPage() {
             <CardDescription>A comprehensive view of all warehouse movements with complete traceability and location changes.</CardDescription>
           </CardHeader>
           <CardContent>
-            <DataTable
+            <UnifiedDataTable
               data={movements}
               columns={columns}
               loading={loading}

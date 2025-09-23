@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { UnifiedDataTable } from '@/components/ui/unified-data-table'
 import { 
   Activity, 
   CheckCircle, 
@@ -18,7 +19,10 @@ import {
   Workflow,
   Zap,
   Shield,
-  Target
+  Target,
+  Eye,
+  Settings,
+  Play
 } from 'lucide-react'
 import { integrationService, type IntegrationWorkflow, type ComplianceMetrics } from '@/services/integration.service'
 
@@ -309,27 +313,157 @@ export function IntegrationDashboard() {
             </Badge>
           </div>
 
-          {workflows.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-8">
-                <Workflow className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No Active Workflows</h3>
-                <p className="text-muted-foreground text-center">
-                  Create a new workflow to start monitoring the supply chain integration.
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {workflows.map((workflow) => (
-                <WorkflowCard
-                  key={workflow.id}
-                  workflow={workflow}
-                  onViewDetails={handleViewWorkflowDetails}
-                />
-              ))}
-            </div>
-          )}
+          <UnifiedDataTable
+            data={workflows}
+            columns={[
+              {
+                key: 'type',
+                header: 'Workflow Type',
+                render: (workflow) => (
+                  <div className="flex items-center gap-2">
+                    <Workflow className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium">
+                      {workflow.type.replace(/_/g, ' ').toUpperCase()}
+                    </span>
+                  </div>
+                ),
+                sortable: true,
+              },
+              {
+                key: 'status',
+                header: 'Status',
+                render: (workflow) => {
+                  const getStatusColor = (status: string) => {
+                    switch (status) {
+                      case 'completed': return 'bg-green-500'
+                      case 'failed': return 'bg-red-500'
+                      case 'in_progress': return 'bg-blue-500'
+                      default: return 'bg-gray-500'
+                    }
+                  }
+                  const getStatusIcon = (status: string) => {
+                    switch (status) {
+                      case 'completed': return <CheckCircle className="h-4 w-4" />
+                      case 'failed': return <XCircle className="h-4 w-4" />
+                      case 'in_progress': return <Clock className="h-4 w-4" />
+                      default: return <AlertTriangle className="h-4 w-4" />
+                    }
+                  }
+                  return (
+                    <Badge className={`${getStatusColor(workflow.status)} text-white`}>
+                      {getStatusIcon(workflow.status)}
+                      <span className="ml-1">{workflow.status}</span>
+                    </Badge>
+                  )
+                },
+                sortable: true,
+              },
+              {
+                key: 'progress',
+                header: 'Progress',
+                render: (workflow) => {
+                  const completedSteps = workflow.steps.filter(step => step.status === 'completed').length
+                  const totalSteps = workflow.steps.length
+                  const progressPercentage = (completedSteps / totalSteps) * 100
+                  return (
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span>{completedSteps}/{totalSteps} steps</span>
+                        <span>{progressPercentage.toFixed(0)}%</span>
+                      </div>
+                      <Progress value={progressPercentage} className="h-2" />
+                    </div>
+                  )
+                },
+              },
+              {
+                key: 'priority',
+                header: 'Priority',
+                render: (workflow) => (
+                  <Badge variant="outline">{workflow.metadata.priority}</Badge>
+                ),
+                sortable: true,
+              },
+              {
+                key: 'createdAt',
+                header: 'Created',
+                render: (workflow) => (
+                  <span className="text-sm text-muted-foreground">
+                    {new Date(workflow.createdAt).toLocaleDateString()}
+                  </span>
+                ),
+                sortable: true,
+              },
+            ]}
+            filters={[
+              {
+                key: 'status',
+                label: 'Status',
+                type: 'select',
+                options: [
+                  { value: 'pending', label: 'Pending' },
+                  { value: 'in_progress', label: 'In Progress' },
+                  { value: 'completed', label: 'Completed' },
+                  { value: 'failed', label: 'Failed' },
+                ],
+              },
+              {
+                key: 'type',
+                label: 'Workflow Type',
+                type: 'select',
+                options: [
+                  { value: 'procurement_to_supplier', label: 'Procurement → Supplier' },
+                  { value: 'supplier_to_warehouse', label: 'Supplier → Warehouse' },
+                  { value: 'warehouse_to_quality', label: 'Warehouse → Quality' },
+                  { value: 'manufacturing_to_finished', label: 'Manufacturing → Finished' },
+                  { value: 'sales_to_distribution', label: 'Sales → Distribution' },
+                ],
+              },
+              {
+                key: 'priority',
+                label: 'Priority',
+                type: 'select',
+                options: [
+                  { value: 'low', label: 'Low' },
+                  { value: 'normal', label: 'Normal' },
+                  { value: 'high', label: 'High' },
+                  { value: 'urgent', label: 'Urgent' },
+                ],
+              },
+            ]}
+            actions={(workflow) => (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleViewWorkflowDetails(workflow.id)}
+                >
+                  <Eye className="h-3 w-3 mr-1" />
+                  View
+                </Button>
+                <Button size="sm" variant="outline">
+                  <Settings className="h-3 w-3 mr-1" />
+                  Manage
+                </Button>
+              </>
+            )}
+            bulkActions={[
+              {
+                label: 'Execute Selected',
+                action: (selectedWorkflows) => {
+                  console.log('Executing workflows:', selectedWorkflows)
+                },
+                icon: Play,
+              },
+            ]}
+            onRefresh={loadDashboardData}
+            onExport={() => console.log('Export workflows')}
+            searchPlaceholder="Search workflows..."
+            emptyMessage="No active workflows found. Create a new workflow to start monitoring the supply chain integration."
+            showBulkActions={true}
+            showRefresh={true}
+            showExport={true}
+          />
         </TabsContent>
 
         <TabsContent value="create" className="space-y-4">

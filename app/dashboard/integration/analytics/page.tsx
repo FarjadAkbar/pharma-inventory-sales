@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { UnifiedDataTable } from '@/components/ui/unified-data-table'
 import { 
   BarChart3, 
   TrendingUp, 
@@ -247,27 +248,87 @@ export default function AnalyticsPage() {
 
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Module Performance Breakdown</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {Object.entries(analytics.modulePerformance).map(([module, score]) => (
-                      <div key={module} className="p-4 border rounded-lg">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="font-medium">
-                            {module.replace(/_/g, ' ').toUpperCase()}
-                          </span>
+                  <UnifiedDataTable
+                    data={Object.entries(analytics.modulePerformance).map(([module, score]) => ({
+                      module: module.replace(/_/g, ' ').toUpperCase(),
+                      score: score,
+                      status: score >= 95 ? 'excellent' : score >= 90 ? 'good' : 'needs_improvement',
+                      trend: '+1.2%'
+                    }))}
+                    columns={[
+                      {
+                        key: 'module',
+                        header: 'Module',
+                        render: (item) => (
+                          <div className="flex items-center gap-2">
+                            <Activity className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-medium">{item.module}</span>
+                          </div>
+                        ),
+                        sortable: true,
+                      },
+                      {
+                        key: 'score',
+                        header: 'Performance Score',
+                        render: (item) => (
+                          <div className="flex items-center gap-2">
+                            <span className={`font-bold ${
+                              item.score >= 95 ? 'text-green-600' :
+                              item.score >= 90 ? 'text-yellow-600' :
+                              'text-red-600'
+                            }`}>
+                              {item.score.toFixed(1)}%
+                            </span>
+                            <span className="text-sm text-green-600">{item.trend}</span>
+                          </div>
+                        ),
+                        sortable: true,
+                      },
+                      {
+                        key: 'status',
+                        header: 'Status',
+                        render: (item) => (
                           <Badge 
                             className={
-                              score >= 95 ? 'bg-green-100 text-green-800' :
-                              score >= 90 ? 'bg-yellow-100 text-yellow-800' :
+                              item.status === 'excellent' ? 'bg-green-100 text-green-800' :
+                              item.status === 'good' ? 'bg-yellow-100 text-yellow-800' :
                               'bg-red-100 text-red-800'
                             }
                           >
-                            {score.toFixed(1)}%
+                            {item.status}
                           </Badge>
-                        </div>
-                        <Progress value={score} className="h-2" />
-                      </div>
-                    ))}
-                  </div>
+                        ),
+                        sortable: true,
+                      },
+                      {
+                        key: 'progress',
+                        header: 'Progress',
+                        render: (item) => (
+                          <div className="w-full">
+                            <Progress value={item.score} className="h-2" />
+                          </div>
+                        ),
+                      },
+                    ]}
+                    filters={[
+                      {
+                        key: 'status',
+                        label: 'Status',
+                        type: 'select',
+                        options: [
+                          { value: 'excellent', label: 'Excellent' },
+                          { value: 'good', label: 'Good' },
+                          { value: 'needs_improvement', label: 'Needs Improvement' },
+                        ],
+                      },
+                    ]}
+                    searchPlaceholder="Search modules..."
+                    emptyMessage="No module performance data available"
+                    showBulkActions={false}
+                    showRefresh={false}
+                    showExport={true}
+                    onExport={() => console.log('Export module performance')}
+                  />
                 </div>
               </div>
             </CardContent>
@@ -303,46 +364,95 @@ export default function AnalyticsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {analytics.bottlenecks.map((bottleneck, index) => (
-                  <div key={index} className="p-4 border rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold">
-                        {bottleneck.module.replace(/_/g, ' ').toUpperCase()}
-                      </h4>
+              <UnifiedDataTable
+                data={analytics.bottlenecks.map((bottleneck, index) => ({
+                  ...bottleneck,
+                  module: bottleneck.module.replace(/_/g, ' ').toUpperCase(),
+                  id: index.toString()
+                }))}
+                columns={[
+                  {
+                    key: 'module',
+                    header: 'Module',
+                    render: (item) => (
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className="h-4 w-4 text-orange-500" />
+                        <span className="font-medium">{item.module}</span>
+                      </div>
+                    ),
+                    sortable: true,
+                  },
+                  {
+                    key: 'impact',
+                    header: 'Impact',
+                    render: (item) => (
                       <Badge 
                         className={
-                          bottleneck.impact === 'high' ? 'bg-red-100 text-red-800' :
-                          bottleneck.impact === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                          item.impact === 'high' ? 'bg-red-100 text-red-800' :
+                          item.impact === 'medium' ? 'bg-yellow-100 text-yellow-800' :
                           'bg-green-100 text-green-800'
                         }
                       >
-                        {bottleneck.impact} impact
+                        {item.impact} impact
                       </Badge>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">Average Delay:</span>
-                        <span className="ml-2 font-medium">{bottleneck.averageDelay}h</span>
+                    ),
+                    sortable: true,
+                  },
+                  {
+                    key: 'averageDelay',
+                    header: 'Average Delay',
+                    render: (item) => (
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">{item.averageDelay}h</span>
                       </div>
-                      <div>
-                        <span className="text-muted-foreground">Frequency:</span>
-                        <span className="ml-2 font-medium">{bottleneck.frequency} occurrences</span>
+                    ),
+                    sortable: true,
+                  },
+                  {
+                    key: 'frequency',
+                    header: 'Frequency',
+                    render: (item) => (
+                      <span className="font-medium">{item.frequency} occurrences</span>
+                    ),
+                    sortable: true,
+                  },
+                  {
+                    key: 'severity',
+                    header: 'Severity',
+                    render: (item) => (
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span>Delay Severity</span>
+                          <span>{item.averageDelay}h</span>
+                        </div>
+                        <Progress 
+                          value={(item.averageDelay / 5) * 100} 
+                          className="h-2" 
+                        />
                       </div>
-                    </div>
-                    <div className="mt-3">
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Delay Severity</span>
-                        <span>{bottleneck.averageDelay}h</span>
-                      </div>
-                      <Progress 
-                        value={(bottleneck.averageDelay / 5) * 100} 
-                        className="h-2" 
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    ),
+                  },
+                ]}
+                filters={[
+                  {
+                    key: 'impact',
+                    label: 'Impact Level',
+                    type: 'select',
+                    options: [
+                      { value: 'high', label: 'High Impact' },
+                      { value: 'medium', label: 'Medium Impact' },
+                      { value: 'low', label: 'Low Impact' },
+                    ],
+                  },
+                ]}
+                searchPlaceholder="Search bottlenecks..."
+                emptyMessage="No bottlenecks identified"
+                showBulkActions={false}
+                showRefresh={false}
+                showExport={true}
+                onExport={() => console.log('Export bottlenecks')}
+              />
             </CardContent>
           </Card>
         </TabsContent>

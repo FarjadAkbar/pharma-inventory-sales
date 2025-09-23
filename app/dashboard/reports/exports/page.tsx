@@ -45,6 +45,8 @@ export default function ExportsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
   const [filters, setFilters] = useState<Record<string, any>>({})
+  const [typeFilter, setTypeFilter] = useState("all")
+  const [statusFilter, setStatusFilter] = useState("all")
 
   useEffect(() => {
     fetchExports()
@@ -430,7 +432,7 @@ export default function ExportsPage() {
             <CardDescription>A list of all data exports with their status and download links.</CardDescription>
           </CardHeader>
           <CardContent>
-            <DataTable
+            <UnifiedDataTable
               data={exports}
               columns={columns}
               loading={loading}

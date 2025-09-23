@@ -375,7 +375,7 @@ export default function GoodsReceiptsPage() {
             <CardDescription>A comprehensive list of all goods receipts and their QC status.</CardDescription>
           </CardHeader>
           <CardContent>
-            <DataTable
+            <UnifiedDataTable
               data={goodsReceipts}
               columns={columns}
               loading={loading}

@@ -387,7 +387,7 @@ export default function CertificateOfAnalysisPage() {
             <CardDescription>A list of all certificates of analysis with test results and approval status.</CardDescription>
           </CardHeader>
           <CardContent>
-            <DataTable
+            <UnifiedDataTable
               data={coas}
               columns={columns}
               loading={loading}

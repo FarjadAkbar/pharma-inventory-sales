@@ -394,7 +394,7 @@ export default function AuditTrailPage() {
             <CardDescription>Complete audit trail of all user activities and data modifications.</CardDescription>
           </CardHeader>
           <CardContent>
-            <DataTable
+            <UnifiedDataTable
               data={auditTrails}
               columns={columns}
               loading={loading}

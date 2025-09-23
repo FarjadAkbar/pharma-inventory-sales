@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { UnifiedDataTable } from '@/components/ui/unified-data-table'
 import { 
   Target, 
   Shield, 
@@ -295,37 +296,85 @@ export default function ComplianceMetricsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {[
-                  { module: 'Procurement', score: 96.5, status: 'excellent' },
-                  { module: 'Warehouse', score: 94.8, status: 'good' },
-                  { module: 'Quality Control', score: 98.2, status: 'excellent' },
-                  { module: 'Quality Assurance', score: 97.1, status: 'excellent' },
-                  { module: 'Manufacturing', score: 95.3, status: 'good' },
-                  { module: 'Distribution', score: 93.7, status: 'good' },
-                ].map((item, index) => (
-                  <div key={index} className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">{item.module}</span>
+              <UnifiedDataTable
+                data={[
+                  { module: 'Procurement', score: 96.5, status: 'excellent', trend: '+2.1%' },
+                  { module: 'Warehouse', score: 94.8, status: 'good', trend: '+1.5%' },
+                  { module: 'Quality Control', score: 98.2, status: 'excellent', trend: '+0.8%' },
+                  { module: 'Quality Assurance', score: 97.1, status: 'excellent', trend: '+1.2%' },
+                  { module: 'Manufacturing', score: 95.3, status: 'good', trend: '+0.9%' },
+                  { module: 'Distribution', score: 93.7, status: 'good', trend: '+1.8%' },
+                ]}
+                columns={[
+                  {
+                    key: 'module',
+                    header: 'Module',
+                    render: (item) => (
+                      <div className="flex items-center gap-2">
+                        <Activity className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">{item.module}</span>
+                      </div>
+                    ),
+                    sortable: true,
+                  },
+                  {
+                    key: 'score',
+                    header: 'Score',
+                    render: (item) => (
                       <div className="flex items-center gap-2">
                         <span className={`font-bold ${getScoreColor(item.score)}`}>
                           {item.score}%
                         </span>
-                        <Badge 
-                          className={
-                            item.status === 'excellent' ? 'bg-green-100 text-green-800' :
-                            item.status === 'good' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                          }
-                        >
-                          {item.status}
-                        </Badge>
+                        <span className="text-sm text-green-600">{item.trend}</span>
                       </div>
-                    </div>
-                    <Progress value={item.score} className="h-2" />
-                  </div>
-                ))}
-              </div>
+                    ),
+                    sortable: true,
+                  },
+                  {
+                    key: 'status',
+                    header: 'Status',
+                    render: (item) => (
+                      <Badge 
+                        className={
+                          item.status === 'excellent' ? 'bg-green-100 text-green-800' :
+                          item.status === 'good' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'
+                        }
+                      >
+                        {item.status}
+                      </Badge>
+                    ),
+                    sortable: true,
+                  },
+                  {
+                    key: 'progress',
+                    header: 'Progress',
+                    render: (item) => (
+                      <div className="w-full">
+                        <Progress value={item.score} className="h-2" />
+                      </div>
+                    ),
+                  },
+                ]}
+                filters={[
+                  {
+                    key: 'status',
+                    label: 'Status',
+                    type: 'select',
+                    options: [
+                      { value: 'excellent', label: 'Excellent' },
+                      { value: 'good', label: 'Good' },
+                      { value: 'needs_improvement', label: 'Needs Improvement' },
+                    ],
+                  },
+                ]}
+                searchPlaceholder="Search modules..."
+                emptyMessage="No module data available"
+                showBulkActions={false}
+                showRefresh={false}
+                showExport={true}
+                onExport={() => console.log('Export module breakdown')}
+              />
             </CardContent>
           </Card>
         </TabsContent>
