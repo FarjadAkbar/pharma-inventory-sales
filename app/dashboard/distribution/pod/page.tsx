@@ -38,6 +38,8 @@ import { ProofOfDeliveryForm } from "@/components/sales/proof-of-delivery-form"
 import { toast } from "sonner"
 import type { ProofOfDelivery, PODFilters } from "@/types/distribution"
 import { formatDateISO } from "@/lib/utils"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function PODPage() {
   const [pods, setPODs] = useState<ProofOfDelivery[]>([])
@@ -481,7 +483,7 @@ export default function PODPage() {
             <CardDescription>A comprehensive view of all proof of delivery records with signature capture and photo documentation.</CardDescription>
           </CardHeader>
           <CardContent>
-            <DataTable
+            <UnifiedDataTable
               data={pods}
               columns={columns}
               loading={loading}
