@@ -380,7 +380,7 @@ export default function ShipmentItemsPage() {
             <CardDescription>A list of all shipment items with their status and tracking information.</CardDescription>
           </CardHeader>
           <CardContent>
-            <DataTable
+            <UnifiedDataTable
               data={items}
               columns={columns}
               loading={loading}
