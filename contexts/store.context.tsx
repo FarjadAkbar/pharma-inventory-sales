@@ -28,10 +28,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const loadStores = async () => {
     setLoading(true)
     try {
-      const res = await apiService.getStores()
+      const res = await apiService.getSites()
       if (res.success && res.data) {
-        const list = res.data as Store[]
-        setStores(list)
+        // Map sites data to store format
+        const sites = res.data.sites || []
+        const mappedStores: Store[] = sites.map((site: any) => ({
+          id: site.id,
+          name: site.name,
+          city: site.address?.city || '',
+          address: site.address ? `${site.address.street}, ${site.address.city}, ${site.address.state}` : '',
+          image: '', // Sites don't have images
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          createdBy: 'system'
+        }))
+        setStores(mappedStores)
         const initial =
           (typeof window !== "undefined" && localStorage.getItem("current_store_id")) ||
           (user as any)?.defaultStoreId ||

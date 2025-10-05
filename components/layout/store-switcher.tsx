@@ -22,10 +22,10 @@ export function StoreSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline">{current ? current.name : "Select store"}</Button>
+        <Button variant="outline">{current ? current.name : "Select site"}</Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Stores</DropdownMenuLabel>
+        <DropdownMenuLabel>Sites</DropdownMenuLabel>
         {stores.map((s) => (
           <DropdownMenuItem key={s.id} onClick={() => setSelectedStoreId(s.id)}>
             {s.name}

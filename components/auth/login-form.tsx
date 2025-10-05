@@ -18,7 +18,6 @@ import { Eye, EyeOff } from "lucide-react"
 export function LoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [rememberMe, setRememberMe] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -53,8 +52,7 @@ export function LoginForm() {
     try {
       await login({ 
         email, 
-        password, 
-        rememberMe
+        password
       })
       router.push("/dashboard")
     } catch (error) {
@@ -109,16 +107,6 @@ export function LoginForm() {
           </div>
 
 
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="rememberMe"
-              checked={rememberMe}
-              onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-            />
-            <Label htmlFor="rememberMe" className="text-sm text-gray-600">
-              Remember me
-            </Label>
-          </div>
 
           {errors.submit && (
             <Alert variant="destructive">
