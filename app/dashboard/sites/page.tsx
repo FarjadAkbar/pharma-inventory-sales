@@ -1,43 +1,23 @@
 "use client"
 
-import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Building2, MapPin, Phone, Mail, Users, Settings } from "lucide-react"
-import { apiService } from "@/services/api.service"
-import { formatDateISO } from "@/lib/utils"
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Plus, Building2, Users, Settings } from "lucide-react"
+import { sitesApi } from "@/services"
 import { PermissionGuard } from "@/components/auth/permission-guard"
-
-interface Site {
-  id: string
-  name: string
-  code: string
-  type: "manufacturing" | "warehouse" | "distribution" | "office" | "laboratory"
-  address: string
-  city: string
-  state: string
-  country: string
-  postalCode: string
-  contactPerson: string
-  email: string
-  phone: string
-  capacity: {
-    employees: number
-    storage: number
-    production: number
-  }
-  facilities: string[]
-  certifications: string[]
-  isActive: boolean
-  parentSiteId?: string
-  parentSiteName?: string
-  createdAt: string
-  updatedAt: string
-}
+import type { Site } from "@/types/sites"
 
 export default function SitesPage() {
   const [sites, setSites] = useState<Site[]>([])
@@ -45,28 +25,19 @@ export default function SitesPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
   const [filters, setFilters] = useState<Record<string, any>>({})
-
-  useEffect(() => {
-    fetchSites()
-  }, [searchQuery, pagination.page, filters])
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [siteToDelete, setSiteToDelete] = useState<Site | null>(null)
+  const hasFetchedRef = useRef(false)
 
   const fetchSites = async () => {
+    console.log("fetchSites called at:", new Date().toISOString())
     try {
       setLoading(true)
-      const response = await apiService.getSites({
-        search: searchQuery,
-        ...filters,
-        page: pagination.page,
-        limit: 10,
-      })
+      const response = await sitesApi.getSites()
 
-      if (response.success && response.data) {
-        const siteData = response.data as {
-          sites: Site[]
-          pagination: { page: number; pages: number; total: number }
-        }
-        setSites(siteData.sites || [])
-        setPagination(siteData.pagination || { page: 1, pages: 1, total: 0 })
+      if (response.status && response.data) {
+        setSites(response.data)
+        setPagination({ page: 1, pages: 1, total: response.data.length })
       }
     } catch (error) {
       console.error("Failed to fetch sites:", error)
@@ -75,9 +46,17 @@ export default function SitesPage() {
     }
   }
 
+  useEffect(() => {
+    if (!hasFetchedRef.current) {
+      hasFetchedRef.current = true
+      fetchSites()
+    }
+  }, [])
+
   const handleSearch = (query: string) => {
     setSearchQuery(query)
-    setPagination((prev) => ({ ...prev, page: 1 }))
+    // For now, we'll do client-side filtering since the API doesn't support search
+    // In the future, this could be updated to call the API with search parameters
   }
 
   const handlePageChange = (page: number) => {
@@ -88,67 +67,32 @@ export default function SitesPage() {
     window.location.href = `/dashboard/sites/${site.id}`
   }
 
-  const handleDelete = async (site: Site) => {
-    if (confirm(`Are you sure you want to delete site "${site.name}"?`)) {
-      try {
-        await apiService.deleteSite(site.id)
-        fetchSites()
-      } catch (error) {
-        console.error("Failed to delete site:", error)
-      }
-    }
+  const handleDelete = (site: Site) => {
+    setSiteToDelete(site)
+    setDeleteDialogOpen(true)
   }
 
-  const handleToggleStatus = async (site: Site) => {
+  const confirmDelete = async () => {
+    if (!siteToDelete) return
+    
     try {
-      await apiService.updateSite(site.id, { isActive: !site.isActive })
-      fetchSites()
+      await sitesApi.deleteSite(siteToDelete.id)
+      fetchSites() // Refresh the list
+      setDeleteDialogOpen(false)
+      setSiteToDelete(null)
     } catch (error) {
-      console.error("Failed to toggle site status:", error)
+      console.error("Failed to delete site:", error)
     }
   }
 
-  const getTypeBadgeColor = (type: string) => {
-    switch (type) {
-      case "manufacturing":
-        return "bg-blue-100 text-blue-800"
-      case "warehouse":
-        return "bg-green-100 text-green-800"
-      case "distribution":
-        return "bg-purple-100 text-purple-800"
-      case "office":
-        return "bg-gray-100 text-gray-800"
-      case "laboratory":
-        return "bg-yellow-100 text-yellow-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
-
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case "manufacturing":
-        return "🏭"
-      case "warehouse":
-        return "🏪"
-      case "distribution":
-        return "🚚"
-      case "office":
-        return "🏢"
-      case "laboratory":
-        return "🧪"
-      default:
-        return "🏢"
-    }
+  const cancelDelete = () => {
+    setDeleteDialogOpen(false)
+    setSiteToDelete(null)
   }
 
   const calculateStats = () => {
-    const activeSites = sites.filter(s => s.isActive).length
-    const manufacturingSites = sites.filter(s => s.type === "manufacturing").length
-    const warehouseSites = sites.filter(s => s.type === "warehouse").length
-    const totalEmployees = sites.reduce((sum, s) => sum + s.capacity.employees, 0)
-
-    return { activeSites, manufacturingSites, warehouseSites, totalEmployees }
+    const totalSites = sites.length
+    return { totalSites }
   }
 
   const stats = calculateStats()
@@ -156,28 +100,10 @@ export default function SitesPage() {
   const columns = [
     {
       key: "name",
-      header: "Site",
+      header: "Site Name",
       sortable: true,
       render: (site: Site) => (
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <span className="text-lg">{getTypeIcon(site.type)}</span>
-          </div>
-          <div>
-            <div className="font-medium">{site.name}</div>
-            <div className="text-sm text-muted-foreground">{site.code}</div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: "type",
-      header: "Type",
-      sortable: true,
-      render: (site: Site) => (
-        <Badge className={getTypeBadgeColor(site.type)}>
-          {site.type.charAt(0).toUpperCase() + site.type.slice(1)}
-        </Badge>
+        <div className="font-medium">{site.name}</div>
       ),
     },
     {
@@ -185,130 +111,47 @@ export default function SitesPage() {
       header: "Location",
       sortable: true,
       render: (site: Site) => (
-        <div className="flex items-center gap-2 text-sm">
-          <MapPin className="h-3 w-3 text-muted-foreground" />
-          <span>{site.city}, {site.state}</span>
+        <div className="text-sm text-muted-foreground">{site.location}</div>
+      ),
+    },
+    {
+      key: "created_at",
+      header: "Created",
+      sortable: true,
+      render: (site: Site) => (
+        <div className="text-sm text-muted-foreground">
+          {new Date(site.created_at).toLocaleDateString()}
         </div>
       ),
     },
     {
-      key: "contact",
-      header: "Contact",
+      key: "updated_at",
+      header: "Last Updated",
       sortable: true,
       render: (site: Site) => (
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-sm">
-            <Mail className="h-3 w-3 text-muted-foreground" />
-            <span>{site.email}</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <Phone className="h-3 w-3 text-muted-foreground" />
-            <span>{site.phone}</span>
-          </div>
+        <div className="text-sm text-muted-foreground">
+          {new Date(site.updated_at).toLocaleDateString()}
         </div>
-      ),
-    },
-    {
-      key: "capacity",
-      header: "Capacity",
-      sortable: true,
-      render: (site: Site) => (
-        <div className="space-y-1 text-sm">
-          <div className="flex items-center gap-2">
-            <Users className="h-3 w-3 text-muted-foreground" />
-            <span>{site.capacity.employees} employees</span>
-          </div>
-          <div>Storage: {site.capacity.storage} sq ft</div>
-        </div>
-      ),
-    },
-    {
-      key: "facilities",
-      header: "Facilities",
-      sortable: true,
-      render: (site: Site) => (
-        <div className="flex flex-wrap gap-1">
-          {site.facilities.slice(0, 2).map((facility) => (
-            <Badge key={facility} variant="secondary" className="text-xs">
-              {facility}
-            </Badge>
-          ))}
-          {site.facilities.length > 2 && (
-            <Badge variant="outline" className="text-xs">
-              +{site.facilities.length - 2} more
-            </Badge>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: "parentSite",
-      header: "Parent Site",
-      sortable: true,
-      render: (site: Site) => (
-        <span className="text-sm text-muted-foreground">
-          {site.parentSiteName || "Root Site"}
-        </span>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      sortable: true,
-      render: (site: Site) => (
-        <Badge variant={site.isActive ? "default" : "secondary"}>
-          {site.isActive ? "Active" : "Inactive"}
-        </Badge>
       ),
     },
   ]
 
-  const filterOptions = [
-    {
-      key: "type",
-      label: "Site Type",
-      type: "select" as const,
-      options: [
-        { value: "manufacturing", label: "Manufacturing" },
-        { value: "warehouse", label: "Warehouse" },
-        { value: "distribution", label: "Distribution" },
-        { value: "office", label: "Office" },
-        { value: "laboratory", label: "Laboratory" },
-      ],
-    },
-    {
-      key: "isActive",
-      label: "Status",
-      type: "select" as const,
-      options: [
-        { value: "true", label: "Active" },
-        { value: "false", label: "Inactive" },
-      ],
-    },
-  ]
+  const filterOptions: any[] = []
 
   const handleFiltersChange = (newFilters: Record<string, any>) => {
     setFilters(newFilters)
-    setPagination((prev) => ({ ...prev, page: 1 }))
+    // For now, we'll do client-side filtering since the API doesn't support filters
+    // In the future, this could be updated to call the API with filter parameters
   }
 
   const actions = (site: Site) => (
     <div className="flex items-center gap-2">
-      <PermissionGuard module="MASTER_DATA" screen="sites" action="update">
+      <PermissionGuard module="MASTER_DATA" action="update">
         <Button variant="ghost" size="sm" onClick={() => handleEdit(site)}>
           Edit
         </Button>
       </PermissionGuard>
-      <PermissionGuard module="MASTER_DATA" screen="sites" action="update">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => handleToggleStatus(site)}
-        >
-          {site.isActive ? "Deactivate" : "Activate"}
-        </Button>
-      </PermissionGuard>
-      <PermissionGuard module="MASTER_DATA" screen="sites" action="delete">
+      <PermissionGuard module="MASTER_DATA" action="delete">
         <Button variant="ghost" size="sm" onClick={() => handleDelete(site)}>
           Delete
         </Button>
@@ -325,7 +168,7 @@ export default function SitesPage() {
             <p className="text-muted-foreground">Manage company sites and facilities</p>
           </div>
 
-          <PermissionGuard module="MASTER_DATA" screen="sites" action="create">
+          <PermissionGuard module="MASTER_DATA" action="create">
             <Button onClick={() => (window.location.href = "/dashboard/sites/new")}>
               <Plus className="mr-2 h-4 w-4" />
               Add Site
@@ -341,7 +184,7 @@ export default function SitesPage() {
               <Building2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{pagination.total}</div>
+              <div className="text-2xl font-bold">{stats.totalSites}</div>
             </CardContent>
           </Card>
 
@@ -351,27 +194,29 @@ export default function SitesPage() {
               <Settings className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.activeSites}</div>
+              <div className="text-2xl font-bold text-green-600">{stats.totalSites}</div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Manufacturing</CardTitle>
+              <CardTitle className="text-sm font-medium">Locations</CardTitle>
               <Building2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{stats.manufacturingSites}</div>
+              <div className="text-2xl font-bold text-blue-600">{stats.totalSites}</div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
+              <CardTitle className="text-sm font-medium">Last Updated</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-purple-600">{stats.totalEmployees}</div>
+              <div className="text-2xl font-bold text-purple-600">
+                {sites.length > 0 ? new Date(sites[0]?.updated_at).toLocaleDateString() : 'N/A'}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -398,6 +243,29 @@ export default function SitesPage() {
           emptyMessage="No sites found. Add your first site to get started."
         />
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Site</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete the site "{siteToDelete?.name}"? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={cancelDelete}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={confirmDelete}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   )
 }

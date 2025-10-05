@@ -154,6 +154,11 @@ class AuthService {
     const permissions = this.getPermissions()
     if (!permissions) return false
     
+    // If permissions is empty object {}, user has all permissions (System Administrator)
+    if (Object.keys(permissions).length === 0) {
+      return true
+    }
+    
     const modulePermissions = permissions[module]
     if (!modulePermissions) return false
     
@@ -161,6 +166,14 @@ class AuthService {
   }
 
   hasAllPermissions(module: string, actions: string[]): boolean {
+    const permissions = this.getPermissions()
+    if (!permissions) return false
+    
+    // If permissions is empty object {}, user has all permissions (System Administrator)
+    if (Object.keys(permissions).length === 0) {
+      return true
+    }
+    
     return actions.every(action => this.hasPermission(module, action))
   }
 }
