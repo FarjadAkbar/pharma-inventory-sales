@@ -19,9 +19,19 @@ This document outlines the development guidelines and standards for the Ziauddin
 
 ### API Integration
 - Use centralized API services for all backend communication
+- **Use direct backend API calls instead of proxy APIs** - Call backend endpoints directly through `apiService`
 - Implement automatic JWT token management
 - Handle errors consistently across the application
 - Use proper loading states and user feedback
+
+**Direct API Usage Pattern:**
+```typescript
+// ✅ CORRECT: Direct backend API call
+const response = await apiService.getUsers({ search: query, page: 1 })
+
+// ❌ AVOID: Proxy API calls (unless specifically needed)
+const response = await fetch('/api/users')
+```
 
 ### Authentication & Security
 - Implement JWT-based authentication
