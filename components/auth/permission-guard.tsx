@@ -5,23 +5,20 @@ import type { ReactNode } from "react"
 
 interface PermissionGuardProps {
   module: string
-  screen: string
-  action: 'view' | 'create' | 'update' | 'delete'
+  action: string
   children: ReactNode
   fallback?: ReactNode
 }
 
 interface ModulePermissionGuardProps {
   module: string
-  screen: string
   children: ReactNode
   fallback?: ReactNode
 }
 
 interface ActionButtonProps {
   module: string
-  screen: string
-  action: 'create' | 'update' | 'delete'
+  action: string
   children: ReactNode
   onClick?: () => void
   className?: string
@@ -31,29 +28,28 @@ interface ActionButtonProps {
 }
 
 // Basic permission guard - renders children only if user has the specified permission
-export function PermissionGuard({ module, screen, action, children, fallback = null }: PermissionGuardProps) {
+export function PermissionGuard({ module, action, children, fallback = null }: PermissionGuardProps) {
   const { hasPermission, permissions } = useAuth()
   
   console.log('🔐 PermissionGuard Debug:', {
     module,
-    screen,
     action,
     permissions,
-    hasPermission: hasPermission(module, screen, action)
+    hasPermission: hasPermission(module, action)
   })
   
-  if (hasPermission(module, screen, action)) {
+  if (hasPermission(module, action)) {
     return <>{children}</>
   }
   
   return <>{fallback}</>
 }
 
-// Module permission guard - renders children only if user can view the screen
-export function ModulePermissionGuard({ module, screen, children, fallback = null }: ModulePermissionGuardProps) {
+// Module permission guard - renders children only if user can view the module
+export function ModulePermissionGuard({ module, children, fallback = null }: ModulePermissionGuardProps) {
   const { hasPermission } = useAuth()
   
-  if (hasPermission(module, screen, 'view')) {
+  if (hasPermission(module, 'view')) {
     return <>{children}</>
   }
   
@@ -63,7 +59,6 @@ export function ModulePermissionGuard({ module, screen, children, fallback = nul
 // Action button - renders a button only if user has the specified permission
 export function ActionButton({ 
   module, 
-  screen, 
   action, 
   children, 
   onClick, 
@@ -74,7 +69,7 @@ export function ActionButton({
 }: ActionButtonProps) {
   const { hasPermission } = useAuth()
   
-  if (!hasPermission(module, screen, action)) {
+  if (!hasPermission(module, action)) {
     return null
   }
   
@@ -94,14 +89,12 @@ export function ActionButton({
 // Multi-module permission guard - renders children if user has permission in ANY of the specified modules
 export function MultiModulePermissionGuard({ 
   modules, 
-  screen, 
   action, 
   children, 
   fallback = null 
 }: {
   modules: string[]
-  screen: string
-  action: 'view' | 'create' | 'update' | 'delete'
+  action: string
   children: ReactNode
   fallback?: ReactNode
 }) {
@@ -109,15 +102,14 @@ export function MultiModulePermissionGuard({
   
   console.log('🔐 MultiModulePermissionGuard Debug:', {
     modules,
-    screen,
     action,
     hasPermission: hasPermission
   })
   
   // Check if user has permission in any of the specified modules
   const hasAnyPermission = modules.some(module => {
-    const result = hasPermission(module, screen, action)
-    console.log(`🔐 Checking ${module}.${screen}.${action}:`, result)
+    const result = hasPermission(module, action)
+    console.log(`🔐 Checking ${module}.${action}:`, result)
     return result
   })
   
@@ -133,39 +125,37 @@ export function MultiModulePermissionGuard({
 // Permission-based icon renderer
 export function PermissionIcon({ 
   module, 
-  screen, 
   action, 
   icon: Icon, 
   fallback = null 
 }: {
   module: string
-  screen: string
-  action: 'view' | 'create' | 'update' | 'delete'
+  action: string
   icon: React.ComponentType<{ className?: string }>
   fallback?: ReactNode
 }) {
   const { hasPermission } = useAuth()
   
-  if (hasPermission(module, screen, action)) {
+  if (hasPermission(module, action)) {
     return <Icon className="h-4 w-4" />
   }
   
   return <>{fallback}</>
 }
 
-// Check if user has any permission for a screen
-export function useScreenPermissions(module: string, screen: string) {
+// Check if user has any permission for a module
+export function useModulePermissions(module: string) {
   const { hasPermission, hasAllPermissions } = useAuth()
   
   return {
-    canView: hasPermission(module, screen, 'view'),
-    canCreate: hasPermission(module, screen, 'create'),
-    canUpdate: hasPermission(module, screen, 'update'),
-    canDelete: hasPermission(module, screen, 'delete'),
-    canAll: hasAllPermissions(module, screen),
-    hasAnyPermission: hasPermission(module, screen, 'view') || 
-                      hasPermission(module, screen, 'create') || 
-                      hasPermission(module, screen, 'update') || 
-                      hasPermission(module, screen, 'delete')
+    canView: hasPermission(module, 'view'),
+    canCreate: hasPermission(module, 'create'),
+    canUpdate: hasPermission(module, 'update'),
+    canDelete: hasPermission(module, 'delete'),
+    canAll: hasAllPermissions(module, ['view', 'create', 'update', 'delete']),
+    hasAnyPermission: hasPermission(module, 'view') || 
+                      hasPermission(module, 'create') || 
+                      hasPermission(module, 'update') || 
+                      hasPermission(module, 'delete')
   }
 }

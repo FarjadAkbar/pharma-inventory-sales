@@ -14,8 +14,8 @@ interface AuthContextType {
   changePassword: (data: ChangePasswordData) => Promise<void>
   forgotPassword: (data: ForgotPasswordData) => Promise<void>
   isAuthenticated: boolean
-  hasPermission: (module: string, screen: string, action: 'view' | 'create' | 'update' | 'delete') => boolean
-  hasAllPermissions: (module: string, screen: string) => boolean
+  hasPermission: (module: string, action: string) => boolean
+  hasAllPermissions: (module: string, actions: string[]) => boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -57,14 +57,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("Auth context: Login successful, authResponse:", authResponse)
       
       console.log("Auth context: Getting current user")
-      const userData = await authService.getCurrentUser()
-      console.log("Auth context: User data:", userData)
-      
-      console.log("Auth context: Setting user and permissions")
-      setUser(userData)
-      setPermissions(authResponse.permissions)
-      console.log("Auth context: Login process completed successfully")
-      console.log("Auth context: Current state - user:", !!userData, "permissions:", !!authResponse.permissions)
+      try {
+        const userData = await authService.getCurrentUser()
+        console.log("Auth context: User data:", userData)
+        
+        console.log("Auth context: Setting user and permissions")
+        setUser(userData)
+        setPermissions(authResponse.permissions)
+        console.log("Auth context: Login process completed successfully")
+        console.log("Auth context: Current state - user:", !!userData, "permissions:", !!authResponse.permissions)
+      } catch (userError) {
+        console.error("Auth context: getCurrentUser failed:", userError)
+        throw new Error(`Failed to get user data: ${userError.message}`)
+      }
     } catch (error) {
       console.error("Auth context: Login failed:", error)
       throw error
@@ -108,21 +113,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await authService.forgotPassword(data)
   }
 
-  const hasPermission = (module: string, screen: string, action: 'view' | 'create' | 'update' | 'delete'): boolean => {
+  const hasPermission = (module: string, action: string): boolean => {
     console.log('🔐 AuthContext hasPermission Debug:', {
       module,
-      screen,
       action,
       permissions,
       user
     })
-    const result = authService.hasPermission(module, screen, action)
+    const result = authService.hasPermission(module, action)
     console.log('🔐 AuthContext hasPermission Result:', result)
     return result
   }
 
-  const hasAllPermissions = (module: string, screen: string): boolean => {
-    return authService.hasAllPermissions(module, screen)
+  const hasAllPermissions = (module: string, actions: string[]): boolean => {
+    return authService.hasAllPermissions(module, actions)
   }
 
   const value: AuthContextType = {

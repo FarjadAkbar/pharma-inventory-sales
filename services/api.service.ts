@@ -4,7 +4,7 @@ import { authService } from "./auth.service"
 import type { ApiResponse } from "@/types/auth"
 
 class ApiService {
-  private baseUrl = "/api"
+  private baseUrl = process.env.NEXT_PUBLIC_API || 'http://localhost:3000/api'
   private getCurrentStoreId(): string | null {
     if (typeof window === "undefined") return null
     return localStorage.getItem("current_store_id")
@@ -128,7 +128,7 @@ class ApiService {
     })
   }
 
-  // Users API (Admin only)
+  // Users API (Direct backend calls)
   async getUsers(params?: {
     search?: string
     role?: string
@@ -162,6 +162,36 @@ class ApiService {
   async deleteUser(id: string) {
     const sp = new URLSearchParams({ id })
     return this.request(`/users?${sp.toString()}`, { method: "DELETE" })
+  }
+
+  // Generic HTTP methods
+  async get<T>(endpoint: string): Promise<ApiResponse<T>> { 
+    return await this.request<T>(endpoint, { method: 'GET' })
+  }
+  
+  async post<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> { 
+    return await this.request<T>(endpoint, { 
+      method: 'POST', 
+      body: data ? JSON.stringify(data) : undefined, 
+    })
+  }
+  
+  async put<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> { 
+    return await this.request<T>(endpoint, { 
+      method: 'PUT', 
+      body: data ? JSON.stringify(data) : undefined, 
+    })
+  }
+  
+  async delete<T>(endpoint: string): Promise<ApiResponse<T>> { 
+    return await this.request<T>(endpoint, { method: 'DELETE' })
+  }
+  
+  async patch<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> { 
+    return await this.request<T>(endpoint, { 
+      method: 'PATCH', 
+      body: data ? JSON.stringify(data) : undefined, 
+    })
   }
 
   // Cache invalidation methods
@@ -419,7 +449,7 @@ class ApiService {
 
   // Sites API
   async getSites() {
-    return this.request("/sites")
+    return this.request("/site/getAllSites")
   }
 
   // Cache invalidation for procurement data

@@ -24,8 +24,22 @@ export default function StoresPage() {
   const load = async () => {
     setLoading(true)
     try {
-      const res = await apiService.getStores()
-      if (res.success && res.data) setStores(res.data as any[])
+      const res = await apiService.getSites()
+      if (res.success && res.data) {
+        // Map sites data to store format for display
+        const sites = res.data.sites || []
+        const mappedStores = sites.map((site: any) => ({
+          id: site.id,
+          name: site.name,
+          city: site.address?.city || '',
+          address: site.address ? `${site.address.street}, ${site.address.city}, ${site.address.state}` : '',
+          image: '', // Sites don't have images
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          createdBy: 'system'
+        }))
+        setStores(mappedStores)
+      }
     } finally {
       setLoading(false)
     }

@@ -4,7 +4,7 @@ import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import "./globals.css"
 import { AuthProvider } from "@/contexts/auth.context"
-import { StoreProvider } from "@/contexts/store.context"
+import { ConditionalStoreProvider } from "@/components/providers/conditional-store-provider"
 import { GlobalLoader } from "@/components/ui/global-loader"
 import { RouteChangeListener } from "@/components/ui/route-change-listener"
 
@@ -32,11 +32,11 @@ html {
       </head>
       <body>
         <AuthProvider>
-          <StoreProvider>
+          <ConditionalStoreProvider>
             <GlobalLoader />
             <RouteChangeListener />
             {children}
-          </StoreProvider>
+          </ConditionalStoreProvider>
         </AuthProvider>
       </body>
     </html>

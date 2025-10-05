@@ -1,65 +1,62 @@
 import type { ScreenPermission } from "@/types/tenant"
 
 export interface JwtPayload {
-  userId: number
-  clientId: number
-  storeId: number
+  id: number
+  site_id: number
   role: string
-  email: string
-  name: string
+  permission: any[] // Empty array means all permissions
   iat: number
   exp: number
 }
 
 export interface Permission {
-  canView: boolean
-  canCreate: boolean
-  canUpdate: boolean
-  canDelete: boolean
-  canAll: boolean
+  module: string
+  actions: string[]
 }
 
 export interface ModulePermissions {
-  [screenName: string]: Permission
+  [module: string]: string[]
 }
 
 export interface Permissions {
-  [moduleName: string]: ModulePermissions
+  [key: string]: ModulePermissions
 }
 
 export interface User {
-  id: string
+  id: number
+  fullname: string
+  username: string
   email: string
-  name: string
   role: string
-  clientId: number
-  storeId: number
-  permissions: Permissions
+  site_id: number
+  org_id: number | null
+  storeId?: number
+  clientId?: number
+  status: string
+  created_at: string
+  updated_at: string
+  // Optional fields that might be added by frontend
   assignedStores?: string[]
-  defaultStoreId?: string
-  screenPermissions?: ScreenPermission[]
-  createdAt: string
-  updatedAt: string
+  screenPermissions?: { screen: string; actions: string[] }[]
 }
 
 export interface LoginCredentials {
   email: string
   password: string
-  rememberMe?: boolean
-  organization?: string
 }
 
 export interface RegisterData {
-  name: string
   email: string
   password: string
-  role?: string
-  assignedStores?: string[]
+  firstName: string
+  lastName: string
+  role: string
 }
 
 export interface ChangePasswordData {
   currentPassword: string
   newPassword: string
+  confirmPassword: string
 }
 
 export interface ForgotPasswordData {
@@ -72,7 +69,7 @@ export interface AuthResponse {
   permissions: Permissions
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T> {
   success: boolean
   data?: T
   message?: string
