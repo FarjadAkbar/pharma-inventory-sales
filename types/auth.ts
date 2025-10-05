@@ -23,15 +23,21 @@ export interface Permissions {
 }
 
 export interface User {
-  id: string
+  id: number
+  fullname: string
+  username: string
   email: string
-  name: string
   role: string
-  clientId: number
-  storeId: number
-  permissions: Permissions
-  createdAt: string
-  updatedAt: string
+  site_id: number
+  org_id: number | null
+  storeId?: number
+  clientId?: number
+  status: string
+  created_at: string
+  updated_at: string
+  // Optional fields that might be added by frontend
+  assignedStores?: string[]
+  screenPermissions?: { screen: string; actions: string[] }[]
 }
 
 export interface LoginCredentials {

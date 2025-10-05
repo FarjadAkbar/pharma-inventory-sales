@@ -12,7 +12,7 @@ import {
   PermissionGuard, 
   ModulePermissionGuard, 
   ActionButton, 
-  useScreenPermissions 
+  useModulePermissions 
 } from "@/components/auth/permission-guard"
 
 export default function PermissionsDemoPage() {
@@ -20,10 +20,9 @@ export default function PermissionsDemoPage() {
   const [selectedRole, setSelectedRole] = useState("pos_staff")
 
   // Get permissions for different modules
-  const posProductPermissions = useScreenPermissions("POS", "pos_product")
-  const posCategoryPermissions = useScreenPermissions("POS", "pos_category")
-  const pharmaProductPermissions = useScreenPermissions("PHARMA", "pharma_product")
-  const userManagementPermissions = useScreenPermissions("USER_MANAGEMENT", "users")
+  const posPermissions = useModulePermissions("POS")
+  const pharmaPermissions = useModulePermissions("PHARMA")
+  const userManagementPermissions = useModulePermissions("USER_MANAGEMENT")
 
   const roles = [
     { value: "pos_staff", label: "POS Staff", description: "Can manage POS products and categories" },
@@ -99,15 +98,15 @@ export default function PermissionsDemoPage() {
         </Card>
 
         {/* POS Module Permissions */}
-        <ModulePermissionGuard module="POS" screen="pos_product">
+        <ModulePermissionGuard module="POS">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ShoppingCart className="h-5 w-5" />
-                POS Module - Products
+                POS Module
               </CardTitle>
               <CardDescription>
-                This section shows POS product permissions
+                This section shows POS module permissions
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -115,26 +114,26 @@ export default function PermissionsDemoPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center p-3 border rounded-lg">
                     <p className="text-sm font-medium">View</p>
-                    <Badge variant={posProductPermissions.canView ? "default" : "secondary"}>
-                      {posProductPermissions.canView ? "Yes" : "No"}
+                    <Badge variant={posPermissions.canView ? "default" : "secondary"}>
+                      {posPermissions.canView ? "Yes" : "No"}
                     </Badge>
                   </div>
                   <div className="text-center p-3 border rounded-lg">
                     <p className="text-sm font-medium">Create</p>
-                    <Badge variant={posProductPermissions.canCreate ? "default" : "secondary"}>
-                      {posProductPermissions.canCreate ? "Yes" : "No"}
+                    <Badge variant={posPermissions.canCreate ? "default" : "secondary"}>
+                      {posPermissions.canCreate ? "Yes" : "No"}
                     </Badge>
                   </div>
                   <div className="text-center p-3 border rounded-lg">
                     <p className="text-sm font-medium">Update</p>
-                    <Badge variant={posProductPermissions.canUpdate ? "default" : "secondary"}>
-                      {posProductPermissions.canUpdate ? "Yes" : "No"}
+                    <Badge variant={posPermissions.canUpdate ? "default" : "secondary"}>
+                      {posPermissions.canUpdate ? "Yes" : "No"}
                     </Badge>
                   </div>
                   <div className="text-center p-3 border rounded-lg">
                     <p className="text-sm font-medium">Delete</p>
-                    <Badge variant={posProductPermissions.canDelete ? "default" : "secondary"}>
-                      {posProductPermissions.canDelete ? "Yes" : "No"}
+                    <Badge variant={posPermissions.canDelete ? "default" : "secondary"}>
+                      {posPermissions.canDelete ? "Yes" : "No"}
                     </Badge>
                   </div>
                 </div>
@@ -142,28 +141,28 @@ export default function PermissionsDemoPage() {
                 <Separator />
 
                 <div className="flex gap-2 flex-wrap">
-                  <PermissionGuard module="POS" screen="pos_product" action="create">
+                  <PermissionGuard module="POS" action="create">
                     <Button>
                       <Plus className="h-4 w-4 mr-2" />
                       Add Product
                     </Button>
                   </PermissionGuard>
                   
-                  <PermissionGuard module="POS" screen="pos_product" action="view">
+                  <PermissionGuard module="POS" action="view">
                     <Button variant="outline">
                       <Eye className="h-4 w-4 mr-2" />
                       View Products
                     </Button>
                   </PermissionGuard>
                   
-                  <PermissionGuard module="POS" screen="pos_product" action="update">
+                  <PermissionGuard module="POS" action="update">
                     <Button variant="outline">
                       <Edit className="h-4 w-4 mr-2" />
                       Edit Products
                     </Button>
                   </PermissionGuard>
                   
-                  <PermissionGuard module="POS" screen="pos_product" action="delete">
+                  <PermissionGuard module="POS" action="delete">
                     <Button variant="outline">
                       <Trash2 className="h-4 w-4 mr-2" />
                       Delete Products
@@ -175,93 +174,16 @@ export default function PermissionsDemoPage() {
           </Card>
         </ModulePermissionGuard>
 
-        {/* POS Categories */}
-        <ModulePermissionGuard module="POS" screen="pos_category">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5" />
-                POS Module - Categories
-              </CardTitle>
-              <CardDescription>
-                This section shows POS category permissions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center p-3 border rounded-lg">
-                    <p className="text-sm font-medium">View</p>
-                    <Badge variant={posCategoryPermissions.canView ? "default" : "secondary"}>
-                      {posCategoryPermissions.canView ? "Yes" : "No"}
-                    </Badge>
-                  </div>
-                  <div className="text-center p-3 border rounded-lg">
-                    <p className="text-sm font-medium">Create</p>
-                    <Badge variant={posCategoryPermissions.canCreate ? "default" : "secondary"}>
-                      {posCategoryPermissions.canCreate ? "Yes" : "No"}
-                    </Badge>
-                  </div>
-                  <div className="text-center p-3 border rounded-lg">
-                    <p className="text-sm font-medium">Update</p>
-                    <Badge variant={posCategoryPermissions.canUpdate ? "default" : "secondary"}>
-                      {posCategoryPermissions.canUpdate ? "Yes" : "No"}
-                    </Badge>
-                  </div>
-                  <div className="text-center p-3 border rounded-lg">
-                    <p className="text-sm font-medium">Delete</p>
-                    <Badge variant={posCategoryPermissions.canDelete ? "default" : "secondary"}>
-                      {posCategoryPermissions.canDelete ? "Yes" : "No"}
-                    </Badge>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="flex gap-2 flex-wrap">
-                  <PermissionGuard module="POS" screen="pos_category" action="create">
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Category
-                    </Button>
-                  </PermissionGuard>
-                  
-                  <PermissionGuard module="POS" screen="pos_category" action="view">
-                    <Button variant="outline">
-                      <Eye className="h-4 w-4 mr-2" />
-                      View Categories
-                    </Button>
-                  </PermissionGuard>
-                  
-                  <PermissionGuard module="POS" screen="pos_category" action="update">
-                    <Button variant="outline">
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit Categories
-                    </Button>
-                  </PermissionGuard>
-                  
-                  <PermissionGuard module="POS" screen="pos_category" action="delete">
-                    <Button variant="outline">
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete Categories
-                    </Button>
-                  </PermissionGuard>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </ModulePermissionGuard>
-
         {/* Pharma Module */}
-        <ModulePermissionGuard module="PHARMA" screen="pharma_product">
+        <ModulePermissionGuard module="PHARMA">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Package className="h-5 w-5" />
-                Pharma Module - Products
+                Pharma Module
               </CardTitle>
               <CardDescription>
-                This section shows pharmaceutical product permissions
+                This section shows pharmaceutical module permissions
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -269,26 +191,26 @@ export default function PermissionsDemoPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center p-3 border rounded-lg">
                     <p className="text-sm font-medium">View</p>
-                    <Badge variant={pharmaProductPermissions.canView ? "default" : "secondary"}>
-                      {pharmaProductPermissions.canView ? "Yes" : "No"}
+                    <Badge variant={pharmaPermissions.canView ? "default" : "secondary"}>
+                      {pharmaPermissions.canView ? "Yes" : "No"}
                     </Badge>
                   </div>
                   <div className="text-center p-3 border rounded-lg">
                     <p className="text-sm font-medium">Create</p>
-                    <Badge variant={pharmaProductPermissions.canCreate ? "default" : "secondary"}>
-                      {pharmaProductPermissions.canCreate ? "Yes" : "No"}
+                    <Badge variant={pharmaPermissions.canCreate ? "default" : "secondary"}>
+                      {pharmaPermissions.canCreate ? "Yes" : "No"}
                     </Badge>
                   </div>
                   <div className="text-center p-3 border rounded-lg">
                     <p className="text-sm font-medium">Update</p>
-                    <Badge variant={pharmaProductPermissions.canUpdate ? "default" : "secondary"}>
-                      {pharmaProductPermissions.canUpdate ? "Yes" : "No"}
+                    <Badge variant={pharmaPermissions.canUpdate ? "default" : "secondary"}>
+                      {pharmaPermissions.canUpdate ? "Yes" : "No"}
                     </Badge>
                   </div>
                   <div className="text-center p-3 border rounded-lg">
                     <p className="text-sm font-medium">Delete</p>
-                    <Badge variant={pharmaProductPermissions.canDelete ? "default" : "secondary"}>
-                      {pharmaProductPermissions.canDelete ? "Yes" : "No"}
+                    <Badge variant={pharmaPermissions.canDelete ? "default" : "secondary"}>
+                      {pharmaPermissions.canDelete ? "Yes" : "No"}
                     </Badge>
                   </div>
                 </div>
@@ -296,28 +218,28 @@ export default function PermissionsDemoPage() {
                 <Separator />
 
                 <div className="flex gap-2 flex-wrap">
-                  <PermissionGuard module="PHARMA" screen="pharma_product" action="create">
+                  <PermissionGuard module="PHARMA" action="create">
                     <Button>
                       <Plus className="h-4 w-4 mr-2" />
                       Add Pharma Product
                     </Button>
                   </PermissionGuard>
                   
-                  <PermissionGuard module="PHARMA" screen="pharma_product" action="view">
+                  <PermissionGuard module="PHARMA" action="view">
                     <Button variant="outline">
                       <Eye className="h-4 w-4 mr-2" />
                       View Pharma Products
                     </Button>
                   </PermissionGuard>
                   
-                  <PermissionGuard module="PHARMA" screen="pharma_product" action="update">
+                  <PermissionGuard module="PHARMA" action="update">
                     <Button variant="outline">
                       <Edit className="h-4 w-4 mr-2" />
                       Edit Pharma Products
                     </Button>
                   </PermissionGuard>
                   
-                  <PermissionGuard module="PHARMA" screen="pharma_product" action="delete">
+                  <PermissionGuard module="PHARMA" action="delete">
                     <Button variant="outline">
                       <Trash2 className="h-4 w-4 mr-2" />
                       Delete Pharma Products
@@ -330,7 +252,7 @@ export default function PermissionsDemoPage() {
         </ModulePermissionGuard>
 
         {/* User Management Module */}
-        <ModulePermissionGuard module="USER_MANAGEMENT" screen="users">
+        <ModulePermissionGuard module="USER_MANAGEMENT">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -373,28 +295,28 @@ export default function PermissionsDemoPage() {
                 <Separator />
 
                 <div className="flex gap-2 flex-wrap">
-                  <PermissionGuard module="USER_MANAGEMENT" screen="users" action="create">
+                  <PermissionGuard module="USER_MANAGEMENT" action="create">
                     <Button>
                       <Plus className="h-4 w-4 mr-2" />
                       Add User
                     </Button>
                   </PermissionGuard>
                   
-                  <PermissionGuard module="USER_MANAGEMENT" screen="users" action="view">
+                  <PermissionGuard module="USER_MANAGEMENT" action="view">
                     <Button variant="outline">
                       <Eye className="h-4 w-4 mr-2" />
                       View Users
                     </Button>
                   </PermissionGuard>
                   
-                  <PermissionGuard module="USER_MANAGEMENT" screen="users" action="update">
+                  <PermissionGuard module="USER_MANAGEMENT" action="update">
                     <Button variant="outline">
                       <Edit className="h-4 w-4 mr-2" />
                       Edit Users
                     </Button>
                   </PermissionGuard>
                   
-                  <PermissionGuard module="USER_MANAGEMENT" screen="users" action="delete">
+                  <PermissionGuard module="USER_MANAGEMENT" action="delete">
                     <Button variant="outline">
                       <Trash2 className="h-4 w-4 mr-2" />
                       Delete Users

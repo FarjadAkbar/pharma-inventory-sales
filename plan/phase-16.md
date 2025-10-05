@@ -148,7 +148,12 @@ export interface ApiResponse<T> {
 ```
 
 ### 16.1.5 API Service (`frontend/services/api.service.ts`)
-This service automatically adds the `Authorization` header to all requests:
+This service automatically adds the `Authorization` header to all requests and **calls backend APIs directly**:
+
+**Important: Use Direct Backend API Calls**
+- ✅ **CORRECT**: `await apiService.getUsers({ search: query })` - Direct backend call
+- ❌ **AVOID**: `await fetch('/api/users')` - Proxy API call (unless specifically needed)
+
 ```typescript
 import { authService } from './auth.service'
 import type { ApiResponse } from '@/types/auth'
@@ -200,33 +205,51 @@ class ApiService {
     }
   }
 
+  // Generic HTTP methods - Direct backend calls
   async get<T>(endpoint: string): Promise<T> { 
-    return (await this.request<T>(endpoint, { method: 'GET' })).data 
+    return await this.request<T>(endpoint, { method: 'GET' })
   }
   
   async post<T>(endpoint: string, data?: any): Promise<T> { 
-    return (await this.request<T>(endpoint, { 
+    return await this.request<T>(endpoint, { 
       method: 'POST', 
       body: data ? JSON.stringify(data) : undefined, 
-    })).data 
+    })
   }
   
   async put<T>(endpoint: string, data?: any): Promise<T> { 
-    return (await this.request<T>(endpoint, { 
+    return await this.request<T>(endpoint, { 
       method: 'PUT', 
       body: data ? JSON.stringify(data) : undefined, 
-    })).data 
+    })
   }
   
   async delete<T>(endpoint: string): Promise<T> { 
-    return (await this.request<T>(endpoint, { method: 'DELETE' })).data 
+    return await this.request<T>(endpoint, { method: 'DELETE' })
   }
   
   async patch<T>(endpoint: string, data?: any): Promise<T> { 
-    return (await this.request<T>(endpoint, { 
+    return await this.request<T>(endpoint, { 
       method: 'PATCH', 
       body: data ? JSON.stringify(data) : undefined, 
-    })).data 
+    })
+  }
+
+  // Example: Users API - Direct backend calls
+  async getUsers(params?: {
+    search?: string
+    role?: string
+    page?: number
+    limit?: number
+  }) {
+    const searchParams = new URLSearchParams()
+    if (params?.search) searchParams.set("search", params.search)
+    if (params?.role) searchParams.set("role", params.role)
+    if (params?.page) searchParams.set("page", params.page.toString())
+    if (params?.limit) searchParams.set("limit", params.limit.toString())
+
+    const query = searchParams.toString()
+    return this.request(`/users${query ? `?${query}` : ""}`)
   }
 }
 

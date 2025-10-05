@@ -128,7 +128,7 @@ class ApiService {
     })
   }
 
-  // Users API (Admin only)
+  // Users API (Direct backend calls)
   async getUsers(params?: {
     search?: string
     role?: string
@@ -165,29 +165,29 @@ class ApiService {
   }
 
   // Generic HTTP methods
-  async get<T>(endpoint: string): Promise<T> { 
+  async get<T>(endpoint: string): Promise<ApiResponse<T>> { 
     return await this.request<T>(endpoint, { method: 'GET' })
   }
   
-  async post<T>(endpoint: string, data?: any): Promise<T> { 
+  async post<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> { 
     return await this.request<T>(endpoint, { 
       method: 'POST', 
       body: data ? JSON.stringify(data) : undefined, 
     })
   }
   
-  async put<T>(endpoint: string, data?: any): Promise<T> { 
+  async put<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> { 
     return await this.request<T>(endpoint, { 
       method: 'PUT', 
       body: data ? JSON.stringify(data) : undefined, 
     })
   }
   
-  async delete<T>(endpoint: string): Promise<T> { 
+  async delete<T>(endpoint: string): Promise<ApiResponse<T>> { 
     return await this.request<T>(endpoint, { method: 'DELETE' })
   }
   
-  async patch<T>(endpoint: string, data?: any): Promise<T> { 
+  async patch<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> { 
     return await this.request<T>(endpoint, { 
       method: 'PATCH', 
       body: data ? JSON.stringify(data) : undefined, 

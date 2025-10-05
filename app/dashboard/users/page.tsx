@@ -11,7 +11,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Plus, Users, Shield, UserCheck } from "lucide-react"
 import { apiService } from "@/services/api.service"
 import type { User } from "@/types/auth"
-import { useStore } from "@/contexts/store.context"
 import {
   Dialog,
   DialogContent,
@@ -35,13 +34,14 @@ export default function UsersPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
 
   const [formData, setFormData] = useState({
-    name: "",
+    fullname: "",
+    username: "",
     email: "",
-    role: "warehouse_ops" as "system_admin" | "org_admin" | "procurement_manager" | "production_manager" | "qc_manager" | "qa_manager" | "warehouse_ops" | "distribution_ops" | "sales_rep",
-    assignedStores: [] as string[],
-    screenPermissions: [] as { screen: string; actions: string[] }[],
+    password: "",
+    role: "Warehouse Operations" as "System Administrator" | "Organization Administrator" | "Procurement Manager" | "Production Manager" | "Quality Control Manager" | "Quality Assurance Manager" | "Warehouse Operations" | "Distribution Operations" | "Sales Representative",
+    site_id: 1,
+    org_id: null as number | null,
   })
-  const { stores } = useStore()
 
   useEffect(() => {
     fetchUsers()
@@ -57,13 +57,12 @@ export default function UsersPage() {
       })
 
       if (response.success && response.data) {
-        // Type assertion for the response data structure
-        const userData = response.data as {
-          users: User[]
-          pagination: { page: number; pages: number; total: number }
-        }
-        setUsers(userData.users || [])
-        setPagination(userData.pagination || { page: 1, pages: 1, total: 0 })
+        // Handle direct backend response structure
+        const users = Array.isArray(response.data) ? response.data : (response.data as any).users || []
+        const paginationData = (response.data as any).pagination || { page: 1, pages: 1, total: users.length }
+        
+        setUsers(users)
+        setPagination(paginationData)
       }
     } catch (error) {
       console.error("Failed to fetch users:", error)
@@ -82,7 +81,15 @@ export default function UsersPage() {
   }
 
   const resetForm = () => {
-    setFormData({ name: "", email: "", role: "warehouse_ops", assignedStores: [], screenPermissions: [] })
+    setFormData({ 
+      fullname: "", 
+      username: "", 
+      email: "", 
+      password: "", 
+      role: "Warehouse Operations", 
+      site_id: 1, 
+      org_id: null 
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -102,19 +109,21 @@ export default function UsersPage() {
   const handleEdit = (user: User) => {
     // For now, just open the add dialog with user data
     setFormData({
-      name: user.name,
+      fullname: user.fullname,
+      username: user.username,
       email: user.email,
-      role: user.role,
-      assignedStores: user.assignedStores || [],
-      screenPermissions: user.screenPermissions || [],
+      password: "", // Don't populate password for security
+      role: user.role as "System Administrator" | "Organization Administrator" | "Procurement Manager" | "Production Manager" | "Quality Control Manager" | "Quality Assurance Manager" | "Warehouse Operations" | "Distribution Operations" | "Sales Representative",
+      site_id: user.site_id,
+      org_id: user.org_id,
     })
     setIsAddDialogOpen(true)
   }
 
   const handleDelete = async (user: User) => {
-    if (confirm(`Are you sure you want to delete ${user.name}?`)) {
+    if (confirm(`Are you sure you want to delete ${user.fullname}?`)) {
       try {
-        await apiService.deleteUser(user.id)
+        await apiService.deleteUser(user.id.toString())
         fetchUsers()
         apiService.invalidateUsers()
       } catch (error) {
@@ -125,23 +134,23 @@ export default function UsersPage() {
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
-      case "system_admin":
+      case "System Administrator":
         return "bg-red-100 text-red-800"
-      case "org_admin":
+      case "Organization Administrator":
         return "bg-purple-100 text-purple-800"
-      case "procurement_manager":
+      case "Procurement Manager":
         return "bg-blue-100 text-blue-800"
-      case "production_manager":
+      case "Production Manager":
         return "bg-indigo-100 text-indigo-800"
-      case "qc_manager":
+      case "Quality Control Manager":
         return "bg-yellow-100 text-yellow-800"
-      case "qa_manager":
+      case "Quality Assurance Manager":
         return "bg-orange-100 text-orange-800"
-      case "warehouse_ops":
+      case "Warehouse Operations":
         return "bg-green-100 text-green-800"
-      case "distribution_ops":
+      case "Distribution Operations":
         return "bg-teal-100 text-teal-800"
-      case "sales_rep":
+      case "Sales Representative":
         return "bg-pink-100 text-pink-800"
       default:
         return "bg-gray-100 text-gray-800"
@@ -149,42 +158,23 @@ export default function UsersPage() {
   }
 
   const getRoleDisplayName = (role: string) => {
-    switch (role) {
-      case "system_admin":
-        return "System Admin"
-      case "org_admin":
-        return "Org Admin"
-      case "procurement_manager":
-        return "Procurement Manager"
-      case "production_manager":
-        return "Production Manager"
-      case "qc_manager":
-        return "QC Manager"
-      case "qa_manager":
-        return "QA Manager"
-      case "warehouse_ops":
-        return "Warehouse Ops"
-      case "distribution_ops":
-        return "Distribution Ops"
-      case "sales_rep":
-        return "Sales Rep"
-      default:
-        return role.charAt(0).toUpperCase() + role.slice(1)
-    }
+    return role // Backend already returns display names
   }
 
   const calculateStats = () => {
-    const adminCount = users.filter((user) => user.role === "system_admin" || user.role === "org_admin").length
+    const adminCount = users.filter((user) => 
+      user.role === "System Administrator" || user.role === "Organization Administrator"
+    ).length
     const managerCount = users.filter((user) => 
-      user.role === "procurement_manager" || 
-      user.role === "production_manager" || 
-      user.role === "qc_manager" || 
-      user.role === "qa_manager"
+      user.role === "Procurement Manager" || 
+      user.role === "Production Manager" || 
+      user.role === "Quality Control Manager" || 
+      user.role === "Quality Assurance Manager"
     ).length
     const opsCount = users.filter((user) => 
-      user.role === "warehouse_ops" || 
-      user.role === "distribution_ops" || 
-      user.role === "sales_rep"
+      user.role === "Warehouse Operations" || 
+      user.role === "Distribution Operations" || 
+      user.role === "Sales Representative"
     ).length
 
     return { adminCount, managerCount, opsCount }
@@ -194,13 +184,13 @@ export default function UsersPage() {
 
   const columns = [
     {
-      key: "name",
+      key: "fullname",
       header: "User",
       render: (user: User) => (
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
             <span className="text-sm font-medium">
-              {user.name
+              {user.fullname
                 .split(" ")
                 .map((n) => n[0])
                 .join("")
@@ -209,7 +199,7 @@ export default function UsersPage() {
             </span>
           </div>
           <div>
-            <div className="font-medium">{user.name}</div>
+            <div className="font-medium">{user.fullname}</div>
             <div className="text-sm text-muted-foreground">{user.email}</div>
           </div>
         </div>
@@ -222,8 +212,8 @@ export default function UsersPage() {
         <Badge className={getRoleBadgeColor(user.role)}>{getRoleDisplayName(user.role)}</Badge>
       ),
     },
-    { key: "createdAt", header: "Joined", render: (user: User) => formatDateISO(user.createdAt) },
-    { key: "updatedAt", header: "Last Updated", render: (user: User) => formatDateISO(user.createdAt) },
+    { key: "created_at", header: "Joined", render: (user: User) => formatDateISO(user.created_at) },
+    { key: "updated_at", header: "Last Updated", render: (user: User) => formatDateISO(user.updated_at) },
   ]
 
   return (
@@ -305,20 +295,18 @@ export default function UsersPage() {
                 onPageChange: handlePageChange
               }}
               searchPlaceholder="Search users..."
-              actions={(user: User) => (
-                <div className="flex items-center gap-2">
-                  <PermissionGuard module="USER_MANAGEMENT" screen="users" action="update">
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(user)}>
-                      Edit
-                    </Button>
-                  </PermissionGuard>
-                  <PermissionGuard module="USER_MANAGEMENT" screen="users" action="delete">
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(user)}>
-                      Delete
-                    </Button>
-                  </PermissionGuard>
-                </div>
-              )}
+              actions={[
+                {
+                  label: "Edit",
+                  onClick: (user: User) => handleEdit(user),
+                  variant: "outline" as const,
+                },
+                {
+                  label: "Delete",
+                  onClick: (user: User) => handleDelete(user),
+                  variant: "destructive" as const,
+                },
+              ]}
             />
           </CardContent>
         </Card>
@@ -339,15 +327,27 @@ export default function UsersPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
+                  <Label htmlFor="fullname">Full Name</Label>
                   <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    id="fullname"
+                    value={formData.fullname}
+                    onChange={(e) => setFormData({ ...formData, fullname: e.target.value })}
                     placeholder="Enter full name"
                     required
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                    placeholder="Enter username"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -359,6 +359,17 @@ export default function UsersPage() {
                     required
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder="Enter password"
+                    required
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="role">Role</Label>
@@ -367,15 +378,15 @@ export default function UsersPage() {
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="system_admin">System Admin</SelectItem>
-                    <SelectItem value="org_admin">Org Admin</SelectItem>
-                    <SelectItem value="procurement_manager">Procurement Manager</SelectItem>
-                    <SelectItem value="production_manager">Production Manager</SelectItem>
-                    <SelectItem value="qc_manager">QC Manager</SelectItem>
-                    <SelectItem value="qa_manager">QA Manager</SelectItem>
-                    <SelectItem value="warehouse_ops">Warehouse Ops</SelectItem>
-                    <SelectItem value="distribution_ops">Distribution Ops</SelectItem>
-                    <SelectItem value="sales_rep">Sales Rep</SelectItem>
+                    <SelectItem value="System Administrator">System Administrator</SelectItem>
+                    <SelectItem value="Organization Administrator">Organization Administrator</SelectItem>
+                    <SelectItem value="Procurement Manager">Procurement Manager</SelectItem>
+                    <SelectItem value="Production Manager">Production Manager</SelectItem>
+                    <SelectItem value="Quality Control Manager">Quality Control Manager</SelectItem>
+                    <SelectItem value="Quality Assurance Manager">Quality Assurance Manager</SelectItem>
+                    <SelectItem value="Warehouse Operations">Warehouse Operations</SelectItem>
+                    <SelectItem value="Distribution Operations">Distribution Operations</SelectItem>
+                    <SelectItem value="Sales Representative">Sales Representative</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
