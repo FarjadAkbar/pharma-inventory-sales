@@ -21,37 +21,53 @@ import {
   Mail,
   MapPin
 } from "lucide-react"
-import { apiService } from "@/services/api.service"
-import type { Supplier, SupplierFilters } from "@/types/pharma"
-import { formatDateISO } from "@/lib/utils"
+import { PermissionGuard } from "@/components/auth/permission-guard"
+import { suppliersApi } from "@/services"
+import type { Supplier } from "@/types/suppliers"
 
 export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
+  const [filteredSuppliers, setFilteredSuppliers] = useState<Supplier[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
-  const [filters, setFilters] = useState<SupplierFilters>({})
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
 
   useEffect(() => {
     fetchSuppliers()
-  }, [searchQuery, filters, pagination.page])
+  }, [])
+
+  useEffect(() => {
+    // Filter suppliers based on search query
+    if (!searchQuery.trim()) {
+      setFilteredSuppliers(suppliers)
+    } else {
+      const filtered = suppliers.filter(supplier => 
+        supplier.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        supplier.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        supplier.contact.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      setFilteredSuppliers(filtered)
+    }
+  }, [suppliers, searchQuery])
 
   const fetchSuppliers = async () => {
     try {
       setLoading(true)
-      const response = await apiService.getSuppliers({
-        search: searchQuery,
-        ...filters,
-        page: pagination.page,
-        limit: 10,
-      })
+      console.log("🔄 Fetching suppliers...")
+      const response = await suppliersApi.getSuppliers()
+      console.log("📦 Suppliers API response:", response)
 
-      if (response.success && response.data) {
-        setSuppliers(response.data.suppliers || [])
-        setPagination(response.data.pagination || { page: 1, pages: 1, total: 0 })
+      if (response.status && response.data) {
+        // Ensure data is always an array
+        const suppliersData = Array.isArray(response.data) ? response.data : [response.data]
+        console.log("✅ Suppliers data:", suppliersData)
+        setSuppliers(suppliersData)
+        setPagination({ page: 1, pages: 1, total: suppliersData.length })
+      } else {
+        console.log("❌ No suppliers data in response")
       }
     } catch (error) {
-      console.error("Failed to fetch suppliers:", error)
+      console.error("❌ Failed to fetch suppliers:", error)
     } finally {
       setLoading(false)
     }
@@ -59,26 +75,33 @@ export default function SuppliersPage() {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
-    setPagination((prev) => ({ ...prev, page: 1 }))
-  }
-
-  const handleFiltersChange = (newFilters: Record<string, any>) => {
-    setFilters(newFilters)
-    setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
   const handlePageChange = (page: number) => {
     setPagination((prev) => ({ ...prev, page }))
   }
 
-  const getRatingStars = (rating: number) => {
+  const handleDelete = async (supplier: Supplier) => {
+    if (confirm(`Are you sure you want to delete supplier "${supplier.name}"?`)) {
+      try {
+        await suppliersApi.deleteSupplier(supplier.id)
+        fetchSuppliers() // Refresh the list
+      } catch (error) {
+        console.error("Failed to delete supplier:", error)
+        alert("Failed to delete supplier. Please try again.")
+      }
+    }
+  }
+
+  const getRatingStars = (rating: string) => {
+    const numRating = parseFloat(rating)
     return Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
         className={`h-4 w-4 ${
-          i < Math.floor(rating)
+          i < Math.floor(numRating)
             ? "text-yellow-400 fill-current"
-            : i < rating
+            : i < numRating
             ? "text-yellow-400 fill-current opacity-50"
             : "text-gray-300"
         }`}
@@ -86,36 +109,12 @@ export default function SuppliersPage() {
     ))
   }
 
-  const getPerformanceBadge = (performance: string) => {
-    switch (performance) {
-      case "excellent":
-        return <Badge className="bg-green-100 text-green-800">Excellent</Badge>
-      case "good":
-        return <Badge className="bg-blue-100 text-blue-800">Good</Badge>
-      case "average":
-        return <Badge className="bg-yellow-100 text-yellow-800">Average</Badge>
-      case "poor":
-        return <Badge className="bg-red-100 text-red-800">Poor</Badge>
-      default:
-        return <Badge className="bg-gray-100 text-gray-800">Unknown</Badge>
-    }
-  }
-
-  const getPerformanceLevel = (supplier: Supplier) => {
-    const { onTimeDelivery, qualityScore } = supplier.performance
-    if (onTimeDelivery >= 95 && qualityScore >= 4.5) return "excellent"
-    if (onTimeDelivery >= 85 && qualityScore >= 4.0) return "good"
-    if (onTimeDelivery >= 70 && qualityScore >= 3.0) return "average"
-    return "poor"
-  }
-
   const calculateStats = () => {
     const total = suppliers.length
-    const active = suppliers.filter(s => s.isActive).length
-    const excellent = suppliers.filter(s => getPerformanceLevel(s) === "excellent").length
-    const averageRating = suppliers.reduce((sum, s) => sum + s.rating, 0) / suppliers.length
+    const active = suppliers.filter(s => s.approved === 1).length
+    const averageRating = suppliers.length > 0 ? suppliers.reduce((sum, s) => sum + parseFloat(s.rating), 0) / suppliers.length : 0
 
-    return { total, active, excellent, averageRating }
+    return { total, active, averageRating }
   }
 
   const stats = calculateStats()
@@ -140,7 +139,7 @@ export default function SuppliersPage() {
           <div className="font-medium">{supplier.name}</div>
           <div className="text-sm text-muted-foreground flex items-center gap-1">
             <MapPin className="h-3 w-3" />
-            {supplier.address.city}, {supplier.address.country}
+            {supplier.address}
           </div>
         </div>
       ),
@@ -151,13 +150,9 @@ export default function SuppliersPage() {
       sortable: true,
       render: (supplier: Supplier) => (
         <div className="text-sm">
-          <div className="flex items-center gap-1 mb-1">
-            <Phone className="h-3 w-3" />
-            {supplier.phone}
-          </div>
           <div className="flex items-center gap-1">
-            <Mail className="h-3 w-3" />
-            {supplier.email}
+            <Phone className="h-3 w-3" />
+            {supplier.contact}
           </div>
         </div>
       ),
@@ -169,145 +164,74 @@ export default function SuppliersPage() {
       render: (supplier: Supplier) => (
         <div className="flex items-center gap-2">
           <div className="flex">{getRatingStars(supplier.rating)}</div>
-          <span className="text-sm font-medium">{supplier.rating.toFixed(1)}</span>
+          <span className="text-sm font-medium">{supplier.rating}</span>
         </div>
       ),
     },
     {
-      key: "performance",
-      header: "Performance",
-      sortable: true,
-      render: (supplier: Supplier) => {
-        const performance = getPerformanceLevel(supplier)
-        return (
-          <div>
-            {getPerformanceBadge(performance)}
-            <div className="text-xs text-muted-foreground mt-1">
-              {supplier.performance.onTimeDelivery.toFixed(1)}% on-time
-            </div>
-          </div>
-        )
-      },
-    },
-    {
-      key: "orders",
-      header: "Orders",
-      sortable: true,
-      render: (supplier: Supplier) => (
-        <div className="text-sm">
-          <div className="font-medium">{supplier.performance.successfulOrders}</div>
-          <div className="text-muted-foreground">
-            of {supplier.performance.totalOrders} total
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: "delivery",
-      header: "Delivery",
-      sortable: true,
-      render: (supplier: Supplier) => (
-        <div className="text-sm">
-          <div className="flex items-center gap-1">
-            <Clock className="h-3 w-3" />
-            {supplier.deliveryTime} days
-          </div>
-          <div className="text-muted-foreground">
-            {supplier.paymentTerms}
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: "certifications",
-      header: "Certifications",
-      sortable: true,
-      render: (supplier: Supplier) => (
-        <div className="flex flex-wrap gap-1">
-          {supplier.certifications.slice(0, 2).map((cert, index) => (
-            <Badge key={index} variant="outline" className="text-xs">
-              {cert}
-            </Badge>
-          ))}
-          {supplier.certifications.length > 2 && (
-            <Badge variant="outline" className="text-xs">
-              +{supplier.certifications.length - 2}
-            </Badge>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: "status",
+      key: "approved",
       header: "Status",
       sortable: true,
       render: (supplier: Supplier) => (
-        <Badge className={supplier.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
-          {supplier.isActive ? "Active" : "Inactive"}
+        <Badge className={supplier.approved === 1 ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
+          {supplier.approved === 1 ? "Approved" : "Pending"}
         </Badge>
+      ),
+    },
+    {
+      key: "created_at",
+      header: "Created",
+      sortable: true,
+      render: (supplier: Supplier) => (
+        <div className="text-sm text-muted-foreground">
+          {new Date(supplier.created_at).toLocaleDateString()}
+        </div>
       ),
     },
   ]
 
   const filterOptions = [
     {
-      key: "rating",
-      label: "Rating",
-      type: "select" as const,
-      options: [
-        { value: "5", label: "5 Stars" },
-        { value: "4", label: "4+ Stars" },
-        { value: "3", label: "3+ Stars" },
-        { value: "2", label: "2+ Stars" },
-        { value: "1", label: "1+ Stars" },
-      ],
-    },
-    {
-      key: "performance",
-      label: "Performance",
-      type: "select" as const,
-      options: [
-        { value: "excellent", label: "Excellent" },
-        { value: "good", label: "Good" },
-        { value: "average", label: "Average" },
-        { value: "poor", label: "Poor" },
-      ],
-    },
-    {
-      key: "isActive",
+      key: "approved",
       label: "Status",
       type: "select" as const,
       options: [
-        { value: "true", label: "Active" },
-        { value: "false", label: "Inactive" },
+        { value: "1", label: "Approved" },
+        { value: "0", label: "Pending" },
       ],
     },
   ]
 
   const actions = (supplier: Supplier) => (
     <div className="flex items-center gap-2">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => window.location.href = `/dashboard/suppliers/${supplier.id}`}
-      >
-        <Eye className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => window.location.href = `/dashboard/suppliers/${supplier.id}/edit`}
-      >
-        <Edit className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => console.log("Delete supplier", supplier.id)}
-        className="text-red-600 hover:text-red-700"
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
+      <PermissionGuard module="MASTER_DATA" action="read">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => window.location.href = `/dashboard/suppliers/${supplier.id}`}
+        >
+          <Eye className="h-4 w-4" />
+        </Button>
+      </PermissionGuard>
+      <PermissionGuard module="MASTER_DATA" action="update">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => window.location.href = `/dashboard/suppliers/${supplier.id}`}
+        >
+          <Edit className="h-4 w-4" />
+        </Button>
+      </PermissionGuard>
+      <PermissionGuard module="MASTER_DATA" action="delete">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => handleDelete(supplier)}
+          className="text-red-600 hover:text-red-700"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </PermissionGuard>
     </div>
   )
 
@@ -319,14 +243,19 @@ export default function SuppliersPage() {
             <h1 className="text-3xl font-bold tracking-tight">Suppliers Management</h1>
             <p className="text-muted-foreground">Manage pharmaceutical suppliers and their performance</p>
           </div>
-          <Button className="bg-orange-600 hover:bg-orange-700">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Supplier
-          </Button>
+          <PermissionGuard module="MASTER_DATA" action="create">
+            <Button 
+              className="bg-orange-600 hover:bg-orange-700"
+              onClick={() => window.location.href = "/dashboard/suppliers/new"}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Supplier
+            </Button>
+          </PermissionGuard>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Suppliers</CardTitle>
@@ -339,7 +268,7 @@ export default function SuppliersPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Suppliers</CardTitle>
+              <CardTitle className="text-sm font-medium">Approved Suppliers</CardTitle>
               <CheckCircle className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
@@ -349,39 +278,28 @@ export default function SuppliersPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Excellent Performance</CardTitle>
+              <CardTitle className="text-sm font-medium">Average Rating</CardTitle>
               <Star className="h-4 w-4 text-yellow-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{stats.excellent}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Average Rating</CardTitle>
-              <TrendingUp className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{stats.averageRating.toFixed(1)}</div>
+              <div className="text-2xl font-bold text-yellow-600">{stats.averageRating.toFixed(1)}</div>
             </CardContent>
           </Card>
         </div>
 
         {/* Suppliers Table */}
         <UnifiedDataTable
-          data={suppliers}
+          data={filteredSuppliers}
           columns={columns}
           loading={loading}
           searchPlaceholder="Search suppliers..."
           searchValue={searchQuery}
           onSearch={handleSearch}
           filters={filterOptions}
-          onFiltersChange={handleFiltersChange}
           pagination={{
             page: pagination.page,
             pages: pagination.pages,
-            total: pagination.total,
+            total: filteredSuppliers.length,
             onPageChange: handlePageChange
           }}
           actions={actions}
@@ -393,3 +311,4 @@ export default function SuppliersPage() {
     </DashboardLayout>
   )
 }
+
