@@ -299,46 +299,6 @@ class ApiService {
     return this.request(`/master-data/raw-materials?${sp.toString()}`, { method: "DELETE" })
   }
 
-  // Suppliers API
-  async getSuppliers(params?: {
-    search?: string
-    rating?: number
-    isActive?: boolean
-    performance?: string
-    page?: number
-    limit?: number
-  }) {
-    const searchParams = new URLSearchParams()
-    if (params?.search) searchParams.set("search", params.search)
-    if (params?.rating) searchParams.set("rating", params.rating.toString())
-    if (params?.isActive !== undefined) searchParams.set("isActive", params.isActive.toString())
-    if (params?.performance) searchParams.set("performance", params.performance)
-    if (params?.page) searchParams.set("page", params.page.toString())
-    if (params?.limit) searchParams.set("limit", params.limit.toString())
-
-    const query = searchParams.toString()
-    return this.request(`/master-data/suppliers${query ? `?${query}` : ""}`)
-  }
-
-  async createSupplier(supplierData: any) {
-    return this.request("/master-data/suppliers", {
-      method: "POST",
-      body: JSON.stringify(supplierData),
-    })
-  }
-
-  async updateSupplier(supplierData: any) {
-    return this.request("/master-data/suppliers", {
-      method: "PUT",
-      body: JSON.stringify(supplierData),
-    })
-  }
-
-  async deleteSupplier(id: string) {
-    const sp = new URLSearchParams({ id })
-    return this.request(`/master-data/suppliers?${sp.toString()}`, { method: "DELETE" })
-  }
-
   // Cache invalidation for pharmaceutical data
   invalidateDrugs() {
     this.invalidateCache("drugs")
@@ -346,10 +306,6 @@ class ApiService {
 
   invalidateRawMaterials() {
     this.invalidateCache("raw-materials")
-  }
-
-  invalidateSuppliers() {
-    this.invalidateCache("suppliers")
   }
 
   // Procurement API
@@ -445,11 +401,6 @@ class ApiService {
   async deleteGoodsReceipt(id: string) {
     const sp = new URLSearchParams({ id })
     return this.request(`/procurement/goods-receipts?${sp.toString()}`, { method: "DELETE" })
-  }
-
-  // Sites API
-  async getSites() {
-    return this.request("/site/getAllSites")
   }
 
   // Cache invalidation for procurement data
