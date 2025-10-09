@@ -7,6 +7,8 @@ import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { 
   Plus, 
   ShoppingCart, 
@@ -23,34 +25,43 @@ import {
   User
 } from "lucide-react"
 import Link from "next/link"
-import { apiService } from "@/services/api.service"
-import type { PurchaseOrder, POFilters } from "@/types/procurement"
-import { formatDateISO } from "@/lib/utils"
+import { purchaseOrdersApi, sitesApi } from "@/services"
+import type { PurchaseOrder, SupplierOption } from "@/types/purchase-orders"
+import { PermissionGuard } from "@/components/auth/permission-guard"
+import { useAuth } from "@/contexts/auth.context"
 
 export default function PurchaseOrdersPage() {
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([])
+  const [suppliers, setSuppliers] = useState<SupplierOption[]>([])
+  const [sites, setSites] = useState<{ id: number; name: string }[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
-  const [filters, setFilters] = useState<POFilters>({})
-  const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
+  const [selectedSiteId, setSelectedSiteId] = useState<number | null>(null)
+  const [activeTab, setActiveTab] = useState("all")
+  const { user } = useAuth()
 
   useEffect(() => {
     fetchPurchaseOrders()
-  }, [searchQuery, filters, pagination.page])
+    fetchSuppliers()
+    fetchSites()
+  }, [])
+
+  useEffect(() => {
+    if (activeTab === "by-site" && selectedSiteId) {
+      fetchPurchaseOrdersBySite(selectedSiteId)
+    } else if (activeTab === "all") {
+      fetchPurchaseOrders()
+    }
+  }, [activeTab, selectedSiteId])
 
   const fetchPurchaseOrders = async () => {
     try {
       setLoading(true)
-      const response = await apiService.getPurchaseOrders({
-        search: searchQuery,
-        ...filters,
-        page: pagination.page,
-        limit: 10,
-      })
+      const response = await purchaseOrdersApi.getAllPurchaseOrders()
 
-      if (response.success && response.data) {
-        setPurchaseOrders(response.data.purchaseOrders || [])
-        setPagination(response.data.pagination || { page: 1, pages: 1, total: 0 })
+      if (response.status && response.data) {
+        const orders = Array.isArray(response.data) ? response.data : [response.data]
+        setPurchaseOrders(orders)
       }
     } catch (error) {
       console.error("Failed to fetch purchase orders:", error)
@@ -59,25 +70,49 @@ export default function PurchaseOrdersPage() {
     }
   }
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query)
-    setPagination((prev) => ({ ...prev, page: 1 }))
+  const fetchPurchaseOrdersBySite = async (siteId: number) => {
+    try {
+      setLoading(true)
+      const response = await purchaseOrdersApi.getPurchaseOrdersBySite(siteId)
+
+      if (response.status && response.data) {
+        const orders = Array.isArray(response.data) ? response.data : [response.data]
+        setPurchaseOrders(orders)
+      }
+    } catch (error) {
+      console.error("Failed to fetch purchase orders by site:", error)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleFiltersChange = (newFilters: Record<string, any>) => {
-    setFilters(newFilters)
-    setPagination((prev) => ({ ...prev, page: 1 }))
+  const fetchSuppliers = async () => {
+    try {
+      const response = await purchaseOrdersApi.getSuppliersList()
+      if (response.status && response.data) {
+        setSuppliers(response.data)
+      }
+    } catch (error) {
+      console.error("Failed to fetch suppliers:", error)
+    }
   }
 
-  const handlePageChange = (page: number) => {
-    setPagination((prev) => ({ ...prev, page }))
+  const fetchSites = async () => {
+    try {
+      const response = await sitesApi.getSites()
+      if (response.status && response.data) {
+        setSites(response.data.map((site: any) => ({ id: site.id, name: site.name })))
+      }
+    } catch (error) {
+      console.error("Failed to fetch sites:", error)
+    }
   }
 
   const handleDeletePurchaseOrder = async (po: PurchaseOrder) => {
-    if (confirm(`Are you sure you want to delete Purchase Order ${po.poNumber}?`)) {
+    if (confirm(`Are you sure you want to delete Purchase Order ${po.id}?`)) {
       try {
-        const response = await apiService.deletePurchaseOrder(po.id)
-        if (response.success) {
+        const response = await purchaseOrdersApi.deletePurchaseOrder(po.id)
+        if (response.status) {
           fetchPurchaseOrders() // Refresh the list
         } else {
           alert("Failed to delete purchase order")
@@ -89,34 +124,14 @@ export default function PurchaseOrdersPage() {
     }
   }
 
-  const handleApprovePurchaseOrder = async (po: PurchaseOrder) => {
-    if (confirm(`Are you sure you want to approve Purchase Order ${po.poNumber}?`)) {
-      try {
-        const response = await apiService.approvePurchaseOrder(po.id)
-        if (response.success) {
-          fetchPurchaseOrders() // Refresh the list
-        } else {
-          alert("Failed to approve purchase order")
-        }
-      } catch (error) {
-        console.error("Failed to approve purchase order:", error)
-        alert("Failed to approve purchase order")
-      }
-    }
-  }
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "Approved":
         return <Badge className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />Approved</Badge>
-      case "Pending Approval":
-        return <Badge className="bg-yellow-100 text-yellow-800"><Clock className="h-3 w-3 mr-1" />Pending Approval</Badge>
-      case "Partially Received":
-        return <Badge className="bg-blue-100 text-blue-800"><AlertTriangle className="h-3 w-3 mr-1" />Partially Received</Badge>
-      case "Fully Received":
-        return <Badge className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />Fully Received</Badge>
-      case "Cancelled":
-        return <Badge className="bg-red-100 text-red-800"><XCircle className="h-3 w-3 mr-1" />Cancelled</Badge>
+      case "Pending":
+        return <Badge className="bg-yellow-100 text-yellow-800"><Clock className="h-3 w-3 mr-1" />Pending</Badge>
+      case "Completed":
+        return <Badge className="bg-blue-100 text-blue-800"><CheckCircle className="h-3 w-3 mr-1" />Completed</Badge>
       case "Rejected":
         return <Badge className="bg-red-100 text-red-800"><XCircle className="h-3 w-3 mr-1" />Rejected</Badge>
       default:
@@ -127,37 +142,47 @@ export default function PurchaseOrdersPage() {
   const calculateStats = () => {
     const total = purchaseOrders.length
     const draft = purchaseOrders.filter(po => po.status === "Draft").length
-    const pendingApproval = purchaseOrders.filter(po => po.status === "Pending Approval").length
+    const pending = purchaseOrders.filter(po => po.status === "Pending").length
     const approved = purchaseOrders.filter(po => po.status === "Approved").length
-    const totalValue = purchaseOrders.reduce((sum, po) => sum + po.totalAmount, 0)
+    const totalValue = purchaseOrders.reduce((sum, po) => sum + (typeof po.total_amount === 'string' ? parseFloat(po.total_amount) : po.total_amount), 0)
 
-    return { total, draft, pendingApproval, approved, totalValue }
+    return { total, draft, pending, approved, totalValue }
   }
 
   const stats = calculateStats()
 
   const columns = [
     {
-      key: "poNumber",
-      header: "PO Number",
+      key: "id",
+      header: "PO ID",
       sortable: true,
       render: (po: PurchaseOrder) => (
         <div className="font-mono text-sm font-medium text-orange-600">
-          {po.poNumber}
+          #{po.id}
         </div>
       ),
     },
     {
-      key: "supplier",
-      header: "Supplier",
+      key: "name",
+      header: "Site",
       sortable: true,
       render: (po: PurchaseOrder) => (
         <div>
-          <div className="font-medium">{po.supplierName}</div>
+          <div className="font-medium">{po.name || "N/A"}</div>
           <div className="text-sm text-muted-foreground flex items-center gap-1">
             <Building2 className="h-3 w-3" />
-            {po.siteName}
+            {po.location || "N/A"}
           </div>
+        </div>
+      ),
+    },
+    {
+      key: "supplier_id",
+      header: "Supplier",
+      sortable: true,
+      render: (po: PurchaseOrder) => (
+        <div className="text-sm">
+          <div className="font-medium">Supplier #{po.supplier_id}</div>
         </div>
       ),
     },
@@ -169,32 +194,32 @@ export default function PurchaseOrdersPage() {
         <div className="text-sm">
           <div className="font-medium">{po.items.length} items</div>
           <div className="text-muted-foreground">
-            {po.items.reduce((sum, item) => sum + item.quantity, 0)} total qty
+            {po.items.reduce((sum, item) => sum + item.qty, 0)} total qty
           </div>
         </div>
       ),
     },
     {
-      key: "amount",
+      key: "total_amount",
       header: "Amount",
       sortable: true,
       render: (po: PurchaseOrder) => (
         <div className="text-sm">
           <div className="font-medium flex items-center gap-1">
             <DollarSign className="h-3 w-3" />
-            {po.totalAmount.toLocaleString()} {po.currency}
+            {typeof po.total_amount === 'string' ? po.total_amount : po.total_amount.toLocaleString()} {po.currency}
           </div>
         </div>
       ),
     },
     {
-      key: "expectedDate",
+      key: "expected_date",
       header: "Expected Date",
       sortable: true,
       render: (po: PurchaseOrder) => (
         <div className="text-sm flex items-center gap-1">
           <Calendar className="h-3 w-3" />
-          {formatDateISO(po.expectedDate)}
+          {new Date(po.expected_date).toLocaleDateString()}
         </div>
       ),
     },
@@ -205,96 +230,43 @@ export default function PurchaseOrdersPage() {
       render: (po: PurchaseOrder) => getStatusBadge(po.status),
     },
     {
-      key: "createdBy",
-      header: "Created By",
-      sortable: true,
-      render: (po: PurchaseOrder) => (
-        <div className="text-sm flex items-center gap-1">
-          <User className="h-3 w-3" />
-          {po.createdByName}
-        </div>
-      ),
-    },
-    {
-      key: "createdAt",
+      key: "created_at",
       header: "Created",
       sortable: true,
-      render: (po: PurchaseOrder) => formatDateISO(po.createdAt),
-    },
-  ]
-
-  const filterOptions = [
-    {
-      key: "supplierId",
-      label: "Supplier",
-      type: "select" as const,
-      options: [
-        { value: "1", label: "MediChem Supplies" },
-        { value: "2", label: "PharmaExcipients Ltd" },
-        { value: "3", label: "Global Pharma Ingredients" },
-      ],
-    },
-    {
-      key: "status",
-      label: "Status",
-      type: "select" as const,
-      options: [
-        { value: "Draft", label: "Draft" },
-        { value: "Pending Approval", label: "Pending Approval" },
-        { value: "Approved", label: "Approved" },
-        { value: "Partially Received", label: "Partially Received" },
-        { value: "Fully Received", label: "Fully Received" },
-        { value: "Cancelled", label: "Cancelled" },
-        { value: "Rejected", label: "Rejected" },
-      ],
-    },
-    {
-      key: "siteId",
-      label: "Site",
-      type: "select" as const,
-      options: [
-        { value: "1", label: "Main Campus" },
-        { value: "2", label: "Clifton" },
-        { value: "3", label: "North Nazimabad" },
-        { value: "4", label: "Korangi" },
-      ],
+      render: (po: PurchaseOrder) => new Date(po.created_at).toLocaleDateString(),
     },
   ]
 
   const actions = (po: PurchaseOrder) => (
     <div className="flex items-center gap-2">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => window.location.href = `/dashboard/procurement/purchase-orders/${po.id}`}
-      >
-        <Eye className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => window.location.href = `/dashboard/procurement/purchase-orders/${po.id}/edit`}
-      >
-        <Edit className="h-4 w-4" />
-      </Button>
-      {po.status === "Pending Approval" && (
+      <PermissionGuard module="PROCUREMENT" screen="purchase-orders" action="read">
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => handleApprovePurchaseOrder(po)}
-          className="text-green-600 hover:text-green-700"
+          onClick={() => window.location.href = `/dashboard/procurement/purchase-orders/${po.id}/view`}
         >
-          <CheckCircle className="h-4 w-4" />
+          <Eye className="h-4 w-4" />
         </Button>
-      )}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => handleDeletePurchaseOrder(po)}
-        className="text-red-600 hover:text-red-700"
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
+      </PermissionGuard>
+      <PermissionGuard module="PROCUREMENT" screen="purchase-orders" action="update">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => window.location.href = `/dashboard/procurement/purchase-orders/${po.id}/edit`}
+        >
+          <Edit className="h-4 w-4" />
+        </Button>
+      </PermissionGuard>
+      <PermissionGuard module="PROCUREMENT" screen="purchase-orders" action="delete">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => handleDeletePurchaseOrder(po)}
+          className="text-red-600 hover:text-red-700"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </PermissionGuard>
     </div>
   )
 
@@ -306,12 +278,14 @@ export default function PurchaseOrdersPage() {
             <h1 className="text-3xl font-bold tracking-tight">Purchase Orders</h1>
             <p className="text-muted-foreground">Manage pharmaceutical purchase orders and procurement</p>
           </div>
-          <Link href="/dashboard/procurement/purchase-orders/new">
-            <Button className="bg-orange-600 hover:bg-orange-700">
-              <Plus className="mr-2 h-4 w-4" />
-              Create PO
-            </Button>
-          </Link>
+          <PermissionGuard module="PROCUREMENT" screen="purchase-orders" action="create">
+            <Link href="/dashboard/procurement/purchase-orders/new">
+              <Button className="bg-orange-600 hover:bg-orange-700">
+                <Plus className="mr-2 h-4 w-4" />
+                Create PO
+              </Button>
+            </Link>
+          </PermissionGuard>
         </div>
 
         {/* Stats Cards */}
@@ -328,11 +302,11 @@ export default function PurchaseOrdersPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Approval</CardTitle>
+              <CardTitle className="text-sm font-medium">Pending</CardTitle>
               <Clock className="h-4 w-4 text-yellow-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{stats.pendingApproval}</div>
+              <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
             </CardContent>
           </Card>
 
@@ -359,27 +333,86 @@ export default function PurchaseOrdersPage() {
           </Card>
         </div>
 
-        {/* Purchase Orders Table */}
-        <UnifiedDataTable
-          data={purchaseOrders}
-          columns={columns}
-          loading={loading}
-          searchPlaceholder="Search purchase orders..."
-          searchValue={searchQuery}
-          onSearch={handleSearch}
-          filters={filterOptions}
-          onFiltersChange={handleFiltersChange}
-          pagination={{
-            page: pagination.page,
-            pages: pagination.pages,
-            total: pagination.total,
-            onPageChange: handlePageChange
-          }}
-          actions={actions}
-          onRefresh={fetchPurchaseOrders}
-          onExport={() => console.log("Export purchase orders")}
-          emptyMessage="No purchase orders found. Create your first purchase order to get started."
-        />
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="all">All Orders</TabsTrigger>
+            <TabsTrigger value="by-site">By Site</TabsTrigger>
+            <TabsTrigger value="suppliers">Suppliers</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="all" className="space-y-4">
+            <UnifiedDataTable
+              data={purchaseOrders}
+              columns={columns}
+              loading={loading}
+              searchPlaceholder="Search purchase orders..."
+              searchValue={searchQuery}
+              onSearch={setSearchQuery}
+              actions={actions}
+              onRefresh={fetchPurchaseOrders}
+              onExport={() => console.log("Export purchase orders")}
+              emptyMessage="No purchase orders found. Create your first purchase order to get started."
+            />
+          </TabsContent>
+
+          <TabsContent value="by-site" className="space-y-4">
+            <div className="flex items-center gap-4 mb-4">
+              <Select
+                value={selectedSiteId?.toString() || ""}
+                onValueChange={(value) => setSelectedSiteId(value ? parseInt(value) : null)}
+              >
+                <SelectTrigger className="w-[300px]">
+                  <SelectValue placeholder="Select a site" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sites.map((site) => (
+                    <SelectItem key={site.id} value={site.id.toString()}>
+                      {site.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <UnifiedDataTable
+              data={purchaseOrders}
+              columns={columns}
+              loading={loading}
+              searchPlaceholder="Search purchase orders..."
+              searchValue={searchQuery}
+              onSearch={setSearchQuery}
+              actions={actions}
+              onRefresh={() => selectedSiteId ? fetchPurchaseOrdersBySite(selectedSiteId) : fetchPurchaseOrders()}
+              onExport={() => console.log("Export purchase orders")}
+              emptyMessage="No purchase orders found for the selected site."
+            />
+          </TabsContent>
+
+          <TabsContent value="suppliers" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Suppliers List</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {suppliers.map((supplier) => (
+                    <div key={supplier.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <div className="font-medium">{supplier.name}</div>
+                        <div className="text-sm text-muted-foreground">ID: {supplier.id}</div>
+                      </div>
+                    </div>
+                  ))}
+                  {suppliers.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No suppliers found
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   )

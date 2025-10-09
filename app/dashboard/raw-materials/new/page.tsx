@@ -1,31 +1,14 @@
 "use client"
 
-import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { RawMaterialForm } from "@/components/pharma/raw-material-form"
-import { apiService } from "@/services/api.service"
-import type { RawMaterial } from "@/types/pharma"
+import { RawMaterialForm } from "@/components/raw-materials/raw-material-form"
 
 export default function NewRawMaterialPage() {
   const router = useRouter()
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSubmit = async (data: RawMaterial) => {
-    setIsSubmitting(true)
-    try {
-      const response = await apiService.createRawMaterial(data)
-      if (response.success) {
-        router.push("/dashboard/raw-materials")
-      } else {
-        throw new Error(response.message || "Failed to create raw material")
-      }
-    } catch (error: any) {
-      console.error("Failed to create raw material:", error)
-      throw error
-    } finally {
-      setIsSubmitting(false)
-    }
+  const handleSuccess = () => {
+    router.push("/dashboard/raw-materials")
   }
 
   const handleCancel = () => {
@@ -43,9 +26,8 @@ export default function NewRawMaterialPage() {
         </div>
 
         <RawMaterialForm
-          onSubmit={handleSubmit}
+          onSuccess={handleSuccess}
           onCancel={handleCancel}
-          submitLabel={isSubmitting ? "Creating..." : "Create Raw Material"}
         />
       </div>
     </DashboardLayout>
