@@ -6,6 +6,7 @@ export { BaseApiService } from "./base-api.service"
 
 // Individual API Services
 import { SitesApiService } from "./sites-api.service"
+import { SuppliersApiService } from "./suppliers-api.service"
 import { DistributionApiService } from "./distribution-api.service"
 import { ManufacturingApiService } from "./manufacturing-api.service"
 import { MasterDataApiService } from "./master-data-api.service"
@@ -25,6 +26,7 @@ export { apiService } from "./api.service"
 
 // Create instances of all API services
 export const sitesApi = new SitesApiService()
+export const suppliersApi = new SuppliersApiService()
 export const usersApi = new UsersApiService()
 export const productsApi = new ProductsApiService()
 export const vendorsApi = new VendorsApiService()
@@ -41,6 +43,7 @@ export const reportingApi = new ReportingApiService()
 // Unified API object for easy access
 export const api = {
   sites: sitesApi,
+  suppliers: suppliersApi,
   users: usersApi,
   products: productsApi,
   vendors: vendorsApi,

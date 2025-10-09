@@ -11,7 +11,7 @@ import { DataTable } from "@/components/ui/data-table"
 import { PermissionGuard } from "@/components/auth/permission-guard"
 import { MultiModulePermissionGuard } from "@/components/auth/permission-guard"
 import { useAuth } from "@/contexts/auth.context"
-import { apiService } from "@/services/api.service"
+import { sitesApi, storesApi } from "@/services"
 
 export default function StoresPage() {
   const [stores, setStores] = useState<any[]>([])
@@ -24,15 +24,15 @@ export default function StoresPage() {
   const load = async () => {
     setLoading(true)
     try {
-      const res = await apiService.getSites()
-      if (res.success && res.data) {
+      const res = await sitesApi.getSites()
+      if (res.status && res.data) {
         // Map sites data to store format for display
-        const sites = res.data.sites || []
+        const sites = res.data
         const mappedStores = sites.map((site: any) => ({
           id: site.id,
           name: site.name,
-          city: site.address?.city || '',
-          address: site.address ? `${site.address.street}, ${site.address.city}, ${site.address.state}` : '',
+          city: site.location || '',
+          address: site.location || '',
           image: '', // Sites don't have images
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -63,9 +63,9 @@ export default function StoresPage() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (editing) {
-      await apiService.updateStore(editing.id, form)
+      await storesApi.updateStore(editing.id, form)
     } else {
-      await apiService.createStore(form)
+      await storesApi.createStore(form)
     }
     setOpen(false)
     setEditing(null)
@@ -81,7 +81,7 @@ export default function StoresPage() {
 
   const onDelete = async (row: any) => {
     if (!confirm(`Delete store ${row.name}?`)) return
-    await apiService.deleteStore(row.id)
+    await storesApi.deleteStore(row.id)
     load()
   }
 

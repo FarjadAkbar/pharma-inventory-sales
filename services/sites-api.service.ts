@@ -7,29 +7,29 @@ export class SitesApiService extends BaseApiService {
   // Sites API
   async getSites(): Promise<SitesResponse> {
     console.log("API getSites called at:", new Date().toISOString())
-    return this.sitesRequest<SitesResponse>("/site/getAllSites")
+    return this.rawRequest<SitesResponse>("/site/getAllSites")
   }
 
   async getSite(id: number): Promise<SiteResponse> {
-    return this.sitesRequest<SiteResponse>(`/site/${id}`)
+    return this.rawRequest<SiteResponse>(`/site/${id}`)
   }
 
   async createSite(data: { name: string; location: string }): Promise<SiteActionResponse> {
-    return this.sitesRequest<SiteActionResponse>("/site", {
+    return this.rawRequest<SiteActionResponse>("/site", {
       method: "POST",
       body: JSON.stringify(data)
     })
   }
 
   async updateSite(id: number, data: { name: string; location: string }): Promise<SiteActionResponse> {
-    return this.sitesRequest<SiteActionResponse>(`/site/${id}`, {
+    return this.rawRequest<SiteActionResponse>(`/site/${id}`, {
       method: "PUT",
       body: JSON.stringify(data)
     })
   }
 
   async deleteSite(id: number): Promise<SiteActionResponse> {
-    return this.sitesRequest<SiteActionResponse>(`/site/${id}`, {
+    return this.rawRequest<SiteActionResponse>(`/site/${id}`, {
       method: "DELETE"
     })
   }

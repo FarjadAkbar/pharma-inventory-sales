@@ -2,7 +2,6 @@
 
 import { authService } from "./auth.service"
 import type { ApiResponse } from "@/types/auth"
-import type { SitesResponse, SiteResponse, SiteActionResponse } from "@/types/sites"
 
 class ApiService {
   private baseUrl = process.env.NEXT_PUBLIC_API || 'http://localhost:3000/api'
@@ -300,46 +299,6 @@ class ApiService {
     return this.request(`/master-data/raw-materials?${sp.toString()}`, { method: "DELETE" })
   }
 
-  // Suppliers API
-  async getSuppliers(params?: {
-    search?: string
-    rating?: number
-    isActive?: boolean
-    performance?: string
-    page?: number
-    limit?: number
-  }) {
-    const searchParams = new URLSearchParams()
-    if (params?.search) searchParams.set("search", params.search)
-    if (params?.rating) searchParams.set("rating", params.rating.toString())
-    if (params?.isActive !== undefined) searchParams.set("isActive", params.isActive.toString())
-    if (params?.performance) searchParams.set("performance", params.performance)
-    if (params?.page) searchParams.set("page", params.page.toString())
-    if (params?.limit) searchParams.set("limit", params.limit.toString())
-
-    const query = searchParams.toString()
-    return this.request(`/master-data/suppliers${query ? `?${query}` : ""}`)
-  }
-
-  async createSupplier(supplierData: any) {
-    return this.request("/master-data/suppliers", {
-      method: "POST",
-      body: JSON.stringify(supplierData),
-    })
-  }
-
-  async updateSupplier(supplierData: any) {
-    return this.request("/master-data/suppliers", {
-      method: "PUT",
-      body: JSON.stringify(supplierData),
-    })
-  }
-
-  async deleteSupplier(id: string) {
-    const sp = new URLSearchParams({ id })
-    return this.request(`/master-data/suppliers?${sp.toString()}`, { method: "DELETE" })
-  }
-
   // Cache invalidation for pharmaceutical data
   invalidateDrugs() {
     this.invalidateCache("drugs")
@@ -347,10 +306,6 @@ class ApiService {
 
   invalidateRawMaterials() {
     this.invalidateCache("raw-materials")
-  }
-
-  invalidateSuppliers() {
-    this.invalidateCache("suppliers")
   }
 
   // Procurement API
@@ -446,78 +401,6 @@ class ApiService {
   async deleteGoodsReceipt(id: string) {
     const sp = new URLSearchParams({ id })
     return this.request(`/procurement/goods-receipts?${sp.toString()}`, { method: "DELETE" })
-  }
-
-  // Sites API - Custom request method for sites API that returns status instead of success
-  private async sitesRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    console.log(`HTTP ${options.method || 'GET'} request to: ${this.baseUrl}${endpoint} at:`, new Date().toISOString())
-    
-    const token = authService.getToken()
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      ...(options.headers as Record<string, string>),
-    }
-
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`
-    }
-
-    const storeId = this.getCurrentStoreId()
-    if (storeId) {
-      headers["x-store-id"] = storeId
-    }
-
-    try {
-      window.dispatchEvent(new Event("api:request:start"))
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
-        ...options,
-        headers,
-      })
-
-      const contentType = response.headers.get("content-type") || ""
-      const data = contentType.includes("application/json") ? await response.json() : ({} as any)
-
-      if (!response.ok) {
-        throw new Error(data.error || "Request failed")
-      }
-
-      return data
-    } catch (error) {
-      console.error("API request failed:", error)
-      throw error
-    } finally {
-      window.dispatchEvent(new Event("api:request:stop"))
-    }
-  }
-
-  // Sites API
-  async getSites(): Promise<SitesResponse> {
-    console.log("API getSites called at:", new Date().toISOString())
-    return this.sitesRequest<SitesResponse>("/site/getAllSites")
-  }
-
-  async getSite(id: number): Promise<SiteResponse> {
-    return this.sitesRequest<SiteResponse>(`/site/${id}`)
-  }
-
-  async createSite(data: { name: string; location: string }): Promise<SiteActionResponse> {
-    return this.sitesRequest<SiteActionResponse>("/site", {
-      method: "POST",
-      body: JSON.stringify(data)
-    })
-  }
-
-  async updateSite(id: number, data: { name: string; location: string }): Promise<SiteActionResponse> {
-    return this.sitesRequest<SiteActionResponse>(`/site/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data)
-    })
-  }
-
-  async deleteSite(id: number): Promise<SiteActionResponse> {
-    return this.sitesRequest<SiteActionResponse>(`/site/${id}`, {
-      method: "DELETE"
-    })
   }
 
   // Cache invalidation for procurement data

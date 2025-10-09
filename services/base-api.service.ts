@@ -51,8 +51,8 @@ export class BaseApiService {
     }
   }
 
-  // Sites API - Custom request method for sites API that returns status instead of success
-  protected async sitesRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  // Raw request method that returns the response directly (for APIs that don't wrap responses)
+  protected async rawRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     console.log(`HTTP ${options.method || 'GET'} request to: ${this.baseUrl}${endpoint} at:`, new Date().toISOString())
     
     const token = authService.getToken()
