@@ -1,31 +1,14 @@
 "use client"
 
-import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { PurchaseOrderForm } from "@/components/procurement/purchase-order-form"
-import { apiService } from "@/services/api.service"
-import type { PurchaseOrder } from "@/types/procurement"
 
 export default function NewPurchaseOrderPage() {
   const router = useRouter()
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSubmit = async (data: PurchaseOrder) => {
-    setIsSubmitting(true)
-    try {
-      const response = await apiService.createPurchaseOrder(data)
-      if (response.success) {
-        router.push("/dashboard/procurement/purchase-orders")
-      } else {
-        throw new Error(response.message || "Failed to create purchase order")
-      }
-    } catch (error: any) {
-      console.error("Failed to create purchase order:", error)
-      throw error
-    } finally {
-      setIsSubmitting(false)
-    }
+  const handleSuccess = () => {
+    router.push("/dashboard/procurement/purchase-orders")
   }
 
   const handleCancel = () => {
@@ -43,9 +26,8 @@ export default function NewPurchaseOrderPage() {
         </div>
 
         <PurchaseOrderForm
-          onSubmit={handleSubmit}
+          onSuccess={handleSuccess}
           onCancel={handleCancel}
-          submitLabel={isSubmitting ? "Creating..." : "Create Purchase Order"}
         />
       </div>
     </DashboardLayout>
