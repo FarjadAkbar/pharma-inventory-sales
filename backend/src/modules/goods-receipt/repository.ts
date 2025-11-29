@@ -67,7 +67,7 @@ export class GoodsReceiptRepository extends TypeORMRepository<Model> implements 
     const docs = await query.getMany();
 
     return {
-      docs: docs as GoodsReceiptEntity[],
+      docs: docs as unknown as GoodsReceiptEntity[],
       limit,
       page,
       total
@@ -80,8 +80,8 @@ export class GoodsReceiptRepository extends TypeORMRepository<Model> implements 
     await queryRunner.startTransaction();
 
     try {
-      await queryRunner.manager.save(GoodsReceiptSchema, grn);
-      await queryRunner.manager.save(GoodsReceiptItemSchema, items);
+      await queryRunner.manager.save(GoodsReceiptSchema, grn as unknown as GoodsReceiptSchema);
+      await queryRunner.manager.save(GoodsReceiptItemSchema, items as unknown as GoodsReceiptItemSchema[]);
 
       await queryRunner.commitTransaction();
 
@@ -103,8 +103,8 @@ export class GoodsReceiptRepository extends TypeORMRepository<Model> implements 
     const items = await this.itemRepository.find({ where: { goodsReceiptId: id } });
 
     return {
-      grn: grn as GoodsReceiptEntity,
-      items: items as GoodsReceiptItemEntity[]
+      grn: grn as unknown as GoodsReceiptEntity,
+      items: items as unknown as GoodsReceiptItemEntity[]
     };
   }
 }

@@ -72,7 +72,7 @@ export class PurchaseOrderRepository extends TypeORMRepository<Model> implements
     const docs = await query.getMany();
 
     return {
-      docs: docs as PurchaseOrderEntity[],
+      docs: docs as unknown as PurchaseOrderEntity[],
       limit,
       page,
       total
@@ -85,8 +85,8 @@ export class PurchaseOrderRepository extends TypeORMRepository<Model> implements
     await queryRunner.startTransaction();
 
     try {
-      await queryRunner.manager.save(PurchaseOrderSchema, po);
-      await queryRunner.manager.save(PurchaseOrderItemSchema, items);
+      await queryRunner.manager.save(PurchaseOrderSchema, po as unknown as PurchaseOrderSchema);
+      await queryRunner.manager.save(PurchaseOrderItemSchema, items as unknown as PurchaseOrderItemSchema[]);
 
       await queryRunner.commitTransaction();
 
@@ -108,8 +108,8 @@ export class PurchaseOrderRepository extends TypeORMRepository<Model> implements
     const items = await this.itemRepository.find({ where: { purchaseOrderId: id } });
 
     return {
-      po: po as PurchaseOrderEntity,
-      items: items as PurchaseOrderItemEntity[]
+      po: po as unknown as PurchaseOrderEntity,
+      items: items as unknown as PurchaseOrderItemEntity[]
     };
   }
 }

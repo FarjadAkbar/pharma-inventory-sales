@@ -56,7 +56,7 @@ export class SupplierController {
   async list(@Req() { query }: ApiRequest): Promise<SupplierListOutput> {
     const input: SupplierListInput = {
       sort: SortHttpSchema.parse(query.sort),
-      search: SearchHttpSchema.parse(query.search),
+      search: SearchHttpSchema.parse(query.search) || undefined,
       limit: Number(query.limit),
       page: Number(query.page),
       status: query.status as 'Active' | 'Inactive' | undefined

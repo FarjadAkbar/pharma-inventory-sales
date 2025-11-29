@@ -1,10 +1,8 @@
-import { ObjectId } from 'mongoose';
-
 export type UpdatedModel = {
   matchedCount: number;
   modifiedCount: number;
   acknowledged: boolean;
-  upsertedId: unknown | ObjectId;
+  upsertedId: unknown;
   upsertedCount: number;
 };
 

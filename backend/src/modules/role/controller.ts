@@ -11,6 +11,8 @@ import { ApiRequest } from '@/utils/request';
 import { SearchHttpSchema } from '@/utils/search';
 import { SortHttpSchema } from '@/utils/sort';
 
+import { RoleEntity } from '@/core/role/entity/role';
+
 import {
   IRoleAddPermissionAdapter,
   IRoleCreateAdapter,
@@ -61,7 +63,7 @@ export class RoleController {
   async list(@Req() { query }: ApiRequest): Promise<RoleListOutput> {
     const input: RoleListInput = {
       sort: SortHttpSchema.parse(query.sort),
-      search: SearchHttpSchema.parse(query.search),
+      search: (SearchHttpSchema.parse(query.search) as unknown as Partial<RoleEntity>) || null,
       limit: Number(query.limit),
       page: Number(query.page)
     };

@@ -11,6 +11,8 @@ import { ApiRequest, UserRequest } from '@/utils/request';
 import { SearchHttpSchema } from '@/utils/search';
 import { SortHttpSchema } from '@/utils/sort';
 
+import { UserEntity } from '@/core/user/entity/user';
+
 import {
   IUserChangePasswordAdapter,
   IUserCreateAdapter,
@@ -52,7 +54,7 @@ export class UserController {
   async list(@Req() { query }: ApiRequest): Promise<UserListOutput> {
     const input: UserListInput = {
       sort: SortHttpSchema.parse(query.sort),
-      search: SearchHttpSchema.parse(query.search),
+      search: (SearchHttpSchema.parse(query.search) as unknown as Partial<UserEntity>) || null,
       limit: Number(query.limit),
       page: Number(query.page)
     };

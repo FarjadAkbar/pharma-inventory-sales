@@ -1,7 +1,7 @@
 import { ILoggerAdapter } from '@/infra/logger';
 import { ValidateSchema } from '@/utils/decorators';
 import { ApiNotFoundException, ApiBadRequestException } from '@/utils/exception';
-import { UpdatedModel } from '@/infra/repository';
+import { UpdatedEntity } from '@/utils/entity';
 import { ApiTrancingInput } from '@/utils/request';
 import { IUsecase } from '@/utils/usecase';
 import { Infer, InputValidator } from '@/utils/validator';
@@ -42,4 +42,4 @@ export class DrugApproveUsecase implements IUsecase {
 }
 
 export type DrugApproveInput = Infer<typeof DrugApproveSchema>;
-export type DrugApproveOutput = UpdatedModel;
+export type DrugApproveOutput = UpdatedEntity;

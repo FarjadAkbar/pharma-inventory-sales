@@ -32,7 +32,7 @@ export class DeviationUpdateUsecase implements IUsecase {
       throw new ApiNotFoundException('deviationNotFound');
     }
 
-    await this.deviationRepository.update({ id: input.id }, input);
+    await this.deviationRepository.updateOne({ id: input.id }, input);
 
     this.loggerService.info({ message: 'Deviation updated', obj: { deviationId: input.id } });
 

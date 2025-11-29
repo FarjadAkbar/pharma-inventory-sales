@@ -10,6 +10,8 @@ import { ApiRequest } from '@/utils/request';
 import { SearchHttpSchema } from '@/utils/search';
 import { SortHttpSchema } from '@/utils/sort';
 
+import { PermissionEntity } from '@/core/permission/entity/permission';
+
 import {
   IPermissionCreateAdapter,
   IPermissionDeleteAdapter,
@@ -56,7 +58,7 @@ export class PermissionController {
   async list(@Req() { query }: ApiRequest): Promise<PermissionListOutput> {
     const input: PermissionListInput = {
       sort: SortHttpSchema.parse(query.sort),
-      search: SearchHttpSchema.parse(query.search),
+      search: (SearchHttpSchema.parse(query.search) as unknown as Partial<PermissionEntity>) || null,
       limit: Number(query.limit),
       page: Number(query.page)
     };

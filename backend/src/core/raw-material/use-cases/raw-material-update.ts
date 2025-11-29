@@ -1,5 +1,5 @@
 import { ILoggerAdapter } from '@/infra/logger';
-import { UpdatedModel } from '@/infra/repository';
+import { UpdatedEntity } from '@/utils/entity';
 import { ValidateSchema } from '@/utils/decorators';
 import { ApiNotFoundException } from '@/utils/exception';
 import { ApiTrancingInput } from '@/utils/request';
@@ -49,4 +49,4 @@ export class RawMaterialUpdateUsecase implements IUsecase {
 }
 
 export type RawMaterialUpdateInput = Infer<typeof RawMaterialUpdateSchema>;
-export type RawMaterialUpdateOutput = UpdatedModel;
+export type RawMaterialUpdateOutput = UpdatedEntity;

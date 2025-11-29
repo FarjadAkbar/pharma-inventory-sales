@@ -3,6 +3,16 @@ import z from 'zod';
 import { DateUtils } from './date';
 import { UUIDUtils } from './uuid';
 
+export type DeletedModel = {
+  id: string;
+  deleted: boolean;
+};
+
+export type UpdatedEntity = {
+  id: string;
+  updated: boolean;
+};
+
 export const withID = (entity: { _id?: string; id?: string }) => {
   Object.assign(entity, { id: [entity?.id, entity?._id, UUIDUtils.create()].find(Boolean) });
   return entity;

@@ -157,6 +157,11 @@ export class TypeORMRepository<T extends BaseEntity & IEntity = BaseEntity & IEn
     return { deletedCount: data.affected || 0, deleted: !!data.affected };
   }
 
+  async softDelete<TQuery = Partial<T>>(filter: TQuery): Promise<RemovedModel> {
+    const data = await this.repository.softDelete(filter as FindOptionsWhere<T>);
+    return { deletedCount: data.affected || 0, deleted: !!data.affected };
+  }
+
   async findOne<TQuery = Partial<T>>(filter: TQuery): Promise<T | null> {
     return this.repository.findOne({
       where: filter

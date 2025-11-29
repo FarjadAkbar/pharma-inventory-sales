@@ -56,7 +56,7 @@ export class DrugController {
   async list(@Req() { query }: ApiRequest): Promise<DrugListOutput> {
     const input: DrugListInput = {
       sort: SortHttpSchema.parse(query.sort),
-      search: SearchHttpSchema.parse(query.search),
+      search: SearchHttpSchema.parse(query.search) || undefined,
       limit: Number(query.limit),
       page: Number(query.page),
       approvalStatus: query.approvalStatus as 'Draft' | 'Pending' | 'Approved' | 'Rejected' | undefined

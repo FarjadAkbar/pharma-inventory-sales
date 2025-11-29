@@ -1,5 +1,5 @@
 import { ILoggerAdapter } from '@/infra/logger';
-import { UpdatedModel } from '@/infra/repository';
+import { UpdatedEntity } from '@/utils/entity';
 import { ValidateSchema } from '@/utils/decorators';
 import { ApiNotFoundException } from '@/utils/exception';
 import { ApiTrancingInput } from '@/utils/request';
@@ -53,4 +53,4 @@ export class SupplierUpdateUsecase implements IUsecase {
 }
 
 export type SupplierUpdateInput = Infer<typeof SupplierUpdateSchema>;
-export type SupplierUpdateOutput = UpdatedModel;
+export type SupplierUpdateOutput = UpdatedEntity;

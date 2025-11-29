@@ -1,6 +1,6 @@
 import { ValidateSchema } from '@/utils/decorators';
 import { ApiNotFoundException } from '@/utils/exception';
-import { UpdatedModel } from '@/infra/repository';
+import { UpdatedEntity } from '@/utils/entity';
 import { IUsecase } from '@/utils/usecase';
 import { Infer, InputValidator } from '@/utils/validator';
 
@@ -33,4 +33,4 @@ export class SupplierUpdateRatingUsecase implements IUsecase {
 }
 
 export type SupplierUpdateRatingInput = Infer<typeof SupplierUpdateRatingSchema>;
-export type SupplierUpdateRatingOutput = UpdatedModel;
+export type SupplierUpdateRatingOutput = UpdatedEntity;

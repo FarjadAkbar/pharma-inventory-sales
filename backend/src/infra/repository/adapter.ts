@@ -39,6 +39,8 @@ export abstract class IRepository<T> {
 
   abstract remove<TQuery = Partial<T>, TOpt = unknown>(filter: TQuery, opt?: TOpt): Promise<RemovedModel>;
 
+  abstract softDelete<TQuery = Partial<T>, TOpt = unknown>(filter: TQuery, opt?: TOpt): Promise<RemovedModel>;
+
   abstract findOne<TQuery = Partial<T>, TOptions = unknown>(filter: TQuery, options?: TOptions): Promise<T | null>;
 
   abstract updateOne<TQuery = Partial<T>, TUpdate = Partial<T>, TOptions = unknown>(
