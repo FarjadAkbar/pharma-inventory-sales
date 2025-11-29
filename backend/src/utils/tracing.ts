@@ -4,7 +4,6 @@ import { diag, DiagConsoleLogger, DiagLogLevel, Span } from '@opentelemetry/api'
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
-import { MongoDBInstrumentation } from '@opentelemetry/instrumentation-mongodb';
 import { PgInstrumentation } from '@opentelemetry/instrumentation-pg';
 import { RedisInstrumentation } from '@opentelemetry/instrumentation-redis-4';
 import { detectResources, Resource } from '@opentelemetry/resources';
@@ -161,22 +160,6 @@ const redisInstrumentation = new RedisInstrumentation({
   }
 });
 
-const mongodbInstrumentation = new MongoDBInstrumentation({
-  enhancedDatabaseReporting: true,
-  requireParentSpan: false,
-  responseHook: (span: Span) => {
-    if (!isSpan(span)) return;
-
-    try {
-      // Para MongoDB, nome genérico
-      const spanContext = span.spanContext();
-      span.updateName(`mongodb => operation-${spanContext.spanId}`);
-    } catch (error) {
-      logger.warn({ message: 'Error in MongoDB response hook:', obj: { originalError: error } });
-    }
-  }
-});
-
 const pgInstrumentation = new PgInstrumentation({
   requireParentSpan: false,
   responseHook: (span: Span) => {
@@ -196,7 +179,7 @@ const sdk = new NodeSDK({
   resource,
   traceExporter: tracerExporter,
   metricReader,
-  instrumentations: [httpInstrumentation, redisInstrumentation, mongodbInstrumentation, pgInstrumentation],
+  instrumentations: [httpInstrumentation, redisInstrumentation, pgInstrumentation],
   serviceName: name
 });
 

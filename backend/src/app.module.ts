@@ -22,6 +22,16 @@ import { AlertModule } from './modules/alert/module';
 import { PermissionModule } from './modules/permission/module';
 import { ResetPasswordModule } from './modules/reset-password/module';
 import { RoleModule } from './modules/role/module';
+import { DrugModule } from './modules/drug/module';
+import { SupplierModule } from './modules/supplier/module';
+import { RawMaterialModule } from './modules/raw-material/module';
+import { PurchaseOrderModule } from './modules/purchase-order/module';
+import { GoodsReceiptModule } from './modules/goods-receipt/module';
+import { QCSampleModule } from './modules/qc-sample/module';
+import { QCTestModule } from './modules/qc-test/module';
+import { QCResultModule } from './modules/qc-result/module';
+import { QAReleaseModule } from './modules/qa-release/module';
+import { DeviationModule } from './modules/deviation/module';
 
 @Module({
   imports: [
@@ -35,7 +45,17 @@ import { RoleModule } from './modules/role/module';
     ResetPasswordModule,
     RoleModule,
     PermissionModule,
-    LoggerModule
+    LoggerModule,
+    DrugModule,
+    SupplierModule,
+    RawMaterialModule,
+    PurchaseOrderModule,
+    GoodsReceiptModule,
+    QCSampleModule,
+    QCTestModule,
+    QCResultModule,
+    QAReleaseModule,
+    DeviationModule
   ],
   providers: [
     {

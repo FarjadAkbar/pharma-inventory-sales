@@ -1,8 +1,5 @@
-import { Types } from 'mongoose';
-
 import { DateUtils } from '@/utils/date';
 import { ApiBadRequestException } from '@/utils/exception';
-import { MongoUtils } from '@/utils/mongoose';
 
 import { AllowedFilter } from '../types';
 
@@ -36,15 +33,6 @@ export const convertFilterValue = (input: Pick<AllowedFilter<unknown>, 'format'>
       throw new ApiBadRequestException('invalid number filter');
     }
     return Number(input.value);
-  }
-
-  if (input.format === 'ObjectId') {
-    const isObjectId = MongoUtils.isObjectId(`${input.value}`);
-
-    if (!isObjectId) {
-      throw new ApiBadRequestException('invalid objectId filter');
-    }
-    return new Types.ObjectId(`${input.value} `);
   }
 
   return input.value;
