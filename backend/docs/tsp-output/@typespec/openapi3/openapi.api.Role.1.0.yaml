@@ -843,15 +843,61 @@ components:
               description: default error model
           description: When resource not found.
       description: When role not found
-    api.Cat.ListQueryInput:
+    api.Deviation.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
+      description: deviation list query input
+    api.Drug.ListQueryInput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
+      description: drug list query input
+    api.GoodsReceipt.ListQueryInput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
+      description: goods receipt list query input
     api.Permission.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: permission list input
+    api.PurchaseOrder.ListQueryInput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
+      description: purchase order list query input
+    api.QARelease.ListQueryInput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
+      description: qa release list query input
+    api.QCResult.ListQueryInput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
+      description: qc result list query input
+    api.QCSample.ListQueryInput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
+      description: qc sample list query input
+    api.QCTest.ListQueryInput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
+      description: qc test list query input
+    api.RawMaterial.ListQueryInput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
+      description: raw material list query input
+    api.Supplier.ListQueryInput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
+      description: supplier list query input
     api.User.ListQueryInput:
       type: object
       allOf:

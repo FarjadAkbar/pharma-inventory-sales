@@ -4,7 +4,7 @@ import "../../utils/exceptions.tsp";
 using TypeSpec.Http;
 using api.Utils.Exception;
 
-namespace api.QaRelease;
+namespace api.QARelease;
 
 // ## CREATE ## //
 @doc("When qaRelease not found")

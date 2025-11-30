@@ -1,37 +1,43 @@
 openapi: 3.0.0
 info:
-  title: Permission
+  title: PurchaseOrder
   version: '1.0'
 tags:
-  - name: Permission
+  - name: PurchaseOrder
 paths:
-  /api/{version}/permissions:
+  /api/{version}/purchase-orders:
     post:
-      operationId: PermissionController_create
-      description: create permission
+      operationId: PurchaseOrderController_create
+      description: create purchase order
       parameters:
         - $ref: '#/components/parameters/api.Utils.Versioning.VersionParams'
       responses:
-        '200':
-          description: permission created successfully
+        '201':
+          description: purchase order created successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CreateOutput'
         '400':
-          description: When input is invalid
+          description: When input body is invalid
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateValidationError'
+                $ref: '#/components/schemas/CreateBodyValidationError'
+        '404':
+          description: When purchaseOrder not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateNotFoundError'
         '409':
-          description: When input is invalid
+          description: When purchaseOrder already exists
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConflictPermissionExistsError'
+                $ref: '#/components/schemas/CreateExistConflictError'
       tags:
-        - Permission
+        - PurchaseOrder
       requestBody:
         required: true
         content:
@@ -41,8 +47,8 @@ paths:
       security:
         - BearerAuth: []
     get:
-      operationId: PermissionController_list
-      description: list permission
+      operationId: PurchaseOrderController_list
+      description: list purchase order
       parameters:
         - $ref: '#/components/parameters/api.Utils.Versioning.VersionParams'
         - $ref: '#/components/parameters/api.Utils.Model.ApiPaginationInput.page'
@@ -51,49 +57,49 @@ paths:
         - $ref: '#/components/parameters/api.Utils.Model.ApiPaginationInput.search'
       responses:
         '200':
-          description: list permission successfully
+          description: purchase order listed successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ListOutput'
       tags:
-        - Permission
+        - PurchaseOrder
       security:
         - BearerAuth: []
-  /api/{version}/permissions/{id}:
+  /api/{version}/purchase-orders/{id}:
     put:
-      operationId: PermissionController_update
-      description: update permission
+      operationId: PurchaseOrderController_update
+      description: update purchase order
       parameters:
         - $ref: '#/components/parameters/api.Utils.Versioning.VersionParams'
         - $ref: '#/components/parameters/UpdateParamsInput'
       responses:
         '200':
-          description: permission updated successfully
+          description: purchase order updated successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UpdateOutput'
         '400':
-          description: When input is invalid
+          description: When input params is invalid
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UpdateValidationError'
+                $ref: '#/components/schemas/UpdateParamsValidationError'
         '404':
-          description: When permission not found
+          description: When purchaseOrder not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UpdatePermissionNotFoundError'
+                $ref: '#/components/schemas/UpdatePurchaseOrderNotFoundError'
         '409':
-          description: When permission already exists
+          description: When purchaseOrder already exists
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UpdatePermissionAlreadyExistsError'
+                $ref: '#/components/schemas/UpdateExistConflictError'
       tags:
-        - Permission
+        - PurchaseOrder
       requestBody:
         required: true
         content:
@@ -103,61 +109,61 @@ paths:
       security:
         - BearerAuth: []
     get:
-      operationId: PermissionController_getById
-      description: get permission
+      operationId: PurchaseOrderController_getById
+      description: get purchase order by id
       parameters:
         - $ref: '#/components/parameters/api.Utils.Versioning.VersionParams'
         - $ref: '#/components/parameters/GetByIdParamsInput'
       responses:
         '200':
-          description: get permission successfully
+          description: get purchase order by id successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetByIdOutput'
         '400':
-          description: When input is invalid
+          description: When input params is invalid
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetByIdValidationError'
+                $ref: '#/components/schemas/GetByIdParamsValidationError'
         '404':
-          description: When permission not found
+          description: When purchaseOrder not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetByIdPermissionNotFoundError'
+                $ref: '#/components/schemas/GetByIdPurchaseOrderNotFoundError'
       tags:
-        - Permission
+        - PurchaseOrder
       security:
         - BearerAuth: []
     delete:
-      operationId: PermissionController_delete
-      description: delete permission
+      operationId: PurchaseOrderController_delete
+      description: delete purchase order
       parameters:
         - $ref: '#/components/parameters/api.Utils.Versioning.VersionParams'
         - $ref: '#/components/parameters/DeleteParamsInput'
       responses:
         '200':
-          description: delete permission successfully
+          description: delete purchase order successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/DeleteOutput'
         '400':
-          description: When input is invalid
+          description: When input params is invalid
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeleteValidationError'
+                $ref: '#/components/schemas/DeleteParamsValidationError'
         '404':
-          description: When permission not found
+          description: When purchaseOrder not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeletePermissionNotFoundError'
+                $ref: '#/components/schemas/DeletePurchaseOrderNotFoundError'
       tags:
-        - Permission
+        - PurchaseOrder
       security:
         - BearerAuth: []
 components:
@@ -166,21 +172,21 @@ components:
       name: id
       in: path
       required: true
-      description: permission id
+      description: purchase order id
       schema:
         type: string
     GetByIdParamsInput:
       name: id
       in: path
       required: true
-      description: permission id
+      description: purchase order id
       schema:
         type: string
     UpdateParamsInput:
       name: id
       in: path
       required: true
-      description: permission id
+      description: purchase order id
       schema:
         type: string
     api.Utils.Model.ApiPaginationInput.limit:
@@ -228,7 +234,51 @@ components:
       schema:
         $ref: '#/components/schemas/api.Utils.Versioning.ApiVersion'
   schemas:
-    ConflictPermissionExistsError:
+    CreateBodyValidationError:
+      type: object
+      allOf:
+        - type: object
+          required:
+            - error
+          properties:
+            error:
+              type: object
+              required:
+                - code
+                - traceid
+                - context
+                - message
+                - timestamp
+                - path
+              properties:
+                code:
+                  type: number
+                  enum:
+                    - 400
+                  description: status code
+                traceid:
+                  type: string
+                  description: request traceid
+                context:
+                  type: string
+                  description: class that error occur
+                message:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - 'description: Required, type: Required'
+                  description: error message
+                timestamp:
+                  type: string
+                  description: timestamp that error occur
+                path:
+                  type: string
+                  description: path error
+              description: default error model
+          description: When input is invalid.
+      description: When input body is invalid
+    CreateExistConflictError:
       type: object
       allOf:
         - type: object
@@ -261,7 +311,7 @@ components:
                   items:
                     type: string
                     enum:
-                      - permissionExists
+                      - purchaseOrderExists
                   description: error message
                 timestamp:
                   type: string
@@ -271,24 +321,27 @@ components:
                   description: path error
               description: default error model
           description: When conflict occour.
-      description: When input is invalid
+      description: When purchaseOrder already exists
     CreateInput:
       type: object
-      allOf:
-        - type: object
-          required:
-            - name
-          properties:
-            name:
-              type: string
-          description: The template for picking properties.
-      description: permission create input
-    CreateOutput:
-      type: object
-      allOf:
-        - $ref: '#/components/schemas/PermisisonEntity'
-      description: permission create output
-    CreateValidationError:
+      required:
+        - supplierId
+        - expectedDate
+        - items
+      properties:
+        supplierId:
+          type: string
+        siteId:
+          type: string
+        expectedDate:
+          type: string
+          format: date-time
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PurchaseOrderItemCreateInput'
+      description: purchase order create input
+    CreateNotFoundError:
       type: object
       allOf:
         - type: object
@@ -308,7 +361,7 @@ components:
                 code:
                   type: number
                   enum:
-                    - 400
+                    - 404
                   description: status code
                 traceid:
                   type: string
@@ -321,7 +374,7 @@ components:
                   items:
                     type: string
                     enum:
-                      - 'name: Required'
+                      - purchaseOrderNotFound
                   description: error message
                 timestamp:
                   type: string
@@ -330,8 +383,13 @@ components:
                   type: string
                   description: path error
               description: default error model
-          description: When input is invalid.
-      description: When input is invalid
+          description: When resource not found.
+      description: When purchaseOrder not found
+    CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: purchase order created input
     DeleteOutput:
       type: object
       required:
@@ -344,65 +402,47 @@ components:
         - type: object
           required:
             - id
-            - name
+            - poNumber
+            - supplierId
+            - expectedDate
+            - status
+            - totalAmount
             - createdAt
             - updatedAt
           properties:
             id:
               type: string
-            name:
+            poNumber:
               type: string
+            supplierId:
+              type: string
+            siteId:
+              type: string
+            expectedDate:
+              type: string
+              format: date-time
+            status:
+              type: string
+              enum:
+                - Draft
+                - Pending
+                - Approved
+                - Received
+                - Cancelled
+            totalAmount:
+              type: number
+              format: double
             createdAt:
               type: string
             updatedAt:
               type: string
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/PurchaseOrderItemEntity'
           description: The template for omitting properties.
-      description: permission depete output
-    DeletePermissionNotFoundError:
-      type: object
-      allOf:
-        - type: object
-          required:
-            - error
-          properties:
-            error:
-              type: object
-              required:
-                - code
-                - traceid
-                - context
-                - message
-                - timestamp
-                - path
-              properties:
-                code:
-                  type: number
-                  enum:
-                    - 404
-                  description: status code
-                traceid:
-                  type: string
-                  description: request traceid
-                context:
-                  type: string
-                  description: class that error occur
-                message:
-                  type: array
-                  items:
-                    type: string
-                    enum:
-                      - permissionNotFound
-                  description: error message
-                timestamp:
-                  type: string
-                  description: timestamp that error occur
-                path:
-                  type: string
-                  description: path error
-              description: default error model
-          description: When resource not found.
-      description: When permission not found
-    DeleteValidationError:
+      description: purchase order delete output
+    DeleteParamsValidationError:
       type: object
       allOf:
         - type: object
@@ -445,78 +485,57 @@ components:
                   description: path error
               description: default error model
           description: When input is invalid.
-      description: When input is invalid
+      description: When input params is invalid
+    DeletePurchaseOrderNotFoundError:
+      type: object
+      allOf:
+        - type: object
+          required:
+            - error
+          properties:
+            error:
+              type: object
+              required:
+                - code
+                - traceid
+                - context
+                - message
+                - timestamp
+                - path
+              properties:
+                code:
+                  type: number
+                  enum:
+                    - 404
+                  description: status code
+                traceid:
+                  type: string
+                  description: request traceid
+                context:
+                  type: string
+                  description: class that error occur
+                message:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - purchaseOrderNotFound
+                  description: error message
+                timestamp:
+                  type: string
+                  description: timestamp that error occur
+                path:
+                  type: string
+                  description: path error
+              description: default error model
+          description: When resource not found.
+      description: When purchaseOrder not found
     GetByIdOutput:
       type: object
-      required:
-        - deletedAt
-      properties:
-        deletedAt:
-          type: string
-          format: date-time
       allOf:
-        - type: object
-          required:
-            - id
-            - name
-            - createdAt
-            - updatedAt
-          properties:
-            id:
-              type: string
-            name:
-              type: string
-            createdAt:
-              type: string
-            updatedAt:
-              type: string
-          description: The template for omitting properties.
-      description: permission get by id output
-    GetByIdPermissionNotFoundError:
-      type: object
-      allOf:
-        - type: object
-          required:
-            - error
-          properties:
-            error:
-              type: object
-              required:
-                - code
-                - traceid
-                - context
-                - message
-                - timestamp
-                - path
-              properties:
-                code:
-                  type: number
-                  enum:
-                    - 404
-                  description: status code
-                traceid:
-                  type: string
-                  description: request traceid
-                context:
-                  type: string
-                  description: class that error occur
-                message:
-                  type: array
-                  items:
-                    type: string
-                    enum:
-                      - permissionNotFound
-                  description: error message
-                timestamp:
-                  type: string
-                  description: timestamp that error occur
-                path:
-                  type: string
-                  description: path error
-              description: default error model
-          description: When resource not found.
-      description: When permission not found
-    GetByIdValidationError:
+        - $ref: '#/components/schemas/PurchaseOrderEntity'
+      description: get purchase order by id output
+    GetByIdParamsValidationError:
       type: object
       allOf:
         - type: object
@@ -559,7 +578,51 @@ components:
                   description: path error
               description: default error model
           description: When input is invalid.
-      description: When input is invalid
+      description: When input params is invalid
+    GetByIdPurchaseOrderNotFoundError:
+      type: object
+      allOf:
+        - type: object
+          required:
+            - error
+          properties:
+            error:
+              type: object
+              required:
+                - code
+                - traceid
+                - context
+                - message
+                - timestamp
+                - path
+              properties:
+                code:
+                  type: number
+                  enum:
+                    - 404
+                  description: status code
+                traceid:
+                  type: string
+                  description: request traceid
+                context:
+                  type: string
+                  description: class that error occur
+                message:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - purchaseOrderNotFound
+                  description: error message
+                timestamp:
+                  type: string
+                  description: timestamp that error occur
+                path:
+                  type: string
+                  description: path error
+              description: default error model
+          description: When resource not found.
+      description: When purchaseOrder not found
     ListOutput:
       type: object
       allOf:
@@ -573,7 +636,7 @@ components:
             docs:
               type: array
               items:
-                $ref: '#/components/schemas/PermisisonEntity'
+                $ref: '#/components/schemas/PurchaseOrderEntity'
               description: documents
             page:
               type: integer
@@ -596,25 +659,46 @@ components:
               description: total pages
               default: 1
           description: pagination default response
-      description: permission list output
+      description: purchase order list output
     ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
-      description: permission list input
-    PermisisonEntity:
+      description: purchase order list query input
+    PurchaseOrderEntity:
       type: object
       required:
         - id
-        - name
+        - poNumber
+        - supplierId
+        - expectedDate
+        - status
+        - totalAmount
         - createdAt
         - updatedAt
-        - deletedAt
       properties:
         id:
           type: string
-        name:
+        poNumber:
           type: string
+        supplierId:
+          type: string
+        siteId:
+          type: string
+        expectedDate:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+            - Draft
+            - Pending
+            - Approved
+            - Received
+            - Cancelled
+        totalAmount:
+          type: number
+          format: double
         createdAt:
           type: string
         updatedAt:
@@ -623,24 +707,60 @@ components:
           type: string
           nullable: true
           default: null
-      description: permission base entity
-    UpdateInput:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PurchaseOrderItemEntity'
+      description: purchase order base entity
+    PurchaseOrderItemCreateInput:
       type: object
-      allOf:
-        - type: object
-          required:
-            - name
-          properties:
-            name:
-              type: string
-          description: The template for picking properties.
-      description: permission update input
-    UpdateOutput:
+      required:
+        - materialId
+        - quantity
+        - unitPrice
+      properties:
+        materialId:
+          type: string
+        quantity:
+          type: number
+          format: double
+        unitPrice:
+          type: number
+          format: double
+      description: purchase order item create input
+    PurchaseOrderItemEntity:
       type: object
-      allOf:
-        - $ref: '#/components/schemas/PermisisonEntity'
-      description: permission update output
-    UpdatePermissionAlreadyExistsError:
+      required:
+        - id
+        - purchaseOrderId
+        - materialId
+        - quantity
+        - unitPrice
+        - totalPrice
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        purchaseOrderId:
+          type: string
+        materialId:
+          type: string
+        quantity:
+          type: number
+          format: double
+        unitPrice:
+          type: number
+          format: double
+        totalPrice:
+          type: number
+          format: double
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      description: purchase order item entity
+    UpdateExistConflictError:
       type: object
       allOf:
         - type: object
@@ -673,7 +793,7 @@ components:
                   items:
                     type: string
                     enum:
-                      - permissionExists
+                      - purchaseOrderExists
                   description: error message
                 timestamp:
                   type: string
@@ -683,52 +803,44 @@ components:
                   description: path error
               description: default error model
           description: When conflict occour.
-      description: When permission already exists
-    UpdatePermissionNotFoundError:
+      description: When purchaseOrder already exists
+    UpdateInput:
       type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PurchaseOrderItemCreateInput'
       allOf:
         - type: object
           required:
-            - error
+            - supplierId
+            - expectedDate
+            - status
           properties:
-            error:
-              type: object
-              required:
-                - code
-                - traceid
-                - context
-                - message
-                - timestamp
-                - path
-              properties:
-                code:
-                  type: number
-                  enum:
-                    - 404
-                  description: status code
-                traceid:
-                  type: string
-                  description: request traceid
-                context:
-                  type: string
-                  description: class that error occur
-                message:
-                  type: array
-                  items:
-                    type: string
-                    enum:
-                      - permissionNotFound
-                  description: error message
-                timestamp:
-                  type: string
-                  description: timestamp that error occur
-                path:
-                  type: string
-                  description: path error
-              description: default error model
-          description: When resource not found.
-      description: When permission not found
-    UpdateValidationError:
+            supplierId:
+              type: string
+            siteId:
+              type: string
+            expectedDate:
+              type: string
+              format: date-time
+            status:
+              type: string
+              enum:
+                - Draft
+                - Pending
+                - Approved
+                - Received
+                - Cancelled
+          description: The template for omitting properties.
+      description: purchase order update input
+    UpdateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/PurchaseOrderEntity'
+      description: purchase order update output
+    UpdateParamsValidationError:
       type: object
       allOf:
         - type: object
@@ -771,47 +883,131 @@ components:
                   description: path error
               description: default error model
           description: When input is invalid.
-      description: When input is invalid
+      description: When input params is invalid
+    UpdatePurchaseOrderNotFoundError:
+      type: object
+      allOf:
+        - type: object
+          required:
+            - error
+          properties:
+            error:
+              type: object
+              required:
+                - code
+                - traceid
+                - context
+                - message
+                - timestamp
+                - path
+              properties:
+                code:
+                  type: number
+                  enum:
+                    - 404
+                  description: status code
+                traceid:
+                  type: string
+                  description: request traceid
+                context:
+                  type: string
+                  description: class that error occur
+                message:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - purchaseOrderNotFound
+                  description: error message
+                timestamp:
+                  type: string
+                  description: timestamp that error occur
+                path:
+                  type: string
+                  description: path error
+              description: default error model
+          description: When resource not found.
+      description: When purchaseOrder not found
+    api.Deviation.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: deviation created input
     api.Deviation.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: deviation list query input
+    api.Drug.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: drug created input
     api.Drug.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: drug list query input
+    api.GoodsReceipt.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: goods receipt created input
     api.GoodsReceipt.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: goods receipt list query input
-    api.PurchaseOrder.ListQueryInput:
+    api.Permission.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
-      description: purchase order list query input
+      description: permission list input
+    api.QARelease.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: qa release created input
     api.QARelease.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: qa release list query input
+    api.QCResult.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: qc result created input
     api.QCResult.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: qc result list query input
+    api.QCSample.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: qc sample created input
     api.QCSample.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: qc sample list query input
+    api.QCTest.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: qc test created input
     api.QCTest.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: qc test list query input
+    api.RawMaterial.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: raw material created input
     api.RawMaterial.ListQueryInput:
       type: object
       allOf:
@@ -822,16 +1018,39 @@ components:
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: list query input
+    api.Supplier.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: supplier created input
     api.Supplier.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: supplier list query input
+    api.User.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: user created input
     api.User.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: user list query input
+    api.Utils.Model.ApiCreatedOutput:
+      type: object
+      required:
+        - id
+        - created
+      properties:
+        id:
+          type: string
+          description: document id
+        created:
+          type: boolean
+          description: conditional if document was created
+      description: document created successfully
     api.Utils.Model.ApiPaginationInput:
       type: object
       required:

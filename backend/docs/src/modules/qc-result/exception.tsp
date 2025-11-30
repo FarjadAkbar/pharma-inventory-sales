@@ -4,7 +4,7 @@ import "../../utils/exceptions.tsp";
 using TypeSpec.Http;
 using api.Utils.Exception;
 
-namespace api.QcResult;
+namespace api.QCResult;
 
 // ## CREATE ## //
 @doc("When qcResult not found")

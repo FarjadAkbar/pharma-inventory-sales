@@ -1,37 +1,43 @@
 openapi: 3.0.0
 info:
-  title: Permission
+  title: QARelease
   version: '1.0'
 tags:
-  - name: Permission
+  - name: QARelease
 paths:
-  /api/{version}/permissions:
+  /api/{version}/qa-releases:
     post:
-      operationId: PermissionController_create
-      description: create permission
+      operationId: QAReleaseController_create
+      description: create qa release
       parameters:
         - $ref: '#/components/parameters/api.Utils.Versioning.VersionParams'
       responses:
-        '200':
-          description: permission created successfully
+        '201':
+          description: qa release created successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CreateOutput'
         '400':
-          description: When input is invalid
+          description: When input body is invalid
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateValidationError'
+                $ref: '#/components/schemas/CreateBodyValidationError'
+        '404':
+          description: When qaRelease not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateNotFoundError'
         '409':
-          description: When input is invalid
+          description: When qaRelease already exists
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConflictPermissionExistsError'
+                $ref: '#/components/schemas/CreateExistConflictError'
       tags:
-        - Permission
+        - QARelease
       requestBody:
         required: true
         content:
@@ -41,8 +47,8 @@ paths:
       security:
         - BearerAuth: []
     get:
-      operationId: PermissionController_list
-      description: list permission
+      operationId: QAReleaseController_list
+      description: list qa release
       parameters:
         - $ref: '#/components/parameters/api.Utils.Versioning.VersionParams'
         - $ref: '#/components/parameters/api.Utils.Model.ApiPaginationInput.page'
@@ -51,49 +57,49 @@ paths:
         - $ref: '#/components/parameters/api.Utils.Model.ApiPaginationInput.search'
       responses:
         '200':
-          description: list permission successfully
+          description: qa release listed successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ListOutput'
       tags:
-        - Permission
+        - QARelease
       security:
         - BearerAuth: []
-  /api/{version}/permissions/{id}:
+  /api/{version}/qa-releases/{id}:
     put:
-      operationId: PermissionController_update
-      description: update permission
+      operationId: QAReleaseController_update
+      description: update qa release
       parameters:
         - $ref: '#/components/parameters/api.Utils.Versioning.VersionParams'
         - $ref: '#/components/parameters/UpdateParamsInput'
       responses:
         '200':
-          description: permission updated successfully
+          description: qa release updated successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UpdateOutput'
         '400':
-          description: When input is invalid
+          description: When input params is invalid
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UpdateValidationError'
+                $ref: '#/components/schemas/UpdateParamsValidationError'
         '404':
-          description: When permission not found
+          description: When qaRelease not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UpdatePermissionNotFoundError'
+                $ref: '#/components/schemas/UpdateQaReleaseNotFoundError'
         '409':
-          description: When permission already exists
+          description: When qaRelease already exists
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UpdatePermissionAlreadyExistsError'
+                $ref: '#/components/schemas/UpdateExistConflictError'
       tags:
-        - Permission
+        - QARelease
       requestBody:
         required: true
         content:
@@ -103,61 +109,61 @@ paths:
       security:
         - BearerAuth: []
     get:
-      operationId: PermissionController_getById
-      description: get permission
+      operationId: QAReleaseController_getById
+      description: get qa release by id
       parameters:
         - $ref: '#/components/parameters/api.Utils.Versioning.VersionParams'
         - $ref: '#/components/parameters/GetByIdParamsInput'
       responses:
         '200':
-          description: get permission successfully
+          description: get qa release by id successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetByIdOutput'
         '400':
-          description: When input is invalid
+          description: When input params is invalid
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetByIdValidationError'
+                $ref: '#/components/schemas/GetByIdParamsValidationError'
         '404':
-          description: When permission not found
+          description: When qaRelease not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetByIdPermissionNotFoundError'
+                $ref: '#/components/schemas/GetByIdQaReleaseNotFoundError'
       tags:
-        - Permission
+        - QARelease
       security:
         - BearerAuth: []
     delete:
-      operationId: PermissionController_delete
-      description: delete permission
+      operationId: QAReleaseController_delete
+      description: delete qa release
       parameters:
         - $ref: '#/components/parameters/api.Utils.Versioning.VersionParams'
         - $ref: '#/components/parameters/DeleteParamsInput'
       responses:
         '200':
-          description: delete permission successfully
+          description: delete qa release successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/DeleteOutput'
         '400':
-          description: When input is invalid
+          description: When input params is invalid
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeleteValidationError'
+                $ref: '#/components/schemas/DeleteParamsValidationError'
         '404':
-          description: When permission not found
+          description: When qaRelease not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeletePermissionNotFoundError'
+                $ref: '#/components/schemas/DeleteQaReleaseNotFoundError'
       tags:
-        - Permission
+        - QARelease
       security:
         - BearerAuth: []
 components:
@@ -166,21 +172,21 @@ components:
       name: id
       in: path
       required: true
-      description: permission id
+      description: qa release id
       schema:
         type: string
     GetByIdParamsInput:
       name: id
       in: path
       required: true
-      description: permission id
+      description: qa release id
       schema:
         type: string
     UpdateParamsInput:
       name: id
       in: path
       required: true
-      description: permission id
+      description: qa release id
       schema:
         type: string
     api.Utils.Model.ApiPaginationInput.limit:
@@ -228,7 +234,51 @@ components:
       schema:
         $ref: '#/components/schemas/api.Utils.Versioning.ApiVersion'
   schemas:
-    ConflictPermissionExistsError:
+    CreateBodyValidationError:
+      type: object
+      allOf:
+        - type: object
+          required:
+            - error
+          properties:
+            error:
+              type: object
+              required:
+                - code
+                - traceid
+                - context
+                - message
+                - timestamp
+                - path
+              properties:
+                code:
+                  type: number
+                  enum:
+                    - 400
+                  description: status code
+                traceid:
+                  type: string
+                  description: request traceid
+                context:
+                  type: string
+                  description: class that error occur
+                message:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - 'description: Required, type: Required'
+                  description: error message
+                timestamp:
+                  type: string
+                  description: timestamp that error occur
+                path:
+                  type: string
+                  description: path error
+              description: default error model
+          description: When input is invalid.
+      description: When input body is invalid
+    CreateExistConflictError:
       type: object
       allOf:
         - type: object
@@ -261,7 +311,7 @@ components:
                   items:
                     type: string
                     enum:
-                      - permissionExists
+                      - qaReleaseExists
                   description: error message
                 timestamp:
                   type: string
@@ -271,138 +321,105 @@ components:
                   description: path error
               description: default error model
           description: When conflict occour.
-      description: When input is invalid
+      description: When qaRelease already exists
     CreateInput:
       type: object
       allOf:
         - type: object
           required:
-            - name
+            - entityType
+            - entityId
+            - decision
+            - remarks
+            - releasedBy
+            - releasedAt
           properties:
-            name:
+            entityType:
               type: string
-          description: The template for picking properties.
-      description: permission create input
+              enum:
+                - GoodsReceipt
+                - Batch
+            entityId:
+              type: string
+            decision:
+              type: string
+              enum:
+                - Release
+                - Reject
+                - Hold
+            qcSampleId:
+              type: string
+            remarks:
+              type: string
+            releasedBy:
+              type: string
+            releasedAt:
+              type: string
+              format: date-time
+          description: The template for omitting properties.
+      description: qa release create input
+    CreateNotFoundError:
+      type: object
+      allOf:
+        - type: object
+          required:
+            - error
+          properties:
+            error:
+              type: object
+              required:
+                - code
+                - traceid
+                - context
+                - message
+                - timestamp
+                - path
+              properties:
+                code:
+                  type: number
+                  enum:
+                    - 404
+                  description: status code
+                traceid:
+                  type: string
+                  description: request traceid
+                context:
+                  type: string
+                  description: class that error occur
+                message:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - qaReleaseNotFound
+                  description: error message
+                timestamp:
+                  type: string
+                  description: timestamp that error occur
+                path:
+                  type: string
+                  description: path error
+              description: default error model
+          description: When resource not found.
+      description: When qaRelease not found
     CreateOutput:
       type: object
       allOf:
-        - $ref: '#/components/schemas/PermisisonEntity'
-      description: permission create output
-    CreateValidationError:
-      type: object
-      allOf:
-        - type: object
-          required:
-            - error
-          properties:
-            error:
-              type: object
-              required:
-                - code
-                - traceid
-                - context
-                - message
-                - timestamp
-                - path
-              properties:
-                code:
-                  type: number
-                  enum:
-                    - 400
-                  description: status code
-                traceid:
-                  type: string
-                  description: request traceid
-                context:
-                  type: string
-                  description: class that error occur
-                message:
-                  type: array
-                  items:
-                    type: string
-                    enum:
-                      - 'name: Required'
-                  description: error message
-                timestamp:
-                  type: string
-                  description: timestamp that error occur
-                path:
-                  type: string
-                  description: path error
-              description: default error model
-          description: When input is invalid.
-      description: When input is invalid
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: qa release created input
     DeleteOutput:
       type: object
       required:
-        - deletedAt
+        - deleted
+        - deletedCount
       properties:
-        deletedAt:
-          type: string
-          format: date-time
-      allOf:
-        - type: object
-          required:
-            - id
-            - name
-            - createdAt
-            - updatedAt
-          properties:
-            id:
-              type: string
-            name:
-              type: string
-            createdAt:
-              type: string
-            updatedAt:
-              type: string
-          description: The template for omitting properties.
-      description: permission depete output
-    DeletePermissionNotFoundError:
-      type: object
-      allOf:
-        - type: object
-          required:
-            - error
-          properties:
-            error:
-              type: object
-              required:
-                - code
-                - traceid
-                - context
-                - message
-                - timestamp
-                - path
-              properties:
-                code:
-                  type: number
-                  enum:
-                    - 404
-                  description: status code
-                traceid:
-                  type: string
-                  description: request traceid
-                context:
-                  type: string
-                  description: class that error occur
-                message:
-                  type: array
-                  items:
-                    type: string
-                    enum:
-                      - permissionNotFound
-                  description: error message
-                timestamp:
-                  type: string
-                  description: timestamp that error occur
-                path:
-                  type: string
-                  description: path error
-              description: default error model
-          description: When resource not found.
-      description: When permission not found
-    DeleteValidationError:
+        deleted:
+          type: boolean
+        deletedCount:
+          type: number
+          format: double
+      description: qa release delete output
+    DeleteParamsValidationError:
       type: object
       allOf:
         - type: object
@@ -445,78 +462,57 @@ components:
                   description: path error
               description: default error model
           description: When input is invalid.
-      description: When input is invalid
+      description: When input params is invalid
+    DeleteQaReleaseNotFoundError:
+      type: object
+      allOf:
+        - type: object
+          required:
+            - error
+          properties:
+            error:
+              type: object
+              required:
+                - code
+                - traceid
+                - context
+                - message
+                - timestamp
+                - path
+              properties:
+                code:
+                  type: number
+                  enum:
+                    - 404
+                  description: status code
+                traceid:
+                  type: string
+                  description: request traceid
+                context:
+                  type: string
+                  description: class that error occur
+                message:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - qaReleaseNotFound
+                  description: error message
+                timestamp:
+                  type: string
+                  description: timestamp that error occur
+                path:
+                  type: string
+                  description: path error
+              description: default error model
+          description: When resource not found.
+      description: When qaRelease not found
     GetByIdOutput:
       type: object
-      required:
-        - deletedAt
-      properties:
-        deletedAt:
-          type: string
-          format: date-time
       allOf:
-        - type: object
-          required:
-            - id
-            - name
-            - createdAt
-            - updatedAt
-          properties:
-            id:
-              type: string
-            name:
-              type: string
-            createdAt:
-              type: string
-            updatedAt:
-              type: string
-          description: The template for omitting properties.
-      description: permission get by id output
-    GetByIdPermissionNotFoundError:
-      type: object
-      allOf:
-        - type: object
-          required:
-            - error
-          properties:
-            error:
-              type: object
-              required:
-                - code
-                - traceid
-                - context
-                - message
-                - timestamp
-                - path
-              properties:
-                code:
-                  type: number
-                  enum:
-                    - 404
-                  description: status code
-                traceid:
-                  type: string
-                  description: request traceid
-                context:
-                  type: string
-                  description: class that error occur
-                message:
-                  type: array
-                  items:
-                    type: string
-                    enum:
-                      - permissionNotFound
-                  description: error message
-                timestamp:
-                  type: string
-                  description: timestamp that error occur
-                path:
-                  type: string
-                  description: path error
-              description: default error model
-          description: When resource not found.
-      description: When permission not found
-    GetByIdValidationError:
+        - $ref: '#/components/schemas/QAReleaseEntity'
+      description: get qa release by id output
+    GetByIdParamsValidationError:
       type: object
       allOf:
         - type: object
@@ -559,7 +555,51 @@ components:
                   description: path error
               description: default error model
           description: When input is invalid.
-      description: When input is invalid
+      description: When input params is invalid
+    GetByIdQaReleaseNotFoundError:
+      type: object
+      allOf:
+        - type: object
+          required:
+            - error
+          properties:
+            error:
+              type: object
+              required:
+                - code
+                - traceid
+                - context
+                - message
+                - timestamp
+                - path
+              properties:
+                code:
+                  type: number
+                  enum:
+                    - 404
+                  description: status code
+                traceid:
+                  type: string
+                  description: request traceid
+                context:
+                  type: string
+                  description: class that error occur
+                message:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - qaReleaseNotFound
+                  description: error message
+                timestamp:
+                  type: string
+                  description: timestamp that error occur
+                path:
+                  type: string
+                  description: path error
+              description: default error model
+          description: When resource not found.
+      description: When qaRelease not found
     ListOutput:
       type: object
       allOf:
@@ -573,7 +613,7 @@ components:
             docs:
               type: array
               items:
-                $ref: '#/components/schemas/PermisisonEntity'
+                $ref: '#/components/schemas/QAReleaseEntity'
               description: documents
             page:
               type: integer
@@ -596,51 +636,55 @@ components:
               description: total pages
               default: 1
           description: pagination default response
-      description: permission list output
+      description: qa release list output
     ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
-      description: permission list input
-    PermisisonEntity:
+      description: qa release list query input
+    QAReleaseEntity:
       type: object
       required:
         - id
-        - name
+        - entityType
+        - entityId
+        - decision
+        - remarks
+        - releasedBy
+        - releasedAt
         - createdAt
         - updatedAt
-        - deletedAt
       properties:
         id:
           type: string
-        name:
+        entityType:
           type: string
+          enum:
+            - GoodsReceipt
+            - Batch
+        entityId:
+          type: string
+        decision:
+          type: string
+          enum:
+            - Release
+            - Reject
+            - Hold
+        qcSampleId:
+          type: string
+        remarks:
+          type: string
+        releasedBy:
+          type: string
+        releasedAt:
+          type: string
+          format: date-time
         createdAt:
           type: string
         updatedAt:
           type: string
-        deletedAt:
-          type: string
-          nullable: true
-          default: null
-      description: permission base entity
-    UpdateInput:
-      type: object
-      allOf:
-        - type: object
-          required:
-            - name
-          properties:
-            name:
-              type: string
-          description: The template for picking properties.
-      description: permission update input
-    UpdateOutput:
-      type: object
-      allOf:
-        - $ref: '#/components/schemas/PermisisonEntity'
-      description: permission update output
-    UpdatePermissionAlreadyExistsError:
+      description: qa release base entity
+    UpdateExistConflictError:
       type: object
       allOf:
         - type: object
@@ -673,7 +717,7 @@ components:
                   items:
                     type: string
                     enum:
-                      - permissionExists
+                      - qaReleaseExists
                   description: error message
                 timestamp:
                   type: string
@@ -683,52 +727,49 @@ components:
                   description: path error
               description: default error model
           description: When conflict occour.
-      description: When permission already exists
-    UpdatePermissionNotFoundError:
+      description: When qaRelease already exists
+    UpdateInput:
       type: object
       allOf:
         - type: object
           required:
-            - error
+            - entityType
+            - entityId
+            - decision
+            - remarks
+            - releasedBy
+            - releasedAt
           properties:
-            error:
-              type: object
-              required:
-                - code
-                - traceid
-                - context
-                - message
-                - timestamp
-                - path
-              properties:
-                code:
-                  type: number
-                  enum:
-                    - 404
-                  description: status code
-                traceid:
-                  type: string
-                  description: request traceid
-                context:
-                  type: string
-                  description: class that error occur
-                message:
-                  type: array
-                  items:
-                    type: string
-                    enum:
-                      - permissionNotFound
-                  description: error message
-                timestamp:
-                  type: string
-                  description: timestamp that error occur
-                path:
-                  type: string
-                  description: path error
-              description: default error model
-          description: When resource not found.
-      description: When permission not found
-    UpdateValidationError:
+            entityType:
+              type: string
+              enum:
+                - GoodsReceipt
+                - Batch
+            entityId:
+              type: string
+            decision:
+              type: string
+              enum:
+                - Release
+                - Reject
+                - Hold
+            qcSampleId:
+              type: string
+            remarks:
+              type: string
+            releasedBy:
+              type: string
+            releasedAt:
+              type: string
+              format: date-time
+          description: The template for omitting properties.
+      description: qa release update input
+    UpdateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/QAReleaseEntity'
+      description: qa release update output
+    UpdateParamsValidationError:
       type: object
       allOf:
         - type: object
@@ -771,47 +812,131 @@ components:
                   description: path error
               description: default error model
           description: When input is invalid.
-      description: When input is invalid
+      description: When input params is invalid
+    UpdateQaReleaseNotFoundError:
+      type: object
+      allOf:
+        - type: object
+          required:
+            - error
+          properties:
+            error:
+              type: object
+              required:
+                - code
+                - traceid
+                - context
+                - message
+                - timestamp
+                - path
+              properties:
+                code:
+                  type: number
+                  enum:
+                    - 404
+                  description: status code
+                traceid:
+                  type: string
+                  description: request traceid
+                context:
+                  type: string
+                  description: class that error occur
+                message:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - qaReleaseNotFound
+                  description: error message
+                timestamp:
+                  type: string
+                  description: timestamp that error occur
+                path:
+                  type: string
+                  description: path error
+              description: default error model
+          description: When resource not found.
+      description: When qaRelease not found
+    api.Deviation.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: deviation created input
     api.Deviation.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: deviation list query input
+    api.Drug.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: drug created input
     api.Drug.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: drug list query input
+    api.GoodsReceipt.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: goods receipt created input
     api.GoodsReceipt.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: goods receipt list query input
+    api.Permission.ListQueryInput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
+      description: permission list input
+    api.PurchaseOrder.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: purchase order created input
     api.PurchaseOrder.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: purchase order list query input
-    api.QARelease.ListQueryInput:
+    api.QCResult.CreateOutput:
       type: object
       allOf:
-        - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
-      description: qa release list query input
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: qc result created input
     api.QCResult.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: qc result list query input
+    api.QCSample.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: qc sample created input
     api.QCSample.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: qc sample list query input
+    api.QCTest.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: qc test created input
     api.QCTest.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: qc test list query input
+    api.RawMaterial.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: raw material created input
     api.RawMaterial.ListQueryInput:
       type: object
       allOf:
@@ -822,16 +947,39 @@ components:
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: list query input
+    api.Supplier.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: supplier created input
     api.Supplier.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: supplier list query input
+    api.User.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: user created input
     api.User.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: user list query input
+    api.Utils.Model.ApiCreatedOutput:
+      type: object
+      required:
+        - id
+        - created
+      properties:
+        id:
+          type: string
+          description: document id
+        created:
+          type: boolean
+          description: conditional if document was created
+      description: document created successfully
     api.Utils.Model.ApiPaginationInput:
       type: object
       required:

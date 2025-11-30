@@ -1,37 +1,43 @@
 openapi: 3.0.0
 info:
-  title: Permission
+  title: Deviation
   version: '1.0'
 tags:
-  - name: Permission
+  - name: Deviation
 paths:
-  /api/{version}/permissions:
+  /api/{version}/deviations:
     post:
-      operationId: PermissionController_create
-      description: create permission
+      operationId: DeviationController_create
+      description: create deviation
       parameters:
         - $ref: '#/components/parameters/api.Utils.Versioning.VersionParams'
       responses:
-        '200':
-          description: permission created successfully
+        '201':
+          description: deviation created successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CreateOutput'
         '400':
-          description: When input is invalid
+          description: When input body is invalid
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateValidationError'
+                $ref: '#/components/schemas/CreateBodyValidationError'
+        '404':
+          description: When deviation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateNotFoundError'
         '409':
-          description: When input is invalid
+          description: When deviation already exists
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConflictPermissionExistsError'
+                $ref: '#/components/schemas/CreateExistConflictError'
       tags:
-        - Permission
+        - Deviation
       requestBody:
         required: true
         content:
@@ -41,8 +47,8 @@ paths:
       security:
         - BearerAuth: []
     get:
-      operationId: PermissionController_list
-      description: list permission
+      operationId: DeviationController_list
+      description: list deviation
       parameters:
         - $ref: '#/components/parameters/api.Utils.Versioning.VersionParams'
         - $ref: '#/components/parameters/api.Utils.Model.ApiPaginationInput.page'
@@ -51,49 +57,49 @@ paths:
         - $ref: '#/components/parameters/api.Utils.Model.ApiPaginationInput.search'
       responses:
         '200':
-          description: list permission successfully
+          description: deviation listed successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ListOutput'
       tags:
-        - Permission
+        - Deviation
       security:
         - BearerAuth: []
-  /api/{version}/permissions/{id}:
+  /api/{version}/deviations/{id}:
     put:
-      operationId: PermissionController_update
-      description: update permission
+      operationId: DeviationController_update
+      description: update deviation
       parameters:
         - $ref: '#/components/parameters/api.Utils.Versioning.VersionParams'
         - $ref: '#/components/parameters/UpdateParamsInput'
       responses:
         '200':
-          description: permission updated successfully
+          description: deviation updated successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UpdateOutput'
         '400':
-          description: When input is invalid
+          description: When input params is invalid
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UpdateValidationError'
+                $ref: '#/components/schemas/UpdateParamsValidationError'
         '404':
-          description: When permission not found
+          description: When deviation not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UpdatePermissionNotFoundError'
+                $ref: '#/components/schemas/UpdateDeviationNotFoundError'
         '409':
-          description: When permission already exists
+          description: When deviation already exists
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UpdatePermissionAlreadyExistsError'
+                $ref: '#/components/schemas/UpdateExistConflictError'
       tags:
-        - Permission
+        - Deviation
       requestBody:
         required: true
         content:
@@ -103,61 +109,61 @@ paths:
       security:
         - BearerAuth: []
     get:
-      operationId: PermissionController_getById
-      description: get permission
+      operationId: DeviationController_getById
+      description: get deviation by id
       parameters:
         - $ref: '#/components/parameters/api.Utils.Versioning.VersionParams'
         - $ref: '#/components/parameters/GetByIdParamsInput'
       responses:
         '200':
-          description: get permission successfully
+          description: get deviation by id successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetByIdOutput'
         '400':
-          description: When input is invalid
+          description: When input params is invalid
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetByIdValidationError'
+                $ref: '#/components/schemas/GetByIdParamsValidationError'
         '404':
-          description: When permission not found
+          description: When deviation not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetByIdPermissionNotFoundError'
+                $ref: '#/components/schemas/GetByIdDeviationNotFoundError'
       tags:
-        - Permission
+        - Deviation
       security:
         - BearerAuth: []
     delete:
-      operationId: PermissionController_delete
-      description: delete permission
+      operationId: DeviationController_delete
+      description: delete deviation
       parameters:
         - $ref: '#/components/parameters/api.Utils.Versioning.VersionParams'
         - $ref: '#/components/parameters/DeleteParamsInput'
       responses:
         '200':
-          description: delete permission successfully
+          description: delete deviation successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/DeleteOutput'
         '400':
-          description: When input is invalid
+          description: When input params is invalid
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeleteValidationError'
+                $ref: '#/components/schemas/DeleteParamsValidationError'
         '404':
-          description: When permission not found
+          description: When deviation not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeletePermissionNotFoundError'
+                $ref: '#/components/schemas/DeleteDeviationNotFoundError'
       tags:
-        - Permission
+        - Deviation
       security:
         - BearerAuth: []
 components:
@@ -166,21 +172,21 @@ components:
       name: id
       in: path
       required: true
-      description: permission id
+      description: deviation id
       schema:
         type: string
     GetByIdParamsInput:
       name: id
       in: path
       required: true
-      description: permission id
+      description: deviation id
       schema:
         type: string
     UpdateParamsInput:
       name: id
       in: path
       required: true
-      description: permission id
+      description: deviation id
       schema:
         type: string
     api.Utils.Model.ApiPaginationInput.limit:
@@ -228,7 +234,51 @@ components:
       schema:
         $ref: '#/components/schemas/api.Utils.Versioning.ApiVersion'
   schemas:
-    ConflictPermissionExistsError:
+    CreateBodyValidationError:
+      type: object
+      allOf:
+        - type: object
+          required:
+            - error
+          properties:
+            error:
+              type: object
+              required:
+                - code
+                - traceid
+                - context
+                - message
+                - timestamp
+                - path
+              properties:
+                code:
+                  type: number
+                  enum:
+                    - 400
+                  description: status code
+                traceid:
+                  type: string
+                  description: request traceid
+                context:
+                  type: string
+                  description: class that error occur
+                message:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - 'description: Required, type: Required'
+                  description: error message
+                timestamp:
+                  type: string
+                  description: timestamp that error occur
+                path:
+                  type: string
+                  description: path error
+              description: default error model
+          description: When input is invalid.
+      description: When input body is invalid
+    CreateExistConflictError:
       type: object
       allOf:
         - type: object
@@ -261,7 +311,7 @@ components:
                   items:
                     type: string
                     enum:
-                      - permissionExists
+                      - deviationExists
                   description: error message
                 timestamp:
                   type: string
@@ -271,24 +321,92 @@ components:
                   description: path error
               description: default error model
           description: When conflict occour.
-      description: When input is invalid
+      description: When deviation already exists
     CreateInput:
       type: object
       allOf:
         - type: object
           required:
-            - name
+            - title
+            - description
+            - severity
+            - status
+            - correctiveActions
           properties:
-            name:
+            title:
               type: string
-          description: The template for picking properties.
-      description: permission create input
+            description:
+              type: string
+            severity:
+              type: string
+              enum:
+                - Low
+                - Medium
+                - High
+                - Critical
+            status:
+              type: string
+              enum:
+                - Open
+                - Investigating
+                - Resolved
+                - Closed
+            rootCause:
+              type: string
+            correctiveActions:
+              type: string
+          description: The template for omitting properties.
+      description: deviation create input
+    CreateNotFoundError:
+      type: object
+      allOf:
+        - type: object
+          required:
+            - error
+          properties:
+            error:
+              type: object
+              required:
+                - code
+                - traceid
+                - context
+                - message
+                - timestamp
+                - path
+              properties:
+                code:
+                  type: number
+                  enum:
+                    - 404
+                  description: status code
+                traceid:
+                  type: string
+                  description: request traceid
+                context:
+                  type: string
+                  description: class that error occur
+                message:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - deviationNotFound
+                  description: error message
+                timestamp:
+                  type: string
+                  description: timestamp that error occur
+                path:
+                  type: string
+                  description: path error
+              description: default error model
+          description: When resource not found.
+      description: When deviation not found
     CreateOutput:
       type: object
       allOf:
-        - $ref: '#/components/schemas/PermisisonEntity'
-      description: permission create output
-    CreateValidationError:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: deviation created input
+    DeleteDeviationNotFoundError:
       type: object
       allOf:
         - type: object
@@ -308,7 +426,7 @@ components:
                 code:
                   type: number
                   enum:
-                    - 400
+                    - 404
                   description: status code
                 traceid:
                   type: string
@@ -321,7 +439,7 @@ components:
                   items:
                     type: string
                     enum:
-                      - 'name: Required'
+                      - deviationNotFound
                   description: error message
                 timestamp:
                   type: string
@@ -330,79 +448,21 @@ components:
                   type: string
                   description: path error
               description: default error model
-          description: When input is invalid.
-      description: When input is invalid
+          description: When resource not found.
+      description: When deviation not found
     DeleteOutput:
       type: object
       required:
-        - deletedAt
+        - deleted
+        - deletedCount
       properties:
-        deletedAt:
-          type: string
-          format: date-time
-      allOf:
-        - type: object
-          required:
-            - id
-            - name
-            - createdAt
-            - updatedAt
-          properties:
-            id:
-              type: string
-            name:
-              type: string
-            createdAt:
-              type: string
-            updatedAt:
-              type: string
-          description: The template for omitting properties.
-      description: permission depete output
-    DeletePermissionNotFoundError:
-      type: object
-      allOf:
-        - type: object
-          required:
-            - error
-          properties:
-            error:
-              type: object
-              required:
-                - code
-                - traceid
-                - context
-                - message
-                - timestamp
-                - path
-              properties:
-                code:
-                  type: number
-                  enum:
-                    - 404
-                  description: status code
-                traceid:
-                  type: string
-                  description: request traceid
-                context:
-                  type: string
-                  description: class that error occur
-                message:
-                  type: array
-                  items:
-                    type: string
-                    enum:
-                      - permissionNotFound
-                  description: error message
-                timestamp:
-                  type: string
-                  description: timestamp that error occur
-                path:
-                  type: string
-                  description: path error
-              description: default error model
-          description: When resource not found.
-      description: When permission not found
-    DeleteValidationError:
+        deleted:
+          type: boolean
+        deletedCount:
+          type: number
+          format: double
+      description: deviation delete output
+    DeleteParamsValidationError:
       type: object
       allOf:
         - type: object
@@ -445,34 +505,52 @@ components:
                   description: path error
               description: default error model
           description: When input is invalid.
-      description: When input is invalid
-    GetByIdOutput:
+      description: When input params is invalid
+    DeviationEntity:
       type: object
       required:
-        - deletedAt
+        - id
+        - deviationNumber
+        - title
+        - description
+        - severity
+        - status
+        - correctiveActions
+        - createdAt
+        - updatedAt
       properties:
-        deletedAt:
+        id:
           type: string
-          format: date-time
-      allOf:
-        - type: object
-          required:
-            - id
-            - name
-            - createdAt
-            - updatedAt
-          properties:
-            id:
-              type: string
-            name:
-              type: string
-            createdAt:
-              type: string
-            updatedAt:
-              type: string
-          description: The template for omitting properties.
-      description: permission get by id output
-    GetByIdPermissionNotFoundError:
+        deviationNumber:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        severity:
+          type: string
+          enum:
+            - Low
+            - Medium
+            - High
+            - Critical
+        status:
+          type: string
+          enum:
+            - Open
+            - Investigating
+            - Resolved
+            - Closed
+        rootCause:
+          type: string
+        correctiveActions:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      description: deviation base entity
+    GetByIdDeviationNotFoundError:
       type: object
       allOf:
         - type: object
@@ -505,7 +583,7 @@ components:
                   items:
                     type: string
                     enum:
-                      - permissionNotFound
+                      - deviationNotFound
                   description: error message
                 timestamp:
                   type: string
@@ -515,8 +593,13 @@ components:
                   description: path error
               description: default error model
           description: When resource not found.
-      description: When permission not found
-    GetByIdValidationError:
+      description: When deviation not found
+    GetByIdOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/DeviationEntity'
+      description: get deviation by id output
+    GetByIdParamsValidationError:
       type: object
       allOf:
         - type: object
@@ -559,7 +642,7 @@ components:
                   description: path error
               description: default error model
           description: When input is invalid.
-      description: When input is invalid
+      description: When input params is invalid
     ListOutput:
       type: object
       allOf:
@@ -573,7 +656,7 @@ components:
             docs:
               type: array
               items:
-                $ref: '#/components/schemas/PermisisonEntity'
+                $ref: '#/components/schemas/DeviationEntity'
               description: documents
             page:
               type: integer
@@ -596,95 +679,13 @@ components:
               description: total pages
               default: 1
           description: pagination default response
-      description: permission list output
+      description: deviation list output
     ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
-      description: permission list input
-    PermisisonEntity:
-      type: object
-      required:
-        - id
-        - name
-        - createdAt
-        - updatedAt
-        - deletedAt
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        createdAt:
-          type: string
-        updatedAt:
-          type: string
-        deletedAt:
-          type: string
-          nullable: true
-          default: null
-      description: permission base entity
-    UpdateInput:
-      type: object
-      allOf:
-        - type: object
-          required:
-            - name
-          properties:
-            name:
-              type: string
-          description: The template for picking properties.
-      description: permission update input
-    UpdateOutput:
-      type: object
-      allOf:
-        - $ref: '#/components/schemas/PermisisonEntity'
-      description: permission update output
-    UpdatePermissionAlreadyExistsError:
-      type: object
-      allOf:
-        - type: object
-          required:
-            - error
-          properties:
-            error:
-              type: object
-              required:
-                - code
-                - traceid
-                - context
-                - message
-                - timestamp
-                - path
-              properties:
-                code:
-                  type: number
-                  enum:
-                    - 409
-                  description: status code
-                traceid:
-                  type: string
-                  description: request traceid
-                context:
-                  type: string
-                  description: class that error occur
-                message:
-                  type: array
-                  items:
-                    type: string
-                    enum:
-                      - permissionExists
-                  description: error message
-                timestamp:
-                  type: string
-                  description: timestamp that error occur
-                path:
-                  type: string
-                  description: path error
-              description: default error model
-          description: When conflict occour.
-      description: When permission already exists
-    UpdatePermissionNotFoundError:
+      description: deviation list query input
+    UpdateDeviationNotFoundError:
       type: object
       allOf:
         - type: object
@@ -717,7 +718,7 @@ components:
                   items:
                     type: string
                     enum:
-                      - permissionNotFound
+                      - deviationNotFound
                   description: error message
                 timestamp:
                   type: string
@@ -727,8 +728,92 @@ components:
                   description: path error
               description: default error model
           description: When resource not found.
-      description: When permission not found
-    UpdateValidationError:
+      description: When deviation not found
+    UpdateExistConflictError:
+      type: object
+      allOf:
+        - type: object
+          required:
+            - error
+          properties:
+            error:
+              type: object
+              required:
+                - code
+                - traceid
+                - context
+                - message
+                - timestamp
+                - path
+              properties:
+                code:
+                  type: number
+                  enum:
+                    - 409
+                  description: status code
+                traceid:
+                  type: string
+                  description: request traceid
+                context:
+                  type: string
+                  description: class that error occur
+                message:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - deviationExists
+                  description: error message
+                timestamp:
+                  type: string
+                  description: timestamp that error occur
+                path:
+                  type: string
+                  description: path error
+              description: default error model
+          description: When conflict occour.
+      description: When deviation already exists
+    UpdateInput:
+      type: object
+      allOf:
+        - type: object
+          required:
+            - title
+            - description
+            - severity
+            - status
+            - correctiveActions
+          properties:
+            title:
+              type: string
+            description:
+              type: string
+            severity:
+              type: string
+              enum:
+                - Low
+                - Medium
+                - High
+                - Critical
+            status:
+              type: string
+              enum:
+                - Open
+                - Investigating
+                - Resolved
+                - Closed
+            rootCause:
+              type: string
+            correctiveActions:
+              type: string
+          description: The template for omitting properties.
+      description: deviation update input
+    UpdateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/DeviationEntity'
+      description: deviation update output
+    UpdateParamsValidationError:
       type: object
       allOf:
         - type: object
@@ -771,47 +856,87 @@ components:
                   description: path error
               description: default error model
           description: When input is invalid.
-      description: When input is invalid
-    api.Deviation.ListQueryInput:
+      description: When input params is invalid
+    api.Drug.CreateOutput:
       type: object
       allOf:
-        - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
-      description: deviation list query input
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: drug created input
     api.Drug.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: drug list query input
+    api.GoodsReceipt.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: goods receipt created input
     api.GoodsReceipt.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: goods receipt list query input
+    api.Permission.ListQueryInput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
+      description: permission list input
+    api.PurchaseOrder.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: purchase order created input
     api.PurchaseOrder.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: purchase order list query input
+    api.QARelease.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: qa release created input
     api.QARelease.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: qa release list query input
+    api.QCResult.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: qc result created input
     api.QCResult.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: qc result list query input
+    api.QCSample.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: qc sample created input
     api.QCSample.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: qc sample list query input
+    api.QCTest.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: qc test created input
     api.QCTest.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: qc test list query input
+    api.RawMaterial.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: raw material created input
     api.RawMaterial.ListQueryInput:
       type: object
       allOf:
@@ -822,16 +947,39 @@ components:
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: list query input
+    api.Supplier.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: supplier created input
     api.Supplier.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: supplier list query input
+    api.User.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: user created input
     api.User.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: user list query input
+    api.Utils.Model.ApiCreatedOutput:
+      type: object
+      required:
+        - id
+        - created
+      properties:
+        id:
+          type: string
+          description: document id
+        created:
+          type: boolean
+          description: conditional if document was created
+      description: document created successfully
     api.Utils.Model.ApiPaginationInput:
       type: object
       required:

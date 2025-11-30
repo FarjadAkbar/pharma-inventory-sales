@@ -1,37 +1,43 @@
 openapi: 3.0.0
 info:
-  title: Permission
+  title: Drug
   version: '1.0'
 tags:
-  - name: Permission
+  - name: Drug
 paths:
-  /api/{version}/permissions:
+  /api/{version}/drugs:
     post:
-      operationId: PermissionController_create
-      description: create permission
+      operationId: DrugController_create
+      description: create drug
       parameters:
         - $ref: '#/components/parameters/api.Utils.Versioning.VersionParams'
       responses:
-        '200':
-          description: permission created successfully
+        '201':
+          description: drug created successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CreateOutput'
         '400':
-          description: When input is invalid
+          description: When input body is invalid
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateValidationError'
+                $ref: '#/components/schemas/CreateBodyValidationError'
+        '404':
+          description: When drug not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateNotFoundError'
         '409':
-          description: When input is invalid
+          description: When drug already exists
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConflictPermissionExistsError'
+                $ref: '#/components/schemas/CreateExistConflictError'
       tags:
-        - Permission
+        - Drug
       requestBody:
         required: true
         content:
@@ -41,8 +47,8 @@ paths:
       security:
         - BearerAuth: []
     get:
-      operationId: PermissionController_list
-      description: list permission
+      operationId: DrugController_list
+      description: list drug
       parameters:
         - $ref: '#/components/parameters/api.Utils.Versioning.VersionParams'
         - $ref: '#/components/parameters/api.Utils.Model.ApiPaginationInput.page'
@@ -51,49 +57,109 @@ paths:
         - $ref: '#/components/parameters/api.Utils.Model.ApiPaginationInput.search'
       responses:
         '200':
-          description: list permission successfully
+          description: drug listed successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ListOutput'
       tags:
-        - Permission
+        - Drug
       security:
         - BearerAuth: []
-  /api/{version}/permissions/{id}:
+  /api/{version}/drugs/approve/{id}:
     put:
-      operationId: PermissionController_update
-      description: update permission
+      operationId: DrugController_approve
+      description: approve drug
+      parameters:
+        - $ref: '#/components/parameters/api.Utils.Versioning.VersionParams'
+        - $ref: '#/components/parameters/ApproveParamsInput'
+      responses:
+        '200':
+          description: drug approved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApproveOutput'
+        '400':
+          description: When input params is invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateParamsValidationError'
+        '404':
+          description: When drug not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateDrugNotFoundError'
+      tags:
+        - Drug
+      security:
+        - BearerAuth: []
+  /api/{version}/drugs/reject/{id}:
+    put:
+      operationId: DrugController_reject
+      description: reject drug
+      parameters:
+        - $ref: '#/components/parameters/api.Utils.Versioning.VersionParams'
+        - $ref: '#/components/parameters/RejectParamsInput'
+      responses:
+        '200':
+          description: drug rejected successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RejectOutput'
+        '400':
+          description: When input params is invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateParamsValidationError'
+        '404':
+          description: When drug not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateDrugNotFoundError'
+      tags:
+        - Drug
+      security:
+        - BearerAuth: []
+  /api/{version}/drugs/{id}:
+    put:
+      operationId: DrugController_update
+      description: update drug
       parameters:
         - $ref: '#/components/parameters/api.Utils.Versioning.VersionParams'
         - $ref: '#/components/parameters/UpdateParamsInput'
       responses:
         '200':
-          description: permission updated successfully
+          description: drug updated successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UpdateOutput'
         '400':
-          description: When input is invalid
+          description: When input params is invalid
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UpdateValidationError'
+                $ref: '#/components/schemas/UpdateParamsValidationError'
         '404':
-          description: When permission not found
+          description: When drug not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UpdatePermissionNotFoundError'
+                $ref: '#/components/schemas/UpdateDrugNotFoundError'
         '409':
-          description: When permission already exists
+          description: When drug already exists
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UpdatePermissionAlreadyExistsError'
+                $ref: '#/components/schemas/UpdateExistConflictError'
       tags:
-        - Permission
+        - Drug
       requestBody:
         required: true
         content:
@@ -103,84 +169,98 @@ paths:
       security:
         - BearerAuth: []
     get:
-      operationId: PermissionController_getById
-      description: get permission
+      operationId: DrugController_getById
+      description: get drug by id
       parameters:
         - $ref: '#/components/parameters/api.Utils.Versioning.VersionParams'
         - $ref: '#/components/parameters/GetByIdParamsInput'
       responses:
         '200':
-          description: get permission successfully
+          description: get drug by id successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetByIdOutput'
         '400':
-          description: When input is invalid
+          description: When input params is invalid
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetByIdValidationError'
+                $ref: '#/components/schemas/GetByIdParamsValidationError'
         '404':
-          description: When permission not found
+          description: When drug not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetByIdPermissionNotFoundError'
+                $ref: '#/components/schemas/GetByIdDrugNotFoundError'
       tags:
-        - Permission
+        - Drug
       security:
         - BearerAuth: []
     delete:
-      operationId: PermissionController_delete
-      description: delete permission
+      operationId: DrugController_delete
+      description: delete drug
       parameters:
         - $ref: '#/components/parameters/api.Utils.Versioning.VersionParams'
         - $ref: '#/components/parameters/DeleteParamsInput'
       responses:
         '200':
-          description: delete permission successfully
+          description: delete drug successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/DeleteOutput'
         '400':
-          description: When input is invalid
+          description: When input params is invalid
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeleteValidationError'
+                $ref: '#/components/schemas/DeleteParamsValidationError'
         '404':
-          description: When permission not found
+          description: When drug not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeletePermissionNotFoundError'
+                $ref: '#/components/schemas/DeleteDrugNotFoundError'
       tags:
-        - Permission
+        - Drug
       security:
         - BearerAuth: []
 components:
   parameters:
+    ApproveParamsInput:
+      name: id
+      in: path
+      required: true
+      description: drug id
+      schema:
+        type: string
     DeleteParamsInput:
       name: id
       in: path
       required: true
-      description: permission id
+      description: drug id
       schema:
         type: string
     GetByIdParamsInput:
       name: id
       in: path
       required: true
-      description: permission id
+      description: drug id
+      schema:
+        type: string
+    RejectParamsInput:
+      name: id
+      in: path
+      required: true
+      description: drug id
       schema:
         type: string
     UpdateParamsInput:
       name: id
       in: path
       required: true
-      description: permission id
+      description: drug id
       schema:
         type: string
     api.Utils.Model.ApiPaginationInput.limit:
@@ -228,7 +308,56 @@ components:
       schema:
         $ref: '#/components/schemas/api.Utils.Versioning.ApiVersion'
   schemas:
-    ConflictPermissionExistsError:
+    ApproveOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/DrugEntity'
+      description: drug approve output
+    CreateBodyValidationError:
+      type: object
+      allOf:
+        - type: object
+          required:
+            - error
+          properties:
+            error:
+              type: object
+              required:
+                - code
+                - traceid
+                - context
+                - message
+                - timestamp
+                - path
+              properties:
+                code:
+                  type: number
+                  enum:
+                    - 400
+                  description: status code
+                traceid:
+                  type: string
+                  description: request traceid
+                context:
+                  type: string
+                  description: class that error occur
+                message:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - 'description: Required, type: Required'
+                  description: error message
+                timestamp:
+                  type: string
+                  description: timestamp that error occur
+                path:
+                  type: string
+                  description: path error
+              description: default error model
+          description: When input is invalid.
+      description: When input body is invalid
+    CreateExistConflictError:
       type: object
       allOf:
         - type: object
@@ -261,7 +390,7 @@ components:
                   items:
                     type: string
                     enum:
-                      - permissionExists
+                      - drugExists
                   description: error message
                 timestamp:
                   type: string
@@ -271,24 +400,45 @@ components:
                   description: path error
               description: default error model
           description: When conflict occour.
-      description: When input is invalid
+      description: When drug already exists
     CreateInput:
       type: object
       allOf:
         - type: object
           required:
+            - code
             - name
+            - formula
+            - strength
+            - dosageForm
+            - route
+            - description
+            - approvalStatus
           properties:
+            code:
+              type: string
             name:
               type: string
-          description: The template for picking properties.
-      description: permission create input
-    CreateOutput:
-      type: object
-      allOf:
-        - $ref: '#/components/schemas/PermisisonEntity'
-      description: permission create output
-    CreateValidationError:
+            formula:
+              type: string
+            strength:
+              type: string
+            dosageForm:
+              type: string
+            route:
+              type: string
+            description:
+              type: string
+            approvalStatus:
+              type: string
+              enum:
+                - Draft
+                - Pending
+                - Approved
+                - Rejected
+          description: The template for omitting properties.
+      description: drug create input
+    CreateNotFoundError:
       type: object
       allOf:
         - type: object
@@ -308,7 +458,7 @@ components:
                 code:
                   type: number
                   enum:
-                    - 400
+                    - 404
                   description: status code
                 traceid:
                   type: string
@@ -321,7 +471,7 @@ components:
                   items:
                     type: string
                     enum:
-                      - 'name: Required'
+                      - drugNotFound
                   description: error message
                 timestamp:
                   type: string
@@ -330,8 +480,57 @@ components:
                   type: string
                   description: path error
               description: default error model
-          description: When input is invalid.
-      description: When input is invalid
+          description: When resource not found.
+      description: When drug not found
+    CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: drug created input
+    DeleteDrugNotFoundError:
+      type: object
+      allOf:
+        - type: object
+          required:
+            - error
+          properties:
+            error:
+              type: object
+              required:
+                - code
+                - traceid
+                - context
+                - message
+                - timestamp
+                - path
+              properties:
+                code:
+                  type: number
+                  enum:
+                    - 404
+                  description: status code
+                traceid:
+                  type: string
+                  description: request traceid
+                context:
+                  type: string
+                  description: class that error occur
+                message:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - drugNotFound
+                  description: error message
+                timestamp:
+                  type: string
+                  description: timestamp that error occur
+                path:
+                  type: string
+                  description: path error
+              description: default error model
+          description: When resource not found.
+      description: When drug not found
     DeleteOutput:
       type: object
       required:
@@ -344,65 +543,47 @@ components:
         - type: object
           required:
             - id
+            - code
             - name
+            - formula
+            - strength
+            - dosageForm
+            - route
+            - description
+            - approvalStatus
             - createdAt
             - updatedAt
           properties:
             id:
               type: string
+            code:
+              type: string
             name:
               type: string
+            formula:
+              type: string
+            strength:
+              type: string
+            dosageForm:
+              type: string
+            route:
+              type: string
+            description:
+              type: string
+            approvalStatus:
+              type: string
+              enum:
+                - Draft
+                - Pending
+                - Approved
+                - Rejected
             createdAt:
               type: string
             updatedAt:
               type: string
           description: The template for omitting properties.
-      description: permission depete output
-    DeletePermissionNotFoundError:
-      type: object
-      allOf:
-        - type: object
-          required:
-            - error
-          properties:
-            error:
-              type: object
-              required:
-                - code
-                - traceid
-                - context
-                - message
-                - timestamp
-                - path
-              properties:
-                code:
-                  type: number
-                  enum:
-                    - 404
-                  description: status code
-                traceid:
-                  type: string
-                  description: request traceid
-                context:
-                  type: string
-                  description: class that error occur
-                message:
-                  type: array
-                  items:
-                    type: string
-                    enum:
-                      - permissionNotFound
-                  description: error message
-                timestamp:
-                  type: string
-                  description: timestamp that error occur
-                path:
-                  type: string
-                  description: path error
-              description: default error model
-          description: When resource not found.
-      description: When permission not found
-    DeleteValidationError:
+      description: drug delete output
+    DeleteParamsValidationError:
       type: object
       allOf:
         - type: object
@@ -445,34 +626,55 @@ components:
                   description: path error
               description: default error model
           description: When input is invalid.
-      description: When input is invalid
-    GetByIdOutput:
+      description: When input params is invalid
+    DrugEntity:
       type: object
       required:
-        - deletedAt
+        - id
+        - code
+        - name
+        - formula
+        - strength
+        - dosageForm
+        - route
+        - description
+        - approvalStatus
+        - createdAt
+        - updatedAt
       properties:
+        id:
+          type: string
+        code:
+          type: string
+        name:
+          type: string
+        formula:
+          type: string
+        strength:
+          type: string
+        dosageForm:
+          type: string
+        route:
+          type: string
+        description:
+          type: string
+        approvalStatus:
+          type: string
+          enum:
+            - Draft
+            - Pending
+            - Approved
+            - Rejected
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
         deletedAt:
           type: string
-          format: date-time
-      allOf:
-        - type: object
-          required:
-            - id
-            - name
-            - createdAt
-            - updatedAt
-          properties:
-            id:
-              type: string
-            name:
-              type: string
-            createdAt:
-              type: string
-            updatedAt:
-              type: string
-          description: The template for omitting properties.
-      description: permission get by id output
-    GetByIdPermissionNotFoundError:
+          nullable: true
+          default: null
+      description: drug base entity
+    GetByIdDrugNotFoundError:
       type: object
       allOf:
         - type: object
@@ -505,7 +707,7 @@ components:
                   items:
                     type: string
                     enum:
-                      - permissionNotFound
+                      - drugNotFound
                   description: error message
                 timestamp:
                   type: string
@@ -515,8 +717,13 @@ components:
                   description: path error
               description: default error model
           description: When resource not found.
-      description: When permission not found
-    GetByIdValidationError:
+      description: When drug not found
+    GetByIdOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/DrugEntity'
+      description: get drug by id output
+    GetByIdParamsValidationError:
       type: object
       allOf:
         - type: object
@@ -559,7 +766,7 @@ components:
                   description: path error
               description: default error model
           description: When input is invalid.
-      description: When input is invalid
+      description: When input params is invalid
     ListOutput:
       type: object
       allOf:
@@ -573,7 +780,7 @@ components:
             docs:
               type: array
               items:
-                $ref: '#/components/schemas/PermisisonEntity'
+                $ref: '#/components/schemas/DrugEntity'
               description: documents
             page:
               type: integer
@@ -596,95 +803,18 @@ components:
               description: total pages
               default: 1
           description: pagination default response
-      description: permission list output
+      description: drug list output
     ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
-      description: permission list input
-    PermisisonEntity:
-      type: object
-      required:
-        - id
-        - name
-        - createdAt
-        - updatedAt
-        - deletedAt
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        createdAt:
-          type: string
-        updatedAt:
-          type: string
-        deletedAt:
-          type: string
-          nullable: true
-          default: null
-      description: permission base entity
-    UpdateInput:
+      description: drug list query input
+    RejectOutput:
       type: object
       allOf:
-        - type: object
-          required:
-            - name
-          properties:
-            name:
-              type: string
-          description: The template for picking properties.
-      description: permission update input
-    UpdateOutput:
-      type: object
-      allOf:
-        - $ref: '#/components/schemas/PermisisonEntity'
-      description: permission update output
-    UpdatePermissionAlreadyExistsError:
-      type: object
-      allOf:
-        - type: object
-          required:
-            - error
-          properties:
-            error:
-              type: object
-              required:
-                - code
-                - traceid
-                - context
-                - message
-                - timestamp
-                - path
-              properties:
-                code:
-                  type: number
-                  enum:
-                    - 409
-                  description: status code
-                traceid:
-                  type: string
-                  description: request traceid
-                context:
-                  type: string
-                  description: class that error occur
-                message:
-                  type: array
-                  items:
-                    type: string
-                    enum:
-                      - permissionExists
-                  description: error message
-                timestamp:
-                  type: string
-                  description: timestamp that error occur
-                path:
-                  type: string
-                  description: path error
-              description: default error model
-          description: When conflict occour.
-      description: When permission already exists
-    UpdatePermissionNotFoundError:
+        - $ref: '#/components/schemas/DrugEntity'
+      description: drug reject output
+    UpdateDrugNotFoundError:
       type: object
       allOf:
         - type: object
@@ -717,7 +847,7 @@ components:
                   items:
                     type: string
                     enum:
-                      - permissionNotFound
+                      - drugNotFound
                   description: error message
                 timestamp:
                   type: string
@@ -727,8 +857,94 @@ components:
                   description: path error
               description: default error model
           description: When resource not found.
-      description: When permission not found
-    UpdateValidationError:
+      description: When drug not found
+    UpdateExistConflictError:
+      type: object
+      allOf:
+        - type: object
+          required:
+            - error
+          properties:
+            error:
+              type: object
+              required:
+                - code
+                - traceid
+                - context
+                - message
+                - timestamp
+                - path
+              properties:
+                code:
+                  type: number
+                  enum:
+                    - 409
+                  description: status code
+                traceid:
+                  type: string
+                  description: request traceid
+                context:
+                  type: string
+                  description: class that error occur
+                message:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - drugExists
+                  description: error message
+                timestamp:
+                  type: string
+                  description: timestamp that error occur
+                path:
+                  type: string
+                  description: path error
+              description: default error model
+          description: When conflict occour.
+      description: When drug already exists
+    UpdateInput:
+      type: object
+      allOf:
+        - type: object
+          required:
+            - code
+            - name
+            - formula
+            - strength
+            - dosageForm
+            - route
+            - description
+            - approvalStatus
+          properties:
+            code:
+              type: string
+            name:
+              type: string
+            formula:
+              type: string
+            strength:
+              type: string
+            dosageForm:
+              type: string
+            route:
+              type: string
+            description:
+              type: string
+            approvalStatus:
+              type: string
+              enum:
+                - Draft
+                - Pending
+                - Approved
+                - Rejected
+          description: The template for omitting properties.
+      description: drug update input
+    UpdateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/DrugEntity'
+      description: drug update output
+    UpdateParamsValidationError:
       type: object
       allOf:
         - type: object
@@ -771,47 +987,87 @@ components:
                   description: path error
               description: default error model
           description: When input is invalid.
-      description: When input is invalid
+      description: When input params is invalid
+    api.Deviation.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: deviation created input
     api.Deviation.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: deviation list query input
-    api.Drug.ListQueryInput:
+    api.GoodsReceipt.CreateOutput:
       type: object
       allOf:
-        - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
-      description: drug list query input
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: goods receipt created input
     api.GoodsReceipt.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: goods receipt list query input
+    api.Permission.ListQueryInput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
+      description: permission list input
+    api.PurchaseOrder.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: purchase order created input
     api.PurchaseOrder.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: purchase order list query input
+    api.QARelease.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: qa release created input
     api.QARelease.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: qa release list query input
+    api.QCResult.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: qc result created input
     api.QCResult.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: qc result list query input
+    api.QCSample.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: qc sample created input
     api.QCSample.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: qc sample list query input
+    api.QCTest.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: qc test created input
     api.QCTest.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: qc test list query input
+    api.RawMaterial.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: raw material created input
     api.RawMaterial.ListQueryInput:
       type: object
       allOf:
@@ -822,16 +1078,39 @@ components:
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: list query input
+    api.Supplier.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: supplier created input
     api.Supplier.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: supplier list query input
+    api.User.CreateOutput:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/api.Utils.Model.ApiCreatedOutput'
+      description: user created input
     api.User.ListQueryInput:
       type: object
       allOf:
         - $ref: '#/components/schemas/api.Utils.Model.ApiPaginationInput'
       description: user list query input
+    api.Utils.Model.ApiCreatedOutput:
+      type: object
+      required:
+        - id
+        - created
+      properties:
+        id:
+          type: string
+          description: document id
+        created:
+          type: boolean
+          description: conditional if document was created
+      description: document created successfully
     api.Utils.Model.ApiPaginationInput:
       type: object
       required:
