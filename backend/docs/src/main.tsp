@@ -9,7 +9,16 @@ import "./modules/reset-password/controller.tsp";
 import "./modules/permission/controller.tsp";
 import "./modules/logout/controller.tsp";
 import "./modules/health/controller.tsp";
-import "./modules/cat/controller.tsp";
+import "./modules/supplier/controller.tsp";
+import "./modules/drug/controller.tsp";
+import "./modules/raw-material/controller.tsp";
+import "./modules/purchase-order/controller.tsp";
+import "./modules/goods-receipt/controller.tsp";
+import "./modules/qc-test/controller.tsp";
+import "./modules/qc-sample/controller.tsp";
+import "./modules/qc-result/controller.tsp";
+import "./modules/qa-release/controller.tsp";
+import "./modules/deviation/controller.tsp";
 
 using TypeSpec.Http;
 using Utils.Versioning;

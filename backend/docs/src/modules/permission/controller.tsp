@@ -43,7 +43,7 @@ interface PermissionController {
   getById(
     ...VersionParams,
     ...GetByIdParamsInput,
-  ): GetByIdOutput | GetByIdValidationException | GeyByIdNotFoundException;
+  ): GetByIdOutput | GetByIdValidationException | GetByIdNotFoundException;
 
   @get
   @doc("list permission")

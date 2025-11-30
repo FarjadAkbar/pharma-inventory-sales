@@ -42,8 +42,8 @@ alias UpdateNotFoundException = UpdatePermissionNotFoundError;
 
 @doc("When permission already exists")
 @error
-model UpdatePermissionAlreadyExistsError extends ApiNotFoundException<"permissionExists"> {
-  @statusCode statusCode: 404;
+model UpdatePermissionAlreadyExistsError extends ApiConflictException<"permissionExists"> {
+  @statusCode statusCode: 409;
 }
 
 alias UpdateConflictException = UpdatePermissionAlreadyExistsError;
@@ -59,11 +59,11 @@ alias GetByIdValidationException = GetByIdValidationError;
 
 @doc("When permission not found")
 @error
-model GeyByIdPermissionNotFoundError extends ApiNotFoundException<"permissionNotFound"> {
+model GetByIdPermissionNotFoundError extends ApiNotFoundException<"permissionNotFound"> {
   @statusCode statusCode: 404;
 }
 
-alias GeyByIdNotFoundException = GeyByIdPermissionNotFoundError;
+alias GetByIdNotFoundException = GetByIdPermissionNotFoundError;
 
 // ## DELETE ## //
 @doc("When input is invalid")
