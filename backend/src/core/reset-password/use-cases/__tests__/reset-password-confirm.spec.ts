@@ -7,7 +7,7 @@ import { IUserRepository } from '@/core/user/repository/user';
 import { CreatedModel, RemovedModel } from '@/infra/repository';
 import { EmitEventOutput, IEventAdapter } from '@/libs/event';
 import { ITokenAdapter } from '@/libs/token';
-import { IConfirmResetPasswordAdapter } from '../../../../../../services/auth-service/src/adapters';
+import { IConfirmResetPasswordAdapter } from '@/services/auth-service/src/adapters';
 import { ApiBadRequestException, ApiNotFoundException, ApiUnauthorizedException } from '@/utils/exception';
 import { ZodExceptionIssue } from '@/utils/validator';
 

@@ -8,7 +8,7 @@ import { CreatedModel } from '@/infra/repository';
 import { ISecretsAdapter } from '@/infra/secrets';
 import { EmitEventOutput, IEventAdapter } from '@/libs/event';
 import { ITokenAdapter, SignOutput } from '@/libs/token';
-import { IConfirmResetPasswordAdapter, ISendEmailResetPasswordAdapter } from '../../../../../../services/auth-service/src/adapters';
+import { IConfirmResetPasswordAdapter, ISendEmailResetPasswordAdapter } from '@/services/auth-service/src/adapters';
 import { ApiNotFoundException } from '@/utils/exception';
 import { ZodExceptionIssue } from '@/utils/validator';
 

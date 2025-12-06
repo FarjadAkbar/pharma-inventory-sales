@@ -14,7 +14,11 @@
     "baseUrl": "./",
     "incremental": true,
     "paths": {
+      
       "@/*": ["../../src/*"],
+      "@/test/*": ["../../test/*"],
+      "@/services/*": ["../../services/*"],
+      "test/*": ["../../test/*"]
     }
   },
   "include": [
