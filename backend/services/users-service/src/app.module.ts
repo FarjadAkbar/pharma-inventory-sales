@@ -31,6 +31,7 @@ import {
 } from './adapters';
 import { UserRepository } from './repositories/user.repository';
 import { RoleRepository } from './repositories/role.repository';
+import { RoleEntity } from '@/core/role/entity/role';
 
 @Module({
   imports: [

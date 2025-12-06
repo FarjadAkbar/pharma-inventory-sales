@@ -16,7 +16,7 @@ import swagger from 'swagger-ui-express';
 import { ILoggerAdapter } from '@/infra/logger/adapter';
 import { ISecretsAdapter } from '@/infra/secrets';
 import { ExceptionHandlerFilter } from '@/middlewares/filters';
-import { SERVICE_PORTS } from '@shared/constants';
+import { SERVICE_PORTS } from '@/constants';
 import { ErrorType } from '@/infra/logger';
 import { CryptoUtils } from '@/utils/crypto';
 import { changeLanguage, initI18n, LocaleInput } from '@/utils/validator';
@@ -75,12 +75,12 @@ async function bootstrap() {
           defaultSrc: [`'self'`],
           styleSrc: [`'self'`],
           frameSrc: ["'none'"],
-          upgradeInsecureRequests: [],
+          upgradeInsecureRequests: false,
           imgSrc: [`'self'`, 'data:', 'blob:', 'validator.swagger.io'],
           scriptSrc: [
             "'self'",
-            (req, res) => {
-              return `'nonce-${(res as ServerResponse<IncomingMessage> & { locals: { nonce: string } }).locals.nonce}'`;
+            (req: Request, res: Response) => {
+              return `'nonce-${(res as unknown as ServerResponse<IncomingMessage> & { locals: { nonce: string } }).locals.nonce}'`;
             }
           ]
         }

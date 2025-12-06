@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 
-import { QA_RELEASES_CREATE, QA_RELEASES_DELETE, QA_RELEASES_GET_BY_ID, QA_RELEASES_LIST, QA_RELEASES_UPDATE } from '@shared/constants/message-patterns';
+import { QA_RELEASES_CREATE, QA_RELEASES_DELETE, QA_RELEASES_GET_BY_ID, QA_RELEASES_LIST, QA_RELEASES_UPDATE } from '@/constants/message-patterns';
 
 import { IQAReleaseCreateAdapter, IQAReleaseListAdapter } from './adapters';
 

@@ -12,7 +12,7 @@ import {
   GOODS_RECEIPTS_GET_BY_ID,
   GOODS_RECEIPTS_LIST,
   GOODS_RECEIPTS_UPDATE
-} from '@shared/constants/message-patterns';
+} from '@/constants/message-patterns';
 
 @Controller('goods-receipts')
 export class GoodsReceiptsController {

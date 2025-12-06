@@ -1,7 +1,14 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 
-import { SITES_CREATE, SITES_DELETE, SITES_GET_ALL, SITES_GET_BY_ID, SITES_LIST, SITES_UPDATE } from '@shared/constants/message-patterns';
+import { SITES_CREATE, SITES_DELETE, SITES_GET_ALL, SITES_GET_BY_ID, SITES_LIST, SITES_UPDATE } from '@/constants/message-patterns';
+
+import { SiteCreateInput } from '@/core/site/use-cases/site-create';
+import { SiteUpdateInput } from '@/core/site/use-cases/site-update';
+import { SiteDeleteInput } from '@/core/site/use-cases/site-delete';
+import { SiteGetByIdInput } from '@/core/site/use-cases/site-get-by-id';
+import { SiteListInput } from '@/core/site/use-cases/site-list';
+import { ApiTrancingInput } from '@/utils/request';
 
 import {
   ISiteCreateAdapter,
@@ -22,32 +29,42 @@ export class SitesController {
   ) {}
 
   @MessagePattern(SITES_CREATE)
-  async create(@Payload() data: { body?: unknown; user?: unknown; tracing?: unknown }) {
-    return this.createUsecase.execute(data.body as any, { user: data.user, tracing: data.tracing } as any);
+  async create(@Payload() data: { body?: SiteCreateInput; user?: ApiTrancingInput['user']; tracing?: ApiTrancingInput['tracing'] }) {
+    return this.createUsecase.execute(
+      data.body as SiteCreateInput,
+      { user: data.user, tracing: data.tracing } as ApiTrancingInput
+    );
   }
 
   @MessagePattern(SITES_UPDATE)
-  async update(@Payload() data: { body?: unknown; id?: string; user?: unknown; tracing?: unknown }) {
-    return this.updateUsecase.execute({ ...data.body, id: data.id } as any, { user: data.user, tracing: data.tracing } as any);
+  async update(@Payload() data: { body?: Partial<SiteUpdateInput>; id?: string; user?: ApiTrancingInput['user']; tracing?: ApiTrancingInput['tracing'] }) {
+    const body = (data.body ?? {}) as Record<string, unknown>;
+    return this.updateUsecase.execute(
+      { ...body, id: data.id } as SiteUpdateInput,
+      { user: data.user, tracing: data.tracing } as ApiTrancingInput
+    );
   }
 
   @MessagePattern(SITES_LIST)
-  async list(@Payload() data: unknown) {
-    return this.listUsecase.execute(data as any);
+  async list(@Payload() data: SiteListInput) {
+    return this.listUsecase.execute(data);
   }
 
   @MessagePattern(SITES_GET_ALL)
   async getAll(@Payload() data: unknown) {
-    return this.listUsecase.execute({ limit: 1000, page: 1 } as any);
+    return this.listUsecase.execute({ limit: 1000, page: 1 } as SiteListInput);
   }
 
   @MessagePattern(SITES_GET_BY_ID)
-  async getById(@Payload() data: { id?: string }) {
-    return this.getByIdUsecase.execute(data as any);
+  async getById(@Payload() data: SiteGetByIdInput) {
+    return this.getByIdUsecase.execute(data);
   }
 
   @MessagePattern(SITES_DELETE)
-  async delete(@Payload() data: { id?: string; user?: unknown; tracing?: unknown }) {
-    return this.deleteUsecase.execute({ id: data.id } as any, { user: data.user, tracing: data.tracing } as any);
+  async delete(@Payload() data: { id?: string; user?: ApiTrancingInput['user']; tracing?: ApiTrancingInput['tracing'] }) {
+    return this.deleteUsecase.execute(
+      { id: data.id } as SiteDeleteInput,
+      { user: data.user, tracing: data.tracing } as ApiTrancingInput
+    );
   }
 }

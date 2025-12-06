@@ -7,7 +7,7 @@ import {
   PURCHASE_ORDERS_GET_BY_ID,
   PURCHASE_ORDERS_LIST,
   PURCHASE_ORDERS_UPDATE
-} from '@shared/constants/message-patterns';
+} from '@/constants/message-patterns';
 
 import {
   IPurchaseOrderCreateAdapter,

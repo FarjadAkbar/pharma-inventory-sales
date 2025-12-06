@@ -13,7 +13,7 @@ import {
   USERS_GET_CURRENT,
   USERS_LIST,
   USERS_UPDATE
-} from '@shared/constants/message-patterns';
+} from '@/constants/message-patterns';
 
 import { UserEntity } from '@/core/user/entity/user';
 

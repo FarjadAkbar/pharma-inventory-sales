@@ -6,7 +6,7 @@ import { Permission } from '@/utils/decorators';
 import { ApiRequest } from '@/utils/request';
 import { SearchHttpSchema } from '@/utils/search';
 import { SortHttpSchema } from '@/utils/sort';
-import { QC_TESTS_CREATE, QC_TESTS_DELETE, QC_TESTS_GET_BY_ID, QC_TESTS_LIST, QC_TESTS_UPDATE } from '@shared/constants/message-patterns';
+import { QC_TESTS_CREATE, QC_TESTS_DELETE, QC_TESTS_GET_BY_ID, QC_TESTS_LIST, QC_TESTS_UPDATE } from '@/constants/message-patterns';
 
 @Controller('qc-tests')
 export class QCTestsController {

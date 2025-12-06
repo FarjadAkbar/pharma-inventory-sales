@@ -21,9 +21,9 @@ export class SiteCreateUsecase implements IUsecase {
 
     const createdSite = await this.siteRepository.create(site);
 
-    tracing.logEvent('site-created', `Site created: ${createdSite.name}`);
+    tracing.logEvent('site-created', `Site created: ${site.name}`);
 
-    return createdSite;
+    return site;
   }
 }
 

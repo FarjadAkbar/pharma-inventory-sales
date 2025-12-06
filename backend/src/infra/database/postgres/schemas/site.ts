@@ -1,25 +1,22 @@
-import { EntitySchema } from 'typeorm';
+import { BaseEntity, Column, CreateDateColumn, Entity, UpdateDateColumn } from 'typeorm';
 
-import { SiteEntity } from '@/core/site/entity/site';
-import { BaseSchema } from '@/infra/database/postgres/schemas/base';
+@Entity({ name: 'sites' })
+export class SiteSchema extends BaseEntity {
+  @Column({ type: 'uuid', primary: true })
+  id!: string;
 
-export const SiteSchema = new EntitySchema<SiteEntity>({
-  name: 'SiteEntity',
-  tableName: 'sites',
-  target: SiteEntity,
-  columns: {
-    ...BaseSchema,
-    name: {
-      type: String,
-      nullable: false
-    },
-    location: {
-      type: String,
-      nullable: true
-    },
-    active: {
-      type: Boolean,
-      default: true
-    }
-  }
-});
+  @Column({ type: String, nullable: false })
+  name!: string;
+
+  @Column({ type: String, nullable: true })
+  location!: string;
+
+  @Column({ type: Boolean, default: true })
+  active!: boolean;
+
+  @CreateDateColumn()
+  createdAt!: Date;
+
+  @UpdateDateColumn()
+  updatedAt!: Date;
+}

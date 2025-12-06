@@ -1,7 +1,13 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 
-import { DEVIATIONS_CREATE, DEVIATIONS_DELETE, DEVIATIONS_GET_BY_ID, DEVIATIONS_LIST, DEVIATIONS_UPDATE } from '@shared/constants/message-patterns';
+import { DEVIATIONS_CREATE, DEVIATIONS_DELETE, DEVIATIONS_GET_BY_ID, DEVIATIONS_LIST, DEVIATIONS_UPDATE } from '@/constants/message-patterns';
+
+import { DeviationCreateInput } from '@/core/deviation/use-cases/deviation-create';
+import { DeviationUpdateInput } from '@/core/deviation/use-cases/deviation-update';
+import { DeviationCloseInput } from '@/core/deviation/use-cases/deviation-close';
+import { DeviationListInput } from '@/core/deviation/repository/deviation';
+import { ApiTrancingInput } from '@/utils/request';
 
 import { IDeviationCreateAdapter, IDeviationUpdateAdapter, IDeviationListAdapter, IDeviationCloseAdapter } from './adapters';
 
@@ -15,21 +21,31 @@ export class DeviationsController {
   ) {}
 
   @MessagePattern(DEVIATIONS_CREATE)
-  async create(@Payload() data: { body?: unknown; user?: unknown; tracing?: unknown }) {
-    return this.createUsecase.execute(data.body as any, { user: data.user, tracing: data.tracing } as any);
+  async create(@Payload() data: { body?: DeviationCreateInput; user?: ApiTrancingInput['user']; tracing?: ApiTrancingInput['tracing'] }) {
+    return this.createUsecase.execute(
+      data.body as DeviationCreateInput,
+      { user: data.user, tracing: data.tracing } as ApiTrancingInput
+    );
   }
 
   @MessagePattern(DEVIATIONS_UPDATE)
-  async update(@Payload() data: { body?: unknown; id?: string; user?: unknown; tracing?: unknown; action?: string }) {
+  async update(@Payload() data: { body?: Partial<DeviationUpdateInput>; id?: string; user?: ApiTrancingInput['user']; tracing?: ApiTrancingInput['tracing']; action?: string }) {
     if (data.action === 'close') {
-      return this.closeUsecase.execute({ id: data.id } as any, { user: data.user, tracing: data.tracing } as any);
+      return this.closeUsecase.execute(
+        { id: data.id } as DeviationCloseInput,
+        { user: data.user, tracing: data.tracing } as ApiTrancingInput
+      );
     }
-    return this.updateUsecase.execute({ ...data.body, id: data.id } as any, { user: data.user, tracing: data.tracing } as any);
+    const body = (data.body ?? {}) as Record<string, unknown>;
+    return this.updateUsecase.execute(
+      { ...body, id: data.id } as DeviationUpdateInput,
+      { user: data.user, tracing: data.tracing } as ApiTrancingInput
+    );
   }
 
   @MessagePattern(DEVIATIONS_LIST)
-  async list(@Payload() data: unknown) {
-    return this.listUsecase.execute(data as any);
+  async list(@Payload() data: DeviationListInput) {
+    return this.listUsecase.execute(data);
   }
 
   @MessagePattern(DEVIATIONS_GET_BY_ID)
@@ -39,7 +55,7 @@ export class DeviationsController {
   }
 
   @MessagePattern(DEVIATIONS_DELETE)
-  async delete(@Payload() data: { id?: string; user?: unknown; tracing?: unknown }) {
+  async delete(@Payload() data: { id?: string; user?: ApiTrancingInput['user']; tracing?: ApiTrancingInput['tracing'] }) {
     // Stub implementation - can be implemented later if needed
     return { id: data.id, deleted: false, message: 'DELETE not yet implemented' };
   }

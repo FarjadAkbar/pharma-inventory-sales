@@ -14,7 +14,7 @@ import {
   AUTH_REFRESH_TOKEN,
   AUTH_RESET_PASSWORD_CONFIRM,
   AUTH_RESET_PASSWORD_SEND_EMAIL
-} from '@shared/constants/message-patterns';
+} from '@/constants/message-patterns';
 
 @Controller()
 export class AuthController {

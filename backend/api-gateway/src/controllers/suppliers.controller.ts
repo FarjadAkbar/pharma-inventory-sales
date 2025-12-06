@@ -12,7 +12,7 @@ import {
   SUPPLIERS_GET_BY_ID,
   SUPPLIERS_LIST,
   SUPPLIERS_UPDATE
-} from '@shared/constants/message-patterns';
+} from '@/constants/message-patterns';
 
 @Controller('suppliers')
 export class SuppliersController {

@@ -71,32 +71,50 @@ class AuthService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     console.log("Login attempt with credentials:", credentials)
 
-    const response = await apiService.rawRequest<{ accessToken: string; refreshToken: string }>("/login", {
-      method: "POST",
-      body: JSON.stringify(credentials)
-    })
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(credentials),
+      })
 
-    console.log("API response:", response)
-
-    if (response.accessToken) {
-      console.log("Login successful, setting tokens")
-      this.setToken(response.accessToken)
-      this.setRefreshToken(response.refreshToken)
-
-      // Decode JWT to get user info and permissions
-      const user = this.getUserFromToken()
-      const permissions = user?.permissions || {}
-      this.setPermissions(permissions)
-
-      return {
-        success: true,
-        token: response.accessToken,
-        permissions: permissions
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || "Login failed")
       }
-    }
 
-    console.log("Login failed, throwing error")
-    throw new Error("Login failed")
+      const data = await response.json()
+      console.log("API response:", data)
+
+      if (data.accessToken) {
+        console.log("Login successful, setting tokens")
+        this.setToken(data.accessToken)
+        this.setRefreshToken(data.refreshToken)
+
+        // Decode JWT to get user info and permissions
+        const user = this.getUserFromToken()
+        // JWT payload has permission (array), convert to Permissions format
+        // Empty array means all permissions (System Administrator)
+        const permissions: Permissions = user?.permission && user.permission.length > 0 
+          ? {} // TODO: Convert permission array to Permissions object format if needed
+          : {} // Empty object means all permissions
+        this.setPermissions(permissions)
+
+        return {
+          success: true,
+          token: data.accessToken,
+          permissions: permissions
+        }
+      }
+
+      console.log("Login failed, throwing error")
+      throw new Error("Login failed")
+    } catch (error) {
+      console.error("Login error:", error)
+      throw error instanceof Error ? error : new Error("Login failed")
+    }
   }
 
   async register(userData: RegisterData): Promise<AuthResponse> {
@@ -127,15 +145,18 @@ class AuthService {
     }
 
     return {
-      id: user.id.toString(),
+      id: user.id,
+      fullname: '', // Not in backend JWT payload
+      username: '', // Not in backend JWT payload
       email: '', // Not in backend JWT payload
-      name: '', // Not in backend JWT payload
       role: user.role,
+      site_id: user.site_id,
+      org_id: null,
       clientId: 1, // Default or derive from user.site_id if applicable
       storeId: user.site_id,
-      permissions: this.getPermissions() || {},
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      status: 'active',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     }
   }
 
@@ -183,7 +204,14 @@ class AuthService {
     const modulePermissions = permissions[module]
     if (!modulePermissions) return false
     
-    return modulePermissions.includes(action) || modulePermissions.includes('*')
+    // Handle both ModulePermissions (nested) and string[] (flat) structures
+    if (Array.isArray(modulePermissions)) {
+      return modulePermissions.includes(action) || modulePermissions.includes('*')
+    }
+    
+    // If it's a ModulePermissions object, check all modules within it
+    const actions = Object.values(modulePermissions).flat()
+    return actions.includes(action) || actions.includes('*')
   }
 
   hasAllPermissions(module: string, actions: string[]): boolean {

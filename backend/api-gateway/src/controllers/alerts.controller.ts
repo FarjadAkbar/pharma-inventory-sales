@@ -3,7 +3,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 
 import { ILoggerAdapter } from '@/infra/logger';
-import { ALERTS_CREATE, ALERTS_LIST } from '@shared/constants/message-patterns';
+import { ALERTS_CREATE, ALERTS_LIST } from '@/constants/message-patterns';
 
 @Controller('alert')
 export class AlertsController {

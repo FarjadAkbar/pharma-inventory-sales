@@ -1,7 +1,13 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 
-import { QC_SAMPLES_CREATE, QC_SAMPLES_DELETE, QC_SAMPLES_GET_BY_ID, QC_SAMPLES_LIST, QC_SAMPLES_UPDATE } from '@shared/constants/message-patterns';
+import { QC_SAMPLES_CREATE, QC_SAMPLES_DELETE, QC_SAMPLES_GET_BY_ID, QC_SAMPLES_LIST, QC_SAMPLES_UPDATE } from '@/constants/message-patterns';
+
+import { QCSampleCreateInput } from '@/core/qc-sample/use-cases/qc-sample-create';
+import { QCSampleListInput } from '@/core/qc-sample/repository/qc-sample';
+import { QCSampleAssignInput } from '@/core/qc-sample/use-cases/qc-sample-assign';
+import { QCSampleCompleteInput } from '@/core/qc-sample/use-cases/qc-sample-complete';
+import { ApiTrancingInput } from '@/utils/request';
 
 import {
   IQCSampleCreateAdapter,
@@ -20,22 +26,32 @@ export class QCSamplesController {
   ) {}
 
   @MessagePattern(QC_SAMPLES_CREATE)
-  async create(@Payload() data: { body?: unknown; user?: unknown; tracing?: unknown }) {
-    return this.createUsecase.execute(data.body as any, { user: data.user, tracing: data.tracing } as any);
+  async create(@Payload() data: { body?: QCSampleCreateInput; user?: ApiTrancingInput['user']; tracing?: ApiTrancingInput['tracing'] }) {
+    return this.createUsecase.execute(
+      data.body as QCSampleCreateInput,
+      { user: data.user, tracing: data.tracing } as ApiTrancingInput
+    );
   }
 
   @MessagePattern(QC_SAMPLES_LIST)
-  async list(@Payload() data: unknown) {
-    return this.listUsecase.execute(data as any);
+  async list(@Payload() data: QCSampleListInput) {
+    return this.listUsecase.execute(data);
   }
 
   @MessagePattern(QC_SAMPLES_UPDATE)
-  async update(@Payload() data: { id?: string; body?: unknown; user?: unknown; tracing?: unknown; action?: string }) {
+  async update(@Payload() data: { id?: string; body?: Partial<QCSampleAssignInput>; user?: ApiTrancingInput['user']; tracing?: ApiTrancingInput['tracing']; action?: string }) {
     if (data.action === 'assign') {
-      return this.assignUsecase.execute({ id: data.id, userId: data.body?.userId } as any, { user: data.user, tracing: data.tracing } as any);
+      const body = (data.body ?? {}) as Record<string, unknown>;
+      return this.assignUsecase.execute(
+        { id: data.id, ...body } as QCSampleAssignInput,
+        { user: data.user, tracing: data.tracing } as ApiTrancingInput
+      );
     }
     if (data.action === 'complete') {
-      return this.completeUsecase.execute({ id: data.id } as any, { user: data.user, tracing: data.tracing } as any);
+      return this.completeUsecase.execute(
+        { id: data.id } as QCSampleCompleteInput,
+        { user: data.user, tracing: data.tracing } as ApiTrancingInput
+      );
     }
     return null;
   }
@@ -47,7 +63,7 @@ export class QCSamplesController {
   }
 
   @MessagePattern(QC_SAMPLES_DELETE)
-  async delete(@Payload() data: { id?: string; user?: unknown; tracing?: unknown }) {
+  async delete(@Payload() data: { id?: string; user?: ApiTrancingInput['user']; tracing?: ApiTrancingInput['tracing'] }) {
     // Stub implementation - can be implemented later if needed
     return { id: data.id, deleted: false, message: 'DELETE not yet implemented' };
   }

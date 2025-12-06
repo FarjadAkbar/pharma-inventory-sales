@@ -6,7 +6,7 @@ import { Permission } from '@/utils/decorators';
 import { ApiRequest } from '@/utils/request';
 import { SearchHttpSchema } from '@/utils/search';
 import { SortHttpSchema } from '@/utils/sort';
-import { QC_RESULTS_CREATE, QC_RESULTS_DELETE, QC_RESULTS_GET_BY_ID, QC_RESULTS_LIST, QC_RESULTS_UPDATE } from '@shared/constants/message-patterns';
+import { QC_RESULTS_CREATE, QC_RESULTS_DELETE, QC_RESULTS_GET_BY_ID, QC_RESULTS_LIST, QC_RESULTS_UPDATE } from '@/constants/message-patterns';
 
 @Controller('qc-results')
 export class QCResultsController {

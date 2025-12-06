@@ -12,7 +12,7 @@ import {
   PERMISSIONS_GET_BY_ID,
   PERMISSIONS_LIST,
   PERMISSIONS_UPDATE
-} from '@shared/constants/message-patterns';
+} from '@/constants/message-patterns';
 
 import { PermissionEntity } from '@/core/permission/entity/permission';
 

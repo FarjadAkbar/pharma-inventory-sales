@@ -15,7 +15,7 @@
     "incremental": true,
     "paths": {
       "@/*": ["../../src/*"],
-      "@shared/*": ["../../shared/*"]
+      
     }
   },
   "include": ["src/**/*"],

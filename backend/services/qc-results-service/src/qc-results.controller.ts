@@ -1,7 +1,11 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 
-import { QC_RESULTS_CREATE, QC_RESULTS_DELETE, QC_RESULTS_GET_BY_ID, QC_RESULTS_LIST, QC_RESULTS_UPDATE } from '@shared/constants/message-patterns';
+import { QC_RESULTS_CREATE, QC_RESULTS_DELETE, QC_RESULTS_GET_BY_ID, QC_RESULTS_LIST, QC_RESULTS_UPDATE } from '@/constants/message-patterns';
+
+import { QCResultCreateInput } from '@/core/qc-result/use-cases/qc-result-create';
+import { QCResultListInput } from '@/core/qc-result/repository/qc-result';
+import { ApiTrancingInput } from '@/utils/request';
 
 import { IQCResultCreateAdapter, IQCResultListAdapter } from './adapters';
 
@@ -13,17 +17,20 @@ export class QCResultsController {
   ) {}
 
   @MessagePattern(QC_RESULTS_CREATE)
-  async create(@Payload() data: { body?: unknown; user?: unknown; tracing?: unknown }) {
-    return this.createUsecase.execute(data.body as any, { user: data.user, tracing: data.tracing } as any);
+  async create(@Payload() data: { body?: QCResultCreateInput; user?: ApiTrancingInput['user']; tracing?: ApiTrancingInput['tracing'] }) {
+    return this.createUsecase.execute(
+      data.body as QCResultCreateInput,
+      { user: data.user, tracing: data.tracing } as ApiTrancingInput
+    );
   }
 
   @MessagePattern(QC_RESULTS_LIST)
-  async list(@Payload() data: unknown) {
-    return this.listUsecase.execute(data as any);
+  async list(@Payload() data: QCResultListInput) {
+    return this.listUsecase.execute(data);
   }
 
   @MessagePattern(QC_RESULTS_UPDATE)
-  async update(@Payload() data: { body?: unknown; id?: string; user?: unknown; tracing?: unknown }) {
+  async update(@Payload() data: { body?: unknown; id?: string; user?: ApiTrancingInput['user']; tracing?: ApiTrancingInput['tracing'] }) {
     // Stub implementation - can be implemented later if needed
     return { id: data.id, updated: false, message: 'UPDATE not yet implemented' };
   }
@@ -35,7 +42,7 @@ export class QCResultsController {
   }
 
   @MessagePattern(QC_RESULTS_DELETE)
-  async delete(@Payload() data: { id?: string; user?: unknown; tracing?: unknown }) {
+  async delete(@Payload() data: { id?: string; user?: ApiTrancingInput['user']; tracing?: ApiTrancingInput['tracing'] }) {
     // Stub implementation - can be implemented later if needed
     return { id: data.id, deleted: false, message: 'DELETE not yet implemented' };
   }

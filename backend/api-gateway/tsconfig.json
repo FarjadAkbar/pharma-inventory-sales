@@ -15,9 +15,11 @@
     "incremental": true,
     "paths": {
       "@/*": ["../src/*"],
-      "@shared/*": ["../shared/*"]
     }
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/**/*",
+    "../../src/**/*" 
+  ],
   "exclude": ["node_modules", "dist"]
 }

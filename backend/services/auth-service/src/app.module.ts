@@ -25,6 +25,7 @@ import { AuthController } from './auth.controller';
 import { ILoginAdapter, IRefreshTokenAdapter, ILogoutAdapter, IConfirmResetPasswordAdapter, ISendEmailResetPasswordAdapter } from './adapters';
 import { UserRepository } from './repositories/user.repository';
 import { ResetPasswordRepository } from './repositories/reset-password.repository';
+import { UserEntity } from '@/core/user/entity/user';
 
 @Module({
   imports: [
@@ -42,7 +43,7 @@ import { ResetPasswordRepository } from './repositories/reset-password.repositor
     // User Repository
     {
       provide: IUserRepository,
-      useFactory: (repository: Repository<UserSchema>) => {
+      useFactory: (repository: Repository<UserSchema & UserEntity>) => {
         return new UserRepository(repository);
       },
       inject: [getRepositoryToken(UserSchema)]

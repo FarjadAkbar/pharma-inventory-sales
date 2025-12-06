@@ -22,11 +22,9 @@ export class SiteDeleteUsecase implements IUsecase {
       throw new ApiNotFoundException('siteNotFound');
     }
 
-    await this.siteRepository.delete(site);
+    await this.siteRepository.softDelete({ id: site.id });
 
     tracing.logEvent('site-deleted', `Site deleted: ${site.name}`);
-
-    return site;
   }
 }
 

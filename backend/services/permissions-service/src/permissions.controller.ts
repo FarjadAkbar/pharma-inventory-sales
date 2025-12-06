@@ -7,7 +7,13 @@ import {
   PERMISSIONS_GET_BY_ID,
   PERMISSIONS_LIST,
   PERMISSIONS_UPDATE
-} from '@shared/constants/message-patterns';
+} from '@/constants/message-patterns';
+
+import { PermissionCreateInput } from '@/core/permission/use-cases/permission-create';
+import { PermissionUpdateInput } from '@/core/permission/use-cases/permission-update';
+import { PermissionGetByIdInput } from '@/core/permission/use-cases/permission-get-by-id';
+import { PermissionListInput } from '@/core/permission/use-cases/permission-list';
+import { PermissionDeleteInput } from '@/core/permission/use-cases/permission-delete';
 
 import {
   IPermissionCreateAdapter,
@@ -28,27 +34,28 @@ export class PermissionsController {
   ) {}
 
   @MessagePattern(PERMISSIONS_CREATE)
-  async create(@Payload() data: unknown) {
-    return this.createUsecase.execute(data as any);
+  async create(@Payload() data: PermissionCreateInput) {
+    return this.createUsecase.execute(data);
   }
 
   @MessagePattern(PERMISSIONS_UPDATE)
-  async update(@Payload() data: { body?: unknown; id?: string }) {
-    return this.updateUsecase.execute({ ...data.body, id: data.id } as any);
+  async update(@Payload() data: { body?: Partial<PermissionUpdateInput>; id?: string }) {
+    const body = (data.body ?? {}) as Record<string, unknown>;
+    return this.updateUsecase.execute({ ...body, id: data.id } as PermissionUpdateInput);
   }
 
   @MessagePattern(PERMISSIONS_GET_BY_ID)
-  async getById(@Payload() data: { id?: string }) {
-    return this.getByIdUsecase.execute(data as any);
+  async getById(@Payload() data: PermissionGetByIdInput) {
+    return this.getByIdUsecase.execute(data);
   }
 
   @MessagePattern(PERMISSIONS_LIST)
-  async list(@Payload() data: unknown) {
-    return this.listUsecase.execute(data as any);
+  async list(@Payload() data: PermissionListInput) {
+    return this.listUsecase.execute(data);
   }
 
   @MessagePattern(PERMISSIONS_DELETE)
-  async delete(@Payload() data: { id?: string }) {
-    return this.deleteUsecase.execute(data as any);
+  async delete(@Payload() data: PermissionDeleteInput) {
+    return this.deleteUsecase.execute(data);
   }
 }

@@ -12,7 +12,7 @@ import {
   RAW_MATERIALS_GET_BY_ID,
   RAW_MATERIALS_LIST,
   RAW_MATERIALS_UPDATE
-} from '@shared/constants/message-patterns';
+} from '@/constants/message-patterns';
 
 @Controller('raw-materials')
 export class RawMaterialsController {

@@ -90,22 +90,21 @@ async function seed() {
       // 2. Seed Roles
       console.log('🌱 Seeding roles...');
       const existingRoles = await queryRunner.manager.find(RoleSchema);
-      const existingRoleNames = existingRoles.map((r) => r.name);
 
       let userRole = existingRoles.find((r) => r.name === RoleEnum.USER);
       let backofficeRole = existingRoles.find((r) => r.name === RoleEnum.BACKOFFICE);
 
       if (!userRole) {
-        userRole = new RoleEntity({ id: UUIDUtils.create(), name: RoleEnum.USER });
-        await queryRunner.manager.save(RoleSchema, userRole as any);
+        const userRoleEntity = new RoleEntity({ id: UUIDUtils.create(), name: RoleEnum.USER });
+        await queryRunner.manager.insert(RoleSchema, userRoleEntity as any);
         console.log('✅ Created USER role');
       } else {
         console.log('ℹ️  USER role already exists');
       }
 
       if (!backofficeRole) {
-        backofficeRole = new RoleEntity({ id: UUIDUtils.create(), name: RoleEnum.BACKOFFICE });
-        await queryRunner.manager.save(RoleSchema, backofficeRole as any);
+        const backofficeRoleEntity = new RoleEntity({ id: UUIDUtils.create(), name: RoleEnum.BACKOFFICE });
+        await queryRunner.manager.insert(RoleSchema, backofficeRoleEntity as any);
         console.log('✅ Created BACKOFFICE role');
       } else {
         console.log('ℹ️  BACKOFFICE role already exists');
@@ -156,7 +155,7 @@ async function seed() {
         });
         passwordEntity.createPassword();
 
-        await queryRunner.manager.save(UserPasswordSchema, passwordEntity as any);
+        await queryRunner.manager.insert(UserPasswordSchema, passwordEntity as any);
 
         // Create admin user with both roles
         const adminUser = new UserEntity({
@@ -167,7 +166,7 @@ async function seed() {
           password: passwordEntity
         });
 
-        await queryRunner.manager.save(UserSchema, adminUser as any);
+        await queryRunner.manager.insert(UserSchema, adminUser as any);
 
         // Link user to roles
         for (const role of [userRole, backofficeRole]) {

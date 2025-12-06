@@ -17,8 +17,13 @@ export class SiteListUsecase implements IUsecase {
 
   @ValidateSchema(SiteListSchema)
   async execute(input: SiteListInput): Promise<SiteListOutput> {
-    const sites = await this.siteRepository.list(input);
-    return sites;
+    const sites = await this.siteRepository.findAll({ limit: input.limit, page: input.page, search: input.search, sort: input.sort });
+    return {
+      docs: sites,
+      limit: input.limit ?? 10,
+      page: input.page ?? 1,
+      total: sites.length
+    };
   }
 }
 

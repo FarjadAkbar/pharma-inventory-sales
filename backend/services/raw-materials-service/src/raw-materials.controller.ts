@@ -7,7 +7,14 @@ import {
   RAW_MATERIALS_GET_BY_ID,
   RAW_MATERIALS_LIST,
   RAW_MATERIALS_UPDATE
-} from '@shared/constants/message-patterns';
+} from '@/constants/message-patterns';
+
+import { RawMaterialCreateInput } from '@/core/raw-material/use-cases/raw-material-create';
+import { RawMaterialDeleteInput } from '@/core/raw-material/use-cases/raw-material-delete';
+import { RawMaterialGetByIdInput } from '@/core/raw-material/use-cases/raw-material-get-by-id';
+import { RawMaterialListInput } from '@/core/raw-material/repository/raw-material';
+import { RawMaterialUpdateInput } from '@/core/raw-material/use-cases/raw-material-update';
+import { ApiTrancingInput } from '@/utils/request';
 
 import {
   IRawMaterialCreateAdapter,
@@ -28,27 +35,37 @@ export class RawMaterialsController {
   ) {}
 
   @MessagePattern(RAW_MATERIALS_CREATE)
-  async create(@Payload() data: { body?: unknown; user?: unknown; tracing?: unknown }) {
-    return this.createUsecase.execute(data.body as any, { user: data.user, tracing: data.tracing } as any);
+  async create(@Payload() data: { body?: RawMaterialCreateInput; user?: ApiTrancingInput['user']; tracing?: ApiTrancingInput['tracing'] }) {
+    return this.createUsecase.execute(
+      data.body as RawMaterialCreateInput,
+      { user: data.user, tracing: data.tracing } as ApiTrancingInput
+    );
   }
 
   @MessagePattern(RAW_MATERIALS_UPDATE)
-  async update(@Payload() data: { body?: unknown; id?: string; user?: unknown; tracing?: unknown }) {
-    return this.updateUsecase.execute({ ...data.body, id: data.id } as any, { user: data.user, tracing: data.tracing } as any);
+  async update(@Payload() data: { body?: Partial<RawMaterialUpdateInput>; id?: string; user?: ApiTrancingInput['user']; tracing?: ApiTrancingInput['tracing'] }) {
+    const body = (data.body ?? {}) as Record<string, unknown>;
+    return this.updateUsecase.execute(
+      { ...body, id: data.id } as RawMaterialUpdateInput,
+      { user: data.user, tracing: data.tracing } as ApiTrancingInput
+    );
   }
 
   @MessagePattern(RAW_MATERIALS_LIST)
-  async list(@Payload() data: unknown) {
-    return this.listUsecase.execute(data as any);
+  async list(@Payload() data: RawMaterialListInput) {
+    return this.listUsecase.execute(data);
   }
 
   @MessagePattern(RAW_MATERIALS_GET_BY_ID)
-  async getById(@Payload() data: { id?: string }) {
-    return this.getByIdUsecase.execute(data as any);
+  async getById(@Payload() data: RawMaterialGetByIdInput) {
+    return this.getByIdUsecase.execute(data);
   }
 
   @MessagePattern(RAW_MATERIALS_DELETE)
-  async delete(@Payload() data: { id?: string; user?: unknown; tracing?: unknown }) {
-    return this.deleteUsecase.execute({ id: data.id } as any, { user: data.user, tracing: data.tracing } as any);
+  async delete(@Payload() data: { id?: string; user?: ApiTrancingInput['user']; tracing?: ApiTrancingInput['tracing'] }) {
+    return this.deleteUsecase.execute(
+      { id: data.id } as RawMaterialDeleteInput,
+      { user: data.user, tracing: data.tracing } as ApiTrancingInput
+    );
   }
 }

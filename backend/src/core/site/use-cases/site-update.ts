@@ -27,7 +27,7 @@ export class SiteUpdateUsecase implements IUsecase {
 
     const updatedSite = new SiteEntity({ ...site, ...input });
 
-    await this.siteRepository.update(updatedSite);
+    await this.siteRepository.updateOne({ id: input.id }, updatedSite);
 
     tracing.logEvent('site-updated', `Site updated: ${updatedSite.name}`);
 

@@ -14,7 +14,7 @@ import {
   RequestTimeoutInterceptor,
   TracingInterceptor
 } from '@/middlewares/interceptors';
-import { SERVICE_PORTS } from '@shared/constants';
+import { SERVICE_PORTS } from '@/constants';
 import { HealthModule } from './health/health.module';
 import { AuthController } from './controllers/auth.controller';
 import { UsersController } from './controllers/users.controller';
@@ -39,7 +39,6 @@ import { AlertsController } from './controllers/alerts.controller';
     LibModule,
     LoggerModule,
     HealthModule,
-    UserModule,
     ClientsModule.register([
       {
         name: 'AUTH_SERVICE',

@@ -7,6 +7,7 @@ import { ResetPasswordSchema } from '@/infra/database/postgres/schemas/reset-pas
 import { TypeORMRepository } from '@/infra/repository/postgres/repository';
 import { DateUtils } from '@/utils/date';
 
+type Model = ResetPasswordSchema & ResetPasswordEntity;
 @Injectable()
 export class ResetPasswordRepository extends TypeORMRepository<Model> implements IResetPasswordRepository {
   constructor(readonly repository: Repository<Model>) {
@@ -15,10 +16,10 @@ export class ResetPasswordRepository extends TypeORMRepository<Model> implements
 
   async findByIdUserId(id: string): Promise<ResetPasswordEntity> {
     const date = DateUtils.getDate().minus(1800000).toJSDate();
-    return (await this.repository.findOne({
+    const result = await this.repository.findOne({
       where: { user: { id }, createdAt: MoreThan(date) } as FindOptionsWhere<unknown>
-    })) as Model;
+    });
+    return result as unknown as ResetPasswordEntity;
   }
 }
 
-type Model = ResetPasswordSchema & ResetPasswordEntity;

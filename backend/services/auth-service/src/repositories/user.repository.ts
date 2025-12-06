@@ -10,10 +10,15 @@ import { ConvertTypeOrmFilter, SearchTypeEnum, ValidateDatabaseSortAllowed } fro
 import { IEntity } from '@/utils/entity';
 import { PaginationUtils } from '@/utils/pagination';
 
+type Model = UserSchema & UserEntity;
 @Injectable()
 export class UserRepository extends TypeORMRepository<Model> implements IUserRepository {
   constructor(readonly repository: Repository<Model>) {
     super(repository);
+  }
+
+  async softRemove(entity: Partial<UserEntity>): Promise<Model> {
+    return await this.repository.softRemove(entity as Model);
   }
 
   async existsOnUpdate(
@@ -29,14 +34,11 @@ export class UserRepository extends TypeORMRepository<Model> implements IUserRep
     filter: Partial<UserEntity>,
     relations: { [key in keyof Partial<UserEntity>]: boolean }
   ): Promise<UserEntity> {
-    return (await this.repository.findOne({
+    const result = await this.repository.findOne({
       where: filter as FindOptionsWhere<unknown>,
       relations: relations as FindOptionsRelations<unknown>
-    })) as UserEntity;
-  }
-
-  async softRemove(entity: Partial<UserEntity>): Promise<Model> {
-    return await this.repository.softRemove(entity as Model);
+    });
+    return result as unknown as UserEntity;
   }
 
   @ConvertTypeOrmFilter<UserEntity>([
@@ -54,8 +56,7 @@ export class UserRepository extends TypeORMRepository<Model> implements IUserRep
       where: input.search as FindOptionsWhere<IEntity>
     });
 
-    return { docs, total, page: input.page, limit: input.limit };
+    return { docs: docs as unknown as UserEntity[], total, page: input.page, limit: input.limit };
   }
 }
 
-type Model = UserSchema & UserEntity;

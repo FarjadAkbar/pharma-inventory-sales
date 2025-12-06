@@ -14,7 +14,7 @@ import {
   ROLES_LIST,
   ROLES_REMOVE_PERMISSION,
   ROLES_UPDATE
-} from '@shared/constants/message-patterns';
+} from '@/constants/message-patterns';
 
 import { RoleEntity } from '@/core/role/entity/role';
 

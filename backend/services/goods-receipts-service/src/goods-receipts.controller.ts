@@ -7,7 +7,14 @@ import {
   GOODS_RECEIPTS_GET_BY_ID,
   GOODS_RECEIPTS_LIST,
   GOODS_RECEIPTS_UPDATE
-} from '@shared/constants/message-patterns';
+} from '@/constants/message-patterns';
+
+import { GoodsReceiptCreateInput } from '@/core/goods-receipt/use-cases/goods-receipt-create';
+import { GoodsReceiptVerifyInput } from '@/core/goods-receipt/use-cases/goods-receipt-verify';
+import { GoodsReceiptDeleteInput } from '@/core/goods-receipt/use-cases/goods-receipt-delete';
+import { GoodsReceiptGetByIdInput } from '@/core/goods-receipt/use-cases/goods-receipt-get-by-id';
+import { GoodsReceiptListInput } from '@/core/goods-receipt/repository/goods-receipt';
+import { ApiTrancingInput } from '@/utils/request';
 
 import {
   IGoodsReceiptCreateAdapter,
@@ -28,27 +35,37 @@ export class GoodsReceiptsController {
   ) {}
 
   @MessagePattern(GOODS_RECEIPTS_CREATE)
-  async create(@Payload() data: { body?: unknown; user?: unknown; tracing?: unknown }) {
-    return this.createUsecase.execute(data.body as any, { user: data.user, tracing: data.tracing } as any);
+  async create(@Payload() data: { body?: GoodsReceiptCreateInput; user?: ApiTrancingInput['user']; tracing?: ApiTrancingInput['tracing'] }) {
+    return this.createUsecase.execute(
+      data.body as GoodsReceiptCreateInput,
+      { user: data.user, tracing: data.tracing } as ApiTrancingInput
+    );
   }
 
   @MessagePattern(GOODS_RECEIPTS_UPDATE)
-  async update(@Payload() data: { body?: unknown; id?: string; user?: unknown; tracing?: unknown }) {
-    return this.verifyUsecase.execute({ id: data.id, ...data.body } as any, { user: data.user, tracing: data.tracing } as any);
+  async update(@Payload() data: { body?: Partial<GoodsReceiptVerifyInput>; id?: string; user?: ApiTrancingInput['user']; tracing?: ApiTrancingInput['tracing'] }) {
+    const body = (data.body ?? {}) as Record<string, unknown>;
+    return this.verifyUsecase.execute(
+      { id: data.id, ...body } as GoodsReceiptVerifyInput,
+      { user: data.user, tracing: data.tracing } as ApiTrancingInput
+    );
   }
 
   @MessagePattern(GOODS_RECEIPTS_LIST)
-  async list(@Payload() data: unknown) {
-    return this.listUsecase.execute(data as any);
+  async list(@Payload() data: GoodsReceiptListInput) {
+    return this.listUsecase.execute(data);
   }
 
   @MessagePattern(GOODS_RECEIPTS_GET_BY_ID)
-  async getById(@Payload() data: { id?: string }) {
-    return this.getByIdUsecase.execute(data as any);
+  async getById(@Payload() data: GoodsReceiptGetByIdInput) {
+    return this.getByIdUsecase.execute(data);
   }
 
   @MessagePattern(GOODS_RECEIPTS_DELETE)
-  async delete(@Payload() data: { id?: string; user?: unknown; tracing?: unknown }) {
-    return this.deleteUsecase.execute({ id: data.id } as any, { user: data.user, tracing: data.tracing } as any);
+  async delete(@Payload() data: { id?: string; user?: ApiTrancingInput['user']; tracing?: ApiTrancingInput['tracing'] }) {
+    return this.deleteUsecase.execute(
+      { id: data.id } as GoodsReceiptDeleteInput,
+      { user: data.user, tracing: data.tracing } as ApiTrancingInput
+    );
   }
 }

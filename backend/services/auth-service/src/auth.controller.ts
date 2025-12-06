@@ -7,7 +7,14 @@ import {
   AUTH_REFRESH_TOKEN,
   AUTH_RESET_PASSWORD_CONFIRM,
   AUTH_RESET_PASSWORD_SEND_EMAIL
-} from '@shared/constants/message-patterns';
+} from '@/constants/message-patterns';
+
+import { LoginInput } from '@/core/user/use-cases/user-login';
+import { RefreshTokenInput } from '@/core/user/use-cases/user-refresh-token';
+import { LogoutInput } from '@/core/user/use-cases/user-logout';
+import { ResetPasswordSendEmailInput } from '@/core/reset-password/use-cases/reset-password-send-email';
+import { ResetPasswordConfirmInput } from '@/core/reset-password/use-cases/reset-password-confirm';
+import { ApiTrancingInput } from '@/utils/request';
 
 import {
   ILoginAdapter,
@@ -28,27 +35,34 @@ export class AuthController {
   ) {}
 
   @MessagePattern(AUTH_LOGIN)
-  async login(@Payload() data: { body: unknown; user?: unknown; tracing?: unknown }) {
-    return this.loginUsecase.execute(data.body as any, { user: data.user, tracing: data.tracing } as any);
+  async login(@Payload() data: { body?: LoginInput; user?: ApiTrancingInput['user']; tracing?: ApiTrancingInput['tracing'] }) {
+    return this.loginUsecase.execute(
+      data.body as LoginInput,
+      { user: data.user, tracing: data.tracing } as ApiTrancingInput
+    );
   }
 
   @MessagePattern(AUTH_REFRESH_TOKEN)
-  async refreshToken(@Payload() data: { body: unknown }) {
-    return this.refreshTokenUsecase.execute(data.body as any);
+  async refreshToken(@Payload() data: { body?: RefreshTokenInput }) {
+    return this.refreshTokenUsecase.execute(data.body as RefreshTokenInput);
   }
 
   @MessagePattern(AUTH_LOGOUT)
-  async logout(@Payload() data: { body: unknown; user?: unknown; tracing?: unknown }) {
-    return this.logoutUsecase.execute(data.body as any, { user: data.user, tracing: data.tracing } as any);
+  async logout(@Payload() data: { body?: LogoutInput; user?: ApiTrancingInput['user']; tracing?: ApiTrancingInput['tracing'] }) {
+    return this.logoutUsecase.execute(
+      data.body as LogoutInput,
+      { user: data.user, tracing: data.tracing } as ApiTrancingInput
+    );
   }
 
   @MessagePattern(AUTH_RESET_PASSWORD_SEND_EMAIL)
-  async sendResetPasswordEmail(@Payload() data: { body: unknown }) {
-    return this.sendEmailResetPasswordUsecase.execute(data.body as any);
+  async sendResetPasswordEmail(@Payload() data: { body?: ResetPasswordSendEmailInput }) {
+    return this.sendEmailResetPasswordUsecase.execute(data.body as ResetPasswordSendEmailInput);
   }
 
   @MessagePattern(AUTH_RESET_PASSWORD_CONFIRM)
-  async confirmResetPassword(@Payload() data: { body: unknown; token?: string }) {
-    return this.confirmResetPasswordUsecase.execute({ ...data.body, token: data.token } as any);
+  async confirmResetPassword(@Payload() data: { body?: Partial<ResetPasswordConfirmInput>; token?: string }) {
+    const body = (data.body ?? {}) as Record<string, unknown>;
+    return this.confirmResetPasswordUsecase.execute({ ...body, token: data.token } as ResetPasswordConfirmInput);
   }
 }
