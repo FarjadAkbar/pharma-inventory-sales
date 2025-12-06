@@ -1,25 +1,41 @@
 import type { NextRequest } from "next/server"
 import { requireAuth } from "@/lib/auth-middleware"
-import { mockUsers } from "@/lib/mock-data"
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+const API_GATEWAY_URL = process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:4000/api/v1'
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   return requireAuth(["admin", "client_admin", "store_manager"])(request, async (req, user) => {
-    const u = mockUsers.find((x) => x.id === params.id)
-    if (!u) return Response.json({ success: false, error: "User not found" }, { status: 404 })
+    try {
+      const token = req.headers.get("authorization")?.replace("Bearer ", "")
 
-    if (user.role === "store_manager") {
-      // ensure target user overlaps within manager stores and is not admin/manager
-      if (u.role === "admin" || u.role === "store_manager") {
-        return Response.json({ success: false, error: "Insufficient permissions" }, { status: 403 })
+      // Call backend API Gateway
+      const response = await fetch(`${API_GATEWAY_URL}/users/${params.id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        return Response.json(
+          { success: false, error: data.message || 'Failed to fetch user' },
+          { status: response.status }
+        )
       }
-      const managerStores = (user as any).assignedStores || []
-      const userStores = (u as any).assignedStores || []
-      const overlap = userStores.some((sid: string) => managerStores.includes(sid))
-      if (!overlap) return Response.json({ success: false, error: "User not in your stores" }, { status: 403 })
-    }
 
-    return Response.json({ success: true, data: u })
+      return Response.json({
+        success: true,
+        data: data,
+      })
+    } catch (error) {
+      console.error("Get user error:", error)
+      return Response.json({ success: false, error: "Internal server error" }, { status: 500 })
+    }
   })
 }
-
-

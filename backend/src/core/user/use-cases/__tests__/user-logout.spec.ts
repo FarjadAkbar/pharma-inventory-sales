@@ -4,7 +4,7 @@ import { TestMock } from 'test/mock';
 import { ICacheAdapter } from '@/infra/cache';
 import { ISecretsAdapter, SecretsModule } from '@/infra/secrets';
 import { TokenLibModule } from '@/libs/token';
-import { ILogoutAdapter } from '@/modules/logout/adapter';
+import { ILogoutAdapter } from '@/services/auth-service/src/adapters';
 import { ZodExceptionIssue } from '@/utils/validator';
 
 import { LogoutInput, LogoutUsecase } from '../user-logout';

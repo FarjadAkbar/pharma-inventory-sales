@@ -17,6 +17,9 @@
       ],
       "@/test/*": [
         "./test/*"
+      ],
+      "@/services/*": [
+        "./services/*"
       ]
     },
     "baseUrl": "./",

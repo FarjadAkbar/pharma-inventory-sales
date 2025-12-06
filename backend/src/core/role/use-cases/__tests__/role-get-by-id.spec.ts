@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { TestMock } from 'test/mock';
 
-import { IRoleGetByIdAdapter } from '@/modules/role/adapter';
+import { IRoleGetByIdAdapter } from '@/services/roles-service/src/adapters';
 import { ApiNotFoundException } from '@/utils/exception';
 import { ZodExceptionIssue } from '@/utils/validator';
 

@@ -2,7 +2,7 @@ import { Test } from '@nestjs/testing';
 import { TestMock } from 'test/mock';
 
 import { RoleEntity, RoleEnum } from '@/core/role/entity/role';
-import { IUserListAdapter } from '@/modules/user/adapter';
+import { IUserListAdapter } from '@/services/users-service/src/adapters';
 import { ZodExceptionIssue } from '@/utils/validator';
 
 import { UserEntity } from '../../entity/user';

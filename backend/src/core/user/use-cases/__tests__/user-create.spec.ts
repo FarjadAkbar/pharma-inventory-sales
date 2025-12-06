@@ -6,7 +6,7 @@ import { IRoleRepository } from '@/core/role/repository/role';
 import { ILoggerAdapter, LoggerModule } from '@/infra/logger';
 import { CreatedModel } from '@/infra/repository';
 import { EmitEventOutput, IEventAdapter } from '@/libs/event';
-import { IUserCreateAdapter } from '@/modules/user/adapter';
+import { IUserCreateAdapter } from '@/services/users-service/src/adapters';
 import { ApiConflictException, ApiNotFoundException } from '@/utils/exception';
 import { ZodExceptionIssue } from '@/utils/validator';
 

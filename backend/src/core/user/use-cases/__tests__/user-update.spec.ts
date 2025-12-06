@@ -5,7 +5,7 @@ import { RoleEntity, RoleEnum } from '@/core/role/entity/role';
 import { IRoleRepository } from '@/core/role/repository/role';
 import { ILoggerAdapter, LoggerModule } from '@/infra/logger';
 import { CreatedModel } from '@/infra/repository';
-import { IUserUpdateAdapter } from '@/modules/user/adapter';
+import { IUserUpdateAdapter } from '@/services/users-service/src/adapters';
 import { ApiConflictException, ApiNotFoundException } from '@/utils/exception';
 import { UUIDUtils } from '@/utils/uuid';
 import { ZodExceptionIssue } from '@/utils/validator';

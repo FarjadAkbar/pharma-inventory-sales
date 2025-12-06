@@ -19,6 +19,8 @@ import { QualityControlApiService } from "./quality-control-api.service"
 import { ReportingApiService } from "./reporting-api.service"
 import { StoresApiService } from "./stores-api.service"
 import { UsersApiService } from "./users-api.service"
+import { RolesApiService } from "./roles-api.service"
+import { PermissionsApiService } from "./permissions-api.service"
 import { VendorsApiService } from "./vendors-api.service"
 import { WarehouseApiService } from "./warehouse-api.service"
 
@@ -32,6 +34,8 @@ export const suppliersApi = new SuppliersApiService()
 export const rawMaterialsApi = new RawMaterialsApiService()
 export const purchaseOrdersApi = new PurchaseOrdersApiService()
 export const usersApi = new UsersApiService()
+export const rolesApi = new RolesApiService()
+export const permissionsApi = new PermissionsApiService()
 export const productsApi = new ProductsApiService()
 export const vendorsApi = new VendorsApiService()
 export const storesApi = new StoresApiService()
@@ -51,6 +55,8 @@ export const api = {
   rawMaterials: rawMaterialsApi,
   purchaseOrders: purchaseOrdersApi,
   users: usersApi,
+  roles: rolesApi,
+  permissions: permissionsApi,
   products: productsApi,
   vendors: vendorsApi,
   stores: storesApi,

@@ -3,7 +3,7 @@ import { TestMock } from 'test/mock';
 
 import { ILoggerAdapter } from '@/infra/logger';
 import { UpdatedModel } from '@/infra/repository';
-import { IPermissionUpdateAdapter } from '@/modules/permission/adapter';
+import { IPermissionUpdateAdapter } from '@/services/permissions-service/src/adapters';
 import { ApiConflictException, ApiNotFoundException } from '@/utils/exception';
 import { ZodExceptionIssue } from '@/utils/validator';
 

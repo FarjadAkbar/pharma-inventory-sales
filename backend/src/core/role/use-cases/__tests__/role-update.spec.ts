@@ -3,7 +3,7 @@ import { TestMock } from 'test/mock';
 
 import { ILoggerAdapter } from '@/infra/logger';
 import { CreatedModel } from '@/infra/repository';
-import { IRoleUpdateAdapter } from '@/modules/role/adapter';
+import { IRoleUpdateAdapter } from '@/services/roles-service/src/adapters';
 import { ApiNotFoundException } from '@/utils/exception';
 import { ZodExceptionIssue } from '@/utils/validator';
 

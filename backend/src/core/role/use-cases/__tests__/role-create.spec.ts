@@ -2,7 +2,7 @@ import { Test } from '@nestjs/testing';
 import { TestMock } from 'test/mock';
 
 import { ILoggerAdapter } from '@/infra/logger';
-import { IRoleCreateAdapter } from '@/modules/role/adapter';
+import { IRoleCreateAdapter } from '@/services/roles-service/src/adapters';
 import { ZodExceptionIssue } from '@/utils/validator';
 
 import { RoleEnum } from '../../entity/role';

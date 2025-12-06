@@ -1,105 +1,29 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD, APP_INTERCEPTOR, Reflector } from '@nestjs/core';
 
 import { InfraModule } from '@/infra/module';
-import { AuthorizationRoleGuard } from '@/middlewares/guards';
-import { HealthModule } from '@/modules/health/module';
-import { LoginModule } from '@/modules/login/module';
-import { LogoutModule } from '@/modules/logout/module';
-import { UserModule } from '@/modules/user/module';
-
-import { IUserRepository } from './core/user/repository/user';
-import { ILoggerAdapter, LoggerModule } from './infra/logger';
+import { LoggerModule } from './infra/logger';
 import { LibModule } from './libs/module';
-import {
-  ExceptionHandlerInterceptor,
-  HttpLoggerInterceptor,
-  MetricsInterceptor,
-  RequestTimeoutInterceptor,
-  TracingInterceptor
-} from './middlewares/interceptors';
-import { AlertModule } from './modules/alert/module';
-import { PermissionModule } from './modules/permission/module';
-import { ResetPasswordModule } from './modules/reset-password/module';
-import { RoleModule } from './modules/role/module';
-import { DrugModule } from './modules/drug/module';
-import { SupplierModule } from './modules/supplier/module';
-import { RawMaterialModule } from './modules/raw-material/module';
-import { PurchaseOrderModule } from './modules/purchase-order/module';
-import { GoodsReceiptModule } from './modules/goods-receipt/module';
-import { QCSampleModule } from './modules/qc-sample/module';
-import { QCTestModule } from './modules/qc-test/module';
-import { QCResultModule } from './modules/qc-result/module';
-import { QAReleaseModule } from './modules/qa-release/module';
-import { DeviationModule } from './modules/deviation/module';
-import { SiteModule } from './modules/site/module';
 
+/**
+ * Shared Infrastructure Module
+ * 
+ * This module contains only shared infrastructure code that is used by:
+ * - API Gateway
+ * - All microservices
+ * 
+ * All business logic modules have been extracted to microservices.
+ * This backend directory now serves as a shared codebase for:
+ * - Core entities and use cases
+ * - Infrastructure (database, cache, logger, secrets)
+ * - Libraries (token, event, i18n)
+ * - Utils
+ */
 @Module({
   imports: [
     InfraModule,
     LibModule,
-    HealthModule,
-    AlertModule,
-    UserModule,
-    LoginModule,
-    LogoutModule,
-    ResetPasswordModule,
-    RoleModule,
-    PermissionModule,
-    LoggerModule,
-    DrugModule,
-    SupplierModule,
-    RawMaterialModule,
-    PurchaseOrderModule,
-    GoodsReceiptModule,
-    QCSampleModule,
-    QCTestModule,
-    QCResultModule,
-    QAReleaseModule,
-    DeviationModule,
-    SiteModule
+    LoggerModule
   ],
-  providers: [
-    {
-      provide: APP_INTERCEPTOR,
-      useFactory(logger: ILoggerAdapter) {
-        return new RequestTimeoutInterceptor(new Reflector(), logger);
-      },
-      inject: [ILoggerAdapter]
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useFactory() {
-        return new ExceptionHandlerInterceptor();
-      }
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useFactory(logger: ILoggerAdapter) {
-        return new HttpLoggerInterceptor(logger);
-      },
-      inject: [ILoggerAdapter]
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useFactory(logger: ILoggerAdapter) {
-        return new TracingInterceptor(logger);
-      },
-      inject: [ILoggerAdapter]
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useFactory() {
-        return new MetricsInterceptor();
-      }
-    },
-    {
-      provide: APP_GUARD,
-      useFactory: (repository: IUserRepository) => {
-        return new AuthorizationRoleGuard(new Reflector(), repository);
-      },
-      inject: [IUserRepository]
-    }
-  ]
+  providers: []
 })
 export class AppModule {}

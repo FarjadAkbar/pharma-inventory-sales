@@ -1,8 +1,7 @@
 import type { NextRequest } from "next/server"
 import { requireAuth } from "@/lib/auth-middleware"
-import { mockUsers } from "@/lib/mock-data"
-import { validateEmail, validateText } from "@/lib/validations"
-import type { User } from "@/types/auth"
+
+const API_GATEWAY_URL = process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:4000/api/v1'
 
 export async function GET(request: NextRequest) {
   return requireAuth(["admin", "client_admin", "store_manager"])(request, async (req, user) => {
@@ -10,49 +9,46 @@ export async function GET(request: NextRequest) {
       const { searchParams } = new URL(request.url)
       const search = searchParams.get("search")
       const role = searchParams.get("role")
-      const page = Number.parseInt(searchParams.get("page") || "1")
-      const limit = Number.parseInt(searchParams.get("limit") || "10")
+      const page = searchParams.get("page") || "1"
+      const limit = searchParams.get("limit") || "10"
 
-      let filteredUsers = [...mockUsers]
+      // Build query string
+      const queryParams = new URLSearchParams()
+      if (search) queryParams.set("search", search)
+      if (role) queryParams.set("role", role)
+      queryParams.set("page", page)
+      queryParams.set("limit", limit)
 
-      // Store manager can only see users within their assigned stores and cannot see admins
-      if (user.role === "store_manager") {
-        const managerStores = (user as any).assignedStores || []
-        filteredUsers = filteredUsers.filter((u) => {
-          if (u.role === "admin") return false
-          const userStores = (u as any).assignedStores || []
-          return userStores.some((sid: string) => managerStores.includes(sid))
-        })
-      }
+      const token = req.headers.get("authorization")?.replace("Bearer ", "")
 
-      // Apply search filter
-      if (search) {
-        filteredUsers = filteredUsers.filter(
-          (user) =>
-            user.name.toLowerCase().includes(search.toLowerCase()) ||
-            user.email.toLowerCase().includes(search.toLowerCase()),
+      // Call backend API Gateway
+      const response = await fetch(`${API_GATEWAY_URL}/users?${queryParams.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        return Response.json(
+          { success: false, error: data.message || 'Failed to fetch users' },
+          { status: response.status }
         )
       }
 
-      // Apply role filter
-      if (role) {
-        filteredUsers = filteredUsers.filter((user) => user.role === role)
-      }
-
-      // Apply pagination
-      const startIndex = (page - 1) * limit
-      const endIndex = startIndex + limit
-      const paginatedUsers = filteredUsers.slice(startIndex, endIndex)
-
+      // Backend returns paginated response
       return Response.json({
         success: true,
         data: {
-          users: paginatedUsers,
+          users: data.docs || [],
           pagination: {
-            page,
-            limit,
-            total: filteredUsers.length,
-            pages: Math.ceil(filteredUsers.length / limit),
+            page: data.page || parseInt(page),
+            limit: data.limit || parseInt(limit),
+            total: data.total || 0,
+            pages: Math.ceil((data.total || 0) / (data.limit || parseInt(limit))),
           },
         },
       })
@@ -67,56 +63,40 @@ export async function POST(request: NextRequest) {
   return requireAuth(["admin", "client_admin", "store_manager"])(request, async (req, user) => {
     try {
       const userData = await request.json()
+      const { name, email, password, roles } = userData
 
       // Validation
-      const { name, email, role = "employee", assignedStores = [], screenPermissions = [] } = userData
-
-      if (!name || !email) {
-        return Response.json({ success: false, error: "Name and email are required" }, { status: 400 })
+      if (!name || !email || !password || !roles) {
+        return Response.json(
+          { success: false, error: "Name, email, password, and roles are required" },
+          { status: 400 }
+        )
       }
 
-      if (!validateText(name, 2, 50)) {
-        return Response.json({ success: false, error: "Name must be between 2 and 50 characters" }, { status: 400 })
-      }
+      const token = req.headers.get("authorization")?.replace("Bearer ", "")
 
-      if (!validateEmail(email)) {
-        return Response.json({ success: false, error: "Invalid email format" }, { status: 400 })
-      }
+      // Call backend API Gateway
+      const response = await fetch(`${API_GATEWAY_URL}/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+        body: JSON.stringify({ name, email, password, roles }),
+      })
 
-      // Store manager can only create employees for their stores
-      if (user.role === "store_manager") {
-        if (role !== "employee") {
-          return Response.json({ success: false, error: "Only employees can be created by store managers" }, { status: 403 })
-        }
-        const managerStores = (user as any).assignedStores || []
-        const invalid = assignedStores.some((sid: string) => !managerStores.includes(sid))
-        if (invalid || assignedStores.length === 0) {
-          return Response.json({ success: false, error: "Assigned stores must be within your stores" }, { status: 400 })
-        }
-      }
+      const data = await response.json()
 
-      // Check if user already exists
-      const existingUser = mockUsers.find((u) => u.email === email)
-      if (existingUser) {
-        return Response.json({ success: false, error: "User with this email already exists" }, { status: 409 })
+      if (!response.ok) {
+        return Response.json(
+          { success: false, error: data.message || 'Failed to create user' },
+          { status: response.status }
+        )
       }
-
-      const newUser: User = {
-        id: (mockUsers.length + 1).toString(),
-        name,
-        email,
-        role: role as any,
-        assignedStores,
-        screenPermissions,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-
-      mockUsers.push(newUser)
 
       return Response.json({
         success: true,
-        data: newUser,
+        data: data,
       })
     } catch (error) {
       console.error("Create user error:", error)
@@ -129,33 +109,34 @@ export async function PUT(request: NextRequest) {
   return requireAuth(["admin", "client_admin", "store_manager"])(request, async (req, user) => {
     try {
       const body = await request.json()
-      const { id, name, email, role, assignedStores = [], screenPermissions = [] } = body || {}
-      const idx = mockUsers.findIndex((u) => u.id === id)
-      if (idx === -1) return Response.json({ success: false, error: "User not found" }, { status: 404 })
+      const { id, name, email, roles } = body
 
-      // Store manager constraints
-      if (user.role === "store_manager") {
-        const managerStores = (user as any).assignedStores || []
-        const target = mockUsers[idx]
-        if (target.role === "admin" || target.role === "store_manager") {
-          return Response.json({ success: false, error: "Insufficient permissions" }, { status: 403 })
-        }
-        const invalid = assignedStores.some((sid: string) => !managerStores.includes(sid))
-        if (invalid) return Response.json({ success: false, error: "Assigned stores must be within your stores" }, { status: 400 })
+      if (!id) {
+        return Response.json({ success: false, error: "id is required" }, { status: 400 })
       }
 
-      const existing = mockUsers[idx]
-      mockUsers[idx] = {
-        ...existing,
-        ...(name ? { name } : {}),
-        ...(email ? { email } : {}),
-        ...(role ? { role } : {}),
-        assignedStores,
-        screenPermissions,
-        updatedAt: new Date().toISOString(),
-      } as any
+      const token = req.headers.get("authorization")?.replace("Bearer ", "")
 
-      return Response.json({ success: true, data: mockUsers[idx] })
+      // Call backend API Gateway
+      const response = await fetch(`${API_GATEWAY_URL}/users/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+        body: JSON.stringify({ name, email, roles }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        return Response.json(
+          { success: false, error: data.message || 'Failed to update user' },
+          { status: response.status }
+        )
+      }
+
+      return Response.json({ success: true, data })
     } catch (error) {
       console.error("Update user error:", error)
       return Response.json({ success: false, error: "Internal server error" }, { status: 500 })
@@ -169,22 +150,28 @@ export async function DELETE(request: NextRequest) {
       const { searchParams } = new URL(request.url)
       const id = searchParams.get("id")
       if (!id) return Response.json({ success: false, error: "id is required" }, { status: 400 })
-      const idx = mockUsers.findIndex((u) => u.id === id)
-      if (idx === -1) return Response.json({ success: false, error: "User not found" }, { status: 404 })
 
-      const target = mockUsers[idx]
-      if (user.role === "store_manager") {
-        const managerStores = (user as any).assignedStores || []
-        const userStores = (target as any).assignedStores || []
-        if (target.role === "admin" || target.role === "store_manager") {
-          return Response.json({ success: false, error: "Insufficient permissions" }, { status: 403 })
-        }
-        const overlap = userStores.some((sid: string) => managerStores.includes(sid))
-        if (!overlap) return Response.json({ success: false, error: "User not in your stores" }, { status: 403 })
+      const token = req.headers.get("authorization")?.replace("Bearer ", "")
+
+      // Call backend API Gateway
+      const response = await fetch(`${API_GATEWAY_URL}/users/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        return Response.json(
+          { success: false, error: data.message || 'Failed to delete user' },
+          { status: response.status }
+        )
       }
 
-      const removed = mockUsers.splice(idx, 1)[0]
-      return Response.json({ success: true, data: removed })
+      return Response.json({ success: true, data })
     } catch (error) {
       console.error("Delete user error:", error)
       return Response.json({ success: false, error: "Internal server error" }, { status: 500 })

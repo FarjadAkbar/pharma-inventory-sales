@@ -1,13 +1,456 @@
-version: "2"
+version: '3.8'
+
 services:
-  microservice-api:
-    container_name: microservice-api
+  # Infrastructure Services
+  postgres:
+    container_name: nestjs-microservice-postgres
+    image: postgres:15-alpine
     env_file:
       - .env
+    ports:
+      - '5432:5432'
+    volumes:
+      - nestjs-microservice-postgres:/data/postgres
+      - .docker/postgres/create-database.sql:/docker-entrypoint-initdb.d/create-database.sql
+    restart: always
+    networks:
+      - app-network
+      - postgres-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    container_name: nestjs-microservice-redis
+    image: redis:7-alpine
+    volumes:
+      - nestjs-microservice-redis:/data
+    ports:
+      - 6379:6379
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API Gateway
+  api-gateway:
+    container_name: api-gateway
     build:
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: ./api-gateway/Dockerfile
+    env_file:
+      - .env
     ports:
-      - "3000:3000"
+      - "4000:4000"
     volumes:
-      - ./src:/app/src
+      - ./api-gateway/src:/app/src
+      - ./shared:/app/../shared
+      - ./src:/app/../src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      users-service:
+        condition: service_started
+      roles-service:
+        condition: service_started
+      permissions-service:
+        condition: service_started
+      sites-service:
+        condition: service_started
+      suppliers-service:
+        condition: service_started
+      drugs-service:
+        condition: service_started
+      raw-materials-service:
+        condition: service_started
+      purchase-orders-service:
+        condition: service_started
+      goods-receipts-service:
+        condition: service_started
+      qc-samples-service:
+        condition: service_started
+      qc-tests-service:
+        condition: service_started
+      qc-results-service:
+        condition: service_started
+      qa-releases-service:
+        condition: service_started
+      deviations-service:
+        condition: service_started
+      alerts-service:
+        condition: service_started
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # Microservices
+  auth-service:
+    container_name: auth-service
+    build:
+      context: .
+      dockerfile: ./services/auth-service/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "4001:4001"
+    volumes:
+      - ./services/auth-service/src:/app/src
+      - ./shared:/app/../../shared
+      - ./src:/app/../../src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  users-service:
+    container_name: users-service
+    build:
+      context: .
+      dockerfile: ./services/users-service/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "4002:4002"
+    volumes:
+      - ./services/users-service/src:/app/src
+      - ./shared:/app/../../shared
+      - ./src:/app/../../src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  roles-service:
+    container_name: roles-service
+    build:
+      context: .
+      dockerfile: ./services/roles-service/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "4003:4003"
+    volumes:
+      - ./services/roles-service/src:/app/src
+      - ./shared:/app/../../shared
+      - ./src:/app/../../src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  permissions-service:
+    container_name: permissions-service
+    build:
+      context: .
+      dockerfile: ./services/permissions-service/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "4004:4004"
+    volumes:
+      - ./services/permissions-service/src:/app/src
+      - ./shared:/app/../../shared
+      - ./src:/app/../../src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  sites-service:
+    container_name: sites-service
+    build:
+      context: .
+      dockerfile: ./services/sites-service/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "4005:4005"
+    volumes:
+      - ./services/sites-service/src:/app/src
+      - ./shared:/app/../../shared
+      - ./src:/app/../../src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  suppliers-service:
+    container_name: suppliers-service
+    build:
+      context: .
+      dockerfile: ./services/suppliers-service/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "4006:4006"
+    volumes:
+      - ./services/suppliers-service/src:/app/src
+      - ./shared:/app/../../shared
+      - ./src:/app/../../src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  drugs-service:
+    container_name: drugs-service
+    build:
+      context: .
+      dockerfile: ./services/drugs-service/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "4007:4007"
+    volumes:
+      - ./services/drugs-service/src:/app/src
+      - ./shared:/app/../../shared
+      - ./src:/app/../../src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  raw-materials-service:
+    container_name: raw-materials-service
+    build:
+      context: .
+      dockerfile: ./services/raw-materials-service/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "4008:4008"
+    volumes:
+      - ./services/raw-materials-service/src:/app/src
+      - ./shared:/app/../../shared
+      - ./src:/app/../../src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  purchase-orders-service:
+    container_name: purchase-orders-service
+    build:
+      context: .
+      dockerfile: ./services/purchase-orders-service/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "4009:4009"
+    volumes:
+      - ./services/purchase-orders-service/src:/app/src
+      - ./shared:/app/../../shared
+      - ./src:/app/../../src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  goods-receipts-service:
+    container_name: goods-receipts-service
+    build:
+      context: .
+      dockerfile: ./services/goods-receipts-service/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "4010:4010"
+    volumes:
+      - ./services/goods-receipts-service/src:/app/src
+      - ./shared:/app/../../shared
+      - ./src:/app/../../src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  qc-samples-service:
+    container_name: qc-samples-service
+    build:
+      context: .
+      dockerfile: ./services/qc-samples-service/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "4011:4011"
+    volumes:
+      - ./services/qc-samples-service/src:/app/src
+      - ./shared:/app/../../shared
+      - ./src:/app/../../src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  qc-tests-service:
+    container_name: qc-tests-service
+    build:
+      context: .
+      dockerfile: ./services/qc-tests-service/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "4012:4012"
+    volumes:
+      - ./services/qc-tests-service/src:/app/src
+      - ./shared:/app/../../shared
+      - ./src:/app/../../src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  qc-results-service:
+    container_name: qc-results-service
+    build:
+      context: .
+      dockerfile: ./services/qc-results-service/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "4013:4013"
+    volumes:
+      - ./services/qc-results-service/src:/app/src
+      - ./shared:/app/../../shared
+      - ./src:/app/../../src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  qa-releases-service:
+    container_name: qa-releases-service
+    build:
+      context: .
+      dockerfile: ./services/qa-releases-service/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "4014:4014"
+    volumes:
+      - ./services/qa-releases-service/src:/app/src
+      - ./shared:/app/../../shared
+      - ./src:/app/../../src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  deviations-service:
+    container_name: deviations-service
+    build:
+      context: .
+      dockerfile: ./services/deviations-service/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "4015:4015"
+    volumes:
+      - ./services/deviations-service/src:/app/src
+      - ./shared:/app/../../shared
+      - ./src:/app/../../src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  alerts-service:
+    container_name: alerts-service
+    build:
+      context: .
+      dockerfile: ./services/alerts-service/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "4016:4016"
+    volumes:
+      - ./services/alerts-service/src:/app/src
+      - ./shared:/app/../../shared
+      - ./src:/app/../../src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+volumes:
+  nestjs-microservice-postgres:
+  nestjs-microservice-redis:
+
+networks:
+  app-network:
+    driver: bridge
+  postgres-network:
+    driver: bridge

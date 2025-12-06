@@ -6,7 +6,7 @@ import {
   PermissionListOutput,
   PermissionListUsecase
 } from '@/core/permission/use-cases/permission-list';
-import { IPermissionListAdapter } from '@/modules/permission/adapter';
+import { IPermissionListAdapter } from '@/services/permissions-service/src/adapters';
 import { ZodExceptionIssue } from '@/utils/validator';
 
 import { IPermissionRepository } from '../../repository/permission';

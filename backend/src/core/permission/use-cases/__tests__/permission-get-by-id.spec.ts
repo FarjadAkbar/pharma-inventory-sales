@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { TestMock } from 'test/mock';
 
-import { IPermissionGetByIdAdapter } from '@/modules/permission/adapter';
+import { IPermissionGetByIdAdapter } from '@/services/permissions-service/src/adapters';
 import { ApiNotFoundException } from '@/utils/exception';
 import { ZodExceptionIssue } from '@/utils/validator';
 

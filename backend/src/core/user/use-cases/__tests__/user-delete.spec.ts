@@ -2,7 +2,7 @@ import { Test } from '@nestjs/testing';
 import { TestMock } from 'test/mock';
 
 import { RoleEntity, RoleEnum } from '@/core/role/entity/role';
-import { IUserDeleteAdapter } from '@/modules/user/adapter';
+import { IUserDeleteAdapter } from '@/services/users-service/src/adapters';
 import { ApiNotFoundException } from '@/utils/exception';
 import { ZodExceptionIssue } from '@/utils/validator';
 

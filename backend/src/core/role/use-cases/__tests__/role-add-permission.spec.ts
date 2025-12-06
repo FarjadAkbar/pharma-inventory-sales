@@ -4,7 +4,7 @@ import { TestMock } from 'test/mock';
 import { PermissionEntity } from '@/core/permission/entity/permission';
 import { IPermissionRepository } from '@/core/permission/repository/permission';
 import { CreatedModel } from '@/infra/repository';
-import { IRoleAddPermissionAdapter } from '@/modules/role/adapter';
+import { IRoleAddPermissionAdapter } from '@/services/roles-service/src/adapters';
 import { ApiNotFoundException } from '@/utils/exception';
 import { UUIDUtils } from '@/utils/uuid';
 import { ZodExceptionIssue } from '@/utils/validator';

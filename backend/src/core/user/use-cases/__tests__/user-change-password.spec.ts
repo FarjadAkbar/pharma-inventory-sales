@@ -4,7 +4,7 @@ import { TestMock } from 'test/mock';
 import { RoleEntity, RoleEnum } from '@/core/role/entity/role';
 import { LoggerModule } from '@/infra/logger';
 import { CreatedModel } from '@/infra/repository';
-import { IUserChangePasswordAdapter } from '@/modules/user/adapter';
+import { IUserChangePasswordAdapter } from '@/services/users-service/src/adapters';
 import { ApiBadRequestException, ApiNotFoundException } from '@/utils/exception';
 import { ZodExceptionIssue } from '@/utils/validator';
 

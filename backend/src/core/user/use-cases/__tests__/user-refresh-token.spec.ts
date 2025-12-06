@@ -3,7 +3,7 @@ import { TestMock } from 'test/mock';
 
 import { RoleEntity, RoleEnum } from '@/core/role/entity/role';
 import { ITokenAdapter, SignOutput } from '@/libs/token';
-import { IRefreshTokenAdapter } from '@/modules/login/adapter';
+import { IRefreshTokenAdapter } from '@/services/auth-service/src/adapters';
 import { ApiBadRequestException, ApiNotFoundException } from '@/utils/exception';
 import { ZodExceptionIssue } from '@/utils/validator';
 

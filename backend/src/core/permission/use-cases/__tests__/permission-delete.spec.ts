@@ -4,7 +4,7 @@ import { TestMock } from 'test/mock';
 import { PermissionDeleteInput, PermissionDeleteUsecase } from '@/core/permission/use-cases/permission-delete';
 import { RoleEntity, RoleEnum } from '@/core/role/entity/role';
 import { CreatedModel } from '@/infra/repository';
-import { IPermissionDeleteAdapter } from '@/modules/permission/adapter';
+import { IPermissionDeleteAdapter } from '@/services/permissions-service/src/adapters';
 import { ApiConflictException, ApiNotFoundException } from '@/utils/exception';
 import { ZodExceptionIssue } from '@/utils/validator';
 
