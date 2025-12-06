@@ -4,7 +4,7 @@ import { authService } from "./auth.service"
 import type { ApiResponse } from "@/types/auth"
 
 export class BaseApiService {
-  protected baseUrl = process.env.NEXT_PUBLIC_API || 'http://localhost:3000/api'
+  protected baseUrl = process.env.NEXT_PUBLIC_API || 'http://localhost:4000/api/v1'
 
   protected getCurrentStoreId(): string | null {
     if (typeof window === "undefined") return null

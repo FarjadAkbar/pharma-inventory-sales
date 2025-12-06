@@ -32,6 +32,7 @@ import { QCTestModule } from './modules/qc-test/module';
 import { QCResultModule } from './modules/qc-result/module';
 import { QAReleaseModule } from './modules/qa-release/module';
 import { DeviationModule } from './modules/deviation/module';
+import { SiteModule } from './modules/site/module';
 
 @Module({
   imports: [
@@ -55,7 +56,8 @@ import { DeviationModule } from './modules/deviation/module';
     QCTestModule,
     QCResultModule,
     QAReleaseModule,
-    DeviationModule
+    DeviationModule,
+    SiteModule
   ],
   providers: [
     {

@@ -20,6 +20,10 @@ export class UsersApiService extends BaseApiService {
     return this.request(`/users${query ? `?${query}` : ""}`)
   }
 
+  async getCurrentUser() {
+    return this.request("/users/me")
+  }
+
   async createUser(userData: any) {
     return this.request("/users", {
       method: "POST",
@@ -27,16 +31,15 @@ export class UsersApiService extends BaseApiService {
     })
   }
 
-  async updateUser(userData: any) {
-    return this.request("/users", {
+  async updateUser(id: string, userData: any) {
+    return this.request(`/users/${id}`, {
       method: "PUT",
       body: JSON.stringify(userData),
     })
   }
 
   async deleteUser(id: string) {
-    const sp = new URLSearchParams({ id })
-    return this.request(`/users?${sp.toString()}`, { method: "DELETE" })
+    return this.request(`/users/${id}`, { method: "DELETE" })
   }
 
   // Cache invalidation for users

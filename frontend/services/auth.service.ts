@@ -15,6 +15,7 @@ import { apiService } from "./api.service"
 class AuthService {
   private baseUrl = "/api/auth"
   private tokenKey = "pharma_inventory_sales_token"
+  private refreshTokenKey = "pharma_inventory_sales_refresh_token"
   private permissionsKey = "pharma_inventory_sales_permissions"
 
   // Token management
@@ -34,10 +35,23 @@ class AuthService {
   removeToken(): void {
     if (typeof window !== "undefined") {
       localStorage.removeItem(this.tokenKey)
+      localStorage.removeItem(this.refreshTokenKey)
       localStorage.removeItem(this.permissionsKey)
       // Also remove cookie
       document.cookie = `${this.tokenKey}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
     }
+  }
+
+  // Refresh token management
+  setRefreshToken(token: string): void {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(this.refreshTokenKey, token)
+    }
+  }
+
+  getRefreshToken(): string | null {
+    if (typeof window === "undefined") return null
+    return localStorage.getItem(this.refreshTokenKey)
   }
 
   // Permissions management
@@ -57,26 +71,32 @@ class AuthService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     console.log("Login attempt with credentials:", credentials)
 
-    const response = await apiService.post<{ success: boolean; token: string; permissions?: Permissions; message?: string }>("/login", credentials)
+    const response = await apiService.rawRequest<{ accessToken: string; refreshToken: string }>("/login", {
+      method: "POST",
+      body: JSON.stringify(credentials)
+    })
 
     console.log("API response:", response)
 
-    if (response.success && response.token) {
-      console.log("Login successful, setting token and returning response")
-      this.setToken(response.token)
+    if (response.accessToken) {
+      console.log("Login successful, setting tokens")
+      this.setToken(response.accessToken)
+      this.setRefreshToken(response.refreshToken)
 
-      const permissions = response.permissions || {}
+      // Decode JWT to get user info and permissions
+      const user = this.getUserFromToken()
+      const permissions = user?.permissions || {}
       this.setPermissions(permissions)
 
       return {
         success: true,
-        token: response.token,
+        token: response.accessToken,
         permissions: permissions
       }
     }
 
     console.log("Login failed, throwing error")
-    throw new Error(response.message || "Login failed")
+    throw new Error("Login failed")
   }
 
   async register(userData: RegisterData): Promise<AuthResponse> {
@@ -91,6 +111,7 @@ class AuthService {
 
   async logout(): Promise<void> {
     try {
+      // Call backend logout endpoint
       await apiService.post("/logout")
     } catch (error) {
       console.error("Logout request failed:", error)
