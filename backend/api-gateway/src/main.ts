@@ -75,11 +75,11 @@ async function bootstrap() {
           defaultSrc: [`'self'`],
           styleSrc: [`'self'`],
           frameSrc: ["'none'"],
-          upgradeInsecureRequests: false,
+          upgradeInsecureRequests: [],
           imgSrc: [`'self'`, 'data:', 'blob:', 'validator.swagger.io'],
           scriptSrc: [
             "'self'",
-            (req: Request, res: Response) => {
+            (req, res) => {
               return `'nonce-${(res as unknown as ServerResponse<IncomingMessage> & { locals: { nonce: string } }).locals.nonce}'`;
             }
           ]

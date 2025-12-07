@@ -363,6 +363,9 @@ importers:
       '@pharma/libs':
         specifier: workspace:*
         version: link:../packages/libs
+      '@pharma/middlewares':
+        specifier: workspace:*
+        version: link:../packages/middlewares
       '@pharma/utils':
         specifier: workspace:*
         version: link:../packages/utils
