@@ -2,7 +2,7 @@ import { performance } from 'node:perf_hooks';
 
 import { yellow } from 'colorette';
 
-import { LoggerService } from '@/infra/logger';
+// import { LoggerService } from '@pharma/infra/logger';
 
 export function LogExecutionTime(target: object, propertyKey: string, descriptor: PropertyDescriptor): void {
   const originalMethod = descriptor.value;
@@ -13,7 +13,7 @@ export function LogExecutionTime(target: object, propertyKey: string, descriptor
     const className = target.constructor.name;
     const methodName = propertyKey;
     const end = performance.now();
-    LoggerService.log(yellow(`Function ${className}/${methodName} took ${(end - start).toFixed(3)}ms to execute.`));
+    // LoggerService.log(yellow(`Function ${className}/${methodName} took ${(end - start).toFixed(3)}ms to execute.`));
     return result;
   };
 }

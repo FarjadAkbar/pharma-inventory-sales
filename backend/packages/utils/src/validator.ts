@@ -2,7 +2,7 @@ import i18next, { ResourceLanguage } from 'i18next';
 import { z } from 'zod';
 import { zodI18nMap } from 'zod-i18n-map';
 
-import { LoggerService } from '@/infra/logger';
+// import { LoggerService } from '@pharma/infra/logger';
 
 const languageRegionMap: Record<string, LocaleInput> = {
   'ar-SA': 'ar',
@@ -50,7 +50,7 @@ export async function loadTranslations() {
   });
 
   await Promise.all(translationPromises);
-  LoggerService.log('All translations have been loaded.');
+  // LoggerService.log('All translations have been loaded.');
 }
 
 export const initI18n = async (defaultLocale = 'en-US') => {

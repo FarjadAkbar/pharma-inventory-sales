@@ -1,4 +1,4 @@
-import { IRepository } from '@/infra/repository';
+import { IRepository } from '@pharma/infra/repository';
 
 import { DrugEntity } from '../entity/drug';
 

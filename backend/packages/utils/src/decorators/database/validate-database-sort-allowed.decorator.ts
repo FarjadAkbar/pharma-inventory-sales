@@ -1,8 +1,8 @@
-import { ApiBadRequestException } from '@/utils/exception';
-import { PaginationSchema } from '@/utils/pagination';
-import { SearchSchema } from '@/utils/search';
-import { SortEnum, SortSchema } from '@/utils/sort';
-import { Infer, InputValidator } from '@/utils/validator';
+import { ApiBadRequestException } from '../../exception';
+import { PaginationSchema } from '../../pagination';
+import { SearchSchema } from '../../search';
+import { SortEnum, SortSchema } from '../../sort';
+import { Infer, InputValidator } from '../../validator';
 
 export const ListSchema = InputValidator.intersection(PaginationSchema, SortSchema.merge(SearchSchema));
 

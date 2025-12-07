@@ -16,7 +16,7 @@ import { ILoggerAdapter } from '@pharma/infra/logger';
 import { AxiosUtils } from '@pharma/utils/axios';
 import { generalizePath, TracingType } from '@pharma/utils/request';
 
-import { name, version } from '../../../package.json';
+import { name, version } from '../../package.json';
 
 @Injectable()
 export class TracingInterceptor implements NestInterceptor {

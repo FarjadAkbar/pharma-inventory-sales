@@ -2,7 +2,7 @@ import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nes
 import { Counter, Histogram, Meter, metrics } from '@opentelemetry/api';
 import { catchError, Observable, tap, throwError } from 'rxjs';
 
-import { name, version } from '../../../package.json';
+import { name, version } from '../../package.json';
 
 @Injectable()
 export class MetricsInterceptor implements NestInterceptor {

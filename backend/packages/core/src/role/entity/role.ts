@@ -1,11 +1,10 @@
-import { PermissionEntity, PermissionEntitySchema } from '@/core/permission/entity/permission';
+import { PermissionEntity, PermissionEntitySchema } from '../../permission/entity/permission';
+import { RoleEnum } from '@pharma/utils/constants';
 import { BaseEntity } from '@pharma/utils/entity';
 import { Infer, InputValidator } from '@pharma/utils/validator';
 
-export enum RoleEnum {
-  USER = 'USER',
-  BACKOFFICE = 'BACKOFFICE'
-}
+// Re-export RoleEnum for backward compatibility
+export { RoleEnum };
 
 const ID = InputValidator.string().uuid();
 const Name = InputValidator.string().transform((value) => value.trim().replace(/ /g, '_').toUpperCase());

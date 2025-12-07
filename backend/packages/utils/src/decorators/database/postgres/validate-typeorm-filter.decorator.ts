@@ -1,7 +1,7 @@
 import { FindOperator, In, Raw } from 'typeorm';
 
-import { IEntity } from '@/utils/entity';
-import { ApiBadRequestException } from '@/utils/exception';
+import { IEntity } from '../../../entity';
+import { ApiBadRequestException } from '../../../exception';
 
 import { AllowedFilter, SearchTypeEnum } from '../../types';
 import { convertFilterValue } from '../utils';

@@ -9,7 +9,8 @@ import { ZodExceptionIssue } from '@pharma/utils/validator';
 
 import { IRoleRepository } from '../../repository/role';
 import { RoleUpdateInput, RoleUpdateUsecase } from '../role-update';
-import { RoleEntity, RoleEnum } from './../../entity/role';
+import { RoleEntity } from './../../entity/role';
+import { RoleEnum } from '@pharma/utils/constants';
 
 describe(RoleUpdateUsecase.name, () => {
   let usecase: IRoleUpdateAdapter;

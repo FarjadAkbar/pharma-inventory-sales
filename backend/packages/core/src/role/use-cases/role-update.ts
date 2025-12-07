@@ -1,4 +1,4 @@
-import { IRoleRepository } from '@/core/role/repository/role';
+import { IRoleRepository } from '../repository/role';
 import { ILoggerAdapter } from '@pharma/infra/logger';
 import { ValidateSchema } from '@pharma/utils/decorators';
 import { ApiNotFoundException } from '@pharma/utils/exception';

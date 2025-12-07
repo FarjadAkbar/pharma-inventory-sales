@@ -4,9 +4,9 @@ import path from 'path';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
-import { ISecretsAdapter, SecretsModule } from '@/infra/secrets';
+import { ISecretsAdapter, SecretsModule } from '../../secrets';
 
-import { name } from '../../../../package.json';
+import { name } from '../../../package.json';
 import { PostgresService } from './service';
 @Module({
   imports: [

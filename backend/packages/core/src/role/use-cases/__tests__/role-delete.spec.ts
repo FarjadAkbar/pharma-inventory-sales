@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { TestMock } from 'test/mock';
 
-import { PermissionEntity } from '@/core/permission/entity/permission';
+import { PermissionEntity } from '@pharma/core/permission/entity/permission';
 import { CreatedModel } from '@pharma/infra/repository';
 import { IRoleDeleteAdapter } from '@/services/roles-service/src/adapters';
 import { ApiConflictException, ApiNotFoundException } from '@pharma/utils/exception';
@@ -10,7 +10,8 @@ import { ZodExceptionIssue } from '@pharma/utils/validator';
 import { RoleDeleteInput, RoleDeleteUsecase } from '../role-delete';
 
 import { IRoleRepository } from '../../repository/role';
-import { RoleEntity, RoleEnum } from './../../entity/role';
+import { RoleEntity } from './../../entity/role';
+import { RoleEnum } from '@pharma/utils/constants';
 
 describe(RoleDeleteUsecase.name, () => {
   let usecase: IRoleDeleteAdapter;

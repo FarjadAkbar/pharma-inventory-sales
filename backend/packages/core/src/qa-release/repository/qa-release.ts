@@ -1,4 +1,4 @@
-import { IRepository } from '@/infra/repository';
+import { IRepository } from '@pharma/infra/repository';
 
 import { QAReleaseEntity } from '../entity/qa-release';
 

@@ -15,7 +15,7 @@
 
   ```
   import { Controller, Post, Req } from '@nestjs/common';
-  import { ApiRequest } from '@/utils/request';
+  import { ApiRequest } from '@pharma/utils/request';
   import { IUserCreateAdapter } from './adapter';
   import { UserListOutput } from './types';
 

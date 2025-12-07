@@ -1,5 +1,5 @@
-import { BaseEntity } from '@/utils/entity';
-import { Infer, InputValidator } from '@/utils/validator';
+import { BaseEntity } from '@pharma/utils/entity';
+import { Infer, InputValidator } from '@pharma/utils/validator';
 
 const ID = InputValidator.string().uuid();
 const EntityType = InputValidator.enum(['GoodsReceipt', 'Batch']);

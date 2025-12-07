@@ -5,9 +5,9 @@ import {
   PermissionListInput,
   PermissionListOutput,
   PermissionListUsecase
-} from '@/core/permission/use-cases/permission-list';
+} from '../permission-list';
 import { IPermissionListAdapter } from '@/services/permissions-service/src/adapters';
-import { ZodExceptionIssue } from '@/utils/validator';
+import { ZodExceptionIssue } from '@pharma/utils/validator';
 
 import { IPermissionRepository } from '../../repository/permission';
 import { PermissionEntity } from './../../entity/permission';

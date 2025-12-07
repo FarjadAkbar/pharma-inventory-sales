@@ -1,8 +1,9 @@
 import { Test } from '@nestjs/testing';
 import { TestMock } from 'test/mock';
 
-import { RoleEntity, RoleEnum } from '@/core/role/entity/role';
-import { IRoleRepository } from '@/core/role/repository/role';
+import { RoleEntity } from '@pharma/core/role/entity/role';
+import { RoleEnum } from '@pharma/utils/constants';
+import { IRoleRepository } from '@pharma/core/role/repository/role';
 import { ILoggerAdapter, LoggerModule } from '@pharma/infra/logger';
 import { CreatedModel } from '@pharma/infra/repository';
 import { EmitEventOutput, IEventAdapter } from '@pharma/libs/event';

@@ -1,4 +1,4 @@
-import { PermissionEntitySchema } from '@/core/permission/entity/permission';
+import { PermissionEntitySchema } from '../entity/permission';
 import { ValidateSchema } from '@pharma/utils/decorators';
 import { ApiNotFoundException } from '@pharma/utils/exception';
 import { IUsecase } from '@pharma/utils/usecase';

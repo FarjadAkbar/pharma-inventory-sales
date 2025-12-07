@@ -1,7 +1,8 @@
 import { Test } from '@nestjs/testing';
 import { TestMock } from 'test/mock';
 
-import { RoleEntity, RoleEnum } from '@/core/role/entity/role';
+import { RoleEntity } from '@pharma/core/role/entity/role';
+import { RoleEnum } from '@pharma/utils/constants';
 import { ITokenAdapter, TokenLibModule } from '@pharma/libs/token';
 import { ILoginAdapter } from '@/services/auth-service/src/adapters';
 import { ApiBadRequestException, ApiNotFoundException } from '@pharma/utils/exception';

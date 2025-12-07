@@ -1,5 +1,5 @@
-import { UserPasswordEntity } from '@/core/user/entity/user-password';
-import { IUserRepository } from '@/core/user/repository/user';
+import { UserPasswordEntity } from '../../user/entity/user-password';
+import { IUserRepository } from '../../user/repository/user';
 import { SendEmailInput } from '@pharma/infra/email';
 import { IEventAdapter } from '@pharma/libs/event';
 import { EventNameEnum } from '@pharma/libs/event/types';

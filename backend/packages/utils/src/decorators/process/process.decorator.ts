@@ -1,7 +1,7 @@
 import { ChildProcess, fork } from 'child_process';
 import { red } from 'colorette';
 
-import { ApiTimeoutException } from '@/utils/exception';
+import { ApiTimeoutException } from '../../exception';
 
 export function RunInNewProcess(timeout?: number) {
   return function (target: object, key: string, descriptor: PropertyDescriptor): PropertyDescriptor {

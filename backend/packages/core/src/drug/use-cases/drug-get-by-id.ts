@@ -1,7 +1,7 @@
-import { ValidateSchema } from '@/utils/decorators';
-import { ApiNotFoundException } from '@/utils/exception';
-import { IUsecase } from '@/utils/usecase';
-import { Infer, InputValidator } from '@/utils/validator';
+import { ValidateSchema } from '@pharma/utils/decorators';
+import { ApiNotFoundException } from '@pharma/utils/exception';
+import { IUsecase } from '@pharma/utils/usecase';
+import { Infer, InputValidator } from '@pharma/utils/validator';
 
 import { DrugEntity, DrugEntitySchema } from '../entity/drug';
 import { IDrugRepository } from '../repository/drug';

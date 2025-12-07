@@ -1,4 +1,4 @@
-import { IPermissionRepository } from '@/core/permission/repository/permission';
+import { IPermissionRepository } from '../repository/permission';
 import { ValidateSchema } from '@pharma/utils/decorators';
 import { ApiConflictException, ApiNotFoundException } from '@pharma/utils/exception';
 import { IUsecase } from '@pharma/utils/usecase';

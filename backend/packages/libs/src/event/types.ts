@@ -1,3 +1,2 @@
-export enum EventNameEnum {
-  SEND_EMAIL = 'send-email'
-}
+// Re-export from utils to maintain backward compatibility
+export { EventNameEnum } from '@pharma/utils/constants';

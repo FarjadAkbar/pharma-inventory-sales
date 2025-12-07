@@ -3,6 +3,8 @@ node_modules
 **/node_modules
 dist
 packages/shared/dist
+# Compiled JS files in src directories (should only be in dist)
+**/src/**/*.js
 
 # Logs
 logs

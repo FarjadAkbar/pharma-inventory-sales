@@ -1,6 +1,8 @@
-import { RoleEntity } from '@/core/role/entity/role';
-import { BaseEntity } from '@/utils/entity';
-import { Infer, InputValidator } from '@/utils/validator';
+import { BaseEntity } from '@pharma/utils/entity';
+import { Infer, InputValidator } from '@pharma/utils/validator';
+
+// Use type-only import to avoid circular dependency
+import type { RoleEntity } from '../../role/entity/role';
 
 const ID = InputValidator.string().uuid();
 const Name = InputValidator.string()

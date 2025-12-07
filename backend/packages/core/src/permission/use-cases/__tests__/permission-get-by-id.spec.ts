@@ -2,8 +2,8 @@ import { Test } from '@nestjs/testing';
 import { TestMock } from 'test/mock';
 
 import { IPermissionGetByIdAdapter } from '@/services/permissions-service/src/adapters';
-import { ApiNotFoundException } from '@/utils/exception';
-import { ZodExceptionIssue } from '@/utils/validator';
+import { ApiNotFoundException } from '@pharma/utils/exception';
+import { ZodExceptionIssue } from '@pharma/utils/validator';
 
 import { IPermissionRepository } from '../../repository/permission';
 import { PermissionGetByIdInput, PermissionGetByIdUsecase } from '../permission-get-by-id';

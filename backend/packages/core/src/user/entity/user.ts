@@ -1,4 +1,4 @@
-import { RoleEntity, RoleEntitySchema } from '@/core/role/entity/role';
+import { RoleEntity, RoleEntitySchema } from '../../role/entity/role';
 import { BaseEntity } from '@pharma/utils/entity';
 import { Infer, InputValidator } from '@pharma/utils/validator';
 

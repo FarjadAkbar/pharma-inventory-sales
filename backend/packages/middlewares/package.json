@@ -21,6 +21,7 @@
   "dependencies": {
     "@pharma/utils": "workspace:*",
     "@pharma/infra": "workspace:*",
-    "@pharma/libs": "workspace:*"
+    "@pharma/libs": "workspace:*",
+    "@pharma/core": "workspace:*"
   }
 }

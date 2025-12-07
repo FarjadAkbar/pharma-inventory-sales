@@ -19,6 +19,6 @@
     "strictPropertyInitialization": false,
     "resolveJsonModule": true
   },
-  "include": ["src"],
+  "include": ["src", "../../../core-backend/core/supplier", "../../../core-backend/core/raw-material", "../../../core-backend/core/qa-release", "../../../core-backend/core/batch"],
   "exclude": ["**/__tests__/**", "**/*.spec.ts", "**/*.test.ts", "node_modules"]
 }

@@ -10,7 +10,7 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { RedisService } from '@/infra/cache/redis';
 import { ConnectionName } from '@/infra/database/enum';
 import { PostgresService } from '@/infra/database/postgres';
-import { ILoggerAdapter, LoggerService } from '@/infra/logger';
+import { ILoggerAdapter, LoggerService } from '@pharma/infra/logger';
 
 export class TestMongoContainer {
   mongoContainer!: StartedMongoDBContainer;

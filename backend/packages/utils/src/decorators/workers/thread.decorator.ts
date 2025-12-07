@@ -1,7 +1,8 @@
 import { red } from 'colorette';
+import { join } from 'path';
 import { Worker } from 'worker_threads';
 
-import { ApiTimeoutException } from '@/utils/exception';
+import { ApiTimeoutException } from '../../exception';
 
 export function RunInNewThread(timeout?: number) {
   return function (target: object, key: string, descriptor: PropertyDescriptor): PropertyDescriptor {
@@ -10,7 +11,9 @@ export function RunInNewThread(timeout?: number) {
     descriptor.value = function (...args: unknown[]) {
       const fnCode = originalMethod.toString();
 
-      const worker = new Worker(`${__dirname}/thread.js`);
+      // Use require.resolve to find the thread.js file in the dist folder
+      const threadPath = join(__dirname, 'thread.js');
+      const worker = new Worker(threadPath);
 
       let timeoutId: NodeJS.Timeout | null = null;
 

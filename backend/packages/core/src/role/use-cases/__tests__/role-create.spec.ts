@@ -5,7 +5,7 @@ import { ILoggerAdapter } from '@pharma/infra/logger';
 import { IRoleCreateAdapter } from '@/services/roles-service/src/adapters';
 import { ZodExceptionIssue } from '@pharma/utils/validator';
 
-import { RoleEnum } from '../../entity/role';
+import { RoleEnum } from '@pharma/utils/constants';
 import { IRoleRepository } from '../../repository/role';
 import { RoleCreateInput, RoleCreateOutput, RoleCreateUsecase } from '../role-create';
 

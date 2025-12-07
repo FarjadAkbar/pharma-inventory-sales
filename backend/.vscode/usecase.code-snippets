@@ -5,8 +5,8 @@
     "body": [
       "import { z } from 'zod';",
       "$1",
-      "import { ValidateSchema } from '@/utils/decorators';",
-      "import { IUsecase } from '@/utils/usecase';",
+      "import { ValidateSchema } from '@pharma/utils/decorators';",
+      "import { IUsecase } from '@pharma/utils/usecase';",
       "$2",
       "import { ${TM_FILENAME/(^.*?(?=-))(.*)/${1:/capitalize}${1:+EntitySchema}/g} } from '../entity/${TM_FILENAME/((?=-).*)//}';",
       "$2",

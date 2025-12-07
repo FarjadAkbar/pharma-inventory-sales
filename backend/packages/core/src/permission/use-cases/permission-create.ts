@@ -1,9 +1,9 @@
-import { ILoggerAdapter } from '@/infra/logger';
-import { ValidateSchema } from '@/utils/decorators';
-import { ApiConflictException } from '@/utils/exception';
-import { IUsecase } from '@/utils/usecase';
-import { UUIDUtils } from '@/utils/uuid';
-import { Infer } from '@/utils/validator';
+import { ILoggerAdapter } from '@pharma/infra/logger';
+import { ValidateSchema } from '@pharma/utils/decorators';
+import { ApiConflictException } from '@pharma/utils/exception';
+import { IUsecase } from '@pharma/utils/usecase';
+import { UUIDUtils } from '@pharma/utils/uuid';
+import { Infer } from '@pharma/utils/validator';
 
 import { IPermissionRepository } from '../repository/permission';
 import { PermissionEntity, PermissionEntitySchema } from './../entity/permission';

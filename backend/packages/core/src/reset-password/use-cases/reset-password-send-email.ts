@@ -1,5 +1,5 @@
-import { UserEntity, UserEntitySchema } from '@/core/user/entity/user';
-import { IUserRepository } from '@/core/user/repository/user';
+import { UserEntity, UserEntitySchema } from '../../user/entity/user';
+import { IUserRepository } from '../../user/repository/user';
 import { SendEmailInput } from '@pharma/infra/email';
 import { ISecretsAdapter } from '@pharma/infra/secrets';
 import { IEventAdapter } from '@pharma/libs/event';

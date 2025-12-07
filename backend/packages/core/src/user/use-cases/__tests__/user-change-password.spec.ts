@@ -1,7 +1,8 @@
 import { Test } from '@nestjs/testing';
 import { TestMock } from 'test/mock';
 
-import { RoleEntity, RoleEnum } from '@/core/role/entity/role';
+import { RoleEntity } from '@pharma/core/role/entity/role';
+import { RoleEnum } from '@pharma/utils/constants';
 import { LoggerModule } from '@pharma/infra/logger';
 import { CreatedModel } from '@pharma/infra/repository';
 import { IUserChangePasswordAdapter } from '@/services/users-service/src/adapters';

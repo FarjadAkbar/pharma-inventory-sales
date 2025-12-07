@@ -1,17 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import jwt from 'jsonwebtoken';
 
-import { UserEntitySchema } from '@/core/user/entity/user';
-import { ISecretsAdapter } from '@/infra/secrets';
-import { ApiUnauthorizedException } from '@/utils/exception';
-import { Infer, InputValidator } from '@/utils/validator';
+import { ISecretsAdapter } from '@pharma/infra/secrets';
+import { ApiUnauthorizedException } from '@pharma/utils/exception';
+import { Infer, InputValidator } from '@pharma/utils/validator';
 
 import { ITokenAdapter } from './adapter';
 
-export const TokenGetSchema = UserEntitySchema.pick({
-  email: true,
-  roles: true
-}).merge(InputValidator.object({ password: InputValidator.string() }));
+// Define token schema directly to avoid circular dependency with @pharma/core
+// This matches the structure needed for token generation
+const RoleSchema = InputValidator.object({
+  id: InputValidator.string().uuid(),
+  name: InputValidator.string()
+}).optional();
+
+export const TokenGetSchema = InputValidator.object({
+  email: InputValidator.string().email(),
+  roles: InputValidator.array(RoleSchema).min(1),
+  password: InputValidator.string()
+});
 
 @Injectable()
 export class TokenService implements ITokenAdapter {

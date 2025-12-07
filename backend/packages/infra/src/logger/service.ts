@@ -11,7 +11,7 @@ import { DateUtils } from '@pharma/utils/date';
 import { ApiBadRequestException, ApiInternalServerException, BaseException } from '@pharma/utils/exception';
 import { UUIDUtils } from '@pharma/utils/uuid';
 
-import { name } from '../../../package.json';
+import { name } from '../../package.json';
 import { ILoggerAdapter } from './adapter';
 import { ErrorType, MessageInputType } from './types';
 

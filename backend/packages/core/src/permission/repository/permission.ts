@@ -1,4 +1,4 @@
-import { IRepository } from '@/infra/repository';
+import { IRepository } from '@pharma/infra/repository';
 
 import { PermissionEntity } from '../entity/permission';
 import { PermissionListInput, PermissionListOutput } from '../use-cases/permission-list';

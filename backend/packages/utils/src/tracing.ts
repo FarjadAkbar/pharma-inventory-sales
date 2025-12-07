@@ -10,14 +10,14 @@ import { detectResources, Resource } from '@opentelemetry/resources';
 import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 
-import { LoggerService } from '@/infra/logger';
+// import { LoggerService } from '@pharma/infra/logger';
 
-import { name, version } from '../../package.json';
+import { name, version } from '../package.json';
 import { ApiBadRequestException } from './exception';
 import { generalizePath } from './request';
 import { UUIDUtils } from './uuid';
 
-const logger = new LoggerService();
+// const logger = new LoggerService();
 diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.ERROR);
 
 const getResource = (): Resource => {
@@ -32,7 +32,7 @@ const getResource = (): Resource => {
 
     return resource;
   } catch (error) {
-    logger.error(new ApiBadRequestException('Error detecting resources for tracing', { originalError: error }));
+    // logger.error(new ApiBadRequestException('Error detecting resources for tracing', { originalError: error }));
     const fallbackResource = detectResources();
     Object.assign(fallbackResource.attributes, {
       'service.name': name,
@@ -114,7 +114,7 @@ const httpInstrumentation = new HttpInstrumentation({
         span.setAttribute('http.status_code', statusCode);
       }
     } catch (error) {
-      logger.warn({ message: 'Error in HTTP response hook:', obj: { originalError: error } });
+      // logger.warn({ message: 'Error in HTTP response hook:', obj: { originalError: error } });
     }
   },
   requestHook: (span: Span, request: ClientRequest | IncomingMessage) => {
@@ -141,7 +141,7 @@ const httpInstrumentation = new HttpInstrumentation({
         span.setAttribute('http.url', url);
       }
     } catch (error) {
-      logger.warn({ message: 'Error in HTTP request hook:', obj: { originalError: error } });
+      // logger.warn({ message: 'Error in HTTP request hook:', obj: { originalError: error } });
     }
   }
 });
@@ -155,7 +155,7 @@ const redisInstrumentation = new RedisInstrumentation({
       const spanContext = span.spanContext();
       span.updateName(`redis => command-${spanContext.spanId}`);
     } catch (error) {
-      logger.warn({ message: 'Error in Redis response hook:', obj: { originalError: error } });
+      // logger.warn({ message: 'Error in Redis response hook:', obj: { originalError: error } });
     }
   }
 });
@@ -169,7 +169,7 @@ const pgInstrumentation = new PgInstrumentation({
       const spanContext = span.spanContext();
       span.updateName(`postgres => query-${spanContext.spanId}`);
     } catch (error) {
-      logger.warn({ message: 'Error in PostgreSQL response hook:', obj: { originalError: error } });
+      // logger.warn({ message: 'Error in PostgreSQL response hook:', obj: { originalError: error } });
     }
   }
 });
@@ -187,31 +187,31 @@ let isInitialized = false;
 
 const start = (): void => {
   if (isInitialized) {
-    logger.warn({ message: 'Tracing already started' });
+    // logger.warn({ message: 'Tracing already started' });
     return;
   }
 
   try {
     sdk.start();
     isInitialized = true;
-    logger.log('✅ Tracing started successfully');
+    // logger.log('✅ Tracing started successfully');
   } catch (error) {
-    logger.error(new ApiBadRequestException('Tracing start error', { originalError: error }));
+    // logger.error(new ApiBadRequestException('Tracing start error', { originalError: error }));
   }
 };
 
 const shutdown = async (): Promise<void> => {
   if (!isInitialized) {
-    logger.warn({ message: 'Tracing not initialized, skipping shutdown' });
+    // logger.warn({ message: 'Tracing not initialized, skipping shutdown' });
     return;
   }
 
   try {
     await sdk.shutdown();
     isInitialized = false;
-    logger.log('✅ Tracing terminated gracefully');
+    // logger.log('✅ Tracing terminated gracefully');
   } catch (error) {
-    logger.error(new ApiBadRequestException('Tracing shutdown error', { originalError: error }));
+    // logger.error(new ApiBadRequestException('Tracing shutdown error', { originalError: error }));
     throw error;
   }
 };
@@ -221,12 +221,12 @@ start();
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-  logger.log('Received SIGTERM, shutting down tracing...');
+  // logger.log('Received SIGTERM, shutting down tracing...');
   await shutdown().finally(() => process.exit(0));
 });
 
 process.on('SIGINT', async () => {
-  logger.log('Received SIGINT, shutting down tracing...');
+  // logger.log('Received SIGINT, shutting down tracing...');
   await shutdown().finally(() => process.exit(0));
 });
 

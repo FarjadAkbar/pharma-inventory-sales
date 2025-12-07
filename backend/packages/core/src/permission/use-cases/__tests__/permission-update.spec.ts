@@ -1,11 +1,11 @@
 import { Test } from '@nestjs/testing';
 import { TestMock } from 'test/mock';
 
-import { ILoggerAdapter } from '@/infra/logger';
-import { UpdatedModel } from '@/infra/repository';
+import { ILoggerAdapter } from '@pharma/infra/logger';
+import { UpdatedModel } from '@pharma/infra/repository';
 import { IPermissionUpdateAdapter } from '@/services/permissions-service/src/adapters';
-import { ApiConflictException, ApiNotFoundException } from '@/utils/exception';
-import { ZodExceptionIssue } from '@/utils/validator';
+import { ApiConflictException, ApiNotFoundException } from '@pharma/utils/exception';
+import { ZodExceptionIssue } from '@pharma/utils/validator';
 
 import { IPermissionRepository } from '../../repository/permission';
 import { PermissionUpdateInput, PermissionUpdateUsecase } from '../permission-update';

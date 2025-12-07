@@ -1,6 +1,6 @@
-import { ValidateSchema } from '@/utils/decorators';
-import { IUsecase } from '@/utils/usecase';
-import { Infer, InputValidator } from '@/utils/validator';
+import { ValidateSchema } from '@pharma/utils/decorators';
+import { IUsecase } from '@pharma/utils/usecase';
+import { Infer, InputValidator } from '@pharma/utils/validator';
 
 import { QCSampleEntity } from '../entity/qc-sample';
 import { IQCSampleRepository, QCSampleListInput } from '../repository/qc-sample';

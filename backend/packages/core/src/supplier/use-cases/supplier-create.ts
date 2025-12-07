@@ -1,12 +1,12 @@
-import { ILoggerAdapter } from '@/infra/logger';
-import { CreatedModel } from '@/infra/repository';
-import { IEventAdapter } from '@/libs/event';
-import { ValidateSchema } from '@/utils/decorators';
-import { ApiConflictException } from '@/utils/exception';
-import { ApiTrancingInput } from '@/utils/request';
-import { IUsecase } from '@/utils/usecase';
-import { UUIDUtils } from '@/utils/uuid';
-import { Infer, InputValidator } from '@/utils/validator';
+import { ILoggerAdapter } from '@pharma/infra/logger';
+import { CreatedModel } from '@pharma/infra/repository';
+import { IEventAdapter } from '@pharma/libs/event';
+import { ValidateSchema } from '@pharma/utils/decorators';
+import { ApiConflictException } from '@pharma/utils/exception';
+import { ApiTrancingInput } from '@pharma/utils/request';
+import { IUsecase } from '@pharma/utils/usecase';
+import { UUIDUtils } from '@pharma/utils/uuid';
+import { Infer, InputValidator } from '@pharma/utils/validator';
 
 import { SupplierEntity, SupplierEntitySchema, SupplierStatusEnum } from '../entity/supplier';
 import { ISupplierRepository } from '../repository/supplier';

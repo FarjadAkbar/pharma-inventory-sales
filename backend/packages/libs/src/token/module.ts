@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 
-import { ISecretsAdapter, SecretsModule } from '@/infra/secrets';
+import { ISecretsAdapter, SecretsModule } from '@pharma/infra/secrets';
 
 import { ITokenAdapter } from './adapter';
 import { TokenService } from './service';

@@ -2,7 +2,7 @@ import { AxiosError, AxiosInstance } from 'axios';
 import axiosRetry from 'axios-retry';
 import { AxiosConverter } from 'nestjs-convert-to-curl';
 
-import { ILoggerAdapter } from '@/infra/logger';
+// import { ILoggerAdapter } from '@pharma/infra/logger';
 
 export class AxiosUtils {
   static interceptAxiosResponseError = (error: CustomAxiosError): void => {
@@ -104,7 +104,8 @@ export class AxiosUtils {
 
 type RequestRetry = {
   status?: number[];
-  logger: ILoggerAdapter;
+  // logger: ILoggerAdapter;
+  logger: any;
   axios: AxiosInstance;
 };
 

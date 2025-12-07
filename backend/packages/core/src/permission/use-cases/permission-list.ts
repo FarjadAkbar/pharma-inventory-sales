@@ -1,10 +1,10 @@
-import { PermissionEntity } from '@/core/permission/entity/permission';
-import { ValidateSchema } from '@/utils/decorators';
-import { PaginationInput, PaginationOutput, PaginationSchema } from '@/utils/pagination';
-import { SearchSchema } from '@/utils/search';
-import { SortSchema } from '@/utils/sort';
-import { IUsecase } from '@/utils/usecase';
-import { InputValidator } from '@/utils/validator';
+import { PermissionEntity } from '../entity/permission';
+import { ValidateSchema } from '@pharma/utils/decorators';
+import { PaginationInput, PaginationOutput, PaginationSchema } from '@pharma/utils/pagination';
+import { SearchSchema } from '@pharma/utils/search';
+import { SortSchema } from '@pharma/utils/sort';
+import { IUsecase } from '@pharma/utils/usecase';
+import { InputValidator } from '@pharma/utils/validator';
 
 import { IPermissionRepository } from '../repository/permission';
 

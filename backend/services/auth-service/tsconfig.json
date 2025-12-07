@@ -13,7 +13,13 @@
                             "sourceMap":  true,
                             "outDir":  "./dist",
                             "baseUrl":  "./",
-                            "incremental":  true
+                            "incremental":  true,
+                            "paths": {
+                                "@pharma/core/*": ["../../packages/core/dist/*", "../../packages/core/dist/*/index"],
+                                "@pharma/utils/*": ["../../packages/utils/dist/*", "../../packages/utils/dist/*/index"],
+                                "@pharma/infra/*": ["../../packages/infra/dist/*", "../../packages/infra/dist/*/index"],
+                                "@pharma/libs/*": ["../../packages/libs/dist/*", "../../packages/libs/dist/*/index"]
+                            }
                         },
     "include":  [
                     "src/**/*"

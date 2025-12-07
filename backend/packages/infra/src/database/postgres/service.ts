@@ -1,6 +1,6 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
-import { name } from '../../../../package.json';
+import { name } from '../../../package.json';
 import { IDataBaseAdapter } from '../adapter';
 import { ConnectionType } from '../types';
 

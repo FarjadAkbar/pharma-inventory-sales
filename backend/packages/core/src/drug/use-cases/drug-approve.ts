@@ -1,10 +1,10 @@
-import { ILoggerAdapter } from '@/infra/logger';
-import { ValidateSchema } from '@/utils/decorators';
-import { ApiNotFoundException, ApiBadRequestException } from '@/utils/exception';
-import { UpdatedEntity } from '@/utils/entity';
-import { ApiTrancingInput } from '@/utils/request';
-import { IUsecase } from '@/utils/usecase';
-import { Infer, InputValidator } from '@/utils/validator';
+import { ILoggerAdapter } from '@pharma/infra/logger';
+import { ValidateSchema } from '@pharma/utils/decorators';
+import { ApiNotFoundException, ApiBadRequestException } from '@pharma/utils/exception';
+import { UpdatedEntity } from '@pharma/utils/entity';
+import { ApiTrancingInput } from '@pharma/utils/request';
+import { IUsecase } from '@pharma/utils/usecase';
+import { Infer, InputValidator } from '@pharma/utils/validator';
 
 import { DrugEntitySchema, DrugApprovalStatusEnum } from '../entity/drug';
 import { IDrugRepository } from '../repository/drug';

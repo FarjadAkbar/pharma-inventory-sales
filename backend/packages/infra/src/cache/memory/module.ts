@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 
-import { ILoggerAdapter, LoggerModule } from '@/infra/logger';
+import { ILoggerAdapter, LoggerModule } from '../../logger';
 
 import { ICacheAdapter } from '../adapter';
 import { MemoryCacheService } from './service';

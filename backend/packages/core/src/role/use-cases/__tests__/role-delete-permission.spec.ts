@@ -1,15 +1,16 @@
 import { Test } from '@nestjs/testing';
 import { TestMock } from 'test/mock';
 
-import { PermissionEntity } from '@/core/permission/entity/permission';
-import { IPermissionRepository } from '@/core/permission/repository/permission';
+import { PermissionEntity } from '@pharma/core/permission/entity/permission';
+import { IPermissionRepository } from '@pharma/core/permission/repository/permission';
 import { CreatedModel } from '@pharma/infra/repository';
 import { IRoleDeletePermissionAdapter } from '@/services/roles-service/src/adapters';
 import { ApiNotFoundException } from '@pharma/utils/exception';
 import { UUIDUtils } from '@pharma/utils/uuid';
 import { ZodExceptionIssue } from '@pharma/utils/validator';
 
-import { RoleEntity, RoleEnum } from '../../entity/role';
+import { RoleEntity } from '../../entity/role';
+import { RoleEnum } from '@pharma/utils/constants';
 import { IRoleRepository } from '../../repository/role';
 import { RoleAddPermissionInput } from '../role-add-permission';
 import { RoleDeletePermissionInput, RoleDeletePermissionUsecase } from '../role-delete-permission';

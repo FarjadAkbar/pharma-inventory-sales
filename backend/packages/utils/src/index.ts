@@ -1,6 +1,7 @@
 // Utils
 export * from './axios';
 export * from './collection';
+export * from './constants';
 export * from './crypto';
 export * from './date';
 export * from './decorators';

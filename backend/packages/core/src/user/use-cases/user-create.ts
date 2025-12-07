@@ -1,5 +1,5 @@
-import { RoleEnum } from '@/core/role/entity/role';
-import { IRoleRepository } from '@/core/role/repository/role';
+import { RoleEnum } from '@pharma/utils/constants';
+import { IRoleRepository } from '../../role/repository/role';
 import { SendEmailInput } from '@pharma/infra/email';
 import { ILoggerAdapter } from '@pharma/infra/logger';
 import { CreatedModel } from '@pharma/infra/repository';

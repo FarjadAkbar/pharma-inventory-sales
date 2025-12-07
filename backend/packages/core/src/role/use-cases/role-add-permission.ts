@@ -1,5 +1,5 @@
-import { PermissionEntity } from '@/core/permission/entity/permission';
-import { IPermissionRepository } from '@/core/permission/repository/permission';
+import { PermissionEntity } from '../../permission/entity/permission';
+import { IPermissionRepository } from '../../permission/repository/permission';
 import { ValidateSchema } from '@pharma/utils/decorators';
 import { ApiNotFoundException } from '@pharma/utils/exception';
 import { IUsecase } from '@pharma/utils/usecase';

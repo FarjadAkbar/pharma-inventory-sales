@@ -1,4 +1,4 @@
-import { UserEntity, UserEntitySchema } from '@/core/user/entity/user';
+import { UserEntity, UserEntitySchema } from '../../user/entity/user';
 import { BaseEntity } from '@pharma/utils/entity';
 import { Infer, InputValidator } from '@pharma/utils/validator';
 

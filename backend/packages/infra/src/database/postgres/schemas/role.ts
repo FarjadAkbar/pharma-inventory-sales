@@ -10,7 +10,7 @@ import {
   UpdateDateColumn
 } from 'typeorm';
 
-import { RoleEnum } from '@pharma/core/role/entity/role';
+import { RoleEnum } from '@pharma/utils/constants';
 
 import { PermissionSchema } from './permission';
 

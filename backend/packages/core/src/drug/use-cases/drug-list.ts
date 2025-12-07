@@ -1,6 +1,6 @@
-import { ValidateSchema } from '@/utils/decorators';
-import { IUsecase } from '@/utils/usecase';
-import { Infer, InputValidator } from '@/utils/validator';
+import { ValidateSchema } from '@pharma/utils/decorators';
+import { IUsecase } from '@pharma/utils/usecase';
+import { Infer, InputValidator } from '@pharma/utils/validator';
 
 import { DrugEntity } from '../entity/drug';
 import { IDrugRepository, DrugListInput } from '../repository/drug';

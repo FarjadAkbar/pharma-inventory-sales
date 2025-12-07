@@ -1,7 +1,8 @@
 import { Test } from '@nestjs/testing';
 import { TestMock } from 'test/mock';
 
-import { RoleEntity, RoleEnum } from '@/core/role/entity/role';
+import { RoleEntity } from '@pharma/core/role/entity/role';
+import { RoleEnum } from '@pharma/utils/constants';
 import { IUserDeleteAdapter } from '@/services/users-service/src/adapters';
 import { ApiNotFoundException } from '@pharma/utils/exception';
 import { ZodExceptionIssue } from '@pharma/utils/validator';

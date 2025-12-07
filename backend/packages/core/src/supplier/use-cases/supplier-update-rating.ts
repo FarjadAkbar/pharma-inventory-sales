@@ -1,8 +1,8 @@
-import { ValidateSchema } from '@/utils/decorators';
-import { ApiNotFoundException } from '@/utils/exception';
-import { UpdatedEntity } from '@/utils/entity';
-import { IUsecase } from '@/utils/usecase';
-import { Infer, InputValidator } from '@/utils/validator';
+import { ValidateSchema } from '@pharma/utils/decorators';
+import { ApiNotFoundException } from '@pharma/utils/exception';
+import { UpdatedEntity } from '@pharma/utils/entity';
+import { IUsecase } from '@pharma/utils/usecase';
+import { Infer, InputValidator } from '@pharma/utils/validator';
 
 import { SupplierEntitySchema } from '../entity/supplier';
 import { ISupplierRepository } from '../repository/supplier';

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { RedisClientType, SetOptions } from 'redis';
 
-import { ErrorType, ILoggerAdapter } from '@/infra/logger';
+import { ErrorType, ILoggerAdapter } from '../../logger';
 import { ApiInternalServerException } from '@pharma/utils/exception';
 
 import { ICacheAdapter } from '../adapter';

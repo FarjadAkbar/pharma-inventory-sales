@@ -1,4 +1,4 @@
-import { RoleEntity } from '@/core/role/entity/role';
+import { RoleEntity } from '../entity/role';
 import { ValidateSchema } from '@pharma/utils/decorators';
 import { PaginationInput, PaginationOutput, PaginationSchema } from '@pharma/utils/pagination';
 import { SearchSchema } from '@pharma/utils/search';

@@ -418,21 +418,24 @@ importers:
 
   packages/infra:
     dependencies:
-      '@pharma/libs':
-        specifier: workspace:*
-        version: link:../libs
       '@pharma/utils':
         specifier: workspace:*
         version: link:../utils
 
   packages/libs:
     dependencies:
+      '@pharma/infra':
+        specifier: workspace:*
+        version: link:../infra
       '@pharma/utils':
         specifier: workspace:*
         version: link:../utils
 
   packages/middlewares:
     dependencies:
+      '@pharma/core':
+        specifier: workspace:*
+        version: link:../core
       '@pharma/infra':
         specifier: workspace:*
         version: link:../infra

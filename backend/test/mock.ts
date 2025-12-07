@@ -1,9 +1,9 @@
 import { AttributeValue, SpanStatus, TimeInput } from '@opentelemetry/api';
 
-import { ApiTrancingInput, TracingType, UserRequest } from '@/utils/request';
+import { ApiTrancingInput, TracingType, UserRequest } from '@pharma/utils/request';
 
-import { BaseException } from '@/utils/exception';
-import { ZodExceptionIssue } from '@/utils/validator';
+import { BaseException } from '@pharma/utils/exception';
+import { ZodExceptionIssue } from '@pharma/utils/validator';
 import { z } from 'zod';
 
 export class TestMock {

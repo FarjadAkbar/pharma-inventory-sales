@@ -1,5 +1,5 @@
-import { RoleEnum } from '@/core/role/entity/role';
-import { IRoleRepository } from '@/core/role/repository/role';
+import { RoleEnum } from '@pharma/utils/constants';
+import { IRoleRepository } from '../../role/repository/role';
 import { ILoggerAdapter } from '@pharma/infra/logger';
 import { ValidateSchema } from '@pharma/utils/decorators';
 import { ApiConflictException, ApiNotFoundException } from '@pharma/utils/exception';

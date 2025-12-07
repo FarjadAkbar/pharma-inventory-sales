@@ -1,8 +1,8 @@
-import { ValidateSchema } from '@/utils/decorators';
-import { ApiNotFoundException } from '@/utils/exception';
-import { ApiTrancingInput } from '@/utils/request';
-import { IUsecase } from '@/utils/usecase';
-import { Infer } from '@/utils/validator';
+import { ValidateSchema } from '@pharma/utils/decorators';
+import { ApiNotFoundException } from '@pharma/utils/exception';
+import { ApiTrancingInput } from '@pharma/utils/request';
+import { IUsecase } from '@pharma/utils/usecase';
+import { Infer } from '@pharma/utils/validator';
 
 import { SiteEntitySchema } from '../entity/site';
 import { ISiteRepository } from '../repository/site';

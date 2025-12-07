@@ -1,4 +1,4 @@
-import { RoleEntitySchema } from '@/core/role/entity/role';
+import { RoleEntitySchema } from '../entity/role';
 import { ValidateSchema } from '@pharma/utils/decorators';
 import { ApiNotFoundException } from '@pharma/utils/exception';
 import { IUsecase } from '@pharma/utils/usecase';

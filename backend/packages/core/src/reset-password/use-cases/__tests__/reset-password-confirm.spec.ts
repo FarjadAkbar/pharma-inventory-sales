@@ -1,9 +1,10 @@
 import { Test } from '@nestjs/testing';
 import { TestMock } from 'test/mock';
 
-import { RoleEntity, RoleEnum } from '@/core/role/entity/role';
-import { UserEntity } from '@/core/user/entity/user';
-import { IUserRepository } from '@/core/user/repository/user';
+import { RoleEntity } from '@pharma/core/role/entity/role';
+import { RoleEnum } from '@pharma/utils/constants';
+import { UserEntity } from '@pharma/core/user/entity/user';
+import { IUserRepository } from '@pharma/core/user/repository/user';
 import { CreatedModel, RemovedModel } from '@pharma/infra/repository';
 import { EmitEventOutput, IEventAdapter } from '@pharma/libs/event';
 import { ITokenAdapter } from '@pharma/libs/token';

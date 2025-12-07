@@ -3,10 +3,10 @@ import path from 'path';
 import { DataSource } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
-import { PermissionEntity } from '@/core/permission/entity/permission';
-import { RoleEntity, RoleEnum } from '@/core/role/entity/role';
-import { UserEntity } from '@/core/user/entity/user';
-import { UserPasswordEntity } from '@/core/user/entity/user-password';
+import { PermissionEntity } from '@pharma/core/permission/entity/permission';
+import { RoleEntity, RoleEnum } from '@pharma/core/role/entity/role';
+import { UserEntity } from '@pharma/core/user/entity/user';
+import { UserPasswordEntity } from '@pharma/core/user/entity/user-password';
 import { UUIDUtils } from '@/utils/uuid';
 
 import { PermissionSchema } from '@/infra/database/postgres/schemas/permission';

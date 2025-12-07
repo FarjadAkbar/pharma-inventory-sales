@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import NodeCache from 'node-cache';
 
-import { ILoggerAdapter } from '@/infra/logger';
+import { ILoggerAdapter } from '../../logger';
 
 import { ICacheAdapter } from '../adapter';
 import { MemoryCacheKeyArgument, MemoryCacheSetType, MemoryCacheTTL, MemoryCacheValueArgument } from './types';

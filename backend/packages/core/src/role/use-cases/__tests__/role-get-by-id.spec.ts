@@ -7,7 +7,8 @@ import { ZodExceptionIssue } from '@pharma/utils/validator';
 
 import { IRoleRepository } from '../../repository/role';
 import { RoleGetByIdInput, RoleGetByIdUsecase } from '../role-get-by-id';
-import { RoleEntity, RoleEnum } from './../../entity/role';
+import { RoleEntity } from './../../entity/role';
+import { RoleEnum } from '@pharma/utils/constants';
 
 describe(RoleGetByIdUsecase.name, () => {
   let usecase: IRoleGetByIdAdapter;
