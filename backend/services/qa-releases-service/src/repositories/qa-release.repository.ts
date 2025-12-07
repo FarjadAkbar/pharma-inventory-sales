@@ -1,10 +1,10 @@
 import { Repository } from 'typeorm';
 
-import { QAReleaseEntity } from '@/core/qa-release/entity/qa-release';
-import { IQAReleaseRepository, QAReleaseListInput } from '@/core/qa-release/repository/qa-release';
-import { TypeORMRepository } from '@/infra/repository/postgres/repository';
+import { QAReleaseEntity } from '@pharma/core/qa-release/entity/qa-release';
+import { IQAReleaseRepository, QAReleaseListInput } from '@pharma/core/qa-release/repository/qa-release';
+import { TypeORMRepository } from '@pharma/infra/repository/postgres/repository';
 
-import { QAReleaseSchema } from '@/infra/database/postgres/schemas/qa-release';
+import { QAReleaseSchema } from '@pharma/infra/database/postgres/schemas/qa-release';
 
 type Model = QAReleaseSchema & QAReleaseEntity;
 

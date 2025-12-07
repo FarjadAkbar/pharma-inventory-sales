@@ -3,18 +3,18 @@ import { ClientProxy } from '@nestjs/microservices';
 import { Request, Response } from 'express';
 import { firstValueFrom } from 'rxjs';
 
-import { IUserRepository } from '@/core/user/repository/user';
-import { IHttpAdapter } from '@/infra/http';
-import { ISecretsAdapter } from '@/infra/secrets';
-import { ITokenAdapter } from '@/libs/token';
-import { ApiRequest } from '@/utils/request';
+import { IUserRepository } from '@pharma/core/user/repository/user';
+import { IHttpAdapter } from '@pharma/infra/http';
+import { ISecretsAdapter } from '@pharma/infra/secrets';
+import { ITokenAdapter } from '@pharma/libs/token';
+import { ApiRequest } from '@pharma/utils/request';
 import {
   AUTH_LOGIN,
   AUTH_LOGOUT,
   AUTH_REFRESH_TOKEN,
   AUTH_RESET_PASSWORD_CONFIRM,
   AUTH_RESET_PASSWORD_SEND_EMAIL
-} from '@/constants/message-patterns';
+} from '@pharma/utils/constants/message-patterns';
 
 @Controller()
 export class AuthController {

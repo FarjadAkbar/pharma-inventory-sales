@@ -2,18 +2,18 @@ import { Module } from '@nestjs/common';
 import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { PermissionEntity } from '@/core/permission/entity/permission';
-import { IPermissionRepository } from '@/core/permission/repository/permission';
-import { PermissionCreateUsecase } from '@/core/permission/use-cases/permission-create';
-import { PermissionDeleteUsecase } from '@/core/permission/use-cases/permission-delete';
-import { PermissionGetByIdUsecase } from '@/core/permission/use-cases/permission-get-by-id';
-import { PermissionListUsecase } from '@/core/permission/use-cases/permission-list';
-import { PermissionUpdateUsecase } from '@/core/permission/use-cases/permission-update';
-import { PermissionSchema } from '@/infra/database/postgres/schemas/permission';
-import { InfraModule } from '@/infra/module';
-import { RedisCacheModule } from '@/infra/cache/redis';
-import { ILoggerAdapter, LoggerModule } from '@/infra/logger';
-import { LibModule } from '@/libs/module';
+import { PermissionEntity } from '@pharma/core/permission/entity/permission';
+import { IPermissionRepository } from '@pharma/core/permission/repository/permission';
+import { PermissionCreateUsecase } from '@pharma/core/permission/use-cases/permission-create';
+import { PermissionDeleteUsecase } from '@pharma/core/permission/use-cases/permission-delete';
+import { PermissionGetByIdUsecase } from '@pharma/core/permission/use-cases/permission-get-by-id';
+import { PermissionListUsecase } from '@pharma/core/permission/use-cases/permission-list';
+import { PermissionUpdateUsecase } from '@pharma/core/permission/use-cases/permission-update';
+import { PermissionSchema } from '@pharma/infra/database/postgres/schemas/permission';
+import { InfraModule } from '@pharma/infra/module';
+import { RedisCacheModule } from '@pharma/infra/cache/redis';
+import { ILoggerAdapter, LoggerModule } from '@pharma/infra/logger';
+import { LibModule } from '@pharma/libs/module';
 
 import { PermissionsController } from './permissions.controller';
 import {

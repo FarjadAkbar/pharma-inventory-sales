@@ -2,17 +2,17 @@ import { Controller, Delete, Get, HttpCode, Post, Put, Req, Version, Inject } fr
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 
-import { Permission } from '@/utils/decorators';
-import { ApiRequest } from '@/utils/request';
-import { SearchHttpSchema } from '@/utils/search';
-import { SortHttpSchema } from '@/utils/sort';
+import { Permission } from '@pharma/utils/decorators';
+import { ApiRequest } from '@pharma/utils/request';
+import { SearchHttpSchema } from '@pharma/utils/search';
+import { SortHttpSchema } from '@pharma/utils/sort';
 import {
   GOODS_RECEIPTS_CREATE,
   GOODS_RECEIPTS_DELETE,
   GOODS_RECEIPTS_GET_BY_ID,
   GOODS_RECEIPTS_LIST,
   GOODS_RECEIPTS_UPDATE
-} from '@/constants/message-patterns';
+} from '@pharma/utils/constants/message-patterns';
 
 @Controller('goods-receipts')
 export class GoodsReceiptsController {

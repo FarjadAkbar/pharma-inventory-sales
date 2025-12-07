@@ -1,13 +1,13 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 
-import { DEVIATIONS_CREATE, DEVIATIONS_DELETE, DEVIATIONS_GET_BY_ID, DEVIATIONS_LIST, DEVIATIONS_UPDATE } from '@/constants/message-patterns';
+import { DEVIATIONS_CREATE, DEVIATIONS_DELETE, DEVIATIONS_GET_BY_ID, DEVIATIONS_LIST, DEVIATIONS_UPDATE } from '@pharma/utils/constants/message-patterns';
 
-import { DeviationCreateInput } from '@/core/deviation/use-cases/deviation-create';
-import { DeviationUpdateInput } from '@/core/deviation/use-cases/deviation-update';
-import { DeviationCloseInput } from '@/core/deviation/use-cases/deviation-close';
-import { DeviationListInput } from '@/core/deviation/repository/deviation';
-import { ApiTrancingInput } from '@/utils/request';
+import { DeviationCreateInput } from '@pharma/core/deviation/use-cases/deviation-create';
+import { DeviationUpdateInput } from '@pharma/core/deviation/use-cases/deviation-update';
+import { DeviationCloseInput } from '@pharma/core/deviation/use-cases/deviation-close';
+import { DeviationListInput } from '@pharma/core/deviation/repository/deviation';
+import { ApiTrancingInput } from '@pharma/utils/request';
 
 import { IDeviationCreateAdapter, IDeviationUpdateAdapter, IDeviationListAdapter, IDeviationCloseAdapter } from './adapters';
 

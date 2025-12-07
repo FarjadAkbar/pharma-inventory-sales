@@ -1,11 +1,11 @@
 import { Repository } from 'typeorm';
 
-import { DeviationEntity } from '@/core/deviation/entity/deviation';
-import { IDeviationRepository, DeviationListInput } from '@/core/deviation/repository/deviation';
-import { TypeORMRepository } from '@/infra/repository/postgres/repository';
-import { DeviationStatusEnum } from '@/core/deviation/entity/deviation';
+import { DeviationEntity } from '@pharma/core/deviation/entity/deviation';
+import { IDeviationRepository, DeviationListInput } from '@pharma/core/deviation/repository/deviation';
+import { TypeORMRepository } from '@pharma/infra/repository/postgres/repository';
+import { DeviationStatusEnum } from '@pharma/core/deviation/entity/deviation';
 
-import { DeviationSchema } from '@/infra/database/postgres/schemas/deviation';
+import { DeviationSchema } from '@pharma/infra/database/postgres/schemas/deviation';
 
 type Model = DeviationSchema & DeviationEntity;
 

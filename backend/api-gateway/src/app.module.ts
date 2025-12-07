@@ -2,19 +2,19 @@ import { Module } from '@nestjs/common';
 import { APP_GUARD, APP_INTERCEPTOR, Reflector } from '@nestjs/core';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 
-import { IUserRepository } from '@/core/user/repository/user';
-import { InfraModule } from '@/infra/module';
-import { ILoggerAdapter, LoggerModule } from '@/infra/logger';
-import { LibModule } from '@/libs/module';
-import { AuthorizationRoleGuard } from '@/middlewares/guards';
+import { IUserRepository } from '@pharma/core/user/repository/user';
+import { InfraModule } from '@pharma/infra/module';
+import { ILoggerAdapter, LoggerModule } from '@pharma/infra/logger';
+import { LibModule } from '@pharma/libs/module';
+import { AuthorizationRoleGuard } from '@pharma/middlewares/guards';
 import {
   ExceptionHandlerInterceptor,
   HttpLoggerInterceptor,
   MetricsInterceptor,
   RequestTimeoutInterceptor,
   TracingInterceptor
-} from '@/middlewares/interceptors';
-import { SERVICE_PORTS } from '@/constants';
+} from '@pharma/middlewares/interceptors';
+import { SERVICE_PORTS } from '@pharma/constants';
 import { HealthModule } from './health/health.module';
 import { AuthController } from './controllers/auth.controller';
 import { UsersController } from './controllers/users.controller';

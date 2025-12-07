@@ -1,16 +1,16 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 
-import { DRUGS_CREATE, DRUGS_DELETE, DRUGS_GET_BY_ID, DRUGS_LIST, DRUGS_UPDATE } from '@/constants/message-patterns';
+import { DRUGS_CREATE, DRUGS_DELETE, DRUGS_GET_BY_ID, DRUGS_LIST, DRUGS_UPDATE } from '@pharma/utils/constants/message-patterns';
 
-import { DrugCreateInput } from '@/core/drug/use-cases/drug-create';
-import { DrugUpdateInput } from '@/core/drug/use-cases/drug-update';
-import { DrugApproveInput } from '@/core/drug/use-cases/drug-approve';
-import { DrugRejectInput } from '@/core/drug/use-cases/drug-reject';
-import { DrugDeleteInput } from '@/core/drug/use-cases/drug-delete';
-import { DrugGetByIdInput } from '@/core/drug/use-cases/drug-get-by-id';
-import { DrugListInput } from '@/core/drug/repository/drug';
-import { ApiTrancingInput } from '@/utils/request';
+import { DrugCreateInput } from '@pharma/core/drug/use-cases/drug-create';
+import { DrugUpdateInput } from '@pharma/core/drug/use-cases/drug-update';
+import { DrugApproveInput } from '@pharma/core/drug/use-cases/drug-approve';
+import { DrugRejectInput } from '@pharma/core/drug/use-cases/drug-reject';
+import { DrugDeleteInput } from '@pharma/core/drug/use-cases/drug-delete';
+import { DrugGetByIdInput } from '@pharma/core/drug/use-cases/drug-get-by-id';
+import { DrugListInput } from '@pharma/core/drug/repository/drug';
+import { ApiTrancingInput } from '@pharma/utils/request';
 
 import {
   IDrugCreateAdapter,

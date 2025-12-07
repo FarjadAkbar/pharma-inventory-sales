@@ -1,11 +1,11 @@
 import { Repository, DataSource } from 'typeorm';
 
-import { GoodsReceiptEntity, GoodsReceiptItemEntity } from '@/core/goods-receipt/entity/goods-receipt';
-import { IGoodsReceiptRepository, GoodsReceiptListInput } from '@/core/goods-receipt/repository/goods-receipt';
-import { TypeORMRepository } from '@/infra/repository/postgres/repository';
-import { GoodsReceiptStatusEnum } from '@/core/goods-receipt/entity/goods-receipt';
+import { GoodsReceiptEntity, GoodsReceiptItemEntity } from '@pharma/core/goods-receipt/entity/goods-receipt';
+import { IGoodsReceiptRepository, GoodsReceiptListInput } from '@pharma/core/goods-receipt/repository/goods-receipt';
+import { TypeORMRepository } from '@pharma/infra/repository/postgres/repository';
+import { GoodsReceiptStatusEnum } from '@pharma/core/goods-receipt/entity/goods-receipt';
 
-import { GoodsReceiptSchema, GoodsReceiptItemSchema } from '@/infra/database/postgres/schemas/goods-receipt';
+import { GoodsReceiptSchema, GoodsReceiptItemSchema } from '@pharma/infra/database/postgres/schemas/goods-receipt';
 
 type Model = GoodsReceiptSchema & GoodsReceiptEntity;
 

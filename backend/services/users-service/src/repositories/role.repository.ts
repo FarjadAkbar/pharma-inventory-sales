@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { FindOptionsOrder, FindOptionsWhere, Repository } from 'typeorm';
 
-import { RoleEntity } from '@/core/role/entity/role';
-import { IRoleRepository } from '@/core/role/repository/role';
-import { RoleListInput, RoleListOutput } from '@/core/role/use-cases/role-list';
-import { RoleSchema } from '@/infra/database/postgres/schemas/role';
-import { TypeORMRepository } from '@/infra/repository/postgres/repository';
-import { ConvertTypeOrmFilter, SearchTypeEnum, ValidateDatabaseSortAllowed } from '@/utils/decorators';
-import { IEntity } from '@/utils/entity';
-import { PaginationUtils } from '@/utils/pagination';
+import { RoleEntity } from '@pharma/core/role/entity/role';
+import { IRoleRepository } from '@pharma/core/role/repository/role';
+import { RoleListInput, RoleListOutput } from '@pharma/core/role/use-cases/role-list';
+import { RoleSchema } from '@pharma/infra/database/postgres/schemas/role';
+import { TypeORMRepository } from '@pharma/infra/repository/postgres/repository';
+import { ConvertTypeOrmFilter, SearchTypeEnum, ValidateDatabaseSortAllowed } from '@pharma/utils/decorators';
+import { IEntity } from '@pharma/utils/entity';
+import { PaginationUtils } from '@pharma/utils/pagination';
 
 @Injectable()
 export class RoleRepository extends TypeORMRepository<Model> implements IRoleRepository {

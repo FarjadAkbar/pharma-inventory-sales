@@ -2,17 +2,17 @@ import { Module } from '@nestjs/common';
 import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { QCResultEntity } from '@/core/qc-result/entity/qc-result';
-import { IQCResultRepository } from '@/core/qc-result/repository/qc-result';
-import { QCResultCreateUsecase } from '@/core/qc-result/use-cases/qc-result-create';
-import { QCResultListUsecase } from '@/core/qc-result/use-cases/qc-result-list';
-import { QCResultSchema } from '@/infra/database/postgres/schemas/qc-result';
-import { InfraModule } from '@/infra/module';
-import { RedisCacheModule } from '@/infra/cache/redis';
-import { ILoggerAdapter, LoggerModule } from '@/infra/logger';
-import { SecretsModule } from '@/infra/secrets';
-import { EventLibModule, IEventAdapter } from '@/libs/event';
-import { LibModule } from '@/libs/module';
+import { QCResultEntity } from '@pharma/core/qc-result/entity/qc-result';
+import { IQCResultRepository } from '@pharma/core/qc-result/repository/qc-result';
+import { QCResultCreateUsecase } from '@pharma/core/qc-result/use-cases/qc-result-create';
+import { QCResultListUsecase } from '@pharma/core/qc-result/use-cases/qc-result-list';
+import { QCResultSchema } from '@pharma/infra/database/postgres/schemas/qc-result';
+import { InfraModule } from '@pharma/infra/module';
+import { RedisCacheModule } from '@pharma/infra/cache/redis';
+import { ILoggerAdapter, LoggerModule } from '@pharma/infra/logger';
+import { SecretsModule } from '@pharma/infra/secrets';
+import { EventLibModule, IEventAdapter } from '@pharma/libs/event';
+import { LibModule } from '@pharma/libs/module';
 
 import { QCResultsController } from './qc-results.controller';
 import { IQCResultCreateAdapter, IQCResultListAdapter } from './adapters';

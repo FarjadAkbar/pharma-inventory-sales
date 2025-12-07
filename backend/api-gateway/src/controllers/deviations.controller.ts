@@ -2,11 +2,11 @@ import { Controller, Delete, Get, HttpCode, Post, Put, Req, Version, Inject } fr
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 
-import { Permission } from '@/utils/decorators';
-import { ApiRequest } from '@/utils/request';
-import { SearchHttpSchema } from '@/utils/search';
-import { SortHttpSchema } from '@/utils/sort';
-import { DEVIATIONS_CREATE, DEVIATIONS_DELETE, DEVIATIONS_GET_BY_ID, DEVIATIONS_LIST, DEVIATIONS_UPDATE } from '@/constants/message-patterns';
+import { Permission } from '@pharma/utils/decorators';
+import { ApiRequest } from '@pharma/utils/request';
+import { SearchHttpSchema } from '@pharma/utils/search';
+import { SortHttpSchema } from '@pharma/utils/sort';
+import { DEVIATIONS_CREATE, DEVIATIONS_DELETE, DEVIATIONS_GET_BY_ID, DEVIATIONS_LIST, DEVIATIONS_UPDATE } from '@pharma/utils/constants/message-patterns';
 
 @Controller('deviations')
 export class DeviationsController {

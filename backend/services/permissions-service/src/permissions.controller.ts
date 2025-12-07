@@ -7,13 +7,13 @@ import {
   PERMISSIONS_GET_BY_ID,
   PERMISSIONS_LIST,
   PERMISSIONS_UPDATE
-} from '@/constants/message-patterns';
+} from '@pharma/utils/constants/message-patterns';
 
-import { PermissionCreateInput } from '@/core/permission/use-cases/permission-create';
-import { PermissionUpdateInput } from '@/core/permission/use-cases/permission-update';
-import { PermissionGetByIdInput } from '@/core/permission/use-cases/permission-get-by-id';
-import { PermissionListInput } from '@/core/permission/use-cases/permission-list';
-import { PermissionDeleteInput } from '@/core/permission/use-cases/permission-delete';
+import { PermissionCreateInput } from '@pharma/core/permission/use-cases/permission-create';
+import { PermissionUpdateInput } from '@pharma/core/permission/use-cases/permission-update';
+import { PermissionGetByIdInput } from '@pharma/core/permission/use-cases/permission-get-by-id';
+import { PermissionListInput } from '@pharma/core/permission/use-cases/permission-list';
+import { PermissionDeleteInput } from '@pharma/core/permission/use-cases/permission-delete';
 
 import {
   IPermissionCreateAdapter,

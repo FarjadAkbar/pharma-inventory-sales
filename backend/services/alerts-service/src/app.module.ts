@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 
-import { InfraModule } from '@/infra/module';
-import { ILoggerAdapter, LoggerModule } from '@/infra/logger';
-import { LibModule } from '@/libs/module';
+import { InfraModule } from '@pharma/infra/module';
+import { ILoggerAdapter, LoggerModule } from '@pharma/infra/logger';
+import { LibModule } from '@pharma/libs/module';
 
 import { AlertsController } from './alerts.controller';
 

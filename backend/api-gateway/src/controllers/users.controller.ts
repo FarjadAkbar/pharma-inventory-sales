@@ -2,10 +2,10 @@ import { Controller, Delete, Get, HttpCode, Post, Put, Req, Version, Inject } fr
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 
-import { Permission } from '@/utils/decorators';
-import { ApiRequest, UserRequest } from '@/utils/request';
-import { SearchHttpSchema } from '@/utils/search';
-import { SortHttpSchema } from '@/utils/sort';
+import { Permission } from '@pharma/utils/decorators';
+import { ApiRequest, UserRequest } from '@pharma/utils/request';
+import { SearchHttpSchema } from '@pharma/utils/search';
+import { SortHttpSchema } from '@pharma/utils/sort';
 import {
   USERS_CREATE,
   USERS_DELETE,
@@ -13,9 +13,9 @@ import {
   USERS_GET_CURRENT,
   USERS_LIST,
   USERS_UPDATE
-} from '@/constants/message-patterns';
+} from '@pharma/utils/constants/message-patterns';
 
-import { UserEntity } from '@/core/user/entity/user';
+import { UserEntity } from '@pharma/core/user/entity/user';
 
 @Controller('users')
 export class UsersController {

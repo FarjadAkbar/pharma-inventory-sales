@@ -1,7 +1,7 @@
 import { RedisClientType } from 'redis';
 import { DataSource } from 'typeorm';
 
-import { ICacheAdapter } from '@/infra/cache';
+import { ICacheAdapter } from '@pharma/infra/cache';
 
 import { DatabaseConnectionOutput, DatabaseMemoryOutput, HealthStatus, Load, MemotyOutput } from './health.types';
 

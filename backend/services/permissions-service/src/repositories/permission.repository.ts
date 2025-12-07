@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { FindOptionsOrder, FindOptionsRelations, FindOptionsWhere, Not, Repository } from 'typeorm';
 
-import { PermissionEntity } from '@/core/permission/entity/permission';
-import { ExistsOnUpdateInput, IPermissionRepository } from '@/core/permission/repository/permission';
-import { PermissionListInput, PermissionListOutput } from '@/core/permission/use-cases/permission-list';
-import { PermissionSchema } from '@/infra/database/postgres/schemas/permission';
-import { TypeORMRepository } from '@/infra/repository/postgres/repository';
-import { ConvertTypeOrmFilter, SearchTypeEnum, ValidateDatabaseSortAllowed } from '@/utils/decorators';
-import { IEntity } from '@/utils/entity';
-import { PaginationUtils } from '@/utils/pagination';
+import { PermissionEntity } from '@pharma/core/permission/entity/permission';
+import { ExistsOnUpdateInput, IPermissionRepository } from '@pharma/core/permission/repository/permission';
+import { PermissionListInput, PermissionListOutput } from '@pharma/core/permission/use-cases/permission-list';
+import { PermissionSchema } from '@pharma/infra/database/postgres/schemas/permission';
+import { TypeORMRepository } from '@pharma/infra/repository/postgres/repository';
+import { ConvertTypeOrmFilter, SearchTypeEnum, ValidateDatabaseSortAllowed } from '@pharma/utils/decorators';
+import { IEntity } from '@pharma/utils/entity';
+import { PaginationUtils } from '@pharma/utils/pagination';
 
 @Injectable()
 export class PermissionRepository extends TypeORMRepository<Model> implements IPermissionRepository {

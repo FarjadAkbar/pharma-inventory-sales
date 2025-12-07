@@ -2,19 +2,19 @@ import { Controller, Delete, Get, HttpCode, Post, Put, Req, Version, Inject } fr
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 
-import { Permission } from '@/utils/decorators';
-import { ApiRequest } from '@/utils/request';
-import { SearchHttpSchema } from '@/utils/search';
-import { SortHttpSchema } from '@/utils/sort';
+import { Permission } from '@pharma/utils/decorators';
+import { ApiRequest } from '@pharma/utils/request';
+import { SearchHttpSchema } from '@pharma/utils/search';
+import { SortHttpSchema } from '@pharma/utils/sort';
 import {
   PERMISSIONS_CREATE,
   PERMISSIONS_DELETE,
   PERMISSIONS_GET_BY_ID,
   PERMISSIONS_LIST,
   PERMISSIONS_UPDATE
-} from '@/constants/message-patterns';
+} from '@pharma/utils/constants/message-patterns';
 
-import { PermissionEntity } from '@/core/permission/entity/permission';
+import { PermissionEntity } from '@pharma/core/permission/entity/permission';
 
 @Controller('permissions')
 export class PermissionsController {

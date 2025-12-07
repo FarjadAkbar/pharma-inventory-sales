@@ -1,14 +1,14 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 
-import { SITES_CREATE, SITES_DELETE, SITES_GET_ALL, SITES_GET_BY_ID, SITES_LIST, SITES_UPDATE } from '@/constants/message-patterns';
+import { SITES_CREATE, SITES_DELETE, SITES_GET_ALL, SITES_GET_BY_ID, SITES_LIST, SITES_UPDATE } from '@pharma/utils/constants/message-patterns';
 
-import { SiteCreateInput } from '@/core/site/use-cases/site-create';
-import { SiteUpdateInput } from '@/core/site/use-cases/site-update';
-import { SiteDeleteInput } from '@/core/site/use-cases/site-delete';
-import { SiteGetByIdInput } from '@/core/site/use-cases/site-get-by-id';
-import { SiteListInput } from '@/core/site/use-cases/site-list';
-import { ApiTrancingInput } from '@/utils/request';
+import { SiteCreateInput } from '@pharma/core/site/use-cases/site-create';
+import { SiteUpdateInput } from '@pharma/core/site/use-cases/site-update';
+import { SiteDeleteInput } from '@pharma/core/site/use-cases/site-delete';
+import { SiteGetByIdInput } from '@pharma/core/site/use-cases/site-get-by-id';
+import { SiteListInput } from '@pharma/core/site/use-cases/site-list';
+import { ApiTrancingInput } from '@pharma/utils/request';
 
 import {
   ISiteCreateAdapter,

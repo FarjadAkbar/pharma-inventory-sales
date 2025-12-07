@@ -2,11 +2,11 @@ import { Controller, Delete, Get, HttpCode, Post, Put, Req, Version, Inject } fr
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 
-import { Permission } from '@/utils/decorators';
-import { ApiRequest } from '@/utils/request';
-import { SearchHttpSchema } from '@/utils/search';
-import { SortHttpSchema } from '@/utils/sort';
-import { QC_RESULTS_CREATE, QC_RESULTS_DELETE, QC_RESULTS_GET_BY_ID, QC_RESULTS_LIST, QC_RESULTS_UPDATE } from '@/constants/message-patterns';
+import { Permission } from '@pharma/utils/decorators';
+import { ApiRequest } from '@pharma/utils/request';
+import { SearchHttpSchema } from '@pharma/utils/search';
+import { SortHttpSchema } from '@pharma/utils/sort';
+import { QC_RESULTS_CREATE, QC_RESULTS_DELETE, QC_RESULTS_GET_BY_ID, QC_RESULTS_LIST, QC_RESULTS_UPDATE } from '@pharma/utils/constants/message-patterns';
 
 @Controller('qc-results')
 export class QCResultsController {

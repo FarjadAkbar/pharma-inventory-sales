@@ -2,22 +2,22 @@ import { Module } from '@nestjs/common';
 import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { DrugEntity } from '@/core/drug/entity/drug';
-import { IDrugRepository } from '@/core/drug/repository/drug';
-import { DrugCreateUsecase } from '@/core/drug/use-cases/drug-create';
-import { DrugDeleteUsecase } from '@/core/drug/use-cases/drug-delete';
-import { DrugGetByIdUsecase } from '@/core/drug/use-cases/drug-get-by-id';
-import { DrugListUsecase } from '@/core/drug/use-cases/drug-list';
-import { DrugUpdateUsecase } from '@/core/drug/use-cases/drug-update';
-import { DrugApproveUsecase } from '@/core/drug/use-cases/drug-approve';
-import { DrugRejectUsecase } from '@/core/drug/use-cases/drug-reject';
-import { DrugSchema } from '@/infra/database/postgres/schemas/drug';
-import { InfraModule } from '@/infra/module';
-import { RedisCacheModule } from '@/infra/cache/redis';
-import { ILoggerAdapter, LoggerModule } from '@/infra/logger';
-import { SecretsModule } from '@/infra/secrets';
-import { EventLibModule, IEventAdapter } from '@/libs/event';
-import { LibModule } from '@/libs/module';
+import { DrugEntity } from '@pharma/core/drug/entity/drug';
+import { IDrugRepository } from '@pharma/core/drug/repository/drug';
+import { DrugCreateUsecase } from '@pharma/core/drug/use-cases/drug-create';
+import { DrugDeleteUsecase } from '@pharma/core/drug/use-cases/drug-delete';
+import { DrugGetByIdUsecase } from '@pharma/core/drug/use-cases/drug-get-by-id';
+import { DrugListUsecase } from '@pharma/core/drug/use-cases/drug-list';
+import { DrugUpdateUsecase } from '@pharma/core/drug/use-cases/drug-update';
+import { DrugApproveUsecase } from '@pharma/core/drug/use-cases/drug-approve';
+import { DrugRejectUsecase } from '@pharma/core/drug/use-cases/drug-reject';
+import { DrugSchema } from '@pharma/infra/database/postgres/schemas/drug';
+import { InfraModule } from '@pharma/infra/module';
+import { RedisCacheModule } from '@pharma/infra/cache/redis';
+import { ILoggerAdapter, LoggerModule } from '@pharma/infra/logger';
+import { SecretsModule } from '@pharma/infra/secrets';
+import { EventLibModule, IEventAdapter } from '@pharma/libs/event';
+import { LibModule } from '@pharma/libs/module';
 
 import { DrugsController } from './drugs.controller';
 import {

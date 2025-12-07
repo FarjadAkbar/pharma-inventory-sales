@@ -2,8 +2,8 @@ import { Body, Controller, Post, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 
-import { ILoggerAdapter } from '@/infra/logger';
-import { ALERTS_CREATE, ALERTS_LIST } from '@/constants/message-patterns';
+import { ILoggerAdapter } from '@pharma/infra/logger';
+import { ALERTS_CREATE, ALERTS_LIST } from '@pharma/constants/message-patterns';
 
 @Controller('alert')
 export class AlertsController {

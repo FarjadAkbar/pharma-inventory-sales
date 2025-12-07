@@ -1,10 +1,10 @@
 import { Repository } from 'typeorm';
 
-import { QCTestEntity } from '@/core/qc-test/entity/qc-test';
-import { IQCTestRepository, QCTestListInput } from '@/core/qc-test/repository/qc-test';
-import { TypeORMRepository } from '@/infra/repository/postgres/repository';
+import { QCTestEntity } from '@pharma/core/qc-test/entity/qc-test';
+import { IQCTestRepository, QCTestListInput } from '@pharma/core/qc-test/repository/qc-test';
+import { TypeORMRepository } from '@pharma/infra/repository/postgres/repository';
 
-import { QCTestSchema } from '@/infra/database/postgres/schemas/qc-test';
+import { QCTestSchema } from '@pharma/infra/database/postgres/schemas/qc-test';
 
 type Model = QCTestSchema & QCTestEntity;
 

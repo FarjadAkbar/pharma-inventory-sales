@@ -1,10 +1,10 @@
-import { SiteCreateInput, SiteCreateOutput } from '@/core/site/use-cases/site-create';
-import { SiteDeleteInput, SiteDeleteOutput } from '@/core/site/use-cases/site-delete';
-import { SiteGetByIdInput, SiteGetByIdOutput } from '@/core/site/use-cases/site-get-by-id';
-import { SiteListInput, SiteListOutput } from '@/core/site/use-cases/site-list';
-import { SiteUpdateInput, SiteUpdateOutput } from '@/core/site/use-cases/site-update';
-import { ApiTrancingInput } from '@/utils/request';
-import { IUsecase } from '@/utils/usecase';
+import { SiteCreateInput, SiteCreateOutput } from '@pharma/core/site/use-cases/site-create';
+import { SiteDeleteInput, SiteDeleteOutput } from '@pharma/core/site/use-cases/site-delete';
+import { SiteGetByIdInput, SiteGetByIdOutput } from '@pharma/core/site/use-cases/site-get-by-id';
+import { SiteListInput, SiteListOutput } from '@pharma/core/site/use-cases/site-list';
+import { SiteUpdateInput, SiteUpdateOutput } from '@pharma/core/site/use-cases/site-update';
+import { ApiTrancingInput } from '@pharma/utils/request';
+import { IUsecase } from '@pharma/utils/usecase';
 
 export abstract class ISiteCreateAdapter implements IUsecase {
   abstract execute(input: SiteCreateInput, trace: ApiTrancingInput): Promise<SiteCreateOutput>;

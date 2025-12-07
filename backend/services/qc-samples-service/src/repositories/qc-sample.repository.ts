@@ -1,11 +1,11 @@
 import { Repository } from 'typeorm';
 
-import { QCSampleEntity } from '@/core/qc-sample/entity/qc-sample';
-import { IQCSampleRepository, QCSampleListInput } from '@/core/qc-sample/repository/qc-sample';
-import { TypeORMRepository } from '@/infra/repository/postgres/repository';
-import { QCSampleStatusEnum } from '@/core/qc-sample/entity/qc-sample';
+import { QCSampleEntity } from '@pharma/core/qc-sample/entity/qc-sample';
+import { IQCSampleRepository, QCSampleListInput } from '@pharma/core/qc-sample/repository/qc-sample';
+import { TypeORMRepository } from '@pharma/infra/repository/postgres/repository';
+import { QCSampleStatusEnum } from '@pharma/core/qc-sample/entity/qc-sample';
 
-import { QCSampleSchema } from '@/infra/database/postgres/schemas/qc-sample';
+import { QCSampleSchema } from '@pharma/infra/database/postgres/schemas/qc-sample';
 
 type Model = QCSampleSchema & QCSampleEntity;
 

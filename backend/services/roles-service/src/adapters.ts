@@ -1,11 +1,11 @@
-import { RoleAddPermissionInput, RoleAddPermissionOutput } from '@/core/role/use-cases/role-add-permission';
-import { RoleCreateInput, RoleCreateOutput } from '@/core/role/use-cases/role-create';
-import { RoleDeleteInput, RoleDeleteOutput } from '@/core/role/use-cases/role-delete';
-import { RoleDeletePermissionInput, RoleDeletePermissionOutput } from '@/core/role/use-cases/role-delete-permission';
-import { RoleGetByIdInput, RoleGetByIdOutput } from '@/core/role/use-cases/role-get-by-id';
-import { RoleListInput, RoleListOutput } from '@/core/role/use-cases/role-list';
-import { RoleUpdateInput, RoleUpdateOutput } from '@/core/role/use-cases/role-update';
-import { IUsecase } from '@/utils/usecase';
+import { RoleAddPermissionInput, RoleAddPermissionOutput } from '@pharma/core/role/use-cases/role-add-permission';
+import { RoleCreateInput, RoleCreateOutput } from '@pharma/core/role/use-cases/role-create';
+import { RoleDeleteInput, RoleDeleteOutput } from '@pharma/core/role/use-cases/role-delete';
+import { RoleDeletePermissionInput, RoleDeletePermissionOutput } from '@pharma/core/role/use-cases/role-delete-permission';
+import { RoleGetByIdInput, RoleGetByIdOutput } from '@pharma/core/role/use-cases/role-get-by-id';
+import { RoleListInput, RoleListOutput } from '@pharma/core/role/use-cases/role-list';
+import { RoleUpdateInput, RoleUpdateOutput } from '@pharma/core/role/use-cases/role-update';
+import { IUsecase } from '@pharma/utils/usecase';
 
 export abstract class IRoleCreateAdapter implements IUsecase {
   abstract execute(input: RoleCreateInput): Promise<RoleCreateOutput>;

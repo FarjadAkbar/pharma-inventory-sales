@@ -7,14 +7,14 @@ import {
   AUTH_REFRESH_TOKEN,
   AUTH_RESET_PASSWORD_CONFIRM,
   AUTH_RESET_PASSWORD_SEND_EMAIL
-} from '@/constants/message-patterns';
+} from '@pharma/utils/constants/message-patterns';
 
-import { LoginInput } from '@/core/user/use-cases/user-login';
-import { RefreshTokenInput } from '@/core/user/use-cases/user-refresh-token';
-import { LogoutInput } from '@/core/user/use-cases/user-logout';
-import { ResetPasswordSendEmailInput } from '@/core/reset-password/use-cases/reset-password-send-email';
-import { ResetPasswordConfirmInput } from '@/core/reset-password/use-cases/reset-password-confirm';
-import { ApiTrancingInput } from '@/utils/request';
+import { LoginInput } from '@pharma/core/user/use-cases/user-login';
+import { RefreshTokenInput } from '@pharma/core/user/use-cases/user-refresh-token';
+import { LogoutInput } from '@pharma/core/user/use-cases/user-logout';
+import { ResetPasswordSendEmailInput } from '@pharma/core/reset-password/use-cases/reset-password-send-email';
+import { ResetPasswordConfirmInput } from '@pharma/core/reset-password/use-cases/reset-password-confirm';
+import { ApiTrancingInput } from '@pharma/utils/request';
 
 import {
   ILoginAdapter,

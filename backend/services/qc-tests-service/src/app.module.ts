@@ -2,17 +2,17 @@ import { Module } from '@nestjs/common';
 import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { QCTestEntity } from '@/core/qc-test/entity/qc-test';
-import { IQCTestRepository } from '@/core/qc-test/repository/qc-test';
-import { QCTestCreateUsecase } from '@/core/qc-test/use-cases/qc-test-create';
-import { QCTestListUsecase } from '@/core/qc-test/use-cases/qc-test-list';
-import { QCTestSchema } from '@/infra/database/postgres/schemas/qc-test';
-import { InfraModule } from '@/infra/module';
-import { RedisCacheModule } from '@/infra/cache/redis';
-import { ILoggerAdapter, LoggerModule } from '@/infra/logger';
-import { SecretsModule } from '@/infra/secrets';
-import { EventLibModule, IEventAdapter } from '@/libs/event';
-import { LibModule } from '@/libs/module';
+import { QCTestEntity } from '@pharma/core/qc-test/entity/qc-test';
+import { IQCTestRepository } from '@pharma/core/qc-test/repository/qc-test';
+import { QCTestCreateUsecase } from '@pharma/core/qc-test/use-cases/qc-test-create';
+import { QCTestListUsecase } from '@pharma/core/qc-test/use-cases/qc-test-list';
+import { QCTestSchema } from '@pharma/infra/database/postgres/schemas/qc-test';
+import { InfraModule } from '@pharma/infra/module';
+import { RedisCacheModule } from '@pharma/infra/cache/redis';
+import { ILoggerAdapter, LoggerModule } from '@pharma/infra/logger';
+import { SecretsModule } from '@pharma/infra/secrets';
+import { EventLibModule, IEventAdapter } from '@pharma/libs/event';
+import { LibModule } from '@pharma/libs/module';
 
 import { QCTestsController } from './qc-tests.controller';
 import { IQCTestCreateAdapter, IQCTestListAdapter } from './adapters';

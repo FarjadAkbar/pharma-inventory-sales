@@ -2,30 +2,30 @@ import { Module } from '@nestjs/common';
 import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { IUserRepository } from '@/core/user/repository/user';
-import { LoginUsecase } from '@/core/user/use-cases/user-login';
-import { RefreshTokenUsecase } from '@/core/user/use-cases/user-refresh-token';
-import { LogoutUsecase } from '@/core/user/use-cases/user-logout';
-import { ResetPasswordEntity } from '@/core/reset-password/entity/reset-password';
-import { IResetPasswordRepository } from '@/core/reset-password/repository/reset-password';
-import { ResetPasswordConfirmUsecase } from '@/core/reset-password/use-cases/reset-password-confirm';
-import { ResetPasswordSendEmailUsecase } from '@/core/reset-password/use-cases/reset-password-send-email';
-import { UserSchema } from '@/infra/database/postgres/schemas/user';
-import { ResetPasswordSchema } from '@/infra/database/postgres/schemas/reset-password';
-import { InfraModule } from '@/infra/module';
-import { ICacheAdapter } from '@/infra/cache';
-import { RedisCacheModule } from '@/infra/cache/redis';
-import { ILoggerAdapter, LoggerModule } from '@/infra/logger';
-import { ISecretsAdapter, SecretsModule } from '@/infra/secrets';
-import { EventLibModule, IEventAdapter } from '@/libs/event';
-import { ITokenAdapter, TokenLibModule } from '@/libs/token';
-import { LibModule } from '@/libs/module';
+import { IUserRepository } from '@pharma/core/user/repository/user';
+import { LoginUsecase } from '@pharma/core/user/use-cases/user-login';
+import { RefreshTokenUsecase } from '@pharma/core/user/use-cases/user-refresh-token';
+import { LogoutUsecase } from '@pharma/core/user/use-cases/user-logout';
+import { ResetPasswordEntity } from '@pharma/core/reset-password/entity/reset-password';
+import { IResetPasswordRepository } from '@pharma/core/reset-password/repository/reset-password';
+import { ResetPasswordConfirmUsecase } from '@pharma/core/reset-password/use-cases/reset-password-confirm';
+import { ResetPasswordSendEmailUsecase } from '@pharma/core/reset-password/use-cases/reset-password-send-email';
+import { UserSchema } from '@pharma/infra/database/postgres/schemas/user';
+import { ResetPasswordSchema } from '@pharma/infra/database/postgres/schemas/reset-password';
+import { InfraModule } from '@pharma/infra/module';
+import { ICacheAdapter } from '@pharma/infra/cache';
+import { RedisCacheModule } from '@pharma/infra/cache/redis';
+import { ILoggerAdapter, LoggerModule } from '@pharma/infra/logger';
+import { ISecretsAdapter, SecretsModule } from '@pharma/infra/secrets';
+import { EventLibModule, IEventAdapter } from '@pharma/libs/event';
+import { ITokenAdapter, TokenLibModule } from '@pharma/libs/token';
+import { LibModule } from '@pharma/libs/module';
 
 import { AuthController } from './auth.controller';
 import { ILoginAdapter, IRefreshTokenAdapter, ILogoutAdapter, IConfirmResetPasswordAdapter, ISendEmailResetPasswordAdapter } from './adapters';
 import { UserRepository } from './repositories/user.repository';
 import { ResetPasswordRepository } from './repositories/reset-password.repository';
-import { UserEntity } from '@/core/user/entity/user';
+import { UserEntity } from '@pharma/core/user/entity/user';
 
 @Module({
   imports: [

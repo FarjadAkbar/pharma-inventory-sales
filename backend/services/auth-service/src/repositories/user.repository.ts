@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { FindOptionsOrder, FindOptionsRelations, FindOptionsWhere, Not, Repository } from 'typeorm';
 
-import { UserEntity } from '@/core/user/entity/user';
-import { IUserRepository } from '@/core/user/repository/user';
-import { UserListInput, UserListOutput } from '@/core/user/use-cases/user-list';
-import { UserSchema } from '@/infra/database/postgres/schemas/user';
-import { TypeORMRepository } from '@/infra/repository/postgres/repository';
-import { ConvertTypeOrmFilter, SearchTypeEnum, ValidateDatabaseSortAllowed } from '@/utils/decorators';
-import { IEntity } from '@/utils/entity';
-import { PaginationUtils } from '@/utils/pagination';
+import { UserEntity } from '@pharma/core/user/entity/user';
+import { IUserRepository } from '@pharma/core/user/repository/user';
+import { UserListInput, UserListOutput } from '@pharma/core/user/use-cases/user-list';
+import { UserSchema } from '@pharma/infra/database/postgres/schemas/user';
+import { TypeORMRepository } from '@pharma/infra/repository/postgres/repository';
+import { ConvertTypeOrmFilter, SearchTypeEnum, ValidateDatabaseSortAllowed } from '@pharma/utils/decorators';
+import { IEntity } from '@pharma/utils/entity';
+import { PaginationUtils } from '@pharma/utils/pagination';
 
 type Model = UserSchema & UserEntity;
 @Injectable()

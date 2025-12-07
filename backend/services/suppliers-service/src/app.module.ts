@@ -2,21 +2,21 @@ import { Module } from '@nestjs/common';
 import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { SupplierEntity } from '@/core/supplier/entity/supplier';
-import { ISupplierRepository } from '@/core/supplier/repository/supplier';
-import { SupplierCreateUsecase } from '@/core/supplier/use-cases/supplier-create';
-import { SupplierDeleteUsecase } from '@/core/supplier/use-cases/supplier-delete';
-import { SupplierGetByIdUsecase } from '@/core/supplier/use-cases/supplier-get-by-id';
-import { SupplierListUsecase } from '@/core/supplier/use-cases/supplier-list';
-import { SupplierUpdateRatingUsecase } from '@/core/supplier/use-cases/supplier-update-rating';
-import { SupplierUpdateUsecase } from '@/core/supplier/use-cases/supplier-update';
-import { SupplierSchema } from '@/infra/database/postgres/schemas/supplier';
-import { InfraModule } from '@/infra/module';
-import { RedisCacheModule } from '@/infra/cache/redis';
-import { ILoggerAdapter, LoggerModule } from '@/infra/logger';
-import { SecretsModule } from '@/infra/secrets';
-import { EventLibModule, IEventAdapter } from '@/libs/event';
-import { LibModule } from '@/libs/module';
+import { SupplierEntity } from '@pharma/core/supplier/entity/supplier';
+import { ISupplierRepository } from '@pharma/core/supplier/repository/supplier';
+import { SupplierCreateUsecase } from '@pharma/core/supplier/use-cases/supplier-create';
+import { SupplierDeleteUsecase } from '@pharma/core/supplier/use-cases/supplier-delete';
+import { SupplierGetByIdUsecase } from '@pharma/core/supplier/use-cases/supplier-get-by-id';
+import { SupplierListUsecase } from '@pharma/core/supplier/use-cases/supplier-list';
+import { SupplierUpdateRatingUsecase } from '@pharma/core/supplier/use-cases/supplier-update-rating';
+import { SupplierUpdateUsecase } from '@pharma/core/supplier/use-cases/supplier-update';
+import { SupplierSchema } from '@pharma/infra/database/postgres/schemas/supplier';
+import { InfraModule } from '@pharma/infra/module';
+import { RedisCacheModule } from '@pharma/infra/cache/redis';
+import { ILoggerAdapter, LoggerModule } from '@pharma/infra/logger';
+import { SecretsModule } from '@pharma/infra/secrets';
+import { EventLibModule, IEventAdapter } from '@pharma/libs/event';
+import { LibModule } from '@pharma/libs/module';
 
 import { SuppliersController } from './suppliers.controller';
 import {

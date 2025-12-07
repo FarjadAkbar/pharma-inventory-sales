@@ -1,11 +1,11 @@
-import { UserChangePasswordInput, UserChangePasswordOutput } from '@/core/user/use-cases/user-change-password';
-import { UserCreateInput, UserCreateOutput } from '@/core/user/use-cases/user-create';
-import { UserDeleteInput, UserDeleteOutput } from '@/core/user/use-cases/user-delete';
-import { UserGetByIdInput, UserGetByIdOutput } from '@/core/user/use-cases/user-get-by-id';
-import { UserListInput, UserListOutput } from '@/core/user/use-cases/user-list';
-import { UserUpdateInput, UserUpdateOutput } from '@/core/user/use-cases/user-update';
-import { ApiTrancingInput } from '@/utils/request';
-import { IUsecase } from '@/utils/usecase';
+import { UserChangePasswordInput, UserChangePasswordOutput } from '@pharma/core/user/use-cases/user-change-password';
+import { UserCreateInput, UserCreateOutput } from '@pharma/core/user/use-cases/user-create';
+import { UserDeleteInput, UserDeleteOutput } from '@pharma/core/user/use-cases/user-delete';
+import { UserGetByIdInput, UserGetByIdOutput } from '@pharma/core/user/use-cases/user-get-by-id';
+import { UserListInput, UserListOutput } from '@pharma/core/user/use-cases/user-list';
+import { UserUpdateInput, UserUpdateOutput } from '@pharma/core/user/use-cases/user-update';
+import { ApiTrancingInput } from '@pharma/utils/request';
+import { IUsecase } from '@pharma/utils/usecase';
 
 export abstract class IUserCreateAdapter implements IUsecase {
   abstract execute(input: UserCreateInput, trace: ApiTrancingInput): Promise<UserCreateOutput>;

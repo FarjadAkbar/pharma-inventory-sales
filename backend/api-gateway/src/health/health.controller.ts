@@ -1,7 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import os from 'os';
 
-import { ILoggerAdapter } from '@/infra/logger';
+import { ILoggerAdapter } from '@pharma/infra/logger';
 
 import { version } from '../../../package.json';
 import { IHealthAdapter } from './health.adapter';

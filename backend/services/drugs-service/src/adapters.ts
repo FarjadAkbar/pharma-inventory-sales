@@ -1,13 +1,13 @@
-import { DrugCreateInput, DrugCreateOutput } from '@/core/drug/use-cases/drug-create';
-import { DrugDeleteInput, DrugDeleteOutput } from '@/core/drug/use-cases/drug-delete';
-import { DrugGetByIdInput, DrugGetByIdOutput } from '@/core/drug/use-cases/drug-get-by-id';
-import { DrugListOutput } from '@/core/drug/use-cases/drug-list';
-import { DrugUpdateInput, DrugUpdateOutput } from '@/core/drug/use-cases/drug-update';
-import { DrugApproveInput, DrugApproveOutput } from '@/core/drug/use-cases/drug-approve';
-import { DrugRejectInput, DrugRejectOutput } from '@/core/drug/use-cases/drug-reject';
-import { DrugListInput } from '@/core/drug/repository/drug';
-import { ApiTrancingInput } from '@/utils/request';
-import { IUsecase } from '@/utils/usecase';
+import { DrugCreateInput, DrugCreateOutput } from '@pharma/core/drug/use-cases/drug-create';
+import { DrugDeleteInput, DrugDeleteOutput } from '@pharma/core/drug/use-cases/drug-delete';
+import { DrugGetByIdInput, DrugGetByIdOutput } from '@pharma/core/drug/use-cases/drug-get-by-id';
+import { DrugListOutput } from '@pharma/core/drug/use-cases/drug-list';
+import { DrugUpdateInput, DrugUpdateOutput } from '@pharma/core/drug/use-cases/drug-update';
+import { DrugApproveInput, DrugApproveOutput } from '@pharma/core/drug/use-cases/drug-approve';
+import { DrugRejectInput, DrugRejectOutput } from '@pharma/core/drug/use-cases/drug-reject';
+import { DrugListInput } from '@pharma/core/drug/repository/drug';
+import { ApiTrancingInput } from '@pharma/utils/request';
+import { IUsecase } from '@pharma/utils/usecase';
 
 export abstract class IDrugCreateAdapter implements IUsecase {
   abstract execute(input: DrugCreateInput, trace: ApiTrancingInput): Promise<DrugCreateOutput>;

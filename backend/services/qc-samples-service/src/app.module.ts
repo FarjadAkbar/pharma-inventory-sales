@@ -2,19 +2,19 @@ import { Module } from '@nestjs/common';
 import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { QCSampleEntity } from '@/core/qc-sample/entity/qc-sample';
-import { IQCSampleRepository } from '@/core/qc-sample/repository/qc-sample';
-import { QCSampleCreateUsecase } from '@/core/qc-sample/use-cases/qc-sample-create';
-import { QCSampleListUsecase } from '@/core/qc-sample/use-cases/qc-sample-list';
-import { QCSampleAssignUsecase } from '@/core/qc-sample/use-cases/qc-sample-assign';
-import { QCSampleCompleteUsecase } from '@/core/qc-sample/use-cases/qc-sample-complete';
-import { QCSampleSchema } from '@/infra/database/postgres/schemas/qc-sample';
-import { InfraModule } from '@/infra/module';
-import { RedisCacheModule } from '@/infra/cache/redis';
-import { ILoggerAdapter, LoggerModule } from '@/infra/logger';
-import { SecretsModule } from '@/infra/secrets';
-import { EventLibModule, IEventAdapter } from '@/libs/event';
-import { LibModule } from '@/libs/module';
+import { QCSampleEntity } from '@pharma/core/qc-sample/entity/qc-sample';
+import { IQCSampleRepository } from '@pharma/core/qc-sample/repository/qc-sample';
+import { QCSampleCreateUsecase } from '@pharma/core/qc-sample/use-cases/qc-sample-create';
+import { QCSampleListUsecase } from '@pharma/core/qc-sample/use-cases/qc-sample-list';
+import { QCSampleAssignUsecase } from '@pharma/core/qc-sample/use-cases/qc-sample-assign';
+import { QCSampleCompleteUsecase } from '@pharma/core/qc-sample/use-cases/qc-sample-complete';
+import { QCSampleSchema } from '@pharma/infra/database/postgres/schemas/qc-sample';
+import { InfraModule } from '@pharma/infra/module';
+import { RedisCacheModule } from '@pharma/infra/cache/redis';
+import { ILoggerAdapter, LoggerModule } from '@pharma/infra/logger';
+import { SecretsModule } from '@pharma/infra/secrets';
+import { EventLibModule, IEventAdapter } from '@pharma/libs/event';
+import { LibModule } from '@pharma/libs/module';
 
 import { QCSamplesController } from './qc-samples.controller';
 import {

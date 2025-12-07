@@ -1,11 +1,11 @@
 import { Repository, DataSource } from 'typeorm';
 
-import { PurchaseOrderEntity, PurchaseOrderItemEntity } from '@/core/purchase-order/entity/purchase-order';
-import { IPurchaseOrderRepository, PurchaseOrderListInput } from '@/core/purchase-order/repository/purchase-order';
-import { TypeORMRepository } from '@/infra/repository/postgres/repository';
-import { PurchaseOrderStatusEnum } from '@/core/purchase-order/entity/purchase-order';
+import { PurchaseOrderEntity, PurchaseOrderItemEntity } from '@pharma/core/purchase-order/entity/purchase-order';
+import { IPurchaseOrderRepository, PurchaseOrderListInput } from '@pharma/core/purchase-order/repository/purchase-order';
+import { TypeORMRepository } from '@pharma/infra/repository/postgres/repository';
+import { PurchaseOrderStatusEnum } from '@pharma/core/purchase-order/entity/purchase-order';
 
-import { PurchaseOrderSchema, PurchaseOrderItemSchema } from '@/infra/database/postgres/schemas/purchase-order';
+import { PurchaseOrderSchema, PurchaseOrderItemSchema } from '@pharma/infra/database/postgres/schemas/purchase-order';
 
 type Model = PurchaseOrderSchema & PurchaseOrderEntity;
 

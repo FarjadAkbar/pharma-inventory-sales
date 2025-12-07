@@ -1,10 +1,10 @@
 import { Repository } from 'typeorm';
 
-import { SupplierEntity } from '@/core/supplier/entity/supplier';
-import { ISupplierRepository, SupplierListInput } from '@/core/supplier/repository/supplier';
-import { TypeORMRepository } from '@/infra/repository/postgres/repository';
+import { SupplierEntity } from '@pharma/core/supplier/entity/supplier';
+import { ISupplierRepository, SupplierListInput } from '@pharma/core/supplier/repository/supplier';
+import { TypeORMRepository } from '@pharma/infra/repository/postgres/repository';
 
-import { SupplierSchema } from '@/infra/database/postgres/schemas/supplier';
+import { SupplierSchema } from '@pharma/infra/database/postgres/schemas/supplier';
 
 type Model = SupplierSchema & SupplierEntity;
 

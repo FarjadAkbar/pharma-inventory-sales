@@ -1,11 +1,11 @@
-import { GoodsReceiptCreateInput, GoodsReceiptCreateOutput } from '@/core/goods-receipt/use-cases/goods-receipt-create';
-import { GoodsReceiptDeleteInput, GoodsReceiptDeleteOutput } from '@/core/goods-receipt/use-cases/goods-receipt-delete';
-import { GoodsReceiptGetByIdInput, GoodsReceiptGetByIdOutput } from '@/core/goods-receipt/use-cases/goods-receipt-get-by-id';
-import { GoodsReceiptListOutput } from '@/core/goods-receipt/use-cases/goods-receipt-list';
-import { GoodsReceiptVerifyInput, GoodsReceiptVerifyOutput } from '@/core/goods-receipt/use-cases/goods-receipt-verify';
-import { GoodsReceiptListInput } from '@/core/goods-receipt/repository/goods-receipt';
-import { ApiTrancingInput } from '@/utils/request';
-import { IUsecase } from '@/utils/usecase';
+import { GoodsReceiptCreateInput, GoodsReceiptCreateOutput } from '@pharma/core/goods-receipt/use-cases/goods-receipt-create';
+import { GoodsReceiptDeleteInput, GoodsReceiptDeleteOutput } from '@pharma/core/goods-receipt/use-cases/goods-receipt-delete';
+import { GoodsReceiptGetByIdInput, GoodsReceiptGetByIdOutput } from '@pharma/core/goods-receipt/use-cases/goods-receipt-get-by-id';
+import { GoodsReceiptListOutput } from '@pharma/core/goods-receipt/use-cases/goods-receipt-list';
+import { GoodsReceiptVerifyInput, GoodsReceiptVerifyOutput } from '@pharma/core/goods-receipt/use-cases/goods-receipt-verify';
+import { GoodsReceiptListInput } from '@pharma/core/goods-receipt/repository/goods-receipt';
+import { ApiTrancingInput } from '@pharma/utils/request';
+import { IUsecase } from '@pharma/utils/usecase';
 
 export abstract class IGoodsReceiptCreateAdapter implements IUsecase {
   abstract execute(input: GoodsReceiptCreateInput, trace: ApiTrancingInput): Promise<GoodsReceiptCreateOutput>;

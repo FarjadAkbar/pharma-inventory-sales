@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { FindOptionsWhere, MoreThan, Repository } from 'typeorm';
 
-import { ResetPasswordEntity } from '@/core/reset-password/entity/reset-password';
-import { IResetPasswordRepository } from '@/core/reset-password/repository/reset-password';
-import { ResetPasswordSchema } from '@/infra/database/postgres/schemas/reset-password';
-import { TypeORMRepository } from '@/infra/repository/postgres/repository';
-import { DateUtils } from '@/utils/date';
+import { ResetPasswordEntity } from '@pharma/core/reset-password/entity/reset-password';
+import { IResetPasswordRepository } from '@pharma/core/reset-password/repository/reset-password';
+import { ResetPasswordSchema } from '@pharma/infra/database/postgres/schemas/reset-password';
+import { TypeORMRepository } from '@pharma/infra/repository/postgres/repository';
+import { DateUtils } from '@pharma/utils/date';
 
 type Model = ResetPasswordSchema & ResetPasswordEntity;
 @Injectable()

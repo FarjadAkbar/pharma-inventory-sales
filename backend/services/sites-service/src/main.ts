@@ -1,10 +1,10 @@
-import '../../../src/utils/tracing';
+import '@pharma/utils/tracing';
 
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
-import { ILoggerAdapter } from '@/infra/logger/adapter';
-import { SERVICE_PORTS } from '@/constants';
+import { ILoggerAdapter } from '@pharma/infra/logger/adapter';
+import { SERVICE_PORTS } from '@pharma/utils/constants';
 
 import { name } from '../../../package.json';
 import { AppModule } from './app.module';

@@ -2,22 +2,22 @@ import { Module } from '@nestjs/common';
 import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { IPermissionRepository } from '@/core/permission/repository/permission';
-import { RoleEntity } from '@/core/role/entity/role';
-import { IRoleRepository } from '@/core/role/repository/role';
-import { RoleAddPermissionUsecase } from '@/core/role/use-cases/role-add-permission';
-import { RoleCreateUsecase } from '@/core/role/use-cases/role-create';
-import { RoleDeleteUsecase } from '@/core/role/use-cases/role-delete';
-import { RoleDeletePermissionUsecase } from '@/core/role/use-cases/role-delete-permission';
-import { RoleGetByIdUsecase } from '@/core/role/use-cases/role-get-by-id';
-import { RoleListUsecase } from '@/core/role/use-cases/role-list';
-import { RoleUpdateUsecase } from '@/core/role/use-cases/role-update';
-import { RoleSchema } from '@/infra/database/postgres/schemas/role';
-import { PermissionSchema } from '@/infra/database/postgres/schemas/permission';
-import { InfraModule } from '@/infra/module';
-import { RedisCacheModule } from '@/infra/cache/redis';
-import { ILoggerAdapter, LoggerModule } from '@/infra/logger';
-import { LibModule } from '@/libs/module';
+import { IPermissionRepository } from '@pharma/core/permission/repository/permission';
+import { RoleEntity } from '@pharma/core/role/entity/role';
+import { IRoleRepository } from '@pharma/core/role/repository/role';
+import { RoleAddPermissionUsecase } from '@pharma/core/role/use-cases/role-add-permission';
+import { RoleCreateUsecase } from '@pharma/core/role/use-cases/role-create';
+import { RoleDeleteUsecase } from '@pharma/core/role/use-cases/role-delete';
+import { RoleDeletePermissionUsecase } from '@pharma/core/role/use-cases/role-delete-permission';
+import { RoleGetByIdUsecase } from '@pharma/core/role/use-cases/role-get-by-id';
+import { RoleListUsecase } from '@pharma/core/role/use-cases/role-list';
+import { RoleUpdateUsecase } from '@pharma/core/role/use-cases/role-update';
+import { RoleSchema } from '@pharma/infra/database/postgres/schemas/role';
+import { PermissionSchema } from '@pharma/infra/database/postgres/schemas/permission';
+import { InfraModule } from '@pharma/infra/module';
+import { RedisCacheModule } from '@pharma/infra/cache/redis';
+import { ILoggerAdapter, LoggerModule } from '@pharma/infra/logger';
+import { LibModule } from '@pharma/libs/module';
 
 import { RolesController } from './roles.controller';
 import {
@@ -31,7 +31,7 @@ import {
 } from './adapters';
 import { RoleRepository } from './repositories/role.repository';
 import { PermissionRepository } from './repositories/permission.repository';
-import { PermissionEntity } from '@/core/permission/entity/permission';
+import { PermissionEntity } from '@pharma/core/permission/entity/permission';
 
 @Module({
   imports: [

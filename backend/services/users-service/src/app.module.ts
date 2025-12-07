@@ -2,23 +2,23 @@ import { Module } from '@nestjs/common';
 import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { IRoleRepository } from '@/core/role/repository/role';
-import { UserEntity } from '@/core/user/entity/user';
-import { IUserRepository } from '@/core/user/repository/user';
-import { UserChangePasswordUsecase } from '@/core/user/use-cases/user-change-password';
-import { UserCreateUsecase } from '@/core/user/use-cases/user-create';
-import { UserDeleteUsecase } from '@/core/user/use-cases/user-delete';
-import { UserGetByIdUsecase } from '@/core/user/use-cases/user-get-by-id';
-import { UserListUsecase } from '@/core/user/use-cases/user-list';
-import { UserUpdateUsecase } from '@/core/user/use-cases/user-update';
-import { UserSchema } from '@/infra/database/postgres/schemas/user';
-import { RoleSchema } from '@/infra/database/postgres/schemas/role';
-import { InfraModule } from '@/infra/module';
-import { RedisCacheModule } from '@/infra/cache/redis';
-import { ILoggerAdapter, LoggerModule } from '@/infra/logger';
-import { SecretsModule } from '@/infra/secrets';
-import { EventLibModule, IEventAdapter } from '@/libs/event';
-import { LibModule } from '@/libs/module';
+import { IRoleRepository } from '@pharma/core/role/repository/role';
+import { UserEntity } from '@pharma/core/user/entity/user';
+import { IUserRepository } from '@pharma/core/user/repository/user';
+import { UserChangePasswordUsecase } from '@pharma/core/user/use-cases/user-change-password';
+import { UserCreateUsecase } from '@pharma/core/user/use-cases/user-create';
+import { UserDeleteUsecase } from '@pharma/core/user/use-cases/user-delete';
+import { UserGetByIdUsecase } from '@pharma/core/user/use-cases/user-get-by-id';
+import { UserListUsecase } from '@pharma/core/user/use-cases/user-list';
+import { UserUpdateUsecase } from '@pharma/core/user/use-cases/user-update';
+import { UserSchema } from '@pharma/infra/database/postgres/schemas/user';
+import { RoleSchema } from '@pharma/infra/database/postgres/schemas/role';
+import { InfraModule } from '@pharma/infra/module';
+import { RedisCacheModule } from '@pharma/infra/cache/redis';
+import { ILoggerAdapter, LoggerModule } from '@pharma/infra/logger';
+import { SecretsModule } from '@pharma/infra/secrets';
+import { EventLibModule, IEventAdapter } from '@pharma/libs/event';
+import { LibModule } from '@pharma/libs/module';
 
 import { UsersController } from './users.controller';
 import {
@@ -31,7 +31,7 @@ import {
 } from './adapters';
 import { UserRepository } from './repositories/user.repository';
 import { RoleRepository } from './repositories/role.repository';
-import { RoleEntity } from '@/core/role/entity/role';
+import { RoleEntity } from '@pharma/core/role/entity/role';
 
 @Module({
   imports: [

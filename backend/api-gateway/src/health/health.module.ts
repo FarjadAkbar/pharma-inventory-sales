@@ -3,10 +3,10 @@ import { getDataSourceToken } from '@nestjs/typeorm';
 import { RedisClientType } from 'redis';
 import { DataSource } from 'typeorm';
 
-import { ICacheAdapter } from '@/infra/cache';
-import { RedisCacheModule } from '@/infra/cache/redis';
-import { PostgresDatabaseModule } from '@/infra/database/postgres';
-import { ILoggerAdapter, LoggerModule } from '@/infra/logger';
+import { ICacheAdapter } from '@pharma/infra/cache';
+import { RedisCacheModule } from '@pharma/infra/cache/redis';
+import { PostgresDatabaseModule } from '@pharma/infra/database/postgres';
+import { ILoggerAdapter, LoggerModule } from '@pharma/infra/logger';
 
 import { IHealthAdapter } from './health.adapter';
 import { HealthController } from './health.controller';

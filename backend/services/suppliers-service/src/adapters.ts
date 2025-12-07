@@ -1,15 +1,15 @@
-import { SupplierCreateInput, SupplierCreateOutput } from '@/core/supplier/use-cases/supplier-create';
-import { SupplierDeleteInput, SupplierDeleteOutput } from '@/core/supplier/use-cases/supplier-delete';
-import { SupplierGetByIdInput, SupplierGetByIdOutput } from '@/core/supplier/use-cases/supplier-get-by-id';
-import { SupplierListOutput } from '@/core/supplier/use-cases/supplier-list';
+import { SupplierCreateInput, SupplierCreateOutput } from '@pharma/core/supplier/use-cases/supplier-create';
+import { SupplierDeleteInput, SupplierDeleteOutput } from '@pharma/core/supplier/use-cases/supplier-delete';
+import { SupplierGetByIdInput, SupplierGetByIdOutput } from '@pharma/core/supplier/use-cases/supplier-get-by-id';
+import { SupplierListOutput } from '@pharma/core/supplier/use-cases/supplier-list';
 import {
   SupplierUpdateRatingInput,
   SupplierUpdateRatingOutput
-} from '@/core/supplier/use-cases/supplier-update-rating';
-import { SupplierUpdateInput, SupplierUpdateOutput } from '@/core/supplier/use-cases/supplier-update';
-import { SupplierListInput } from '@/core/supplier/repository/supplier';
-import { ApiTrancingInput } from '@/utils/request';
-import { IUsecase } from '@/utils/usecase';
+} from '@pharma/core/supplier/use-cases/supplier-update-rating';
+import { SupplierUpdateInput, SupplierUpdateOutput } from '@pharma/core/supplier/use-cases/supplier-update';
+import { SupplierListInput } from '@pharma/core/supplier/repository/supplier';
+import { ApiTrancingInput } from '@pharma/utils/request';
+import { IUsecase } from '@pharma/utils/usecase';
 
 export abstract class ISupplierCreateAdapter implements IUsecase {
   abstract execute(input: SupplierCreateInput, trace: ApiTrancingInput): Promise<SupplierCreateOutput>;

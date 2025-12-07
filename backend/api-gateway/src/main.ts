@@ -13,13 +13,13 @@ import yaml from 'js-yaml';
 import path from 'path';
 import swagger from 'swagger-ui-express';
 
-import { ILoggerAdapter } from '@/infra/logger/adapter';
-import { ISecretsAdapter } from '@/infra/secrets';
-import { ExceptionHandlerFilter } from '@/middlewares/filters';
-import { SERVICE_PORTS } from '@/constants';
-import { ErrorType } from '@/infra/logger';
-import { CryptoUtils } from '@/utils/crypto';
-import { changeLanguage, initI18n, LocaleInput } from '@/utils/validator';
+import { ILoggerAdapter } from '@pharma/infra/logger/adapter';
+import { ISecretsAdapter } from '@pharma/infra/secrets';
+import { ExceptionHandlerFilter } from '@pharma/middlewares/filters';
+import { SERVICE_PORTS } from '@pharma/constants';
+import { ErrorType } from '@pharma/infra/logger';
+import { CryptoUtils } from '@pharma/utils/crypto';
+import { changeLanguage, initI18n, LocaleInput } from '@pharma/utils/validator';
 
 import { name } from '../../package.json';
 import { AppModule } from './app.module';

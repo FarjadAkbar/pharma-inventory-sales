@@ -8,14 +8,14 @@ import {
   USERS_GET_CURRENT,
   USERS_LIST,
   USERS_UPDATE
-} from '@/constants/message-patterns';
+} from '@pharma/utils/constants/message-patterns';
 
-import { UserCreateInput } from '@/core/user/use-cases/user-create';
-import { UserUpdateInput } from '@/core/user/use-cases/user-update';
-import { UserDeleteInput } from '@/core/user/use-cases/user-delete';
-import { UserGetByIdInput } from '@/core/user/use-cases/user-get-by-id';
-import { UserListInput } from '@/core/user/use-cases/user-list';
-import { ApiTrancingInput } from '@/utils/request';
+import { UserCreateInput } from '@pharma/core/user/use-cases/user-create';
+import { UserUpdateInput } from '@pharma/core/user/use-cases/user-update';
+import { UserDeleteInput } from '@pharma/core/user/use-cases/user-delete';
+import { UserGetByIdInput } from '@pharma/core/user/use-cases/user-get-by-id';
+import { UserListInput } from '@pharma/core/user/use-cases/user-list';
+import { ApiTrancingInput } from '@pharma/utils/request';
 
 import {
   IUserCreateAdapter,

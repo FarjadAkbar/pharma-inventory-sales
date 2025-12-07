@@ -5,9 +5,9 @@ import systeminformation from 'systeminformation';
 import { DataSource } from 'typeorm';
 import v8 from 'v8';
 
-import { ICacheAdapter } from '@/infra/cache';
-import { ErrorType, ILoggerAdapter } from '@/infra/logger';
-import { ApiInternalServerException } from '@/utils/exception';
+import { ICacheAdapter } from '@pharma/infra/cache';
+import { ErrorType, ILoggerAdapter } from '@pharma/infra/logger';
+import { ApiInternalServerException } from '@pharma/utils/exception';
 
 import { IHealthAdapter } from './health.adapter';
 import { DatabaseConnectionOutput, DatabaseMemoryOutput, HealthStatus, Load } from './health.types';

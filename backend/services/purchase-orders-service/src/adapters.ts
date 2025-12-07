@@ -1,12 +1,12 @@
-import { PurchaseOrderCreateInput, PurchaseOrderCreateOutput } from '@/core/purchase-order/use-cases/purchase-order-create';
-import { PurchaseOrderDeleteInput, PurchaseOrderDeleteOutput } from '@/core/purchase-order/use-cases/purchase-order-delete';
-import { PurchaseOrderGetByIdInput, PurchaseOrderGetByIdOutput } from '@/core/purchase-order/use-cases/purchase-order-get-by-id';
-import { PurchaseOrderListOutput } from '@/core/purchase-order/use-cases/purchase-order-list';
-import { PurchaseOrderApproveInput, PurchaseOrderApproveOutput } from '@/core/purchase-order/use-cases/purchase-order-approve';
-import { PurchaseOrderCancelInput, PurchaseOrderCancelOutput } from '@/core/purchase-order/use-cases/purchase-order-cancel';
-import { PurchaseOrderListInput } from '@/core/purchase-order/repository/purchase-order';
-import { ApiTrancingInput } from '@/utils/request';
-import { IUsecase } from '@/utils/usecase';
+import { PurchaseOrderCreateInput, PurchaseOrderCreateOutput } from '@pharma/core/purchase-order/use-cases/purchase-order-create';
+import { PurchaseOrderDeleteInput, PurchaseOrderDeleteOutput } from '@pharma/core/purchase-order/use-cases/purchase-order-delete';
+import { PurchaseOrderGetByIdInput, PurchaseOrderGetByIdOutput } from '@pharma/core/purchase-order/use-cases/purchase-order-get-by-id';
+import { PurchaseOrderListOutput } from '@pharma/core/purchase-order/use-cases/purchase-order-list';
+import { PurchaseOrderApproveInput, PurchaseOrderApproveOutput } from '@pharma/core/purchase-order/use-cases/purchase-order-approve';
+import { PurchaseOrderCancelInput, PurchaseOrderCancelOutput } from '@pharma/core/purchase-order/use-cases/purchase-order-cancel';
+import { PurchaseOrderListInput } from '@pharma/core/purchase-order/repository/purchase-order';
+import { ApiTrancingInput } from '@pharma/utils/request';
+import { IUsecase } from '@pharma/utils/usecase';
 
 export abstract class IPurchaseOrderCreateAdapter implements IUsecase {
   abstract execute(input: PurchaseOrderCreateInput, trace: ApiTrancingInput): Promise<PurchaseOrderCreateOutput>;

@@ -2,10 +2,10 @@ import { Controller, Delete, Get, HttpCode, Post, Put, Req, Version, Inject } fr
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 
-import { Permission } from '@/utils/decorators';
-import { ApiRequest } from '@/utils/request';
-import { SearchHttpSchema } from '@/utils/search';
-import { SortHttpSchema } from '@/utils/sort';
+import { Permission } from '@pharma/utils/decorators';
+import { ApiRequest } from '@pharma/utils/request';
+import { SearchHttpSchema } from '@pharma/utils/search';
+import { SortHttpSchema } from '@pharma/utils/sort';
 import {
   ROLES_ADD_PERMISSION,
   ROLES_CREATE,
@@ -14,9 +14,9 @@ import {
   ROLES_LIST,
   ROLES_REMOVE_PERMISSION,
   ROLES_UPDATE
-} from '@/constants/message-patterns';
+} from '@pharma/constants/message-patterns';
 
-import { RoleEntity } from '@/core/role/entity/role';
+import { RoleEntity } from '@pharma/core/role/entity/role';
 
 @Controller('roles')
 export class RolesController {

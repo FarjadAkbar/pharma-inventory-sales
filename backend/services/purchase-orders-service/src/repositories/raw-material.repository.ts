@@ -1,10 +1,10 @@
 import { Repository } from 'typeorm';
 
-import { RawMaterialEntity } from '@/core/raw-material/entity/raw-material';
-import { IRawMaterialRepository, RawMaterialListInput } from '@/core/raw-material/repository/raw-material';
-import { TypeORMRepository } from '@/infra/repository/postgres/repository';
+import { RawMaterialEntity } from '@pharma/core/raw-material/entity/raw-material';
+import { IRawMaterialRepository, RawMaterialListInput } from '@pharma/core/raw-material/repository/raw-material';
+import { TypeORMRepository } from '@pharma/infra/repository/postgres/repository';
 
-import { RawMaterialSchema } from '@/infra/database/postgres/schemas/raw-material';
+import { RawMaterialSchema } from '@pharma/infra/database/postgres/schemas/raw-material';
 
 type Model = RawMaterialSchema & RawMaterialEntity;
 

@@ -9,15 +9,15 @@ import {
   ROLES_LIST,
   ROLES_REMOVE_PERMISSION,
   ROLES_UPDATE
-} from '@/constants/message-patterns';
+} from '@pharma/utils/constants/message-patterns';
 
-import { RoleCreateInput } from '@/core/role/use-cases/role-create';
-import { RoleUpdateInput } from '@/core/role/use-cases/role-update';
-import { RoleGetByIdInput } from '@/core/role/use-cases/role-get-by-id';
-import { RoleListInput } from '@/core/role/use-cases/role-list';
-import { RoleDeleteInput } from '@/core/role/use-cases/role-delete';
-import { RoleAddPermissionInput } from '@/core/role/use-cases/role-add-permission';
-import { RoleDeletePermissionInput } from '@/core/role/use-cases/role-delete-permission';
+import { RoleCreateInput } from '@pharma/core/role/use-cases/role-create';
+import { RoleUpdateInput } from '@pharma/core/role/use-cases/role-update';
+import { RoleGetByIdInput } from '@pharma/core/role/use-cases/role-get-by-id';
+import { RoleListInput } from '@pharma/core/role/use-cases/role-list';
+import { RoleDeleteInput } from '@pharma/core/role/use-cases/role-delete';
+import { RoleAddPermissionInput } from '@pharma/core/role/use-cases/role-add-permission';
+import { RoleDeletePermissionInput } from '@pharma/core/role/use-cases/role-delete-permission';
 
 import {
   IRoleAddPermissionAdapter,

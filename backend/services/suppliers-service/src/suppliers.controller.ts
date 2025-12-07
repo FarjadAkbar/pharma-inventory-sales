@@ -7,15 +7,15 @@ import {
   SUPPLIERS_GET_BY_ID,
   SUPPLIERS_LIST,
   SUPPLIERS_UPDATE
-} from '@/constants/message-patterns';
+} from '@pharma/utils/constants/message-patterns';
 
-import { SupplierCreateInput } from '@/core/supplier/use-cases/supplier-create';
-import { SupplierUpdateInput } from '@/core/supplier/use-cases/supplier-update';
-import { SupplierUpdateRatingInput } from '@/core/supplier/use-cases/supplier-update-rating';
-import { SupplierDeleteInput } from '@/core/supplier/use-cases/supplier-delete';
-import { SupplierGetByIdInput } from '@/core/supplier/use-cases/supplier-get-by-id';
-import { SupplierListInput } from '@/core/supplier/repository/supplier';
-import { ApiTrancingInput } from '@/utils/request';
+import { SupplierCreateInput } from '@pharma/core/supplier/use-cases/supplier-create';
+import { SupplierUpdateInput } from '@pharma/core/supplier/use-cases/supplier-update';
+import { SupplierUpdateRatingInput } from '@pharma/core/supplier/use-cases/supplier-update-rating';
+import { SupplierDeleteInput } from '@pharma/core/supplier/use-cases/supplier-delete';
+import { SupplierGetByIdInput } from '@pharma/core/supplier/use-cases/supplier-get-by-id';
+import { SupplierListInput } from '@pharma/core/supplier/repository/supplier';
+import { ApiTrancingInput } from '@pharma/utils/request';
 
 import {
   ISupplierCreateAdapter,

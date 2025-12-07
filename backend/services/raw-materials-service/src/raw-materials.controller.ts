@@ -7,14 +7,14 @@ import {
   RAW_MATERIALS_GET_BY_ID,
   RAW_MATERIALS_LIST,
   RAW_MATERIALS_UPDATE
-} from '@/constants/message-patterns';
+} from '@pharma/utils/constants/message-patterns';
 
-import { RawMaterialCreateInput } from '@/core/raw-material/use-cases/raw-material-create';
-import { RawMaterialDeleteInput } from '@/core/raw-material/use-cases/raw-material-delete';
-import { RawMaterialGetByIdInput } from '@/core/raw-material/use-cases/raw-material-get-by-id';
-import { RawMaterialListInput } from '@/core/raw-material/repository/raw-material';
-import { RawMaterialUpdateInput } from '@/core/raw-material/use-cases/raw-material-update';
-import { ApiTrancingInput } from '@/utils/request';
+import { RawMaterialCreateInput } from '@pharma/core/raw-material/use-cases/raw-material-create';
+import { RawMaterialDeleteInput } from '@pharma/core/raw-material/use-cases/raw-material-delete';
+import { RawMaterialGetByIdInput } from '@pharma/core/raw-material/use-cases/raw-material-get-by-id';
+import { RawMaterialListInput } from '@pharma/core/raw-material/repository/raw-material';
+import { RawMaterialUpdateInput } from '@pharma/core/raw-material/use-cases/raw-material-update';
+import { ApiTrancingInput } from '@pharma/utils/request';
 
 import {
   IRawMaterialCreateAdapter,

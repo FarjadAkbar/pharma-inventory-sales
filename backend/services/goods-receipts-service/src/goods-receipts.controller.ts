@@ -7,14 +7,14 @@ import {
   GOODS_RECEIPTS_GET_BY_ID,
   GOODS_RECEIPTS_LIST,
   GOODS_RECEIPTS_UPDATE
-} from '@/constants/message-patterns';
+} from '@pharma/utils/constants/message-patterns';
 
-import { GoodsReceiptCreateInput } from '@/core/goods-receipt/use-cases/goods-receipt-create';
-import { GoodsReceiptVerifyInput } from '@/core/goods-receipt/use-cases/goods-receipt-verify';
-import { GoodsReceiptDeleteInput } from '@/core/goods-receipt/use-cases/goods-receipt-delete';
-import { GoodsReceiptGetByIdInput } from '@/core/goods-receipt/use-cases/goods-receipt-get-by-id';
-import { GoodsReceiptListInput } from '@/core/goods-receipt/repository/goods-receipt';
-import { ApiTrancingInput } from '@/utils/request';
+import { GoodsReceiptCreateInput } from '@pharma/core/goods-receipt/use-cases/goods-receipt-create';
+import { GoodsReceiptVerifyInput } from '@pharma/core/goods-receipt/use-cases/goods-receipt-verify';
+import { GoodsReceiptDeleteInput } from '@pharma/core/goods-receipt/use-cases/goods-receipt-delete';
+import { GoodsReceiptGetByIdInput } from '@pharma/core/goods-receipt/use-cases/goods-receipt-get-by-id';
+import { GoodsReceiptListInput } from '@pharma/core/goods-receipt/repository/goods-receipt';
+import { ApiTrancingInput } from '@pharma/utils/request';
 
 import {
   IGoodsReceiptCreateAdapter,

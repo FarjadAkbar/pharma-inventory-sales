@@ -2,17 +2,17 @@ import { Controller, Delete, Get, HttpCode, Post, Req, Version, Inject } from '@
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 
-import { Permission } from '@/utils/decorators';
-import { ApiRequest } from '@/utils/request';
-import { SearchHttpSchema } from '@/utils/search';
-import { SortHttpSchema } from '@/utils/sort';
+import { Permission } from '@pharma/utils/decorators';
+import { ApiRequest } from '@pharma/utils/request';
+import { SearchHttpSchema } from '@pharma/utils/search';
+import { SortHttpSchema } from '@pharma/utils/sort';
 import {
   PURCHASE_ORDERS_CREATE,
   PURCHASE_ORDERS_DELETE,
   PURCHASE_ORDERS_GET_BY_ID,
   PURCHASE_ORDERS_LIST,
   PURCHASE_ORDERS_UPDATE
-} from '@/constants/message-patterns';
+} from '@pharma/utils/constants/message-patterns';
 
 @Controller('purchase-orders')
 export class PurchaseOrdersController {

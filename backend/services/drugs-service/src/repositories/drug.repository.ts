@@ -1,11 +1,11 @@
 import { Repository } from 'typeorm';
 
-import { DrugEntity } from '@/core/drug/entity/drug';
-import { IDrugRepository, DrugListInput } from '@/core/drug/repository/drug';
-import { TypeORMRepository } from '@/infra/repository/postgres/repository';
-import { DrugApprovalStatusEnum } from '@/core/drug/entity/drug';
+import { DrugEntity } from '@pharma/core/drug/entity/drug';
+import { IDrugRepository, DrugListInput } from '@pharma/core/drug/repository/drug';
+import { TypeORMRepository } from '@pharma/infra/repository/postgres/repository';
+import { DrugApprovalStatusEnum } from '@pharma/core/drug/entity/drug';
 
-import { DrugSchema } from '@/infra/database/postgres/schemas/drug';
+import { DrugSchema } from '@pharma/infra/database/postgres/schemas/drug';
 
 type Model = DrugSchema & DrugEntity;
 

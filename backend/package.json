@@ -7,7 +7,11 @@
   "license": "MIT",
   "scripts": {
     "prepare": "husky",
-    "build": "nest build",
+    "build:core": "pnpm --filter @pharma/core build",
+    "build:infra": "pnpm --filter @pharma/infra build",
+    "build:libs": "pnpm --filter @pharma/libs build",
+    "build:utils": "pnpm --filter @pharma/utils build",
+    "build": "pnpm -r build",
     "seed": "ts-node -r tsconfig-paths/register scripts/seed.ts",
     "prettier": "prettier --write \"src/**/*.json\"",
     "lint": "eslint \"{src,test}/**/*.{ts,js}\" --fix",
@@ -133,6 +137,7 @@
     "supertest": "^7.1.4",
     "ts-loader": "^9.5.4",
     "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.16",
     "tsconfig-paths": "4.2.0"
   }
 }

@@ -1,10 +1,10 @@
 import { Repository } from 'typeorm';
 
-import { QCResultEntity } from '@/core/qc-result/entity/qc-result';
-import { IQCResultRepository, QCResultListInput } from '@/core/qc-result/repository/qc-result';
-import { TypeORMRepository } from '@/infra/repository/postgres/repository';
+import { QCResultEntity } from '@pharma/core/qc-result/entity/qc-result';
+import { IQCResultRepository, QCResultListInput } from '@pharma/core/qc-result/repository/qc-result';
+import { TypeORMRepository } from '@pharma/infra/repository/postgres/repository';
 
-import { QCResultSchema } from '@/infra/database/postgres/schemas/qc-result';
+import { QCResultSchema } from '@pharma/infra/database/postgres/schemas/qc-result';
 
 type Model = QCResultSchema & QCResultEntity;
 
