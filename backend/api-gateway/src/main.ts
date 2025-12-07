@@ -16,7 +16,7 @@ import swagger from 'swagger-ui-express';
 import { ILoggerAdapter } from '@pharma/infra/logger/adapter';
 import { ISecretsAdapter } from '@pharma/infra/secrets';
 import { ExceptionHandlerFilter } from '@pharma/middlewares/filters';
-import { SERVICE_PORTS } from '@pharma/constants';
+import { SERVICE_PORTS } from '@pharma/utils/constants';
 import { ErrorType } from '@pharma/infra/logger';
 import { CryptoUtils } from '@pharma/utils/crypto';
 import { changeLanguage, initI18n, LocaleInput } from '@pharma/utils/validator';

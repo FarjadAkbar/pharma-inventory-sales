@@ -14,7 +14,7 @@ import {
   RequestTimeoutInterceptor,
   TracingInterceptor
 } from '@pharma/middlewares/interceptors';
-import { SERVICE_PORTS } from '@pharma/constants';
+import { SERVICE_PORTS } from '@pharma/utils/constants';
 import { HealthModule } from './health/health.module';
 import { AuthController } from './controllers/auth.controller';
 import { UsersController } from './controllers/users.controller';
