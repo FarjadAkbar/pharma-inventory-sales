@@ -17,6 +17,7 @@
     "@nestjs/microservices": "^11.1.9",
     "@nestjs/typeorm": "^11.0.0",
     "@pharma/core": "workspace:*",
+    "@pharma/infra": "workspace:*",
     "@pharma/libs": "workspace:*",
     "@pharma/utils": "workspace:*",
     "pg": "^8.16.3",
