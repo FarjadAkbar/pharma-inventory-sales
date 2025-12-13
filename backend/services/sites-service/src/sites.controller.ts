@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 
-import { SITES_CREATE, SITES_DELETE, SITES_GET_ALL, SITES_GET_BY_ID, SITES_LIST, SITES_UPDATE } from '@pharma/utils/constants/message-patterns';
+import { SITES_CREATE, SITES_DELETE, SITES_GET_ALL, SITES_GET_BY_ID, SITES_LIST, SITES_UPDATE } from '@pharma/utils';
 
 import { SiteCreateInput } from '@pharma/core/site/use-cases/site-create';
 import { SiteUpdateInput } from '@pharma/core/site/use-cases/site-update';

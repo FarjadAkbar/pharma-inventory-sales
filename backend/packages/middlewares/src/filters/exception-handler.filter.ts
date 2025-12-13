@@ -2,7 +2,7 @@ import { ArgumentsHost, Catch, ExceptionFilter as AppExceptionFilter, HttpExcept
 import { AxiosError } from 'axios';
 import { ZodError } from 'zod';
 
-import { ILoggerAdapter } from '@pharma/infra/logger/adapter';
+import { ILoggerAdapter } from '@pharma/infra/logger';
 import { DateUtils } from '@pharma/utils/date';
 import { ApiBadRequestException, ApiErrorType, ApiInternalServerException, BaseException } from '@pharma/utils/exception';
 import { DefaultErrorMessage } from '@pharma/utils/http-status';

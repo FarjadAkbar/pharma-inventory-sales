@@ -11,6 +11,7 @@ import type {
 } from "@/types/auth"
 import { decodeToken, extractUserFromToken, isTokenValid } from "@/lib/jwt"
 import { apiService } from "./api.service"
+import { BASE_URL } from "@/config"
 
 class AuthService {
   private baseUrl = "/api/auth"
@@ -72,7 +73,7 @@ class AuthService {
     console.log("Login attempt with credentials:", credentials)
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch(`${BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -82,7 +83,7 @@ class AuthService {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || "Login failed")
+        throw new Error(errorData.message || errorData.error || "Login failed")
       }
 
       const data = await response.json()
@@ -93,13 +94,13 @@ class AuthService {
         this.setToken(data.accessToken)
         this.setRefreshToken(data.refreshToken)
 
-        // Decode JWT to get user info and permissions
-        const user = this.getUserFromToken()
-        // JWT payload has permission (array), convert to Permissions format
-        // Empty array means all permissions (System Administrator)
-        const permissions: Permissions = user?.permission && user.permission.length > 0 
-          ? {} // TODO: Convert permission array to Permissions object format if needed
-          : {} // Empty object means all permissions
+        // Backend returns user object in response
+        // Extract permissions from user.role.permissions if available
+        const permissions: Permissions = {}
+        if (data.user?.role?.permissions) {
+          // Convert permissions array to Permissions format if needed
+          // For now, empty object means all permissions
+        }
         this.setPermissions(permissions)
 
         return {
@@ -129,8 +130,16 @@ class AuthService {
 
   async logout(): Promise<void> {
     try {
-      // Call backend logout endpoint
-      await apiService.post("/logout")
+      const refreshToken = this.getRefreshToken()
+      if (refreshToken) {
+        await fetch(`${BASE_URL}/auth/logout`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ refreshToken }),
+        })
+      }
     } catch (error) {
       console.error("Logout request failed:", error)
     } finally {
@@ -139,24 +148,74 @@ class AuthService {
   }
 
   async getCurrentUser(): Promise<User> {
-    const user = this.getUserFromToken()
-    if (!user) {
-      throw new Error("No user found")
-    }
+    try {
+      // Try to fetch from API first
+      const token = this.getToken()
+      
+      if (token) {
+        const response = await fetch(`${BASE_URL}/users/me`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+        })
 
+        if (response.ok) {
+          const userData = await response.json()
+          // Transform backend user format to frontend format
+          return this.transformUserResponse(userData)
+        } else if (response.status === 401) {
+          // Token is invalid, clear it and throw error
+          this.removeToken()
+          throw new Error("Unauthorized: Please login again")
+        }
+      }
+
+      // Fallback to JWT token if API call fails
+      const user = this.getUserFromToken()
+      if (!user) {
+        throw new Error("No user found")
+      }
+
+      // JWT payload uses 'sub' for user ID (standard JWT claim)
+      const userId = user.sub || user.id
+      
+      return {
+        id: userId || 0,
+        fullname: user.name || '',
+        username: user.email || '',
+        email: user.email || '',
+        role: user.role || '',
+        site_id: user.site_id || 0,
+        org_id: null,
+        clientId: 1,
+        storeId: user.site_id || 0,
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    } catch (error) {
+      console.error("Failed to get current user:", error)
+      throw error instanceof Error ? error : new Error("Failed to get current user")
+    }
+  }
+
+  // Transform backend user response to frontend User format
+  private transformUserResponse(userData: any): User {
     return {
-      id: user.id,
-      fullname: '', // Not in backend JWT payload
-      username: '', // Not in backend JWT payload
-      email: '', // Not in backend JWT payload
-      role: user.role,
-      site_id: user.site_id,
-      org_id: null,
-      clientId: 1, // Default or derive from user.site_id if applicable
-      storeId: user.site_id,
+      id: userData.id,
+      fullname: userData.name || '',
+      username: userData.email || '', // Use email as username if username not available
+      email: userData.email || '',
+      role: userData.role?.name || userData.role || '',
+      site_id: userData.site_id || 0,
+      org_id: userData.org_id || null,
+      clientId: 1,
+      storeId: userData.site_id || 0,
       status: 'active',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      created_at: userData.createdAt ? new Date(userData.createdAt).toISOString() : new Date().toISOString(),
+      updated_at: userData.updatedAt ? new Date(userData.updatedAt).toISOString() : new Date().toISOString()
     }
   }
 

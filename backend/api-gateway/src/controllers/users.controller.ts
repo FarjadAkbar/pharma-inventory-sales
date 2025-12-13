@@ -13,7 +13,7 @@ import {
   USERS_GET_CURRENT,
   USERS_LIST,
   USERS_UPDATE
-} from '@pharma/utils/constants/message-patterns';
+} from '@pharma/utils';
 
 import { UserEntity } from '@pharma/core/user/entity/user';
 

@@ -12,7 +12,7 @@ import {
   PERMISSIONS_GET_BY_ID,
   PERMISSIONS_LIST,
   PERMISSIONS_UPDATE
-} from '@pharma/utils/constants/message-patterns';
+} from '@pharma/utils';
 
 import { PermissionEntity } from '@pharma/core/permission/entity/permission';
 

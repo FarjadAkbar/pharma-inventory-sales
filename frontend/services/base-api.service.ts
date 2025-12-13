@@ -2,9 +2,10 @@
 
 import { authService } from "./auth.service"
 import type { ApiResponse } from "@/types/auth"
+import { BASE_URL } from "@/config"
 
 export class BaseApiService {
-  protected baseUrl = process.env.NEXT_PUBLIC_API || 'http://localhost:4000/api/v1'
+  protected baseUrl = BASE_URL
 
   protected getCurrentStoreId(): string | null {
     if (typeof window === "undefined") return null
@@ -39,7 +40,11 @@ export class BaseApiService {
       const data = contentType.includes("application/json") ? await response.json() : ({} as any)
 
       if (!response.ok) {
-        throw new Error(data.error || "Request failed")
+        // Handle NestJS error response format: { message: string | string[], statusCode: number }
+        const errorMessage = Array.isArray(data.message) 
+          ? data.message.join(', ') 
+          : data.message || data.error || "Request failed"
+        throw new Error(errorMessage)
       }
 
       return data
@@ -81,7 +86,11 @@ export class BaseApiService {
       const data = contentType.includes("application/json") ? await response.json() : ({} as any)
 
       if (!response.ok) {
-        throw new Error(data.error || "Request failed")
+        // Handle NestJS error response format: { message: string | string[], statusCode: number }
+        const errorMessage = Array.isArray(data.message) 
+          ? data.message.join(', ') 
+          : data.message || data.error || "Request failed"
+        throw new Error(errorMessage)
       }
 
       return data

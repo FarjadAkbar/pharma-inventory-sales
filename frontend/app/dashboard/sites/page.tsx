@@ -1,44 +1,49 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { UnifiedDataTable } from "@/components/ui/unified-data-table"
+import { DataTable } from "@/components/ui/data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Plus, Building2, Users, Settings } from "lucide-react"
-import { sitesApi } from "@/services"
+import { Plus } from "lucide-react"
+import { sitesApi, type Site } from "@/services"
 import { PermissionGuard } from "@/components/auth/permission-guard"
-import type { Site } from "@/types/sites"
+import { formatDateISO } from "@/lib/utils"
+import { SiteForm } from "@/components/sites/site-form"
 
 export default function SitesPage() {
   const [sites, setSites] = useState<Site[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
-  const [filters, setFilters] = useState<Record<string, any>>({})
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingSite, setEditingSite] = useState<Site | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [siteToDelete, setSiteToDelete] = useState<Site | null>(null)
-  const hasFetchedRef = useRef(false)
+
+  useEffect(() => {
+    fetchSites()
+  }, [searchQuery, pagination.page])
 
   const fetchSites = async () => {
-    console.log("fetchSites called at:", new Date().toISOString())
     try {
       setLoading(true)
-      const response = await sitesApi.getSites()
-
-      if (response.status && response.data) {
-        setSites(response.data)
-        setPagination({ page: 1, pages: 1, total: response.data.length })
-      }
+      const response = await sitesApi.getSites({
+        search: searchQuery,
+        page: pagination.page,
+        limit: 10,
+      })
+      
+      setSites(response)
+      setPagination({ page: pagination.page, pages: 1, total: response.length })
     } catch (error) {
       console.error("Failed to fetch sites:", error)
     } finally {
@@ -46,17 +51,9 @@ export default function SitesPage() {
     }
   }
 
-  useEffect(() => {
-    if (!hasFetchedRef.current) {
-      hasFetchedRef.current = true
-      fetchSites()
-    }
-  }, [])
-
   const handleSearch = (query: string) => {
     setSearchQuery(query)
-    // For now, we'll do client-side filtering since the API doesn't support search
-    // In the future, this could be updated to call the API with search parameters
+    setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
   const handlePageChange = (page: number) => {
@@ -64,7 +61,41 @@ export default function SitesPage() {
   }
 
   const handleEdit = (site: Site) => {
-    window.location.href = `/dashboard/sites/${site.id}`
+    setEditingSite(site)
+    setIsModalOpen(true)
+  }
+
+  const handleAdd = () => {
+    setEditingSite(null)
+    setIsModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setEditingSite(null)
+  }
+
+  const handleSubmit = async (data: {
+    name: string
+    address?: string
+    city?: string
+    country?: string
+    type?: 'hospital' | 'clinic' | 'pharmacy' | 'warehouse' | 'manufacturing'
+    isActive?: boolean
+  }) => {
+    try {
+      if (editingSite) {
+        await sitesApi.updateSite(editingSite.id.toString(), data)
+      } else {
+        await sitesApi.createSite(data)
+      }
+      handleCloseModal()
+      fetchSites()
+      sitesApi.invalidateSites()
+    } catch (error) {
+      console.error("Failed to save site:", error)
+      throw error
+    }
   }
 
   const handleDelete = (site: Site) => {
@@ -76,10 +107,11 @@ export default function SitesPage() {
     if (!siteToDelete) return
     
     try {
-      await sitesApi.deleteSite(siteToDelete.id)
-      fetchSites() // Refresh the list
+      await sitesApi.deleteSite(siteToDelete.id.toString())
+      fetchSites()
       setDeleteDialogOpen(false)
       setSiteToDelete(null)
+      sitesApi.invalidateSites()
     } catch (error) {
       console.error("Failed to delete site:", error)
     }
@@ -90,74 +122,67 @@ export default function SitesPage() {
     setSiteToDelete(null)
   }
 
-  const calculateStats = () => {
-    const totalSites = sites.length
-    return { totalSites }
+  const getSiteTypeBadgeColor = (type?: string) => {
+    const colors: Record<string, string> = {
+      hospital: "bg-blue-100 text-blue-800",
+      clinic: "bg-green-100 text-green-800",
+      pharmacy: "bg-purple-100 text-purple-800",
+      warehouse: "bg-orange-100 text-orange-800",
+      manufacturing: "bg-red-100 text-red-800",
+    }
+    return colors[type || ''] || "bg-gray-100 text-gray-800"
   }
-
-  const stats = calculateStats()
 
   const columns = [
     {
       key: "name",
       header: "Site Name",
-      sortable: true,
       render: (site: Site) => (
         <div className="font-medium">{site.name}</div>
       ),
     },
     {
+      key: "type",
+      header: "Type",
+      render: (site: Site) => (
+        site.type ? (
+          <Badge className={getSiteTypeBadgeColor(site.type)}>
+            {site.type.charAt(0).toUpperCase() + site.type.slice(1)}
+          </Badge>
+        ) : (
+          <span className="text-sm text-muted-foreground">-</span>
+        )
+      ),
+    },
+    {
       key: "location",
       header: "Location",
-      sortable: true,
       render: (site: Site) => (
-        <div className="text-sm text-muted-foreground">{site.location}</div>
+        <div className="text-sm text-muted-foreground">
+          {[site.address, site.city, site.country].filter(Boolean).join(", ") || "-"}
+        </div>
       ),
     },
     {
-      key: "created_at",
+      key: "status",
+      header: "Status",
+      render: (site: Site) => (
+        <Badge variant={site.isActive ? "default" : "secondary"}>
+          {site.isActive ? "Active" : "Inactive"}
+        </Badge>
+      ),
+    },
+    {
+      key: "createdAt",
       header: "Created",
-      sortable: true,
-      render: (site: Site) => (
-        <div className="text-sm text-muted-foreground">
-          {new Date(site.created_at).toLocaleDateString()}
-        </div>
-      ),
+      render: (site: Site) => formatDateISO(site.createdAt),
     },
     {
-      key: "updated_at",
+      key: "updatedAt",
       header: "Last Updated",
-      sortable: true,
-      render: (site: Site) => (
-        <div className="text-sm text-muted-foreground">
-          {new Date(site.updated_at).toLocaleDateString()}
-        </div>
-      ),
+      render: (site: Site) => formatDateISO(site.updatedAt),
     },
   ]
-
-  const filterOptions: any[] = []
-
-  const handleFiltersChange = (newFilters: Record<string, any>) => {
-    setFilters(newFilters)
-    // For now, we'll do client-side filtering since the API doesn't support filters
-    // In the future, this could be updated to call the API with filter parameters
-  }
-
-  const actions = (site: Site) => (
-    <div className="flex items-center gap-2">
-      <PermissionGuard module="MASTER_DATA" action="update">
-        <Button variant="ghost" size="sm" onClick={() => handleEdit(site)}>
-          Edit
-        </Button>
-      </PermissionGuard>
-      <PermissionGuard module="MASTER_DATA" action="delete">
-        <Button variant="ghost" size="sm" onClick={() => handleDelete(site)}>
-          Delete
-        </Button>
-      </PermissionGuard>
-    </div>
-  )
 
   return (
     <DashboardLayout>
@@ -169,103 +194,88 @@ export default function SitesPage() {
           </div>
 
           <PermissionGuard module="MASTER_DATA" action="create">
-            <Button onClick={() => (window.location.href = "/dashboard/sites/new")}>
+            <Button onClick={handleAdd}>
               <Plus className="mr-2 h-4 w-4" />
               Add Site
             </Button>
           </PermissionGuard>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Sites</CardTitle>
-              <Building2 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalSites}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Sites</CardTitle>
-              <Settings className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.totalSites}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Locations</CardTitle>
-              <Building2 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{stats.totalSites}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Last Updated</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-purple-600">
-                {sites.length > 0 ? new Date(sites[0]?.updated_at).toLocaleDateString() : 'N/A'}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Sites Table */}
-        <UnifiedDataTable
-          data={sites}
-          columns={columns}
-          loading={loading}
-          searchPlaceholder="Search sites..."
-          searchValue={searchQuery}
-          onSearch={handleSearch}
-          filters={filterOptions}
-          onFiltersChange={handleFiltersChange}
-          pagination={{
-            page: pagination.page,
-            pages: pagination.pages,
-            total: pagination.total,
-            onPageChange: handlePageChange
-          }}
-          actions={actions}
-          onRefresh={fetchSites}
-          onExport={() => console.log("Export sites")}
-          emptyMessage="No sites found. Add your first site to get started."
-        />
+        <Card>
+          <CardHeader>
+            <CardTitle>All Sites</CardTitle>
+            <CardDescription>A list of all sites in the system</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DataTable
+              data={sites}
+              columns={columns}
+              loading={loading}
+              onSearch={handleSearch}
+              pagination={{
+                page: pagination.page,
+                pages: pagination.pages,
+                total: pagination.total,
+                onPageChange: handlePageChange
+              }}
+              searchPlaceholder="Search sites..."
+              actions={[
+                {
+                  label: "Edit",
+                  onClick: (site: Site) => handleEdit(site),
+                  variant: "outline" as const,
+                },
+                {
+                  label: "Delete",
+                  onClick: (site: Site) => handleDelete(site),
+                  variant: "destructive" as const,
+                },
+              ]}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Add/Edit Site Modal */}
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{editingSite ? "Edit Site" : "Add New Site"}</DialogTitle>
+              <DialogDescription>
+                {editingSite ? "Update site information" : "Create a new site"}
+              </DialogDescription>
+            </DialogHeader>
+            <SiteForm
+              initialData={editingSite || undefined}
+              onSubmit={handleSubmit}
+              submitLabel={editingSite ? "Save Changes" : "Create Site"}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Site</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete the site "{siteToDelete?.name}"? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={cancelDelete}>
-              Cancel
-            </Button>
-            <Button 
-              variant="destructive"
-              onClick={confirmDelete}
-            >
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Site</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete the site "{siteToDelete?.name}"? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="outline" onClick={cancelDelete}>
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive"
+                onClick={confirmDelete}
+              >
+                Delete
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
     </DashboardLayout>
   )
 }

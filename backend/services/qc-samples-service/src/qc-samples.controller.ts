@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 
-import { QC_SAMPLES_CREATE, QC_SAMPLES_DELETE, QC_SAMPLES_GET_BY_ID, QC_SAMPLES_LIST, QC_SAMPLES_UPDATE } from '@pharma/utils/constants/message-patterns';
+import { QC_SAMPLES_CREATE, QC_SAMPLES_DELETE, QC_SAMPLES_GET_BY_ID, QC_SAMPLES_LIST, QC_SAMPLES_UPDATE } from '@pharma/utils';
 
 import { QCSampleCreateInput } from '@pharma/core/qc-sample/use-cases/qc-sample-create';
 import { QCSampleListInput } from '@pharma/core/qc-sample/repository/qc-sample';

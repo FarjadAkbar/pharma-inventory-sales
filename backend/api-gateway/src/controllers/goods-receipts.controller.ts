@@ -12,7 +12,7 @@ import {
   GOODS_RECEIPTS_GET_BY_ID,
   GOODS_RECEIPTS_LIST,
   GOODS_RECEIPTS_UPDATE
-} from '@pharma/utils/constants/message-patterns';
+} from '@pharma/utils';
 
 @Controller('goods-receipts')
 export class GoodsReceiptsController {

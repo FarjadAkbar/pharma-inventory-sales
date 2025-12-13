@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 
-import { QC_TESTS_CREATE, QC_TESTS_DELETE, QC_TESTS_GET_BY_ID, QC_TESTS_LIST, QC_TESTS_UPDATE } from '@pharma/utils/constants/message-patterns';
+import { QC_TESTS_CREATE, QC_TESTS_DELETE, QC_TESTS_GET_BY_ID, QC_TESTS_LIST, QC_TESTS_UPDATE } from '@pharma/utils';
 
 import { IQCTestCreateAdapter, IQCTestListAdapter } from './adapters';
 

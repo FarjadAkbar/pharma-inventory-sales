@@ -9,7 +9,7 @@ import {
   ROLES_LIST,
   ROLES_REMOVE_PERMISSION,
   ROLES_UPDATE
-} from '@pharma/utils/constants/message-patterns';
+} from '@pharma/utils';
 
 import { RoleCreateInput } from '@pharma/core/role/use-cases/role-create';
 import { RoleUpdateInput } from '@pharma/core/role/use-cases/role-update';

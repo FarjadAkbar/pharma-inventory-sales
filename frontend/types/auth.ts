@@ -1,12 +1,16 @@
 import type { ScreenPermission } from "@/types/tenant"
 
 export interface JwtPayload {
-  id: number
-  site_id: number
-  role: string
-  permission: any[] // Empty array means all permissions
-  iat: number
-  exp: number
+  sub?: number // JWT standard claim for subject (user ID)
+  id?: number // Legacy field, use sub if available
+  site_id?: number
+  role?: string
+  roleId?: number
+  email?: string
+  name?: string
+  permission?: any[] // Empty array means all permissions
+  iat?: number
+  exp?: number
 }
 
 export interface Permission {
@@ -27,7 +31,8 @@ export interface User {
   fullname: string
   username: string
   email: string
-  role: string
+  role: string | { id: number; name: string; permissions?: Array<{ id: number; name: string }> }
+  roleId?: number
   site_id: number
   org_id: number | null
   storeId?: number
@@ -38,6 +43,8 @@ export interface User {
   // Optional fields that might be added by frontend
   assignedStores?: string[]
   screenPermissions?: { screen: string; actions: string[] }[]
+  siteIds?: number[]
+  sites?: Array<{ id: number; name: string; address?: string; city?: string; type?: string }> | number[]
 }
 
 export interface LoginCredentials {

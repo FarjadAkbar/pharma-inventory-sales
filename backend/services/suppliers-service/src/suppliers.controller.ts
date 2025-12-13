@@ -7,7 +7,7 @@ import {
   SUPPLIERS_GET_BY_ID,
   SUPPLIERS_LIST,
   SUPPLIERS_UPDATE
-} from '@pharma/utils/constants/message-patterns';
+} from '@pharma/utils';
 
 import { SupplierCreateInput } from '@pharma/core/supplier/use-cases/supplier-create';
 import { SupplierUpdateInput } from '@pharma/core/supplier/use-cases/supplier-update';

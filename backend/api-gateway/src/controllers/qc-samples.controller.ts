@@ -6,7 +6,7 @@ import { Permission } from '@pharma/utils/decorators';
 import { ApiRequest } from '@pharma/utils/request';
 import { SearchHttpSchema } from '@pharma/utils/search';
 import { SortHttpSchema } from '@pharma/utils/sort';
-import { QC_SAMPLES_CREATE, QC_SAMPLES_DELETE, QC_SAMPLES_GET_BY_ID, QC_SAMPLES_LIST, QC_SAMPLES_UPDATE } from '@pharma/utils/constants/message-patterns';
+import { QC_SAMPLES_CREATE, QC_SAMPLES_DELETE, QC_SAMPLES_GET_BY_ID, QC_SAMPLES_LIST, QC_SAMPLES_UPDATE } from '@pharma/utils';
 
 @Controller('qc-samples')
 export class QCSamplesController {

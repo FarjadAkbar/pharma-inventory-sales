@@ -5,7 +5,7 @@
 export { BaseApiService } from "./base-api.service"
 
 // Individual API Services
-import { SitesApiService } from "./sites-api.service"
+import { SitesApiService, type Site } from "./sites-api.service"
 import { SuppliersApiService } from "./suppliers-api.service"
 import { RawMaterialsApiService } from "./raw-materials-api.service"
 import { PurchaseOrdersApiService } from "./purchase-orders-api.service"
@@ -30,6 +30,7 @@ export { apiService } from "./api.service"
 
 // Create instances of all API services
 export const sitesApi = new SitesApiService()
+export type { Site } from "./sites-api.service"
 export const suppliersApi = new SuppliersApiService()
 export const rawMaterialsApi = new RawMaterialsApiService()
 export const purchaseOrdersApi = new PurchaseOrdersApiService()

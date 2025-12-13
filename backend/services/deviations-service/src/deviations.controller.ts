@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 
-import { DEVIATIONS_CREATE, DEVIATIONS_DELETE, DEVIATIONS_GET_BY_ID, DEVIATIONS_LIST, DEVIATIONS_UPDATE } from '@pharma/utils/constants/message-patterns';
+import { DEVIATIONS_CREATE, DEVIATIONS_DELETE, DEVIATIONS_GET_BY_ID, DEVIATIONS_LIST, DEVIATIONS_UPDATE } from '@pharma/utils';
 
 import { DeviationCreateInput } from '@pharma/core/deviation/use-cases/deviation-create';
 import { DeviationUpdateInput } from '@pharma/core/deviation/use-cases/deviation-update';

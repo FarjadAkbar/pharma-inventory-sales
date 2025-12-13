@@ -6,7 +6,7 @@ import { Permission } from '@pharma/utils/decorators';
 import { ApiRequest } from '@pharma/utils/request';
 import { SearchHttpSchema } from '@pharma/utils/search';
 import { SortHttpSchema } from '@pharma/utils/sort';
-import { SITES_CREATE, SITES_DELETE, SITES_GET_ALL, SITES_GET_BY_ID, SITES_LIST, SITES_UPDATE } from '@pharma/utils/constants/message-patterns';
+import { SITES_CREATE, SITES_DELETE, SITES_GET_ALL, SITES_GET_BY_ID, SITES_LIST, SITES_UPDATE } from '@pharma/utils';
 
 import { SiteEntity } from '@pharma/core/site/entity/site';
 

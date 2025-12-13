@@ -1,4 +1,4 @@
-import '../utils/tracing';
+import '@pharma/utils/tracing';
 
 import { RequestMethod, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';

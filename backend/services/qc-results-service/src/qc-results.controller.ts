@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 
-import { QC_RESULTS_CREATE, QC_RESULTS_DELETE, QC_RESULTS_GET_BY_ID, QC_RESULTS_LIST, QC_RESULTS_UPDATE } from '@pharma/utils/constants/message-patterns';
+import { QC_RESULTS_CREATE, QC_RESULTS_DELETE, QC_RESULTS_GET_BY_ID, QC_RESULTS_LIST, QC_RESULTS_UPDATE } from '@pharma/utils';
 
 import { QCResultCreateInput } from '@pharma/core/qc-result/use-cases/qc-result-create';
 import { QCResultListInput } from '@pharma/core/qc-result/repository/qc-result';

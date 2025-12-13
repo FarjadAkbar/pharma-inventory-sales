@@ -2,7 +2,7 @@ import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 
 import { ILoggerAdapter } from '@pharma/infra/logger';
-import { ALERTS_CREATE, ALERTS_LIST } from '@pharma/utils/constants/message-patterns';
+import { ALERTS_CREATE, ALERTS_LIST } from '@pharma/utils';
 
 @Controller()
 export class AlertsController {

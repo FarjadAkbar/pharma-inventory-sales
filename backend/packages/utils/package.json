@@ -1,7 +1,7 @@
 {
   "name": "@pharma/utils",
   "version": "1.0.0",
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "pnpm@10.24.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -26,11 +26,19 @@
   },
   "typesVersions": {
     "*": {
-      "*": ["./dist/*/index.d.ts", "./dist/*.d.ts"],
-      "*/*": ["./dist/*/*/index.d.ts", "./dist/*/*.d.ts"]
+      "*": [
+        "./dist/*/index.d.ts",
+        "./dist/*.d.ts"
+      ],
+      "*/*": [
+        "./dist/*/*/index.d.ts",
+        "./dist/*/*.d.ts"
+      ]
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json"
   }

@@ -6,7 +6,7 @@ import { Transporter } from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 import path from 'path';
 
-import { EventNameEnum } from '@pharma/utils/constants/events';
+import { EventNameEnum } from '@pharma/utils/constants';
 
 import { ILoggerAdapter } from '../logger';
 import { ISecretsAdapter } from '../secrets';

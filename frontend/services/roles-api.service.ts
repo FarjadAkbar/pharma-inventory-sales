@@ -22,14 +22,14 @@ export class RolesApiService extends BaseApiService {
     return this.request(`/roles/${id}`)
   }
 
-  async createRole(roleData: { name: string }) {
+  async createRole(roleData: { name: string; description?: string }) {
     return this.request("/roles", {
       method: "POST",
       body: JSON.stringify(roleData),
     })
   }
 
-  async updateRole(id: string, roleData: { name: string }) {
+  async updateRole(id: string, roleData: { name?: string; description?: string }) {
     return this.request(`/roles/${id}`, {
       method: "PUT",
       body: JSON.stringify(roleData),
@@ -40,17 +40,16 @@ export class RolesApiService extends BaseApiService {
     return this.request(`/roles/${id}`, { method: "DELETE" })
   }
 
-  async addPermissionToRole(roleId: string, permissionId: string) {
-    return this.request(`/roles/add-permissions/${roleId}`, {
-      method: "PUT",
+  async addPermissionToRole(roleId: string, permissionId: number) {
+    return this.request(`/roles/${roleId}/permissions`, {
+      method: "POST",
       body: JSON.stringify({ permissionId }),
     })
   }
 
-  async removePermissionFromRole(roleId: string, permissionId: string) {
-    return this.request(`/roles/remove-permissions/${roleId}`, {
-      method: "PUT",
-      body: JSON.stringify({ permissionId }),
+  async removePermissionFromRole(roleId: string, permissionId: number) {
+    return this.request(`/roles/${roleId}/permissions/${permissionId}`, {
+      method: "DELETE",
     })
   }
 

@@ -1,115 +1,149 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { sitesApi } from "@/services"
-import type { Site, CreateSiteData } from "@/types/sites"
+import { useState } from "react"
+import { Form, FormInput, FormSelect, FormActions } from "@/components/ui/form"
+import { useFormState } from "@/lib/api-response"
+import { useFormValidation, commonValidationRules } from "@/lib/form-validation"
+import type { Site } from "@/services/sites-api.service"
 
 interface SiteFormProps {
-  siteId?: number
-  onSuccess: () => void
-  onCancel: () => void
+  initialData?: Partial<Site>
+  onSubmit: (data: {
+    name: string
+    address?: string
+    city?: string
+    country?: string
+    type?: 'hospital' | 'clinic' | 'pharmacy' | 'warehouse' | 'manufacturing'
+    isActive?: boolean
+  }) => Promise<void>
+  submitLabel?: string
 }
 
-export function SiteForm({ siteId, onSuccess, onCancel }: SiteFormProps) {
-  const [formData, setFormData] = useState<CreateSiteData>({
-    name: "",
-    location: ""
-  })
-  const [loading, setLoading] = useState(false)
-  const [isEdit, setIsEdit] = useState(!!siteId)
+const SITE_TYPES: Array<{ value: string; label: string }> = [
+  { value: 'hospital', label: 'Hospital' },
+  { value: 'clinic', label: 'Clinic' },
+  { value: 'pharmacy', label: 'Pharmacy' },
+  { value: 'warehouse', label: 'Warehouse' },
+  { value: 'manufacturing', label: 'Manufacturing' },
+]
 
-  useEffect(() => {
-    if (siteId) {
-      fetchSite()
-    }
-  }, [siteId])
-
-  const fetchSite = async () => {
-    if (!siteId) return
-    
-    try {
-      const response = await sitesApi.getSite(siteId)
-      if (response.status && response.data) {
-        setFormData({
-          name: response.data.name,
-          location: response.data.location
-        })
-      }
-    } catch (error) {
-      console.error("Failed to fetch site:", error)
-    }
+export function SiteForm({ initialData, onSubmit, submitLabel = "Save" }: SiteFormProps) {
+  const initialFormData = {
+    name: initialData?.name || "",
+    address: initialData?.address || "",
+    city: initialData?.city || "",
+    country: initialData?.country || "",
+    type: initialData?.type || "",
+    isActive: initialData?.isActive !== undefined ? initialData.isActive : true,
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!formData.name.trim() || !formData.location.trim()) {
-      alert("Please fill in all required fields")
-      return
+  const formState = useFormState(initialFormData)
+  const validation = useFormValidation({
+    ...commonValidationRules,
+    name: {
+      required: true,
+      message: "Site name is required"
     }
+  })
 
-    setLoading(true)
+  const handleSubmit = async (data: typeof initialFormData) => {
+    formState.setLoading(true)
+    formState.clearErrors()
+    
     try {
-        if (isEdit && siteId) {
-          await sitesApi.updateSite(siteId, formData)
-        } else {
-          await sitesApi.createSite(formData)
-        }
-      onSuccess()
+      const errors = validation.validateForm(data)
+      if (validation.hasErrors()) {
+        formState.setErrors(errors)
+        return
+      }
+
+      await onSubmit({
+        name: data.name,
+        address: data.address || undefined,
+        city: data.city || undefined,
+        country: data.country || undefined,
+        type: data.type ? data.type as 'hospital' | 'clinic' | 'pharmacy' | 'warehouse' | 'manufacturing' : undefined,
+        isActive: data.isActive,
+      })
+      
+      formState.setSuccess("Site saved successfully")
     } catch (error) {
-      console.error("Failed to save site:", error)
-      alert("Failed to save site. Please try again.")
+      const errorMessage = error instanceof Error ? error.message : "Failed to save site"
+      formState.setError(errorMessage)
     } finally {
-      setLoading(false)
+      formState.setLoading(false)
     }
   }
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle>{isEdit ? "Edit Site" : "Add New Site"}</CardTitle>
-        <CardDescription>
-          {isEdit ? "Update site information" : "Enter site details"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Site Name *</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Enter site name"
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="location">Location *</Label>
-            <Input
-              id="location"
-              value={formData.location}
-              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              placeholder="Enter site location"
-              required
-            />
-          </div>
+    <Form 
+      onSubmit={handleSubmit} 
+      loading={formState.isLoading}
+      error={formState.error || undefined}
+      success={formState.success || undefined}
+    >
+      <div className="grid md:grid-cols-2 gap-4">
+        <FormInput
+          name="name"
+          label="Site Name"
+          value={formState.data.name}
+          onChange={(e) => formState.updateField('name', e.target.value)}
+          error={formState.errors.name}
+          required
+        />
+        <FormSelect
+          name="type"
+          label="Site Type"
+          value={formState.data.type}
+          onChange={(e) => formState.updateField('type', e.target.value)}
+          error={formState.errors.type}
+          options={SITE_TYPES}
+          placeholder="Select site type"
+        />
+      </div>
 
-          <div className="flex gap-2 pt-4">
-            <Button type="submit" disabled={loading}>
-              {loading ? "Saving..." : (isEdit ? "Update Site" : "Create Site")}
-            </Button>
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+      <FormInput
+        name="address"
+        label="Address"
+        value={formState.data.address}
+        onChange={(e) => formState.updateField('address', e.target.value)}
+        error={formState.errors.address}
+      />
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <FormInput
+          name="city"
+          label="City"
+          value={formState.data.city}
+          onChange={(e) => formState.updateField('city', e.target.value)}
+          error={formState.errors.city}
+        />
+        <FormInput
+          name="country"
+          label="Country"
+          value={formState.data.country}
+          onChange={(e) => formState.updateField('country', e.target.value)}
+          error={formState.errors.country}
+        />
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          id="isActive"
+          checked={formState.data.isActive}
+          onChange={(e) => formState.updateField('isActive', e.target.checked)}
+          className="rounded border-gray-300"
+        />
+        <label htmlFor="isActive" className="text-sm font-medium">
+          Active
+        </label>
+      </div>
+
+      <FormActions 
+        loading={formState.isLoading}
+        submitLabel={submitLabel}
+      />
+    </Form>
   )
 }

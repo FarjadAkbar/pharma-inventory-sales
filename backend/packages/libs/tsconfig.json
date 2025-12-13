@@ -6,7 +6,9 @@
     "rootDir": "src",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": [
+        "src/*"
+      ]
     },
     "moduleResolution": "node",
     "module": "commonjs",
@@ -19,6 +21,13 @@
     "strictPropertyInitialization": false,
     "resolveJsonModule": true
   },
-  "include": ["src"],
-  "exclude": ["**/__tests__/**", "**/*.spec.ts", "**/*.test.ts", "node_modules"]
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "**/__tests__/**",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "node_modules"
+  ]
 }

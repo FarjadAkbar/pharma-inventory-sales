@@ -7,20 +7,32 @@ import { DataTable } from "@/components/ui/data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Key, Shield, Users, Eye } from "lucide-react"
-import { apiService } from "@/services/api.service"
+import { Plus, Key } from "lucide-react"
+import { rolesApi } from "@/services"
 import { formatDateISO } from "@/lib/utils"
 import { PermissionGuard } from "@/components/auth/permission-guard"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { RoleForm } from "@/components/roles/role-form"
 
 interface Role {
-  id: string
+  id: number
   name: string
-  description: string
-  permissions: string[]
-  userCount: number
-  isActive: boolean
-  createdAt: string
-  updatedAt: string
+  description?: string
+  permissions?: Array<{
+    id: number
+    name: string
+    description?: string
+    resource?: string
+    action?: string
+  }>
+  createdAt: Date | string
+  updatedAt: Date | string
 }
 
 export default function RolesPage() {
@@ -28,6 +40,8 @@ export default function RolesPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingRole, setEditingRole] = useState<Role | null>(null)
 
   useEffect(() => {
     fetchRoles()
@@ -36,19 +50,27 @@ export default function RolesPage() {
   const fetchRoles = async () => {
     try {
       setLoading(true)
-      const response = await apiService.getRoles({
+      const response = await rolesApi.getRoles({
         search: searchQuery,
         page: pagination.page,
         limit: 10,
       })
 
-      if (response.success && response.data) {
-        const roleData = response.data as {
-          roles: Role[]
-          pagination: { page: number; pages: number; total: number }
-        }
-        setRoles(roleData.roles || [])
-        setPagination(roleData.pagination || { page: 1, pages: 1, total: 0 })
+      // Backend returns array directly or wrapped in docs
+      const rolesData = Array.isArray(response) ? response : (response?.docs || response?.data || [])
+      setRoles(rolesData)
+      
+      // Handle pagination if available
+      if (response?.pagination) {
+        setPagination(response.pagination)
+      } else if (response?.total !== undefined) {
+        setPagination({
+          page: response?.page || pagination.page,
+          pages: Math.ceil((response?.total || 0) / (response?.limit || 10)),
+          total: response?.total || 0
+        })
+      } else {
+        setPagination({ page: 1, pages: 1, total: rolesData.length })
       }
     } catch (error) {
       console.error("Failed to fetch roles:", error)
@@ -67,39 +89,99 @@ export default function RolesPage() {
   }
 
   const handleEdit = (role: Role) => {
-    // Navigate to edit page
-    window.location.href = `/dashboard/roles/${role.id}`
+    setEditingRole(role)
+    setIsModalOpen(true)
+  }
+
+  const handleAdd = () => {
+    setEditingRole(null)
+    setIsModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setEditingRole(null)
+  }
+
+  const handleSubmit = async (data: {
+    name: string
+    description?: string
+    permissionIds: number[]
+  }) => {
+    try {
+      if (editingRole) {
+        // Update role details
+        await rolesApi.updateRole(editingRole.id.toString(), {
+          name: data.name,
+          description: data.description,
+        })
+        
+        // Get current role to compare permissions
+        const currentRole = await rolesApi.getRole(editingRole.id.toString())
+        const currentPermissionIds = currentRole.permissions?.map((p) => p.id) || []
+        
+        // Find permissions to add and remove
+        const permissionsToAdd = data.permissionIds.filter(id => !currentPermissionIds.includes(id))
+        const permissionsToRemove = currentPermissionIds.filter((id: number) => !data.permissionIds.includes(id))
+        
+        // Add new permissions
+        for (const permissionId of permissionsToAdd) {
+          try {
+            await rolesApi.addPermissionToRole(editingRole.id.toString(), permissionId)
+          } catch (error) {
+            console.error(`Failed to add permission ${permissionId}:`, error)
+          }
+        }
+        
+        // Remove permissions
+        for (const permissionId of permissionsToRemove) {
+          try {
+            await rolesApi.removePermissionFromRole(editingRole.id.toString(), permissionId)
+          } catch (error) {
+            console.error(`Failed to remove permission ${permissionId}:`, error)
+          }
+        }
+      } else {
+        // Create role first
+        const role = await rolesApi.createRole({
+          name: data.name,
+          description: data.description,
+        })
+        
+        // Then add permissions
+        if (data.permissionIds.length > 0) {
+          const roleId = role.id || role.data?.id
+          if (roleId) {
+            // Add permissions one by one
+            for (const permissionId of data.permissionIds) {
+              try {
+                await rolesApi.addPermissionToRole(roleId.toString(), permissionId)
+              } catch (error) {
+                console.error(`Failed to add permission ${permissionId}:`, error)
+              }
+            }
+          }
+        }
+      }
+      
+      handleCloseModal()
+      fetchRoles()
+    } catch (error) {
+      console.error("Failed to save role:", error)
+      throw error
+    }
   }
 
   const handleDelete = async (role: Role) => {
     if (confirm(`Are you sure you want to delete role "${role.name}"?`)) {
       try {
-        await apiService.deleteRole(role.id)
+        await rolesApi.deleteRole(role.id.toString())
         fetchRoles()
       } catch (error) {
         console.error("Failed to delete role:", error)
       }
     }
   }
-
-  const handleToggleStatus = async (role: Role) => {
-    try {
-      await apiService.updateRole(role.id, { isActive: !role.isActive })
-      fetchRoles()
-    } catch (error) {
-      console.error("Failed to toggle role status:", error)
-    }
-  }
-
-  const calculateStats = () => {
-    const activeRoles = roles.filter(role => role.isActive).length
-    const inactiveRoles = roles.filter(role => !role.isActive).length
-    const totalUsers = roles.reduce((sum, role) => sum + role.userCount, 0)
-
-    return { activeRoles, inactiveRoles, totalUsers }
-  }
-
-  const stats = calculateStats()
 
   const columns = [
     {
@@ -122,36 +204,30 @@ export default function RolesPage() {
       header: "Permissions",
       render: (role: Role) => (
         <div className="flex flex-wrap gap-1">
-          {role.permissions.slice(0, 3).map((permission) => (
-            <Badge key={permission} variant="secondary" className="text-xs">
-              {permission}
-            </Badge>
-          ))}
-          {role.permissions.length > 3 && (
-            <Badge variant="outline" className="text-xs">
-              +{role.permissions.length - 3} more
-            </Badge>
+          {role.permissions && role.permissions.length > 0 ? (
+            <>
+              {role.permissions.slice(0, 3).map((permission) => (
+                <Badge key={permission.id} variant="secondary" className="text-xs">
+                  {permission.name}
+                </Badge>
+              ))}
+              {role.permissions.length > 3 && (
+                <Badge variant="outline" className="text-xs">
+                  +{role.permissions.length - 3} more
+                </Badge>
+              )}
+            </>
+          ) : (
+            <span className="text-sm text-muted-foreground">No permissions</span>
           )}
         </div>
       ),
     },
     {
-      key: "userCount",
-      header: "Users",
+      key: "description",
+      header: "Description",
       render: (role: Role) => (
-        <div className="flex items-center gap-2">
-          <Users className="h-4 w-4 text-muted-foreground" />
-          <span>{role.userCount}</span>
-        </div>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (role: Role) => (
-        <Badge variant={role.isActive ? "default" : "secondary"}>
-          {role.isActive ? "Active" : "Inactive"}
-        </Badge>
+        <span className="text-sm text-muted-foreground">{role.description || "-"}</span>
       ),
     },
     { key: "createdAt", header: "Created", render: (role: Role) => formatDateISO(role.createdAt) },
@@ -166,55 +242,12 @@ export default function RolesPage() {
             <p className="text-muted-foreground">Manage system roles and their permissions</p>
           </div>
 
-          <PermissionGuard module="IDENTITY" screen="roles" action="create">
-            <Button onClick={() => (window.location.href = "/dashboard/roles/new")}>
+          <PermissionGuard module="IDENTITY" action="create">
+            <Button onClick={handleAdd}>
               <Plus className="mr-2 h-4 w-4" />
               Add Role
             </Button>
           </PermissionGuard>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Roles</CardTitle>
-              <Key className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{pagination.total}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Roles</CardTitle>
-              <Shield className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.activeRoles}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Inactive Roles</CardTitle>
-              <Eye className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.inactiveRoles}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalUsers}</div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Roles Table */}
@@ -236,32 +269,38 @@ export default function RolesPage() {
                 onPageChange: handlePageChange
               }}
               searchPlaceholder="Search roles..."
-              actions={(role: Role) => (
-                <div className="flex items-center gap-2">
-                  <PermissionGuard module="IDENTITY" screen="roles" action="update">
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(role)}>
-                      Edit
-                    </Button>
-                  </PermissionGuard>
-                  <PermissionGuard module="IDENTITY" screen="roles" action="update">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handleToggleStatus(role)}
-                    >
-                      {role.isActive ? "Deactivate" : "Activate"}
-                    </Button>
-                  </PermissionGuard>
-                  <PermissionGuard module="IDENTITY" screen="roles" action="delete">
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(role)}>
-                      Delete
-                    </Button>
-                  </PermissionGuard>
-                </div>
-              )}
+              actions={[
+                {
+                  label: "Edit",
+                  onClick: (role: Role) => handleEdit(role),
+                  variant: "outline" as const,
+                },
+                {
+                  label: "Delete",
+                  onClick: (role: Role) => handleDelete(role),
+                  variant: "destructive" as const,
+                },
+              ]}
             />
           </CardContent>
         </Card>
+
+        {/* Add/Edit Role Modal */}
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{editingRole ? "Edit Role" : "Add New Role"}</DialogTitle>
+              <DialogDescription>
+                {editingRole ? "Update role information and permissions" : "Create a new role and assign permissions"}
+              </DialogDescription>
+            </DialogHeader>
+            <RoleForm
+              initialData={editingRole || undefined}
+              onSubmit={handleSubmit}
+              submitLabel={editingRole ? "Save Changes" : "Create Role"}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   )

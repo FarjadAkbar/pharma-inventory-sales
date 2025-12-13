@@ -14,7 +14,7 @@ import {
   ROLES_LIST,
   ROLES_REMOVE_PERMISSION,
   ROLES_UPDATE
-} from '@pharma/utils/constants/message-patterns';
+} from '@pharma/utils';
 
 import { RoleEntity } from '@pharma/core/role/entity/role';
 

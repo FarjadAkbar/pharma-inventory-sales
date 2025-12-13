@@ -7,7 +7,7 @@ import {
   RAW_MATERIALS_GET_BY_ID,
   RAW_MATERIALS_LIST,
   RAW_MATERIALS_UPDATE
-} from '@pharma/utils/constants/message-patterns';
+} from '@pharma/utils';
 
 import { RawMaterialCreateInput } from '@pharma/core/raw-material/use-cases/raw-material-create';
 import { RawMaterialDeleteInput } from '@pharma/core/raw-material/use-cases/raw-material-delete';

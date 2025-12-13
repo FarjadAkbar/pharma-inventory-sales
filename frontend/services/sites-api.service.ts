@@ -1,37 +1,71 @@
 "use client"
 
 import { BaseApiService } from "./base-api.service"
-import type { SitesResponse, SiteResponse, SiteActionResponse } from "@/types/sites"
+
+export interface Site {
+  id: number
+  name: string
+  address?: string
+  city?: string
+  country?: string
+  type?: 'hospital' | 'clinic' | 'pharmacy' | 'warehouse' | 'manufacturing'
+  isActive: boolean
+  createdAt: Date | string
+  updatedAt: Date | string
+}
 
 export class SitesApiService extends BaseApiService {
   // Sites API
-  async getSites(): Promise<SitesResponse> {
-    console.log("API getSites called at:", new Date().toISOString())
-    return this.rawRequest<SitesResponse>("/site/getAllSites")
+  async getSites(params?: {
+    search?: string
+    page?: number
+    limit?: number
+  }): Promise<any> {
+    const searchParams = new URLSearchParams()
+    if (params?.search) searchParams.set("search", params.search)
+    if (params?.page) searchParams.set("page", params.page.toString())
+    if (params?.limit) searchParams.set("limit", params.limit.toString())
+
+    const query = searchParams.toString()
+    const response = await this.request(`/sites${query ? `?${query}` : ""}`)
+    // Backend returns array directly, not wrapped in ApiResponse
+    return response
   }
 
-  async getSite(id: number): Promise<SiteResponse> {
-    return this.rawRequest<SiteResponse>(`/site/${id}`)
+  async getSite(id: string) {
+    return this.request(`/sites/${id}`)
   }
 
-  async createSite(data: { name: string; location: string }): Promise<SiteActionResponse> {
-    return this.rawRequest<SiteActionResponse>("/site", {
+  async createSite(siteData: { 
+    name: string
+    address?: string
+    city?: string
+    country?: string
+    type?: string
+    isActive?: boolean
+  }) {
+    return this.request("/sites", {
       method: "POST",
-      body: JSON.stringify(data)
+      body: JSON.stringify(siteData),
     })
   }
 
-  async updateSite(id: number, data: { name: string; location: string }): Promise<SiteActionResponse> {
-    return this.rawRequest<SiteActionResponse>(`/site/${id}`, {
+  async updateSite(id: string, siteData: { 
+    name?: string
+    address?: string
+    city?: string
+    country?: string
+    type?: string
+    isActive?: boolean
+  }) {
+    return this.request(`/sites/${id}`, {
       method: "PUT",
-      body: JSON.stringify(data)
+      body: JSON.stringify(siteData),
     })
   }
 
-  async deleteSite(id: number): Promise<SiteActionResponse> {
-    return this.rawRequest<SiteActionResponse>(`/site/${id}`, {
-      method: "DELETE"
-    })
+  async deleteSite(id: string) {
+    return this.request(`/sites/${id}`, { method: "DELETE" })
   }
 
   // Cache invalidation for sites
@@ -39,3 +73,5 @@ export class SitesApiService extends BaseApiService {
     this.invalidateCache("sites")
   }
 }
+
+export const sitesApiService = new SitesApiService()

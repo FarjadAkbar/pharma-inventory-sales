@@ -8,7 +8,7 @@ import {
   USERS_GET_CURRENT,
   USERS_LIST,
   USERS_UPDATE
-} from '@pharma/utils/constants/message-patterns';
+} from '@pharma/utils';
 
 import { UserCreateInput } from '@pharma/core/user/use-cases/user-create';
 import { UserUpdateInput } from '@pharma/core/user/use-cases/user-update';

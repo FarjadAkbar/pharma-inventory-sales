@@ -8,28 +8,40 @@ export class PermissionsApiService extends BaseApiService {
     search?: string
     page?: number
     limit?: number
-  }) {
+  }): Promise<any> {
     const searchParams = new URLSearchParams()
     if (params?.search) searchParams.set("search", params.search)
     if (params?.page) searchParams.set("page", params.page.toString())
     if (params?.limit) searchParams.set("limit", params.limit.toString())
 
     const query = searchParams.toString()
-    return this.request(`/permissions${query ? `?${query}` : ""}`)
+    const response = await this.request(`/permissions${query ? `?${query}` : ""}`)
+    // Backend returns array directly, not wrapped in ApiResponse
+    return response
   }
 
   async getPermission(id: string) {
     return this.request(`/permissions/${id}`)
   }
 
-  async createPermission(permissionData: { name: string }) {
+  async createPermission(permissionData: { 
+    name: string
+    description?: string
+    resource?: string
+    action?: string
+  }) {
     return this.request("/permissions", {
       method: "POST",
       body: JSON.stringify(permissionData),
     })
   }
 
-  async updatePermission(id: string, permissionData: { name: string }) {
+  async updatePermission(id: string, permissionData: { 
+    name?: string
+    description?: string
+    resource?: string
+    action?: string
+  }) {
     return this.request(`/permissions/${id}`, {
       method: "PUT",
       body: JSON.stringify(permissionData),

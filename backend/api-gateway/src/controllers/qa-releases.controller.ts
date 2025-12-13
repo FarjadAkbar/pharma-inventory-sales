@@ -6,7 +6,7 @@ import { Permission } from '@pharma/utils/decorators';
 import { ApiRequest } from '@pharma/utils/request';
 import { SearchHttpSchema } from '@pharma/utils/search';
 import { SortHttpSchema } from '@pharma/utils/sort';
-import { QA_RELEASES_CREATE, QA_RELEASES_DELETE, QA_RELEASES_GET_BY_ID, QA_RELEASES_LIST, QA_RELEASES_UPDATE } from '@pharma/utils/constants/message-patterns';
+import { QA_RELEASES_CREATE, QA_RELEASES_DELETE, QA_RELEASES_GET_BY_ID, QA_RELEASES_LIST, QA_RELEASES_UPDATE } from '@pharma/utils';
 
 @Controller('qa-releases')
 export class QAReleasesController {

@@ -51,15 +51,19 @@ export async function middleware(request: NextRequest) {
   }
 
   // Check if token is expired
-  const currentTime = Math.floor(Date.now() / 1000)
-  if (userData.exp <= currentTime) {
-    console.log("Middleware: Token expired, redirecting to login")
-    return NextResponse.redirect(new URL("/auth/login", request.url))
+  if (userData.exp) {
+    const currentTime = Math.floor(Date.now() / 1000)
+    if (userData.exp <= currentTime) {
+      console.log("Middleware: Token expired, redirecting to login")
+      return NextResponse.redirect(new URL("/auth/login", request.url))
+    }
   }
 
   const response = NextResponse.next()
-  response.headers.set("x-user-role", userData.role)
-  response.headers.set("x-user-id", userData.id.toString()) // Use userData.id
+  // JWT payload uses 'sub' for user ID (standard JWT claim)
+  const userId = userData.sub || userData.id
+  response.headers.set("x-user-role", userData.role || "")
+  response.headers.set("x-user-id", userId ? userId.toString() : "")
 
   console.log("Middleware: Authentication successful, allowing access")
   return response

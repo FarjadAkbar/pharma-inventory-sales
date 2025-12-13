@@ -7,7 +7,7 @@ import {
   PERMISSIONS_GET_BY_ID,
   PERMISSIONS_LIST,
   PERMISSIONS_UPDATE
-} from '@pharma/utils/constants/message-patterns';
+} from '@pharma/utils';
 
 import { PermissionCreateInput } from '@pharma/core/permission/use-cases/permission-create';
 import { PermissionUpdateInput } from '@pharma/core/permission/use-cases/permission-update';

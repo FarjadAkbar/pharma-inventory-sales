@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 
-import { DRUGS_CREATE, DRUGS_DELETE, DRUGS_GET_BY_ID, DRUGS_LIST, DRUGS_UPDATE } from '@pharma/utils/constants/message-patterns';
+import { DRUGS_CREATE, DRUGS_DELETE, DRUGS_GET_BY_ID, DRUGS_LIST, DRUGS_UPDATE } from '@pharma/utils';
 
 import { DrugCreateInput } from '@pharma/core/drug/use-cases/drug-create';
 import { DrugUpdateInput } from '@pharma/core/drug/use-cases/drug-update';

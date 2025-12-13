@@ -12,7 +12,7 @@ import {
   RAW_MATERIALS_GET_BY_ID,
   RAW_MATERIALS_LIST,
   RAW_MATERIALS_UPDATE
-} from '@pharma/utils/constants/message-patterns';
+} from '@pharma/utils';
 
 @Controller('raw-materials')
 export class RawMaterialsController {

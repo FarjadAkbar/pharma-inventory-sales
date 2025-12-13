@@ -14,29 +14,65 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { LogOut, Settings, User } from "lucide-react"
 import { StoreSwitcher } from "./store-switcher"
-import { SiteSelector, mockSites } from "./site-selector"
+import { SiteSelector } from "./site-selector"
 import { useRouter } from "next/navigation"
+import { sitesApi } from "@/services"
 
 export function Header() {
   const { user, logout } = useAuth()
   const router = useRouter()
-  const [currentSite, setCurrentSite] = useState(mockSites[0])
-  const [availableSites, setAvailableSites] = useState(mockSites)
+  const [currentSite, setCurrentSite] = useState<any>(null)
+  const [availableSites, setAvailableSites] = useState<any[]>([])
+  const [loadingSites, setLoadingSites] = useState(true)
 
   useEffect(() => {
-    // In real implementation, this would come from user context or API
-    // Filter sites based on user role and assigned sites
-    if (user?.role === 'site_manager') {
-      // Site managers can only access their assigned sites
-      setAvailableSites(mockSites.slice(0, 2)) // Example: first 2 sites
-    } else if (user?.role === 'org_admin') {
-      // Org admins can access all sites in their organization
-      setAvailableSites(mockSites.slice(0, 4)) // Example: first 4 sites
-    } else {
-      // System admins can access all sites
-      setAvailableSites(mockSites)
+    const fetchSites = async () => {
+      try {
+        setLoadingSites(true)
+        const response: any = await sitesApi.getSites()
+        const sitesData = Array.isArray(response) ? response : (response?.docs || response?.data || [])
+        
+        // Filter sites based on user role and assigned sites
+        if (!user) {
+          setAvailableSites([])
+          return
+        }
+
+        // Admin users don't have sites assigned, but can view all sites
+        const userRole = user.role?.toLowerCase() || ''
+        const isAdmin = userRole.includes('admin') || userRole === 'system administrator'
+        
+        if (isAdmin) {
+          // Admin can view all sites
+          setAvailableSites(sitesData.filter((s: any) => s.isActive))
+        } else {
+          // Other users can only view their assigned sites
+          const userSiteIds = (user as any).siteIds || (user as any).sites?.map((s: any) => s.id) || []
+          if (userSiteIds.length > 0) {
+            setAvailableSites(sitesData.filter((s: any) => userSiteIds.includes(s.id) && s.isActive))
+          } else {
+            setAvailableSites([])
+          }
+        }
+
+        // Set current site to first available site if not already set
+        if (availableSites.length > 0 && !currentSite) {
+          setCurrentSite(availableSites[0])
+        } else if (availableSites.length === 0) {
+          setCurrentSite(null)
+        }
+      } catch (error) {
+        console.error("Failed to fetch sites:", error)
+        setAvailableSites([])
+      } finally {
+        setLoadingSites(false)
+      }
     }
-  }, [user?.role])
+
+    if (user) {
+      fetchSites()
+    }
+  }, [user])
 
   if (!user) return null
 
@@ -63,7 +99,7 @@ export function Header() {
   return (
     <header className="flex items-center justify-between px-6 py-4 bg-background border-b border-border">
       <div className="flex items-center gap-4">
-        <h1 className="text-xl font-semibold text-foreground">Welcome back, {user?.name}</h1>
+        <h1 className="text-xl font-semibold text-foreground">Welcome back, {user?.fullname || user?.username || 'User'}</h1>
       </div>
 
       <div className="flex items-center gap-4">
@@ -80,7 +116,7 @@ export function Header() {
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
               <Avatar className="h-10 w-10">
                 <AvatarFallback className="bg-primary text-primary-foreground">
-                  {user?.name ? getInitials(user.name) : "U"}
+                  {user?.fullname || user?.username ? getInitials(user.fullname || user.username || 'User') : "U"}
                 </AvatarFallback>
               </Avatar>
             </Button>
@@ -88,7 +124,7 @@ export function Header() {
           <DropdownMenuContent className="w-56" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{user?.name}</p>
+                <p className="text-sm font-medium leading-none">{user?.fullname || user?.username || 'User'}</p>
                 <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
                 <p className="text-xs leading-none text-muted-foreground capitalize">Role: {user?.role}</p>
               </div>

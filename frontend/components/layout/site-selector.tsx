@@ -23,15 +23,15 @@ import {
 import { cn } from "@/lib/utils"
 
 interface Site {
-  id: string
+  id: number | string
   name: string
-  address: string
-  city: string
-  country: string
-  type: 'hospital' | 'clinic' | 'pharmacy' | 'warehouse' | 'manufacturing'
-  isActive: boolean
-  userCount: number
-  inventoryCount: number
+  address?: string
+  city?: string
+  country?: string
+  type?: 'hospital' | 'clinic' | 'pharmacy' | 'warehouse' | 'manufacturing'
+  isActive?: boolean
+  userCount?: number
+  inventoryCount?: number
 }
 
 interface SiteSelectorProps {

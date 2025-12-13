@@ -12,7 +12,7 @@ import {
   SUPPLIERS_GET_BY_ID,
   SUPPLIERS_LIST,
   SUPPLIERS_UPDATE
-} from '@pharma/utils/constants/message-patterns';
+} from '@pharma/utils';
 
 @Controller('suppliers')
 export class SuppliersController {

@@ -14,7 +14,7 @@ import {
   AUTH_REFRESH_TOKEN,
   AUTH_RESET_PASSWORD_CONFIRM,
   AUTH_RESET_PASSWORD_SEND_EMAIL
-} from '@pharma/utils/constants/message-patterns';
+} from '@pharma/utils';
 
 @Controller()
 export class AuthController {

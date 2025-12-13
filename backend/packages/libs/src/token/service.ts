@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import jwt from 'jsonwebtoken';
 
-import { ISecretsAdapter } from '@pharma/infra/secrets';
+import { ISecretsAdapter } from '@pharma/infra';
 import { ApiUnauthorizedException } from '@pharma/utils/exception';
 import { Infer, InputValidator } from '@pharma/utils/validator';
 

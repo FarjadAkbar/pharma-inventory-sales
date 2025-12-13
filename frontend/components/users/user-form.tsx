@@ -1,43 +1,120 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Form, FormField, FormInput, FormSelect, FormCheckbox, FormActions } from "@/components/ui/form"
+import { useState, useEffect } from "react"
+import { Form, FormField, FormInput, FormSelect, FormActions } from "@/components/ui/form"
 import { useFormState } from "@/lib/api-response"
 import { useFormValidation, commonValidationRules } from "@/lib/form-validation"
 import type { User } from "@/types/auth"
-import { useStore } from "@/contexts/store.context"
-
-type ScreenPermission = { screen: string; actions: string[] }
+import { rolesApi, sitesApi } from "@/services"
 
 interface UserFormProps {
-  initialData?: Partial<User> & { screenPermissions?: ScreenPermission[] }
+  initialData?: Partial<User>
   onSubmit: (data: {
     name: string
     email: string
-    role: "admin" | "store_manager" | "employee"
-    assignedStores: string[]
-    screenPermissions: ScreenPermission[]
+    password?: string
+    roleId?: number
+    siteIds: number[]
   }) => Promise<void>
   submitLabel?: string
 }
 
+interface Role {
+  id: number
+  name: string
+  description?: string
+}
+
+interface Site {
+  id: number
+  name: string
+  address?: string
+  city?: string
+  type?: string
+}
+
 export function UserForm({ initialData, onSubmit, submitLabel = "Save" }: UserFormProps) {
-  const { stores } = useStore()
+  const [roles, setRoles] = useState<Role[]>([])
+  const [sites, setSites] = useState<Site[]>([])
+  const [loadingRoles, setLoadingRoles] = useState(true)
+  const [loadingSites, setLoadingSites] = useState(true)
+  
+  // Extract roleId from initialData - could be from roleId, role.id, or role (if it's an object)
+  const getInitialRoleId = (): number | undefined => {
+    if (initialData?.roleId) return initialData.roleId
+    if (typeof initialData?.role === 'object' && initialData.role?.id) return initialData.role.id
+    if (typeof initialData?.role === 'number') return initialData.role
+    return undefined
+  }
+
+  // Extract siteIds from initialData - could be from siteIds, sites (array of objects), or assignedStores
+  const getInitialSiteIds = (): number[] => {
+    if (initialData?.siteIds && Array.isArray(initialData.siteIds)) {
+      return initialData.siteIds.map(id => typeof id === 'number' ? id : parseInt(String(id), 10)).filter(id => !isNaN(id))
+    }
+    if (initialData?.sites && Array.isArray(initialData.sites)) {
+      return initialData.sites.map(site => {
+        if (typeof site === 'object' && 'id' in site) {
+          return typeof site.id === 'number' ? site.id : parseInt(String(site.id), 10)
+        }
+        return typeof site === 'number' ? site : parseInt(String(site), 10)
+      }).filter(id => !isNaN(id))
+    }
+    if (initialData?.assignedStores && Array.isArray(initialData.assignedStores)) {
+      return initialData.assignedStores.map(id => typeof id === 'number' ? id : parseInt(String(id), 10)).filter(id => !isNaN(id))
+    }
+    return []
+  }
   
   const initialFormData = {
-    name: initialData?.name || "",
+    name: initialData?.fullname || "",
     email: initialData?.email || "",
-    role: (initialData?.role as any) || ("employee" as const),
-    assignedStores: (initialData as any)?.assignedStores || ([] as string[]),
-    screenPermissions: (initialData as any)?.screenPermissions || ([] as ScreenPermission[]),
+    password: "",
+    roleId: getInitialRoleId(),
+    siteIds: getInitialSiteIds(),
   }
+  
+  // Fetch roles from backend
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        setLoadingRoles(true)
+        const response: any = await rolesApi.getRoles()
+        // Backend returns array directly or wrapped in docs
+        const rolesData = Array.isArray(response) ? response : (response?.docs || response?.data || [])
+        setRoles(rolesData)
+      } catch (error) {
+        console.error("Failed to fetch roles:", error)
+      } finally {
+        setLoadingRoles(false)
+      }
+    }
+    fetchRoles()
+  }, [])
+
+  // Fetch sites from backend
+  useEffect(() => {
+    const fetchSites = async () => {
+      try {
+        setLoadingSites(true)
+        const response: any = await sitesApi.getSites()
+        // Backend returns array directly or wrapped in docs
+        const sitesData = Array.isArray(response) ? response : (response?.docs || response?.data || [])
+        setSites(sitesData)
+      } catch (error) {
+        console.error("Failed to fetch sites:", error)
+      } finally {
+        setLoadingSites(false)
+      }
+    }
+    fetchSites()
+  }, [])
 
   const formState = useFormState(initialFormData)
   const validation = useFormValidation({
     ...commonValidationRules,
-    role: {
-      required: true,
+    roleId: {
+      required: false, // Make optional for now
       message: "Please select a role"
     }
   })
@@ -57,9 +134,9 @@ export function UserForm({ initialData, onSubmit, submitLabel = "Save" }: UserFo
       await onSubmit({
         name: data.name,
         email: data.email,
-        role: data.role,
-        assignedStores: data.assignedStores ? [data.assignedStores] : [],
-        screenPermissions: formState.data.screenPermissions
+        password: data.password || undefined,
+        roleId: data.roleId ? Number(data.roleId) : undefined,
+        siteIds: data.siteIds || [],
       })
       
       formState.setSuccess("User saved successfully")
@@ -71,22 +148,17 @@ export function UserForm({ initialData, onSubmit, submitLabel = "Save" }: UserFo
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>User Details</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Form 
+    <Form 
           onSubmit={handleSubmit} 
           loading={formState.isLoading}
-          error={formState.error}
-          success={formState.success}
+          error={formState.error || undefined}
+          success={formState.success || undefined}
         >
           <div className="grid md:grid-cols-2 gap-4">
             <FormInput
               name="name"
               label="Full Name"
-              value={formState.data.name}
+              value={formState.data.name || ""}
               onChange={(e) => formState.updateField('name', e.target.value)}
               error={formState.errors.name}
               required
@@ -95,85 +167,81 @@ export function UserForm({ initialData, onSubmit, submitLabel = "Save" }: UserFo
               name="email"
               label="Email"
               type="email"
-              value={formState.data.email}
+              value={formState.data.email || ""}
               onChange={(e) => formState.updateField('email', e.target.value)}
-              error={formState.errors.email}
+              error={formState.errors.email || undefined}
               required
             />
           </div>
 
           <FormSelect
-            name="role"
+            name="roleId"
             label="Role"
-            value={formState.data.role}
-            onChange={(e) => formState.updateField('role', e.target.value)}
-            error={formState.errors.role}
-            required
-            options={[
-              { value: "employee", label: "Employee" },
-              { value: "store_manager", label: "Store Manager" },
-              { value: "admin", label: "Admin" }
-            ]}
-            placeholder="Select a role"
+            value={formState.data.roleId?.toString() || ""}
+            onChange={(e) => formState.updateField('roleId', e.target.value ? Number(e.target.value) : undefined)}
+            error={formState.errors.roleId}
+            required={false}
+            disabled={loadingRoles}
+            options={roles.map(role => ({ 
+              value: role.id.toString(), 
+              label: role.name 
+            }))}
+            placeholder={loadingRoles ? "Loading roles..." : "Select a role"}
           />
+          
+          {!initialData && (
+            <FormInput
+              name="password"
+              label="Password"
+              type="password"
+              value={formState.data.password}
+              onChange={(e) => formState.updateField('password', e.target.value)}
+              error={formState.errors.password}
+              required={!initialData}
+            />
+          )}
 
-          <FormSelect
-            name="assignedStores"
-            label="Assign Store"
-            value={formState.data.assignedStores[0] || ""}
-            onChange={(e) => formState.updateField('assignedStores', e.target.value ? [e.target.value] : [])}
-            error={formState.errors.assignedStores}
-            options={stores.map(store => ({ value: store.id, label: store.name }))}
-            placeholder="Select a store"
-          />
-
-          <div className="space-y-3">
-            <label className="text-sm font-medium">Screen Permissions</label>
-            <div className="space-y-2">
-              {[
-                "dashboard",
-                "products",
-                "vendors",
-                "categories",
-                "sales",
-                "pos",
-                "users",
-                "stores",
-              ].map((screen) => {
-                const current = (formState.data.screenPermissions || []).find((sp) => sp.screen === screen)
-                const actions = ["view", "create", "edit", "delete"]
-                return (
-                  <div key={screen} className="flex items-center gap-4">
-                    <div className="w-32 capitalize text-sm">{screen}</div>
-                    <div className="flex gap-4 text-sm">
-                      {actions.map((action) => {
-                        const checked = current?.actions.includes(action)
-                        return (
-                          <FormCheckbox
-                            key={action}
-                            checked={!!checked}
-                            onChange={(e) => {
-                              const existing = formState.data.screenPermissions.find((sp) => sp.screen === screen)
-                              let next = [...formState.data.screenPermissions]
-                              if (!existing) {
-                                next.push({ screen, actions: e.target.checked ? [action] : [] })
-                              } else {
-                                existing.actions = e.target.checked
-                                  ? Array.from(new Set([...(existing.actions || []), action]))
-                                  : (existing.actions || []).filter((a: string) => a !== action)
-                                next = next.map((sp) => (sp.screen === screen ? existing : sp))
-                              }
-                              formState.updateField('screenPermissions', next)
-                            }}
-                            label={action}
-                          />
-                        )
-                      })}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Assign Sites</label>
+            {loadingSites ? (
+              <div className="text-sm text-muted-foreground">Loading sites...</div>
+            ) : (
+              <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3">
+                {sites.map((site) => {
+                  const isSelected = formState.data.siteIds.includes(site.id)
+                  return (
+                    <div key={site.id} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={`site-${site.id}`}
+                        checked={isSelected}
+                        onChange={(e) => {
+                          const currentIds = formState.data.siteIds || []
+                          if (e.target.checked) {
+                            formState.updateField('siteIds', [...currentIds, site.id])
+                          } else {
+                            formState.updateField('siteIds', currentIds.filter((id: number) => id !== site.id))
+                          }
+                        }}
+                        className="rounded border-gray-300"
+                      />
+                      <label
+                        htmlFor={`site-${site.id}`}
+                        className="text-sm font-normal cursor-pointer flex-1"
+                      >
+                        {site.name}
+                        {site.city && (
+                          <span className="text-muted-foreground ml-2">- {site.city}</span>
+                        )}
+                      </label>
                     </div>
-                  </div>
-                )
-              })}
-            </div>
+                  )
+                })}
+                {sites.length === 0 && (
+                  <div className="text-sm text-muted-foreground">No sites available</div>
+                )}
+              </div>
+            )}
           </div>
 
           <FormActions 
@@ -181,8 +249,6 @@ export function UserForm({ initialData, onSubmit, submitLabel = "Save" }: UserFo
             submitLabel={submitLabel}
           />
         </Form>
-      </CardContent>
-    </Card>
   )
 }
 
