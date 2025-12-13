@@ -1,12 +1,18 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Form, FormInput, FormActions } from "@/components/ui/form"
+import { Form, FormInput, FormActions, FormField } from "@/components/ui/form"
 import { useFormState } from "@/lib/api-response"
 import { useFormValidation, commonValidationRules } from "@/lib/form-validation"
 import { rolesApi, permissionsApi } from "@/services"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
+import {
+  MultiSelect,
+  MultiSelectContent,
+  MultiSelectItem,
+  MultiSelectGroup,
+  MultiSelectTrigger,
+  MultiSelectValue,
+} from "@/components/ui/multi-select"
 
 interface Role {
   id: number
@@ -108,14 +114,6 @@ export function RoleForm({ initialData, onSubmit, submitLabel = "Save" }: RoleFo
     }
   }
 
-  const togglePermission = (permissionId: number) => {
-    setSelectedPermissionIds(prev => 
-      prev.includes(permissionId)
-        ? prev.filter(id => id !== permissionId)
-        : [...prev, permissionId]
-    )
-  }
-
   // Group permissions by resource
   const groupedPermissions = permissions.reduce((acc, permission) => {
     const resource = permission.resource || "Other"
@@ -151,28 +149,37 @@ export function RoleForm({ initialData, onSubmit, submitLabel = "Save" }: RoleFo
               error={formState.errors.description}
             />
 
-            <div className="space-y-3">
-              <Label className="text-sm font-medium">Permissions</Label>
+            <FormField
+              label="Permissions"
+              name="permissionIds"
+              helpText={permissions.length === 0 ? "No permissions available" : undefined}
+            >
               {loadingPermissions ? (
                 <div className="text-sm text-muted-foreground">Loading permissions...</div>
               ) : (
-                <div className="space-y-4 max-h-96 overflow-y-auto border rounded-md p-4">
-                  {Object.entries(groupedPermissions).map(([resource, perms]) => (
-                    <div key={resource} className="space-y-2">
-                      <div className="font-medium text-sm text-muted-foreground capitalize">
-                        {resource}
-                      </div>
-                      <div className="space-y-2 pl-4">
-                        {perms.map((permission) => (
-                          <div key={permission.id} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`permission-${permission.id}`}
-                              checked={selectedPermissionIds.includes(permission.id)}
-                              onCheckedChange={() => togglePermission(permission.id)}
-                            />
-                            <Label
-                              htmlFor={`permission-${permission.id}`}
-                              className="text-sm font-normal cursor-pointer"
+                <>
+                  <input
+                    type="hidden"
+                    name="permissionIds"
+                    value={JSON.stringify(selectedPermissionIds)}
+                  />
+                  <MultiSelect
+                    values={selectedPermissionIds.map(id => id.toString())}
+                    onValuesChange={(values) => {
+                      setSelectedPermissionIds(values.map(v => parseInt(v, 10)))
+                    }}
+                  >
+                    <MultiSelectTrigger className="w-full">
+                      <MultiSelectValue placeholder="Select permissions..." />
+                    </MultiSelectTrigger>
+                    <MultiSelectContent>
+                      {Object.entries(groupedPermissions).map(([resource, perms]) => (
+                        <MultiSelectGroup key={resource} heading={resource.charAt(0).toUpperCase() + resource.slice(1)}>
+                          {perms.map((permission) => (
+                            <MultiSelectItem
+                              key={permission.id}
+                              value={permission.id.toString()}
+                              badgeLabel={permission.name}
                             >
                               {permission.name}
                               {permission.description && (
@@ -180,18 +187,15 @@ export function RoleForm({ initialData, onSubmit, submitLabel = "Save" }: RoleFo
                                   - {permission.description}
                                 </span>
                               )}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                  {permissions.length === 0 && (
-                    <div className="text-sm text-muted-foreground">No permissions available</div>
-                  )}
-                </div>
+                            </MultiSelectItem>
+                          ))}
+                        </MultiSelectGroup>
+                      ))}
+                    </MultiSelectContent>
+                  </MultiSelect>
+                </>
               )}
-            </div>
+            </FormField>
           </div>
 
           <FormActions 

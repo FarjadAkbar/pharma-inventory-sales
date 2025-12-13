@@ -6,6 +6,13 @@ import { useFormState } from "@/lib/api-response"
 import { useFormValidation, commonValidationRules } from "@/lib/form-validation"
 import type { User } from "@/types/auth"
 import { rolesApi, sitesApi } from "@/services"
+import {
+  MultiSelect,
+  MultiSelectContent,
+  MultiSelectItem,
+  MultiSelectTrigger,
+  MultiSelectValue,
+} from "@/components/ui/multi-select"
 
 interface UserFormProps {
   initialData?: Partial<User>
@@ -136,7 +143,7 @@ export function UserForm({ initialData, onSubmit, submitLabel = "Save" }: UserFo
         email: data.email,
         password: data.password || undefined,
         roleId: data.roleId ? Number(data.roleId) : undefined,
-        siteIds: data.siteIds || [],
+        siteIds: formState.data.siteIds || [],
       })
       
       formState.setSuccess("User saved successfully")
@@ -178,7 +185,7 @@ export function UserForm({ initialData, onSubmit, submitLabel = "Save" }: UserFo
             name="roleId"
             label="Role"
             value={formState.data.roleId?.toString() || ""}
-            onChange={(e) => formState.updateField('roleId', e.target.value ? Number(e.target.value) : undefined)}
+            onChange={(value) => formState.updateField('roleId', value ? Number(value) : undefined)}
             error={formState.errors.roleId}
             required={false}
             disabled={loadingRoles}
@@ -201,48 +208,47 @@ export function UserForm({ initialData, onSubmit, submitLabel = "Save" }: UserFo
             />
           )}
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Assign Sites</label>
+          <FormField
+            label="Assign Sites"
+            name="siteIds"
+            helpText={sites.length === 0 ? "No sites available" : undefined}
+          >
             {loadingSites ? (
               <div className="text-sm text-muted-foreground">Loading sites...</div>
             ) : (
-              <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3">
-                {sites.map((site) => {
-                  const isSelected = formState.data.siteIds.includes(site.id)
-                  return (
-                    <div key={site.id} className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id={`site-${site.id}`}
-                        checked={isSelected}
-                        onChange={(e) => {
-                          const currentIds = formState.data.siteIds || []
-                          if (e.target.checked) {
-                            formState.updateField('siteIds', [...currentIds, site.id])
-                          } else {
-                            formState.updateField('siteIds', currentIds.filter((id: number) => id !== site.id))
-                          }
-                        }}
-                        className="rounded border-gray-300"
-                      />
-                      <label
-                        htmlFor={`site-${site.id}`}
-                        className="text-sm font-normal cursor-pointer flex-1"
+              <>
+                <input
+                  type="hidden"
+                  name="siteIds"
+                  value={JSON.stringify(formState.data.siteIds || [])}
+                />
+                <MultiSelect
+                  values={formState.data.siteIds?.map(id => id.toString()) || []}
+                  onValuesChange={(values) => {
+                    formState.updateField('siteIds', values.map(v => parseInt(v, 10)))
+                  }}
+                >
+                  <MultiSelectTrigger className="w-full">
+                    <MultiSelectValue placeholder="Select sites..." />
+                  </MultiSelectTrigger>
+                  <MultiSelectContent>
+                    {sites.map((site) => (
+                      <MultiSelectItem
+                        key={site.id}
+                        value={site.id.toString()}
+                        badgeLabel={site.name}
                       >
                         {site.name}
                         {site.city && (
                           <span className="text-muted-foreground ml-2">- {site.city}</span>
                         )}
-                      </label>
-                    </div>
-                  )
-                })}
-                {sites.length === 0 && (
-                  <div className="text-sm text-muted-foreground">No sites available</div>
-                )}
-              </div>
+                      </MultiSelectItem>
+                    ))}
+                  </MultiSelectContent>
+                </MultiSelect>
+              </>
             )}
-          </div>
+          </FormField>
 
           <FormActions 
             loading={formState.isLoading}

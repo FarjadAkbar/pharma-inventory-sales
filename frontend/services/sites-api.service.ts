@@ -68,6 +68,10 @@ export class SitesApiService extends BaseApiService {
     return this.request(`/sites/${id}`, { method: "DELETE" })
   }
 
+  async getSiteTypes(): Promise<string[]> {
+    return this.request<string[]>("/sites/types/metadata")
+  }
+
   // Cache invalidation for sites
   invalidateSites() {
     this.invalidateCache("sites")

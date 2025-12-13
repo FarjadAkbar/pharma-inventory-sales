@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Form, FormInput, FormSelect, FormActions } from "@/components/ui/form"
 import { useFormState } from "@/lib/api-response"
 import { useFormValidation, commonValidationRules } from "@/lib/form-validation"
-import type { Site } from "@/services/sites-api.service"
+import { sitesApi, type Site } from "@/services"
+import { Switch } from "@/components/ui/switch"
 
 interface SiteFormProps {
   initialData?: Partial<Site>
@@ -19,15 +20,39 @@ interface SiteFormProps {
   submitLabel?: string
 }
 
-const SITE_TYPES: Array<{ value: string; label: string }> = [
-  { value: 'hospital', label: 'Hospital' },
-  { value: 'clinic', label: 'Clinic' },
-  { value: 'pharmacy', label: 'Pharmacy' },
-  { value: 'warehouse', label: 'Warehouse' },
-  { value: 'manufacturing', label: 'Manufacturing' },
-]
+// Color mapping for site types (frontend only)
+const SITE_TYPE_COLORS: Record<string, string> = {
+  hospital: 'bg-blue-100 text-blue-800',
+  clinic: 'bg-green-100 text-green-800',
+  pharmacy: 'bg-purple-100 text-purple-800',
+  warehouse: 'bg-orange-100 text-orange-800',
+  manufacturing: 'bg-red-100 text-red-800',
+}
+
+const capitalizeFirst = (str: string): string => {
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}
 
 export function SiteForm({ initialData, onSubmit, submitLabel = "Save" }: SiteFormProps) {
+  const [siteTypes, setSiteTypes] = useState<string[]>([])
+  const [loadingTypes, setLoadingTypes] = useState(true)
+
+  useEffect(() => {
+    const fetchSiteTypes = async () => {
+      try {
+        setLoadingTypes(true)
+        const types = await sitesApi.getSiteTypes()
+        setSiteTypes(types)
+      } catch (error) {
+        console.error("Failed to fetch site types:", error)
+        // Fallback to default types if API fails
+        setSiteTypes(['hospital', 'clinic', 'pharmacy', 'warehouse', 'manufacturing'])
+      } finally {
+        setLoadingTypes(false)
+      }
+    }
+    fetchSiteTypes()
+  }, [])
   const initialFormData = {
     name: initialData?.name || "",
     address: initialData?.address || "",
@@ -63,7 +88,7 @@ export function SiteForm({ initialData, onSubmit, submitLabel = "Save" }: SiteFo
         city: data.city || undefined,
         country: data.country || undefined,
         type: data.type ? data.type as 'hospital' | 'clinic' | 'pharmacy' | 'warehouse' | 'manufacturing' : undefined,
-        isActive: data.isActive,
+        isActive: formState.data.isActive,
       })
       
       formState.setSuccess("Site saved successfully")
@@ -95,10 +120,11 @@ export function SiteForm({ initialData, onSubmit, submitLabel = "Save" }: SiteFo
           name="type"
           label="Site Type"
           value={formState.data.type}
-          onChange={(e) => formState.updateField('type', e.target.value)}
+          onChange={(value) => formState.updateField('type', value)}
           error={formState.errors.type}
-          options={SITE_TYPES}
-          placeholder="Select site type"
+          options={siteTypes.map(t => ({ value: t, label: capitalizeFirst(t) }))}
+          placeholder={loadingTypes ? "Loading types..." : "Select site type"}
+          disabled={loadingTypes}
         />
       </div>
 
@@ -129,13 +155,16 @@ export function SiteForm({ initialData, onSubmit, submitLabel = "Save" }: SiteFo
 
       <div className="flex items-center space-x-2">
         <input
-          type="checkbox"
+          type="hidden"
+          name="isActive"
+          value={formState.data.isActive ? "true" : "false"}
+        />
+        <Switch
           id="isActive"
           checked={formState.data.isActive}
-          onChange={(e) => formState.updateField('isActive', e.target.checked)}
-          className="rounded border-gray-300"
+          onCheckedChange={(checked) => formState.updateField('isActive', checked)}
         />
-        <label htmlFor="isActive" className="text-sm font-medium">
+        <label htmlFor="isActive" className="text-sm font-medium cursor-pointer">
           Active
         </label>
       </div>

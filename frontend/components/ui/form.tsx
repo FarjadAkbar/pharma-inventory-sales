@@ -4,6 +4,15 @@ import React, { forwardRef } from "react"
 import { cn } from "@/lib/utils"
 import { useFormState, FormState } from "@/lib/api-response"
 import { useFormValidation, FormValidator } from "@/lib/form-validation"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 export interface FormFieldProps {
   label: string
@@ -51,13 +60,13 @@ export interface FormInputProps extends React.InputHTMLAttributes<HTMLInputEleme
 export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
   ({ className, error, label, helpText, required, ...props }, ref) => {
     const input = (
-      <input
+      <Input
         className={cn(
-          "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
           error && "border-destructive focus-visible:ring-destructive",
           className
         )}
         ref={ref}
+        aria-invalid={error ? "true" : undefined}
         {...props}
       />
     )
@@ -91,13 +100,14 @@ export interface FormTextareaProps extends React.TextareaHTMLAttributes<HTMLText
 export const FormTextarea = forwardRef<HTMLTextAreaElement, FormTextareaProps>(
   ({ className, error, label, helpText, required, ...props }, ref) => {
     const textarea = (
-      <textarea
+      <Textarea
         className={cn(
-          "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+          "min-h-[80px]",
           error && "border-destructive focus-visible:ring-destructive",
           className
         )}
         ref={ref}
+        aria-invalid={error ? "true" : undefined}
         {...props}
       />
     )
@@ -121,45 +131,69 @@ export const FormTextarea = forwardRef<HTMLTextAreaElement, FormTextareaProps>(
 )
 FormTextarea.displayName = "FormTextarea"
 
-export interface FormSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+export interface FormSelectProps {
   error?: string
   label?: string
   helpText?: string
   required?: boolean
   options: { value: string; label: string; disabled?: boolean }[]
   placeholder?: string
+  value?: string
+  onChange?: (value: string) => void
+  name?: string
+  disabled?: boolean
+  className?: string
 }
 
-export const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(
-  ({ className, error, label, helpText, required, options, placeholder, ...props }, ref) => {
+export const FormSelect = forwardRef<HTMLButtonElement, FormSelectProps>(
+  ({ className, error, label, helpText, required, options, placeholder, value, onChange, name, disabled }, ref) => {
+    const handleValueChange = (newValue: string) => {
+      if (onChange) {
+        onChange(newValue)
+      }
+    }
+
     const select = (
-      <select
-        className={cn(
-          "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-          error && "border-destructive focus-visible:ring-destructive",
-          className
+      <>
+        {name && (
+          <input type="hidden" name={name} value={value || ""} />
         )}
-        ref={ref}
-        {...props}
-      >
-        {placeholder && (
-          <option value="" disabled>
-            {placeholder}
-          </option>
-        )}
-        {options.map((option) => (
-          <option key={option.value} value={option.value} disabled={option.disabled}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+        <Select
+          value={value}
+          onValueChange={handleValueChange}
+          disabled={disabled}
+        >
+          <SelectTrigger
+            ref={ref}
+            className={cn(
+              "w-full",
+              error && "border-destructive focus-visible:ring-destructive",
+              className
+            )}
+            aria-invalid={error ? "true" : undefined}
+          >
+            <SelectValue placeholder={placeholder} />
+          </SelectTrigger>
+          <SelectContent>
+            {options.map((option) => (
+              <SelectItem
+                key={option.value}
+                value={option.value}
+                disabled={option.disabled}
+              >
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </>
     )
 
     if (label) {
       return (
         <FormField
           label={label}
-          name={props.name || ""}
+          name={name || ""}
           required={required}
           error={error}
           helpText={helpText}

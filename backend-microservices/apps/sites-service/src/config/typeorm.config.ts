@@ -10,6 +10,8 @@ dotenv.config();
 
 // Shared configuration function
 function getTypeOrmOptions(configService?: ConfigService): DataSourceOptions {
+  const isRuntime = !!configService;
+
   // Support both naming conventions: DATABASE_* and DATABASE_*
   const host = configService?.get<string>('DATABASE_HOST') || process.env.DATABASE_HOST;
   const port = configService?.get<number>('DATABASE_PORT') || (process.env.DATABASE_PORT ? parseInt(process.env.DATABASE_PORT, 10) : undefined);
@@ -25,7 +27,7 @@ function getTypeOrmOptions(configService?: ConfigService): DataSourceOptions {
     password,
     database,
     entities: [Site],
-    migrations: ['src/migrations/*.ts'],
+    migrations: isRuntime ? [] : ['src/migrations/*.ts'],
     synchronize: false,
     logging: configService?.get<string>('NODE_ENV') === 'development' || process.env.NODE_ENV === 'development',
   };

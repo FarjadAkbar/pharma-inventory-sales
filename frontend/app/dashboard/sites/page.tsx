@@ -122,15 +122,21 @@ export default function SitesPage() {
     setSiteToDelete(null)
   }
 
-  const getSiteTypeBadgeColor = (type?: string) => {
-    const colors: Record<string, string> = {
-      hospital: "bg-blue-100 text-blue-800",
-      clinic: "bg-green-100 text-green-800",
-      pharmacy: "bg-purple-100 text-purple-800",
-      warehouse: "bg-orange-100 text-orange-800",
-      manufacturing: "bg-red-100 text-red-800",
-    }
-    return colors[type || ''] || "bg-gray-100 text-gray-800"
+  // Color mapping for site types (frontend only)
+  const SITE_TYPE_COLORS: Record<string, string> = {
+    hospital: 'bg-blue-100 text-blue-800',
+    clinic: 'bg-green-100 text-green-800',
+    pharmacy: 'bg-purple-100 text-purple-800',
+    warehouse: 'bg-orange-100 text-orange-800',
+    manufacturing: 'bg-red-100 text-red-800',
+  }
+
+  const capitalizeFirst = (str: string): string => {
+    return str.charAt(0).toUpperCase() + str.slice(1)
+  }
+
+  const getSiteTypeBadgeColor = (type?: string): string => {
+    return type ? (SITE_TYPE_COLORS[type] || "bg-gray-100 text-gray-800") : "bg-gray-100 text-gray-800"
   }
 
   const columns = [
@@ -147,7 +153,7 @@ export default function SitesPage() {
       render: (site: Site) => (
         site.type ? (
           <Badge className={getSiteTypeBadgeColor(site.type)}>
-            {site.type.charAt(0).toUpperCase() + site.type.slice(1)}
+            {capitalizeFirst(site.type)}
           </Badge>
         ) : (
           <span className="text-sm text-muted-foreground">-</span>
