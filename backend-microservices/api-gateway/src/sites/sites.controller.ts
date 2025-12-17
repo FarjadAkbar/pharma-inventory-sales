@@ -28,6 +28,13 @@ export class SitesController {
     );
   }
 
+  @Get('types/metadata')
+  async getSiteTypes() {
+    return await firstValueFrom(
+      this.siteClient.send(SITE_PATTERNS.GET_TYPES, {})
+    );
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return await firstValueFrom(

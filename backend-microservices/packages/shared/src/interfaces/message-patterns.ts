@@ -45,4 +45,5 @@ export const SITE_PATTERNS = {
   GET_BY_ID: { cmd: 'SITES_GET_BY_ID' },
   LIST: { cmd: 'SITES_LIST' },
   DELETE: { cmd: 'SITES_DELETE' },
+  GET_TYPES: { cmd: 'SITES_GET_TYPES' },
 };

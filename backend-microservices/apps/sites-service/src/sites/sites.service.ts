@@ -6,6 +6,7 @@ import {
   CreateSiteDto, 
   UpdateSiteDto, 
   SiteResponseDto,
+  SiteType,
 } from '@repo/shared';
 
 @Injectable()
@@ -26,6 +27,11 @@ export class SitesService {
       order: { createdAt: 'DESC' },
     });
     return sites.map(site => this.toResponseDto(site));
+  }
+
+  async getSiteTypes(): Promise<string[]> {
+    // Return all possible site types from the enum
+    return Object.values(SiteType);
   }
 
   async findOne(id: number): Promise<SiteResponseDto> {

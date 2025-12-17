@@ -35,5 +35,10 @@ export class SitesController {
   delete(@Payload() id: number) {
     return this.sitesService.delete(id);
   }
+
+  @MessagePattern(SITE_PATTERNS.GET_TYPES)
+  getSiteTypes() {
+    return this.sitesService.getSiteTypes();
+  }
 }
 
