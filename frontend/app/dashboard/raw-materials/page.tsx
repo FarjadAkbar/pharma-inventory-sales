@@ -1,48 +1,49 @@
 "use client"
 
-import type React from "react"
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { UnifiedDataTable } from "@/components/ui/unified-data-table"
+import { DataTable } from "@/components/ui/data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { 
-  Plus, 
-  Package, 
-  AlertTriangle,
-  CheckCircle,
-  Eye,
-  Edit,
-  Trash2,
-  TrendingUp,
-  TrendingDown
-} from "lucide-react"
-import Link from "next/link"
-import { rawMaterialsApi, sitesApi } from "@/services"
-import type { RawMaterial } from "@/types/raw-materials"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Plus } from "lucide-react"
+import { rawMaterialsApi, type RawMaterial } from "@/services"
 import { PermissionGuard } from "@/components/auth/permission-guard"
-import { useAuth } from "@/contexts/auth.context"
+import { formatDateISO } from "@/lib/utils"
+import { RawMaterialForm } from "@/components/raw-materials/raw-material-form"
 
 export default function RawMaterialsPage() {
   const [rawMaterials, setRawMaterials] = useState<RawMaterial[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
-  const { user } = useAuth()
+  const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingRawMaterial, setEditingRawMaterial] = useState<RawMaterial | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [rawMaterialToDelete, setRawMaterialToDelete] = useState<RawMaterial | null>(null)
 
   useEffect(() => {
     fetchRawMaterials()
-  }, [])
+  }, [searchQuery, pagination.page])
 
   const fetchRawMaterials = async () => {
     try {
       setLoading(true)
-      const response = await rawMaterialsApi.getRawMaterials()
-
-      if (response.status && response.data) {
-        const materials = Array.isArray(response.data) ? response.data : [response.data]
-        setRawMaterials(materials)
-      }
+      const response = await rawMaterialsApi.getRawMaterials({
+        search: searchQuery,
+        page: pagination.page,
+        limit: 10,
+      })
+      
+      setRawMaterials(response)
+      setPagination({ page: pagination.page, pages: 1, total: response.length })
     } catch (error) {
       console.error("Failed to fetch raw materials:", error)
     } finally {
@@ -50,37 +51,83 @@ export default function RawMaterialsPage() {
     }
   }
 
-  const handleDeleteRawMaterial = async (rawMaterial: RawMaterial) => {
-    if (confirm(`Are you sure you want to delete ${rawMaterial.raw_material_name}?`)) {
-      try {
-        const response = await rawMaterialsApi.deleteRawMaterial(rawMaterial.id)
-        if (response.status) {
-          fetchRawMaterials() // Refresh the list
-        } else {
-          alert("Failed to delete raw material")
-        }
-      } catch (error) {
-        console.error("Failed to delete raw material:", error)
-        alert("Failed to delete raw material")
+  const handleSearch = (query: string) => {
+    setSearchQuery(query)
+    setPagination((prev) => ({ ...prev, page: 1 }))
+  }
+
+  const handlePageChange = (page: number) => {
+    setPagination((prev) => ({ ...prev, page }))
+  }
+
+  const handleEdit = (rawMaterial: RawMaterial) => {
+    setEditingRawMaterial(rawMaterial)
+    setIsModalOpen(true)
+  }
+
+  const handleAdd = () => {
+    setEditingRawMaterial(null)
+    setIsModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setEditingRawMaterial(null)
+  }
+
+  const handleSubmit = async (data: {
+    code: string
+    name: string
+    description?: string
+    grade?: string
+    storageRequirements?: string
+    unitOfMeasure?: string
+    supplierId: number
+    status?: 'Active' | 'InActive'
+  }) => {
+    try {
+      if (editingRawMaterial) {
+        await rawMaterialsApi.updateRawMaterial(editingRawMaterial.id.toString(), data)
+      } else {
+        await rawMaterialsApi.createRawMaterial(data)
       }
+      handleCloseModal()
+      fetchRawMaterials()
+      rawMaterialsApi.invalidateRawMaterials()
+    } catch (error) {
+      console.error("Failed to save raw material:", error)
+      throw error
     }
   }
 
-  const calculateStats = () => {
-    const total = rawMaterials.length
-    const active = rawMaterials.filter(rm => rm.status === "Active").length
-    const inactive = rawMaterials.filter(rm => rm.status === "InActive").length
-
-    return { total, active, inactive }
+  const handleDelete = (rawMaterial: RawMaterial) => {
+    setRawMaterialToDelete(rawMaterial)
+    setDeleteDialogOpen(true)
   }
 
-  const stats = calculateStats()
+  const confirmDelete = async () => {
+    if (!rawMaterialToDelete) return
+    
+    try {
+      await rawMaterialsApi.deleteRawMaterial(rawMaterialToDelete.id.toString())
+      fetchRawMaterials()
+      setDeleteDialogOpen(false)
+      setRawMaterialToDelete(null)
+      rawMaterialsApi.invalidateRawMaterials()
+    } catch (error) {
+      console.error("Failed to delete raw material:", error)
+    }
+  }
+
+  const cancelDelete = () => {
+    setDeleteDialogOpen(false)
+    setRawMaterialToDelete(null)
+  }
 
   const columns = [
     {
       key: "code",
       header: "Code",
-      sortable: true,
       render: (rm: RawMaterial) => (
         <div className="font-mono text-sm font-medium text-orange-600">
           {rm.code}
@@ -88,168 +135,168 @@ export default function RawMaterialsPage() {
       ),
     },
     {
-      key: "raw_material_name",
+      key: "name",
       header: "Material Name",
-      sortable: true,
       render: (rm: RawMaterial) => (
         <div>
-          <div className="font-medium">{rm.raw_material_name}</div>
-          <div className="text-sm text-muted-foreground">{rm.description}</div>
+          <div className="font-medium">{rm.name}</div>
+          {rm.description && (
+            <div className="text-sm text-muted-foreground">{rm.description}</div>
+          )}
         </div>
       ),
     },
     {
       key: "grade",
       header: "Grade",
-      sortable: true,
       render: (rm: RawMaterial) => (
-        <Badge className="bg-blue-100 text-blue-800">
-          {rm.grade || "N/A"}
-        </Badge>
+        rm.grade ? (
+          <Badge className="bg-blue-100 text-blue-800">
+            {rm.grade}
+          </Badge>
+        ) : (
+          <span className="text-sm text-muted-foreground">-</span>
+        )
       ),
     },
     {
-      key: "storage_req",
-      header: "Storage Requirements",
-      sortable: true,
+      key: "storageRequirements",
+      header: "Storage",
       render: (rm: RawMaterial) => (
         <div className="text-sm text-muted-foreground">
-          {rm.storage_req || "N/A"}
+          {rm.storageRequirements || "-"}
         </div>
       ),
     },
     {
-      key: "unit_name",
+      key: "unitOfMeasure",
       header: "Unit",
-      sortable: true,
       render: (rm: RawMaterial) => (
         <div className="text-sm">
-          <div className="font-medium">{rm.unit_name}</div>
-          <div className="text-muted-foreground">{rm.unit_type}</div>
+          {rm.unitOfMeasure || "-"}
         </div>
       ),
     },
     {
-      key: "supplier_name",
+      key: "supplier",
       header: "Supplier",
-      sortable: true,
       render: (rm: RawMaterial) => (
         <div className="text-sm">
-          <div className="font-medium">{rm.supplier_name}</div>
-          <div className="text-muted-foreground">{rm.supplier_code}</div>
+          <div className="font-medium">{rm.supplier?.name || `ID: ${rm.supplierId}`}</div>
+          {rm.supplier?.contactPerson && (
+            <div className="text-muted-foreground">{rm.supplier.contactPerson}</div>
+          )}
         </div>
       ),
     },
     {
       key: "status",
       header: "Status",
-      sortable: true,
       render: (rm: RawMaterial) => (
-        <Badge className={rm.status === "Active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+        <Badge variant={rm.status === 'Active' ? "default" : "secondary"}>
           {rm.status}
         </Badge>
       ),
     },
+    {
+      key: "createdAt",
+      header: "Created",
+      render: (rm: RawMaterial) => formatDateISO(rm.createdAt),
+    },
   ]
-
-  const actions = (rm: RawMaterial) => (
-    <div className="flex items-center gap-2">
-      <PermissionGuard module="MASTER_DATA" screen="raw-materials" action="read">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => window.location.href = `/dashboard/raw-materials/${rm.id}`}
-        >
-          <Eye className="h-4 w-4" />
-        </Button>
-      </PermissionGuard>
-      <PermissionGuard module="MASTER_DATA" screen="raw-materials" action="update">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => window.location.href = `/dashboard/raw-materials/${rm.id}/edit`}
-        >
-          <Edit className="h-4 w-4" />
-        </Button>
-      </PermissionGuard>
-      <PermissionGuard module="MASTER_DATA" screen="raw-materials" action="delete">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => handleDeleteRawMaterial(rm)}
-          className="text-red-600 hover:text-red-700"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </PermissionGuard>
-    </div>
-  )
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Raw Materials Management</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Raw Materials</h1>
             <p className="text-muted-foreground">Manage pharmaceutical raw materials and excipients</p>
           </div>
-          <PermissionGuard module="MASTER_DATA" screen="raw-materials" action="create">
-            <Link href="/dashboard/raw-materials/new">
-              <Button className="bg-orange-600 hover:bg-orange-700">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Raw Material
-              </Button>
-            </Link>
+
+          <PermissionGuard module="MASTER_DATA" action="create">
+            <Button onClick={handleAdd}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Raw Material
+            </Button>
           </PermissionGuard>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Materials</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.total}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Materials</CardTitle>
-              <CheckCircle className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.active}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Inactive Materials</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-red-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">{stats.inactive}</div>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Raw Materials Table */}
-        <UnifiedDataTable
-          data={rawMaterials}
-          columns={columns}
-          loading={loading}
-          searchPlaceholder="Search raw materials..."
-          searchValue={searchQuery}
-          onSearch={setSearchQuery}
-          actions={actions}
-          onRefresh={fetchRawMaterials}
-          onExport={() => console.log("Export raw materials")}
-          emptyMessage="No raw materials found. Add your first raw material to get started."
-        />
+        <Card>
+          <CardHeader>
+            <CardTitle>All Raw Materials</CardTitle>
+            <CardDescription>A list of all raw materials in the system</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DataTable
+              data={rawMaterials}
+              columns={columns}
+              loading={loading}
+              onSearch={handleSearch}
+              pagination={{
+                page: pagination.page,
+                pages: pagination.pages,
+                total: pagination.total,
+                onPageChange: handlePageChange
+              }}
+              searchPlaceholder="Search raw materials..."
+              actions={[
+                {
+                  label: "Edit",
+                  onClick: (rm: RawMaterial) => handleEdit(rm),
+                  variant: "outline" as const,
+                },
+                {
+                  label: "Delete",
+                  onClick: (rm: RawMaterial) => handleDelete(rm),
+                  variant: "destructive" as const,
+                },
+              ]}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Add/Edit Raw Material Modal */}
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{editingRawMaterial ? "Edit Raw Material" : "Add New Raw Material"}</DialogTitle>
+              <DialogDescription>
+                {editingRawMaterial ? "Update raw material information" : "Create a new raw material"}
+              </DialogDescription>
+            </DialogHeader>
+            <RawMaterialForm
+              initialData={editingRawMaterial || undefined}
+              onSubmit={handleSubmit}
+              submitLabel={editingRawMaterial ? "Save Changes" : "Create Raw Material"}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Raw Material</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete the raw material "{rawMaterialToDelete?.name}"? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="outline" onClick={cancelDelete}>
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive"
+                onClick={confirmDelete}
+              >
+                Delete
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
     </DashboardLayout>
   )
 }

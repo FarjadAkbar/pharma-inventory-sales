@@ -1,219 +1,234 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Form, FormInput, FormSelect, FormActions, FormField } from "@/components/ui/form"
+import { useFormState } from "@/lib/api-response"
+import { useFormValidation, commonValidationRules } from "@/lib/form-validation"
+import { suppliersApi, sitesApi, type Supplier } from "@/services"
 import { Switch } from "@/components/ui/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { sitesApi } from "@/services"
-import { suppliersApi } from "@/services"
-import type { Supplier, CreateSupplierData, UpdateSupplierData } from "@/types/suppliers"
+import { MultiSelect, MultiSelectTrigger, MultiSelectValue, MultiSelectContent, MultiSelectItem, MultiSelectGroup } from "@/components/ui/multi-select"
 
 interface SupplierFormProps {
-  supplierId?: number
-  onSuccess: () => void
-  onCancel: () => void
+  initialData?: Partial<Supplier>
+  onSubmit: (data: {
+    name: string
+    contactPerson: string
+    email: string
+    phone: string
+    address: string
+    rating?: number
+    status?: 'Active' | 'Inactive'
+    siteIds?: number[]
+  }) => Promise<void>
+  submitLabel?: string
 }
 
-export function SupplierForm({ supplierId, onSuccess, onCancel }: SupplierFormProps) {
-  const [formData, setFormData] = useState<CreateSupplierData>({
-    site_id: 1, // Default site ID, should be dynamic based on user's site
-    code: "",
-    name: "",
-    contact: "",
-    address: "",
-    approved: true,
-    rating: 0
-  })
-  const [loading, setLoading] = useState(false)
-  const [isEdit, setIsEdit] = useState(!!supplierId)
-  const [sites, setSites] = useState<Array<{id: number, name: string}>>([])
+export function SupplierForm({ initialData, onSubmit, submitLabel = "Save" }: SupplierFormProps) {
+  const [sites, setSites] = useState<Array<{ id: number; name: string }>>([])
+  const [loadingSites, setLoadingSites] = useState(true)
+  const [selectedSiteIds, setSelectedSiteIds] = useState<string[]>([])
 
   useEffect(() => {
-    fetchSites()
-    if (supplierId) {
-      fetchSupplier()
-    }
-  }, [supplierId])
-
   const fetchSites = async () => {
     try {
-      const response = await sitesApi.getSites()
-      if (response.status && response.data) {
-        setSites(response.data.map((site: any) => ({ id: site.id, name: site.name })))
+        setLoadingSites(true)
+        const sitesData = await sitesApi.getSites()
+        setSites(sitesData.map((site: { id: number; name: string }) => ({ id: site.id, name: site.name })))
+        
+        // Set initial selected sites
+        if (initialData?.siteIds && initialData.siteIds.length > 0) {
+          setSelectedSiteIds(initialData.siteIds.map(id => id.toString()))
       }
     } catch (error) {
       console.error("Failed to fetch sites:", error)
+      } finally {
+        setLoadingSites(false)
+      }
     }
+    fetchSites()
+  }, [initialData?.siteIds])
+
+  const initialFormData = {
+    name: initialData?.name || "",
+    contactPerson: initialData?.contactPerson || "",
+    email: initialData?.email || "",
+    phone: initialData?.phone || "",
+    address: initialData?.address || "",
+    rating: initialData?.rating?.toString() || "0",
+    status: initialData?.status || "Active",
   }
 
-  const fetchSupplier = async () => {
-    if (!supplierId) return
+  const formState = useFormState(initialFormData)
+  const validation = useFormValidation({
+    ...commonValidationRules,
+    name: {
+      required: true,
+      message: "Supplier name is required"
+    },
+    contactPerson: {
+      required: true,
+      message: "Contact person is required"
+    },
+    email: {
+      required: true,
+      pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+      message: "Valid email is required"
+    },
+    phone: {
+      required: true,
+      message: "Phone number is required"
+    },
+    address: {
+      required: true,
+      message: "Address is required"
+    },
+    rating: {
+      pattern: /^(0|([1-4](\.[0-9])?)|5(\.0)?)$/,
+      message: "Rating must be between 0 and 5"
+    }
+  })
+
+  const handleSubmit = async (data: typeof initialFormData) => {
+    formState.setLoading(true)
+    formState.clearErrors()
     
     try {
-      const response = await suppliersApi.getSupplier(supplierId)
-      if (response.status && response.data) {
-        const supplier = Array.isArray(response.data) ? response.data[0] : response.data
-        setFormData({
-          site_id: supplier.site_id,
-          code: supplier.code,
-          name: supplier.name,
-          contact: supplier.contact,
-          address: supplier.address,
-          approved: supplier.approved === 1,
-          rating: parseFloat(supplier.rating)
-        })
+      const errors = validation.validateForm(data)
+      if (validation.hasErrors()) {
+        formState.setErrors(errors)
+        return
       }
+
+      await onSubmit({
+        name: data.name,
+        contactPerson: data.contactPerson,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+        rating: parseFloat(data.rating) || 0,
+        status: data.status as 'Active' | 'Inactive',
+        siteIds: selectedSiteIds.length > 0 ? selectedSiteIds.map(id => parseInt(id, 10)) : undefined,
+      })
+      
+      formState.setSuccess("Supplier saved successfully")
     } catch (error) {
-      console.error("Failed to fetch supplier:", error)
-    }
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!formData.code.trim() || !formData.name.trim() || !formData.contact.trim() || !formData.address.trim()) {
-      alert("Please fill in all required fields")
-      return
-    }
-
-    if (formData.rating < 0 || formData.rating > 5) {
-      alert("Rating must be between 0 and 5")
-      return
-    }
-
-    setLoading(true)
-    try {
-      if (isEdit && supplierId) {
-        await suppliersApi.updateSupplier(supplierId, formData)
-      } else {
-        await suppliersApi.createSupplier(formData)
-      }
-      onSuccess()
-    } catch (error) {
-      console.error("Failed to save supplier:", error)
-      alert("Failed to save supplier. Please try again.")
+      const errorMessage = error instanceof Error ? error.message : "Failed to save supplier"
+      formState.setError(errorMessage)
     } finally {
-      setLoading(false)
+      formState.setLoading(false)
     }
   }
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>{isEdit ? "Edit Supplier" : "Add New Supplier"}</CardTitle>
-        <CardDescription>
-          {isEdit ? "Update supplier information" : "Enter supplier details"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="site_id">Site *</Label>
-              <Select
-                className="w-full"
-                value={formData.site_id.toString()}
-                onValueChange={(value) => setFormData({ ...formData, site_id: parseInt(value) })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select site" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sites.map((site) => (
-                    <SelectItem key={site.id} value={site.id.toString()}>
-                      {site.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="code">Supplier Code *</Label>
-              <Input
-                id="code"
-                value={formData.code}
-                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                placeholder="e.g., S#001"
+    <Form 
+      onSubmit={handleSubmit} 
+      loading={formState.isLoading}
+      error={formState.error || undefined}
+      success={formState.success || undefined}
+    >
+      <div className="grid md:grid-cols-2 gap-4">
+        <FormInput
+          name="name"
+          label="Supplier Name"
+          value={formState.data.name}
+          onChange={(e) => formState.updateField('name', e.target.value)}
+          error={formState.errors.name}
                 required
               />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="name">Supplier Name *</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Enter supplier name"
+        <FormInput
+          name="contactPerson"
+          label="Contact Person"
+          value={formState.data.contactPerson}
+          onChange={(e) => formState.updateField('contactPerson', e.target.value)}
+          error={formState.errors.contactPerson}
               required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="contact">Contact *</Label>
-            <Input
-              id="contact"
-              value={formData.contact}
-              onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
-              placeholder="e.g., +92 3001234567"
+      <div className="grid md:grid-cols-2 gap-4">
+        <FormInput
+          name="email"
+          label="Email"
+          type="email"
+          value={formState.data.email}
+          onChange={(e) => formState.updateField('email', e.target.value)}
+          error={formState.errors.email}
+          required
+        />
+        <FormInput
+          name="phone"
+          label="Phone"
+          value={formState.data.phone}
+          onChange={(e) => formState.updateField('phone', e.target.value)}
+          error={formState.errors.phone}
               required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="address">Address *</Label>
-            <Input
-              id="address"
-              value={formData.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              placeholder="Enter supplier address"
+      <FormInput
+        name="address"
+        label="Address"
+        value={formState.data.address}
+        onChange={(e) => formState.updateField('address', e.target.value)}
+        error={formState.errors.address}
               required
             />
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="rating">Rating (0-5)</Label>
-              <Input
-                id="rating"
+      <div className="grid md:grid-cols-2 gap-4">
+        <FormInput
+          name="rating"
+          label="Rating (0-5)"
                 type="number"
                 min="0"
                 max="5"
                 step="0.1"
-                value={formData.rating}
-                onChange={(e) => setFormData({ ...formData, rating: parseFloat(e.target.value) || 0 })}
-                placeholder="0.0"
+          value={formState.data.rating}
+          onChange={(e) => formState.updateField('rating', e.target.value)}
+          error={formState.errors.rating}
+        />
+        <FormSelect
+          name="status"
+          label="Status"
+          value={formState.data.status}
+          onChange={(value) => formState.updateField('status', value)}
+          error={formState.errors.status}
+          options={[
+            { value: "Active", label: "Active" },
+            { value: "Inactive", label: "Inactive" },
+          ]}
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="approved">Approved</Label>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="approved"
-                  checked={formData.approved}
-                  onCheckedChange={(checked) => setFormData({ ...formData, approved: checked })}
-                />
-                <Label htmlFor="approved">{formData.approved ? "Yes" : "No"}</Label>
-              </div>
-            </div>
-          </div>
+      <FormField name="siteIds" label="Sites">
+        <input
+          type="hidden"
+          name="siteIds"
+          value={selectedSiteIds.join(',')}
+        />
+        <MultiSelect
+          values={selectedSiteIds}
+          defaultValues={selectedSiteIds}
+          onValuesChange={setSelectedSiteIds}
+        >
+          <MultiSelectTrigger disabled={loadingSites}>
+            <MultiSelectValue placeholder={loadingSites ? "Loading sites..." : "Select sites"} />
+          </MultiSelectTrigger>
+          <MultiSelectContent>
+            <MultiSelectGroup>
+              {sites.map((site) => (
+                <MultiSelectItem key={site.id} value={site.id.toString()}>
+                  {site.name}
+                </MultiSelectItem>
+              ))}
+            </MultiSelectGroup>
+          </MultiSelectContent>
+        </MultiSelect>
+      </FormField>
 
-          <div className="flex gap-2 pt-4">
-            <Button type="submit" disabled={loading}>
-              {loading ? "Saving..." : (isEdit ? "Update Supplier" : "Create Supplier")}
-            </Button>
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+      <FormActions 
+        loading={formState.isLoading}
+        submitLabel={submitLabel}
+      />
+    </Form>
   )
 }

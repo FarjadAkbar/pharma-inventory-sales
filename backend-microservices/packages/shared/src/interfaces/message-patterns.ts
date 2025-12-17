@@ -47,3 +47,20 @@ export const SITE_PATTERNS = {
   DELETE: { cmd: 'SITES_DELETE' },
   GET_TYPES: { cmd: 'SITES_GET_TYPES' },
 };
+
+export const SUPPLIER_PATTERNS = {
+  CREATE: { cmd: 'SUPPLIERS_CREATE' },
+  UPDATE: { cmd: 'SUPPLIERS_UPDATE' },
+  GET_BY_ID: { cmd: 'SUPPLIERS_GET_BY_ID' },
+  LIST: { cmd: 'SUPPLIERS_LIST' },
+  DELETE: { cmd: 'SUPPLIERS_DELETE' },
+};
+
+export const RAW_MATERIAL_PATTERNS = {
+  CREATE: { cmd: 'RAW_MATERIALS_CREATE' },
+  UPDATE: { cmd: 'RAW_MATERIALS_UPDATE' },
+  GET_BY_ID: { cmd: 'RAW_MATERIALS_GET_BY_ID' },
+  GET_BY_SUPPLIER: { cmd: 'RAW_MATERIALS_GET_BY_SUPPLIER' },
+  LIST: { cmd: 'RAW_MATERIALS_LIST' },
+  DELETE: { cmd: 'RAW_MATERIALS_DELETE' },
+};

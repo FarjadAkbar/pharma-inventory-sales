@@ -4,4 +4,6 @@ export * from './dto/auth.dto';
 export * from './dto/role.dto';
 export * from './dto/permission.dto';
 export * from './dto/site.dto';
+export * from './dto/supplier.dto';
+export * from './dto/raw-material.dto';
 export * from './interfaces/message-patterns';
