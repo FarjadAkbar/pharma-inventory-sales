@@ -298,7 +298,7 @@ export default function DistributorsPage() {
 
           <PermissionGuard module="MASTER_DATA" screen="distributors" action="create">
             <Button onClick={() => (window.location.href = "/dashboard/distributors/new")}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus />
               Add Distributor
             </Button>
           </PermissionGuard>

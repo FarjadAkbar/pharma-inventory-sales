@@ -294,7 +294,7 @@ export default function ShipmentItemsPage() {
 
           <PermissionGuard module="DISTRIBUTION" screen="shipment_items" action="create">
             <Button onClick={() => (window.location.href = "/dashboard/distribution/shipment-items/new")}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus />
               Add Item
             </Button>
           </PermissionGuard>

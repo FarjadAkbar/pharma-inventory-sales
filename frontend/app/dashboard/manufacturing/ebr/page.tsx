@@ -302,7 +302,7 @@ export default function ElectronicBatchRecordsPage() {
 
           <PermissionGuard module="MANUFACTURING" screen="ebr" action="create">
             <Button onClick={() => (window.location.href = "/dashboard/manufacturing/ebr/new")}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus />
               Add EBR
             </Button>
           </PermissionGuard>

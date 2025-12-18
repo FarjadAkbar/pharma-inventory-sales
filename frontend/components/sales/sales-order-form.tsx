@@ -120,7 +120,7 @@ export function SalesOrderForm({ onSuccess, trigger }: SalesOrderFormProps) {
       <DialogTrigger asChild>
         {trigger || (
           <Button className="bg-orange-600 hover:bg-orange-700">
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus />
             New Order
           </Button>
         )}
@@ -218,7 +218,7 @@ export function SalesOrderForm({ onSuccess, trigger }: SalesOrderFormProps) {
             <div className="flex items-center justify-between">
               <Label className="text-base font-medium">Order Items</Label>
               <Button type="button" onClick={addItem} variant="outline" size="sm">
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus />
                 Add Item
               </Button>
             </div>

@@ -245,11 +245,11 @@ export default function AuditTrailPage() {
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={fetchAuditTrails}>
-              <RefreshCw className="mr-2 h-4 w-4" />
+              <RefreshCw />
               Refresh
             </Button>
             <Button className="bg-orange-600 hover:bg-orange-700">
-              <Download className="mr-2 h-4 w-4" />
+              <Download />
               Export
             </Button>
           </div>

@@ -26,7 +26,7 @@ The `PermissionGuard` component should check:
 ```tsx
 <PermissionGuard module="MASTER_DATA" screen="sites" action="create">
   <Button onClick={() => (window.location.href = "/dashboard/sites/new")}>
-    <Plus className="mr-2 h-4 w-4" />
+    <Plus />
     Add Site
   </Button>
 </PermissionGuard>

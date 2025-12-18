@@ -291,7 +291,7 @@ export default function DrugsPage() {
           </div>
           <Link href="/dashboard/drugs/new">
             <Button className="bg-orange-600 hover:bg-orange-700">
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus />
               Add Drug
             </Button>
           </Link>

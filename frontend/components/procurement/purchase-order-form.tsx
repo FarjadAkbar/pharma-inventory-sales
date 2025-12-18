@@ -10,14 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Trash2, Calculator } from "lucide-react"
-import { purchaseOrdersApi, sitesApi, rawMaterialsApi } from "@/services"
-import type { 
-  PurchaseOrder, 
-  CreatePurchaseOrderData, 
-  UpdatePurchaseOrderData,
-  PurchaseOrderItem 
-} from "@/types/purchase-orders"
-import type { RawMaterial } from "@/types/raw-materials"
+import { purchaseOrdersApi, sitesApi, rawMaterialsApi, suppliersApi } from "@/services"
 
 interface Site {
   id: number
@@ -32,8 +25,8 @@ interface Supplier {
 interface RawMaterialOption {
   id: number
   name: string
-  unit_name: string
-  unit_id: number
+  code: string
+  unitOfMeasure?: string
 }
 
 interface PurchaseOrderFormProps {
@@ -44,25 +37,20 @@ interface PurchaseOrderFormProps {
 
 interface FormItem {
   id?: number
-  material_id: number
-  material_name?: string
-  qty: number
-  unit_id: number
-  unit_name?: string
-  unit_price: number
-  line_total: number
+  rawMaterialId: number
+  rawMaterialName?: string
+  quantity: number
+  unitPrice: number
+  lineTotal: number
 }
 
 export function PurchaseOrderForm({ purchaseOrderId, onSuccess, onCancel }: PurchaseOrderFormProps) {
-  const [formData, setFormData] = useState<CreatePurchaseOrderData>({
-    site_id: 0,
-    supplier_id: 0,
-    status: "Draft",
-    expected_date: "",
-    total_amount: 0,
-    currency: "USD",
+  const [formData, setFormData] = useState({
+    siteId: 0,
+    supplierId: 0,
+    status: "Draft" as 'Draft' | 'Pending' | 'Approved' | 'Received' | 'Cancelled',
+    expectedDate: "",
     note: "",
-    items: []
   })
   const [items, setItems] = useState<FormItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -83,16 +71,14 @@ export function PurchaseOrderForm({ purchaseOrderId, onSuccess, onCancel }: Purc
 
   useEffect(() => {
     // Calculate total amount whenever items change
-    const total = items.reduce((sum, item) => sum + item.line_total, 0)
-    setFormData(prev => ({ ...prev, total_amount: total }))
+    const total = items.reduce((sum, item) => sum + item.lineTotal, 0)
+    // Total is calculated automatically in the backend
   }, [items])
 
   const fetchSites = async () => {
     try {
-      const response = await sitesApi.getSites()
-      if (response.status && response.data) {
-        setSites(response.data.map((site: any) => ({ id: site.id, name: site.name })))
-      }
+      const sitesData = await sitesApi.getSites()
+      setSites(sitesData.map((site: any) => ({ id: site.id, name: site.name })))
     } catch (error) {
       console.error("Failed to fetch sites:", error)
     }
@@ -100,10 +86,8 @@ export function PurchaseOrderForm({ purchaseOrderId, onSuccess, onCancel }: Purc
 
   const fetchSuppliers = async () => {
     try {
-      const response = await purchaseOrdersApi.getSuppliersList()
-      if (response.status && response.data) {
-        setSuppliers(response.data.map((supplier: any) => ({ id: supplier.id, name: supplier.name })))
-      }
+      const suppliersData = await suppliersApi.getSuppliers()
+      setSuppliers(suppliersData.map((supplier: any) => ({ id: supplier.id, name: supplier.name })))
     } catch (error) {
       console.error("Failed to fetch suppliers:", error)
     }
@@ -111,16 +95,13 @@ export function PurchaseOrderForm({ purchaseOrderId, onSuccess, onCancel }: Purc
 
   const fetchRawMaterials = async () => {
     try {
-      const response = await rawMaterialsApi.getRawMaterials()
-      if (response.status && response.data) {
-        const materials = Array.isArray(response.data) ? response.data : [response.data]
-        setRawMaterials(materials.map((material: RawMaterial) => ({
-          id: material.id,
-          name: material.raw_material_name,
-          unit_name: material.unit_name,
-          unit_id: material.unit_id
-        })))
-      }
+      const materialsData = await rawMaterialsApi.getRawMaterials()
+      setRawMaterials(materialsData.map((material: any) => ({
+        id: material.id,
+        name: material.name,
+        code: material.code,
+        unitOfMeasure: material.unitOfMeasure,
+      })))
     } catch (error) {
       console.error("Failed to fetch raw materials:", error)
     }
@@ -130,40 +111,24 @@ export function PurchaseOrderForm({ purchaseOrderId, onSuccess, onCancel }: Purc
     if (!purchaseOrderId) return
     
     try {
-      const response = await purchaseOrdersApi.getAllPurchaseOrders()
-      if (response.status && response.data) {
-        const orders = Array.isArray(response.data) ? response.data : [response.data]
-        const order = orders.find(po => po.id === purchaseOrderId)
-        
-        if (order) {
-          setFormData({
-            site_id: order.site_id,
-            supplier_id: order.supplier_id,
-            status: order.status,
-            expected_date: order.expected_date,
-            total_amount: typeof order.total_amount === 'string' ? parseFloat(order.total_amount) : order.total_amount,
-            currency: order.currency,
-            note: order.note,
-            items: order.items.map(item => ({
-              material_id: item.material_id,
-              qty: item.qty,
-              unit_id: item.unit_id,
-              unit_price: item.unit_price
-            }))
-          })
-          
-          setItems(order.items.map(item => ({
-            id: item.id,
-            material_id: item.material_id,
-            material_name: item.material_name,
-            qty: item.qty,
-            unit_id: item.unit_id,
-            unit_name: item.unit_name,
-            unit_price: item.unit_price,
-            line_total: item.qty * item.unit_price
-          })))
-        }
-      }
+      const order = await purchaseOrdersApi.getPurchaseOrder(purchaseOrderId.toString())
+      
+      setFormData({
+        siteId: order.siteId || 0,
+        supplierId: order.supplierId,
+        status: order.status,
+        expectedDate: new Date(order.expectedDate).toISOString().split('T')[0],
+        note: "",
+      })
+      
+      setItems((order.items || []).map(item => ({
+        id: item.id,
+        rawMaterialId: item.rawMaterialId,
+        rawMaterialName: item.rawMaterial?.name,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        lineTotal: item.totalPrice,
+      })))
     } catch (error) {
       console.error("Failed to fetch purchase order:", error)
     }
@@ -171,11 +136,10 @@ export function PurchaseOrderForm({ purchaseOrderId, onSuccess, onCancel }: Purc
 
   const addItem = () => {
     const newItem: FormItem = {
-      material_id: 0,
-      qty: 1,
-      unit_id: 0,
-      unit_price: 0,
-      line_total: 0
+      rawMaterialId: 0,
+      quantity: 1,
+      unitPrice: 0,
+      lineTotal: 0
     }
     setItems([...items, newItem])
   }
@@ -188,19 +152,17 @@ export function PurchaseOrderForm({ purchaseOrderId, onSuccess, onCancel }: Purc
     const updatedItems = [...items]
     updatedItems[index] = { ...updatedItems[index], [field]: value }
     
-    // Auto-populate unit when material is selected
-    if (field === 'material_id') {
+    // Auto-populate material name when material is selected
+    if (field === 'rawMaterialId') {
       const material = rawMaterials.find(m => m.id === value)
       if (material) {
-        updatedItems[index].unit_id = material.unit_id
-        updatedItems[index].unit_name = material.unit_name
-        updatedItems[index].material_name = material.name
+        updatedItems[index].rawMaterialName = material.name
       }
     }
     
-    // Calculate line total when qty or unit_price changes
-    if (field === 'qty' || field === 'unit_price') {
-      updatedItems[index].line_total = updatedItems[index].qty * updatedItems[index].unit_price
+    // Calculate line total when quantity or unit_price changes
+    if (field === 'quantity' || field === 'unitPrice') {
+      updatedItems[index].lineTotal = updatedItems[index].quantity * updatedItems[index].unitPrice
     }
     
     setItems(updatedItems)
@@ -209,8 +171,8 @@ export function PurchaseOrderForm({ purchaseOrderId, onSuccess, onCancel }: Purc
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!formData.site_id || !formData.supplier_id || !formData.expected_date) {
-      alert("Please fill in all required fields")
+    if (!formData.supplierId || !formData.expectedDate) {
+      alert("Please fill in all required fields (Supplier and Expected Date)")
       return
     }
 
@@ -220,39 +182,44 @@ export function PurchaseOrderForm({ purchaseOrderId, onSuccess, onCancel }: Purc
     }
 
     const hasInvalidItems = items.some(item => 
-      !item.material_id || !item.qty || !item.unit_id || !item.unit_price
+      !item.rawMaterialId || item.rawMaterialId === 0 || !item.quantity || item.quantity <= 0 || !item.unitPrice || item.unitPrice <= 0
     )
 
     if (hasInvalidItems) {
-      alert("Please fill in all item details")
+      alert("Please fill in all item details correctly")
       return
     }
 
     setLoading(true)
     try {
       const submitData = {
-        ...formData,
+        supplierId: formData.supplierId,
+        siteId: formData.siteId > 0 ? formData.siteId : undefined,
+        expectedDate: new Date(formData.expectedDate).toISOString(),
         items: items.map(item => ({
-          material_id: item.material_id,
-          qty: item.qty,
-          unit_id: item.unit_id,
-          unit_price: item.unit_price
-        }))
+          rawMaterialId: item.rawMaterialId,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+        })),
+        status: formData.status,
       }
 
       if (isEdit && purchaseOrderId) {
-        await purchaseOrdersApi.updatePurchaseOrder(purchaseOrderId, submitData)
+        await purchaseOrdersApi.updatePurchaseOrder(purchaseOrderId.toString(), submitData)
       } else {
         await purchaseOrdersApi.createPurchaseOrder(submitData)
       }
       onSuccess()
     } catch (error) {
       console.error("Failed to save purchase order:", error)
-      alert("Failed to save purchase order. Please try again.")
+      const errorMessage = error instanceof Error ? error.message : "Failed to save purchase order. Please try again."
+      alert(errorMessage)
     } finally {
       setLoading(false)
     }
   }
+
+  const totalAmount = items.reduce((sum, item) => sum + item.lineTotal, 0)
 
   return (
     <Card className="w-full max-w-6xl mx-auto">
@@ -267,30 +234,10 @@ export function PurchaseOrderForm({ purchaseOrderId, onSuccess, onCancel }: Purc
           {/* Header Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="site_id">Site *</Label>
-              <Select
-                className="w-full"
-                value={formData.site_id.toString()}
-                onValueChange={(value) => setFormData({ ...formData, site_id: parseInt(value) })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select site" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sites.map((site) => (
-                    <SelectItem key={site.id} value={site.id.toString()}>
-                      {site.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="supplier_id">Supplier *</Label>
               <Select
-                className="w-full"
-                value={formData.supplier_id.toString()}
-                onValueChange={(value) => setFormData({ ...formData, supplier_id: parseInt(value) })}
+                value={formData.supplierId.toString()}
+                onValueChange={(value) => setFormData({ ...formData, supplierId: parseInt(value) })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select supplier" />
@@ -304,13 +251,31 @@ export function PurchaseOrderForm({ purchaseOrderId, onSuccess, onCancel }: Purc
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="site_id">Site (Optional)</Label>
+              <Select
+                value={formData.siteId > 0 ? formData.siteId.toString() : "0"}
+                onValueChange={(value) => setFormData({ ...formData, siteId: value && value !== "0" ? parseInt(value) : 0 })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select site (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">None</SelectItem>
+                  {sites.map((site) => (
+                    <SelectItem key={site.id} value={site.id.toString()}>
+                      {site.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
               <Select
-                className="w-full"
                 value={formData.status}
                 onValueChange={(value) => setFormData({ ...formData, status: value as any })}
               >
@@ -321,8 +286,8 @@ export function PurchaseOrderForm({ purchaseOrderId, onSuccess, onCancel }: Purc
                   <SelectItem value="Draft">Draft</SelectItem>
                   <SelectItem value="Pending">Pending</SelectItem>
                   <SelectItem value="Approved">Approved</SelectItem>
-                  <SelectItem value="Rejected">Rejected</SelectItem>
-                  <SelectItem value="Completed">Completed</SelectItem>
+                  <SelectItem value="Received">Received</SelectItem>
+                  <SelectItem value="Cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -331,18 +296,9 @@ export function PurchaseOrderForm({ purchaseOrderId, onSuccess, onCancel }: Purc
               <Input
                 id="expected_date"
                 type="date"
-                value={formData.expected_date}
-                onChange={(e) => setFormData({ ...formData, expected_date: e.target.value })}
+                value={formData.expectedDate}
+                onChange={(e) => setFormData({ ...formData, expectedDate: e.target.value })}
                 required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="currency">Currency</Label>
-              <Input
-                id="currency"
-                value={formData.currency}
-                onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                placeholder="USD"
               />
             </div>
           </div>
@@ -372,13 +328,12 @@ export function PurchaseOrderForm({ purchaseOrderId, onSuccess, onCancel }: Purc
 
             {items.map((item, index) => (
               <Card key={index} className="p-4">
-                <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
                   <div className="space-y-2">
-                    <Label>Material *</Label>
+                    <Label>Raw Material *</Label>
                     <Select
-                      className="w-full"
-                      value={item.material_id.toString()}
-                      onValueChange={(value) => updateItem(index, 'material_id', parseInt(value))}
+                      value={item.rawMaterialId.toString()}
+                      onValueChange={(value) => updateItem(index, 'rawMaterialId', parseInt(value))}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select material" />
@@ -386,7 +341,7 @@ export function PurchaseOrderForm({ purchaseOrderId, onSuccess, onCancel }: Purc
                       <SelectContent>
                         {rawMaterials.map((material) => (
                           <SelectItem key={material.id} value={material.id.toString()}>
-                            {material.name}
+                            {material.code} - {material.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -396,17 +351,10 @@ export function PurchaseOrderForm({ purchaseOrderId, onSuccess, onCancel }: Purc
                     <Label>Quantity *</Label>
                     <Input
                       type="number"
-                      min="1"
-                      value={item.qty}
-                      onChange={(e) => updateItem(index, 'qty', parseInt(e.target.value) || 0)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Unit</Label>
-                    <Input
-                      value={item.unit_name || ""}
-                      disabled
-                      placeholder="Auto-filled"
+                      min="0.01"
+                      step="0.01"
+                      value={item.quantity}
+                      onChange={(e) => updateItem(index, 'quantity', parseFloat(e.target.value) || 0)}
                     />
                   </div>
                   <div className="space-y-2">
@@ -415,8 +363,8 @@ export function PurchaseOrderForm({ purchaseOrderId, onSuccess, onCancel }: Purc
                       type="number"
                       min="0"
                       step="0.01"
-                      value={item.unit_price}
-                      onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
+                      value={item.unitPrice}
+                      onChange={(e) => updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
                     />
                   </div>
                   <div className="space-y-2">
@@ -424,7 +372,7 @@ export function PurchaseOrderForm({ purchaseOrderId, onSuccess, onCancel }: Purc
                     <div className="flex items-center gap-2">
                       <Calculator className="h-4 w-4 text-muted-foreground" />
                       <Badge variant="secondary" className="text-sm">
-                        {item.line_total.toFixed(2)} {formData.currency}
+                        {item.lineTotal.toFixed(2)}
                       </Badge>
                     </div>
                   </div>
@@ -461,7 +409,7 @@ export function PurchaseOrderForm({ purchaseOrderId, onSuccess, onCancel }: Purc
                   <span className="text-lg font-semibold">Total Amount:</span>
                 </div>
                 <Badge variant="default" className="text-lg px-4 py-2">
-                  {formData.total_amount.toFixed(2)} {formData.currency}
+                  {totalAmount.toFixed(2)}
                 </Badge>
               </div>
             </CardContent>

@@ -8,6 +8,7 @@ import { PermissionsController } from './permissions/permissions.controller';
 import { SitesController } from './sites/sites.controller';
 import { SuppliersController } from './suppliers/suppliers.controller';
 import { RawMaterialsController } from './raw-materials/raw-materials.controller';
+import { PurchaseOrdersController } from './purchase-orders/purchase-orders.controller';
 
 @Module({
   imports: [
@@ -69,6 +70,14 @@ import { RawMaterialsController } from './raw-materials/raw-materials.controller
           port: parseInt(process.env.RAW_MATERIAL_SERVICE_PORT),
         },
       },
+      {
+        name: 'PURCHASE_ORDER_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: process.env.PURCHASE_ORDER_SERVICE_HOST,
+          port: parseInt(process.env.PURCHASE_ORDER_SERVICE_PORT),
+        },
+      },
     ]),
   ],
   controllers: [
@@ -79,6 +88,7 @@ import { RawMaterialsController } from './raw-materials/raw-materials.controller
     SitesController,
     SuppliersController,
     RawMaterialsController,
+    PurchaseOrdersController,
   ],
 })
 export class AppModule {}

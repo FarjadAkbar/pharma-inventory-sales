@@ -280,7 +280,7 @@ export default function ContractsPage() {
 
           <PermissionGuard module="SALES" screen="contracts" action="create">
             <Button onClick={() => (window.location.href = "/dashboard/sales/contracts/new")}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus />
               Add Contract
             </Button>
           </PermissionGuard>

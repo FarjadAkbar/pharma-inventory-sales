@@ -311,7 +311,7 @@ export default function BOMsPage() {
           </div>
           <Link href="/dashboard/manufacturing/boms/new">
             <Button className="bg-orange-600 hover:bg-orange-700">
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus />
               New BOM
             </Button>
           </Link>

@@ -291,7 +291,7 @@ export default function QCTestsPage() {
           </div>
           <Link href="/dashboard/quality/qc-tests/new">
             <Button className="bg-orange-600 hover:bg-orange-700">
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus />
               Add Test Method
             </Button>
           </Link>

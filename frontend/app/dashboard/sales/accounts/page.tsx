@@ -352,7 +352,7 @@ export default function AccountsPage() {
 
           <PermissionGuard module="SALES" screen="accounts" action="create">
             <Button onClick={() => (window.location.href = "/dashboard/sales/accounts/new")}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus />
               Add Account
             </Button>
           </PermissionGuard>

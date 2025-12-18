@@ -250,7 +250,7 @@ export default function QCSamplesPage() {
             <p className="text-muted-foreground">Manage quality control samples and testing workflow</p>
           </div>
           <Button className="bg-orange-600 hover:bg-orange-700">
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus />
             Add Sample
           </Button>
         </div>

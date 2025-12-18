@@ -131,16 +131,16 @@ export function Header() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => { window.dispatchEvent(new Event("api:request:start")); router.push("/dashboard/profile"); setTimeout(() => window.dispatchEvent(new Event("api:request:stop")), 800) }}>
-              <User className="mr-2 h-4 w-4" />
+              <User />
               <span>Profile</span>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => { window.dispatchEvent(new Event("api:request:start")); router.push("/auth/change-password"); setTimeout(() => window.dispatchEvent(new Event("api:request:stop")), 800) }}>
-              <Settings className="mr-2 h-4 w-4" />
+              <Settings />
               <span>Change Password</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
+              <LogOut />
               <span>Log out</span>
             </DropdownMenuItem>
           </DropdownMenuContent>

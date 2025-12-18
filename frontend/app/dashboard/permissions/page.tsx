@@ -242,7 +242,7 @@ export default function PermissionsPage() {
           </div>
 
           <Button onClick={handleAdd}>
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus />
             Add Permission
           </Button>
         </div>

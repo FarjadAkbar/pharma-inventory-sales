@@ -252,7 +252,7 @@ export default function GoodsReceiptsPage() {
           </div>
           <Link href="/dashboard/procurement/goods-receipts/new">
             <Button className="bg-orange-600 hover:bg-orange-700">
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus />
               Create GRN
             </Button>
           </Link>

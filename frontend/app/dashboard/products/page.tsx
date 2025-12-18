@@ -196,7 +196,7 @@ export default function ProductsPage() {
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button onClick={resetForm}>
-                  <Plus className="mr-2 h-4 w-4" />
+                  <Plus />
                   Add Product
                 </Button>
               </DialogTrigger>

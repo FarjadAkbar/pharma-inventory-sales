@@ -283,7 +283,7 @@ export default function LabelsPage() {
 
           <PermissionGuard module="WAREHOUSE" screen="labels" action="create">
             <Button onClick={() => (window.location.href = "/dashboard/warehouse/labels/new")}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus />
               Create Label
             </Button>
           </PermissionGuard>

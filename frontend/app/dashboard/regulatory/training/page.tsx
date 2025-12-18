@@ -425,7 +425,7 @@ export default function TrainingRecordsPage() {
 
           <PermissionGuard module="REGULATORY" screen="training" action="create">
             <Button onClick={() => (window.location.href = "/dashboard/regulatory/training/new")}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus />
               New Training
             </Button>
           </PermissionGuard>

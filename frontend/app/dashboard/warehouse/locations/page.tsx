@@ -334,7 +334,7 @@ export default function WarehouseLocationsPage() {
 
           <PermissionGuard module="WAREHOUSE" screen="locations" action="create">
             <Button onClick={() => (window.location.href = "/dashboard/warehouse/locations/new")}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus />
               Add Location
             </Button>
           </PermissionGuard>

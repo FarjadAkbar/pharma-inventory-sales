@@ -228,7 +228,7 @@ export default function BatchConsumptionsPage() {
 
           <PermissionGuard module="MANUFACTURING" screen="consumptions" action="create">
             <Button onClick={() => (window.location.href = "/dashboard/manufacturing/consumptions/new")}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus />
               Add Consumption
             </Button>
           </PermissionGuard>

@@ -176,7 +176,7 @@ export default function UsersPage() {
 
           <PermissionGuard module="USER_MANAGEMENT" action="create">
             <Button onClick={handleAdd}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus />
               Add User
             </Button>
           </PermissionGuard>

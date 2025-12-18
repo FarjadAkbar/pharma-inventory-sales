@@ -371,7 +371,7 @@ export default function RegulatoryDocumentsPage() {
 
           <PermissionGuard module="REGULATORY" screen="documents" action="create">
             <Button onClick={() => (window.location.href = "/dashboard/regulatory/documents/new")}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus />
               Add Document
             </Button>
           </PermissionGuard>

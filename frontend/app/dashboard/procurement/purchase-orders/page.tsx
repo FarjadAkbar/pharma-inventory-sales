@@ -25,15 +25,43 @@ import {
   User
 } from "lucide-react"
 import Link from "next/link"
-import { purchaseOrdersApi, sitesApi } from "@/services"
-import type { PurchaseOrder, SupplierOption } from "@/types/purchase-orders"
+import { purchaseOrdersApi, sitesApi, suppliersApi, type PurchaseOrder } from "@/services"
 import { PermissionGuard } from "@/components/auth/permission-guard"
 import { useAuth } from "@/contexts/auth.context"
+import { formatDateISO } from "@/lib/utils"
+
+// Map backend PurchaseOrder to frontend format
+function mapBackendToFrontend(backendPO: PurchaseOrder): any {
+  return {
+    id: backendPO.id.toString(),
+    poNumber: backendPO.poNumber,
+    supplier_id: backendPO.supplierId.toString(),
+    supplierName: backendPO.supplier?.name || `Supplier #${backendPO.supplierId}`,
+    siteId: backendPO.siteId?.toString() || "",
+    name: backendPO.site?.name || (backendPO.siteId ? `Site #${backendPO.siteId}` : ""),
+    location: backendPO.site?.address || backendPO.site?.city || "",
+    expected_date: new Date(backendPO.expectedDate).toISOString(),
+    status: backendPO.status,
+    total_amount: Number(backendPO.totalAmount),
+    currency: "PKR",
+    items: (backendPO.items || []).map((item) => ({
+      id: item.id.toString(),
+      materialId: item.rawMaterialId.toString(),
+      materialName: item.rawMaterial?.name || `Material #${item.rawMaterialId}`,
+      materialCode: item.rawMaterial?.code || "",
+      qty: Number(item.quantity),
+      unitPrice: Number(item.unitPrice),
+      totalPrice: Number(item.totalPrice),
+    })),
+    created_at: new Date(backendPO.createdAt).toISOString(),
+    updated_at: new Date(backendPO.updatedAt).toISOString(),
+  }
+}
 
 export default function PurchaseOrdersPage() {
-  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([])
-  const [suppliers, setSuppliers] = useState<SupplierOption[]>([])
-  const [sites, setSites] = useState<{ id: number; name: string }[]>([])
+  const [purchaseOrders, setPurchaseOrders] = useState<any[]>([])
+  const [suppliers, setSuppliers] = useState<Array<{ id: number; name: string }>>([])
+  const [sites, setSites] = useState<Array<{ id: number; name: string }>>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedSiteId, setSelectedSiteId] = useState<number | null>(null)
@@ -57,12 +85,13 @@ export default function PurchaseOrdersPage() {
   const fetchPurchaseOrders = async () => {
     try {
       setLoading(true)
-      const response = await purchaseOrdersApi.getAllPurchaseOrders()
+      const response = await purchaseOrdersApi.getPurchaseOrders({
+        search: searchQuery || undefined,
+      })
 
-      if (response.status && response.data) {
-        const orders = Array.isArray(response.data) ? response.data : [response.data]
-        setPurchaseOrders(orders)
-      }
+      // Map backend format to frontend format
+      const mappedOrders = response.map(mapBackendToFrontend)
+      setPurchaseOrders(mappedOrders)
     } catch (error) {
       console.error("Failed to fetch purchase orders:", error)
     } finally {
@@ -73,12 +102,14 @@ export default function PurchaseOrdersPage() {
   const fetchPurchaseOrdersBySite = async (siteId: number) => {
     try {
       setLoading(true)
-      const response = await purchaseOrdersApi.getPurchaseOrdersBySite(siteId)
+      const response = await purchaseOrdersApi.getPurchaseOrders({
+        search: searchQuery || undefined,
+      })
 
-      if (response.status && response.data) {
-        const orders = Array.isArray(response.data) ? response.data : [response.data]
-        setPurchaseOrders(orders)
-      }
+      // Filter by site and map
+      const filtered = response.filter(po => po.siteId === siteId)
+      const mappedOrders = filtered.map(mapBackendToFrontend)
+      setPurchaseOrders(mappedOrders)
     } catch (error) {
       console.error("Failed to fetch purchase orders by site:", error)
     } finally {
@@ -88,10 +119,8 @@ export default function PurchaseOrdersPage() {
 
   const fetchSuppliers = async () => {
     try {
-      const response = await purchaseOrdersApi.getSuppliersList()
-      if (response.status && response.data) {
-        setSuppliers(response.data)
-      }
+      const suppliersData = await suppliersApi.getSuppliers()
+      setSuppliers(suppliersData.map((s: any) => ({ id: s.id, name: s.name })))
     } catch (error) {
       console.error("Failed to fetch suppliers:", error)
     }
@@ -99,24 +128,18 @@ export default function PurchaseOrdersPage() {
 
   const fetchSites = async () => {
     try {
-      const response = await sitesApi.getSites()
-      if (response.status && response.data) {
-        setSites(response.data.map((site: any) => ({ id: site.id, name: site.name })))
-      }
+      const sitesData = await sitesApi.getSites()
+      setSites(sitesData.map((site: any) => ({ id: site.id, name: site.name })))
     } catch (error) {
       console.error("Failed to fetch sites:", error)
     }
   }
 
-  const handleDeletePurchaseOrder = async (po: PurchaseOrder) => {
-    if (confirm(`Are you sure you want to delete Purchase Order ${po.id}?`)) {
+  const handleDeletePurchaseOrder = async (po: any) => {
+    if (confirm(`Are you sure you want to delete Purchase Order ${po.poNumber}?`)) {
       try {
-        const response = await purchaseOrdersApi.deletePurchaseOrder(po.id)
-        if (response.status) {
-          fetchPurchaseOrders() // Refresh the list
-        } else {
-          alert("Failed to delete purchase order")
-        }
+        await purchaseOrdersApi.deletePurchaseOrder(po.id)
+        fetchPurchaseOrders() // Refresh the list
       } catch (error) {
         console.error("Failed to delete purchase order:", error)
         alert("Failed to delete purchase order")
@@ -130,10 +153,10 @@ export default function PurchaseOrdersPage() {
         return <Badge className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />Approved</Badge>
       case "Pending":
         return <Badge className="bg-yellow-100 text-yellow-800"><Clock className="h-3 w-3 mr-1" />Pending</Badge>
-      case "Completed":
-        return <Badge className="bg-blue-100 text-blue-800"><CheckCircle className="h-3 w-3 mr-1" />Completed</Badge>
-      case "Rejected":
-        return <Badge className="bg-red-100 text-red-800"><XCircle className="h-3 w-3 mr-1" />Rejected</Badge>
+      case "Received":
+        return <Badge className="bg-blue-100 text-blue-800"><CheckCircle className="h-3 w-3 mr-1" />Received</Badge>
+      case "Cancelled":
+        return <Badge className="bg-red-100 text-red-800"><XCircle className="h-3 w-3 mr-1" />Cancelled</Badge>
       default:
         return <Badge className="bg-gray-100 text-gray-800">Draft</Badge>
     }
@@ -153,12 +176,12 @@ export default function PurchaseOrdersPage() {
 
   const columns = [
     {
-      key: "id",
-      header: "PO ID",
+      key: "poNumber",
+      header: "PO Number",
       sortable: true,
-      render: (po: PurchaseOrder) => (
+      render: (po: any) => (
         <div className="font-mono text-sm font-medium text-orange-600">
-          #{po.id}
+          {po.poNumber}
         </div>
       ),
     },
@@ -166,7 +189,7 @@ export default function PurchaseOrdersPage() {
       key: "name",
       header: "Site",
       sortable: true,
-      render: (po: PurchaseOrder) => (
+      render: (po: any) => (
         <div>
           <div className="font-medium">{po.name || "N/A"}</div>
           <div className="text-sm text-muted-foreground flex items-center gap-1">
@@ -180,9 +203,9 @@ export default function PurchaseOrdersPage() {
       key: "supplier_id",
       header: "Supplier",
       sortable: true,
-      render: (po: PurchaseOrder) => (
+      render: (po: any) => (
         <div className="text-sm">
-          <div className="font-medium">Supplier #{po.supplier_id}</div>
+          <div className="font-medium">{po.supplierName || `Supplier #${po.supplier_id}`}</div>
         </div>
       ),
     },
@@ -190,11 +213,11 @@ export default function PurchaseOrdersPage() {
       key: "items",
       header: "Items",
       sortable: true,
-      render: (po: PurchaseOrder) => (
+      render: (po: any) => (
         <div className="text-sm">
-          <div className="font-medium">{po.items.length} items</div>
+          <div className="font-medium">{po.items?.length || 0} items</div>
           <div className="text-muted-foreground">
-            {po.items.reduce((sum, item) => sum + item.qty, 0)} total qty
+            {po.items?.reduce((sum: number, item: any) => sum + (item.qty || 0), 0) || 0} total qty
           </div>
         </div>
       ),
@@ -203,11 +226,11 @@ export default function PurchaseOrdersPage() {
       key: "total_amount",
       header: "Amount",
       sortable: true,
-      render: (po: PurchaseOrder) => (
+      render: (po: any) => (
         <div className="text-sm">
           <div className="font-medium flex items-center gap-1">
             <DollarSign className="h-3 w-3" />
-            {typeof po.total_amount === 'string' ? po.total_amount : po.total_amount.toLocaleString()} {po.currency}
+            {typeof po.total_amount === 'string' ? po.total_amount : po.total_amount.toLocaleString()} {po.currency || "PKR"}
           </div>
         </div>
       ),
@@ -216,10 +239,10 @@ export default function PurchaseOrdersPage() {
       key: "expected_date",
       header: "Expected Date",
       sortable: true,
-      render: (po: PurchaseOrder) => (
+      render: (po: any) => (
         <div className="text-sm flex items-center gap-1">
           <Calendar className="h-3 w-3" />
-          {new Date(po.expected_date).toLocaleDateString()}
+          {formatDateISO(po.expected_date)}
         </div>
       ),
     },
@@ -227,17 +250,17 @@ export default function PurchaseOrdersPage() {
       key: "status",
       header: "Status",
       sortable: true,
-      render: (po: PurchaseOrder) => getStatusBadge(po.status),
+      render: (po: any) => getStatusBadge(po.status),
     },
     {
       key: "created_at",
       header: "Created",
       sortable: true,
-      render: (po: PurchaseOrder) => new Date(po.created_at).toLocaleDateString(),
+      render: (po: any) => formatDateISO(po.created_at),
     },
   ]
 
-  const actions = (po: PurchaseOrder) => (
+  const actions = (po: any) => (
     <div className="flex items-center gap-2">
       <PermissionGuard module="PROCUREMENT" screen="purchase-orders" action="read">
         <Button
@@ -280,8 +303,8 @@ export default function PurchaseOrdersPage() {
           </div>
           <PermissionGuard module="PROCUREMENT" screen="purchase-orders" action="create">
             <Link href="/dashboard/procurement/purchase-orders/new">
-              <Button className="bg-orange-600 hover:bg-orange-700">
-                <Plus className="mr-2 h-4 w-4" />
+              <Button>
+                <Plus />
                 Create PO
               </Button>
             </Link>

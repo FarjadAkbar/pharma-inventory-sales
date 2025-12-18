@@ -467,7 +467,7 @@ export default function ColdChainPage() {
                 onClick={() => setActiveTab("records")}
                 className={activeTab === "records" ? "bg-orange-600 hover:bg-orange-700" : ""}
               >
-                <Thermometer className="mr-2 h-4 w-4" />
+                <Thermometer />
                 Temperature Records
               </Button>
               <Button
@@ -475,7 +475,7 @@ export default function ColdChainPage() {
                 onClick={() => setActiveTab("excursions")}
                 className={activeTab === "excursions" ? "bg-orange-600 hover:bg-orange-700" : ""}
               >
-                <Bell className="mr-2 h-4 w-4" />
+                <Bell />
                 Temperature Excursions
               </Button>
             </div>

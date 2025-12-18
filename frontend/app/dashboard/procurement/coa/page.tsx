@@ -303,7 +303,7 @@ export default function CertificateOfAnalysisPage() {
 
           <PermissionGuard module="PROCUREMENT" screen="coa" action="create">
             <Button onClick={() => (window.location.href = "/dashboard/procurement/coa/new")}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus />
               Add CoA
             </Button>
           </PermissionGuard>

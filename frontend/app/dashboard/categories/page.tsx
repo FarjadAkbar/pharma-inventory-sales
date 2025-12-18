@@ -137,7 +137,7 @@ export default function CategoriesPage() {
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button onClick={resetForm}>
-                  <Plus className="mr-2 h-4 w-4" />
+                  <Plus />
                   Add Category
                 </Button>
               </DialogTrigger>
@@ -246,7 +246,7 @@ export default function CategoriesPage() {
               <p className="text-muted-foreground mb-4">Create your first product category to get started</p>
               <MultiModulePermissionGuard modules={["POS", "PHARMA"]} screen="category" action="create">
                 <Button onClick={() => setIsAddDialogOpen(true)}>
-                  <Plus className="mr-2 h-4 w-4" />
+                  <Plus />
                   Add Category
                 </Button>
               </MultiModulePermissionGuard>

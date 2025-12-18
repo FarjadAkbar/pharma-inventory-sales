@@ -384,7 +384,7 @@ export default function StorageLocationsPage() {
 
           <PermissionGuard module="MASTER_DATA" screen="storage_locations" action="create">
             <Button onClick={() => (window.location.href = "/dashboard/storage-locations/new")}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus />
               Add Location
             </Button>
           </PermissionGuard>

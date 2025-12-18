@@ -379,7 +379,7 @@ export default function ApprovalsPage() {
 
           <PermissionGuard module="REGULATORY" screen="approvals" action="create">
             <Button onClick={() => (window.location.href = "/dashboard/regulatory/approvals/new")}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus />
               New Request
             </Button>
           </PermissionGuard>

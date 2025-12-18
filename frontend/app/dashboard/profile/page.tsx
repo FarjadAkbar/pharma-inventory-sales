@@ -110,13 +110,13 @@ export default function ProfilePage() {
             <CardContent className="space-y-4">
               <Link href="/auth/change-password">
                 <Button variant="outline" className="w-full justify-start bg-transparent">
-                  <Shield className="mr-2 h-4 w-4" />
+                  <Shield />
                   Change Password
                 </Button>
               </Link>
 
               <Button variant="outline" className="w-full justify-start bg-transparent" disabled>
-                <User className="mr-2 h-4 w-4" />
+                <User />
                 Edit Profile
                 <span className="ml-auto text-xs text-muted-foreground">Coming Soon</span>
               </Button>

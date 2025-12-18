@@ -232,7 +232,7 @@ export default function UnitsPage() {
 
           <PermissionGuard module="MASTER_DATA" screen="units" action="create">
             <Button onClick={() => (window.location.href = "/dashboard/units/new")}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus />
               Add Unit
             </Button>
           </PermissionGuard>

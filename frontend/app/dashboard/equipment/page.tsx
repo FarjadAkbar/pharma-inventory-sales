@@ -286,7 +286,7 @@ export default function EquipmentPage() {
 
           <PermissionGuard module="MASTER_DATA" screen="equipment" action="create">
             <Button onClick={() => (window.location.href = "/dashboard/equipment/new")}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus />
               Add Equipment
             </Button>
           </PermissionGuard>

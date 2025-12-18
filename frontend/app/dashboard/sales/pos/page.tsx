@@ -293,7 +293,7 @@ export default function POSPage() {
 
           <PermissionGuard module="SALES" screen="pos" action="create">
             <Button onClick={() => (window.location.href = "/dashboard/sales/pos/new")}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus />
               New Transaction
             </Button>
           </PermissionGuard>

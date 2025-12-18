@@ -285,7 +285,7 @@ export default function ActivitiesPage() {
 
           <PermissionGuard module="SALES" screen="activities" action="create">
             <Button onClick={() => (window.location.href = "/dashboard/sales/activities/new")}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus />
               Add Activity
             </Button>
           </PermissionGuard>

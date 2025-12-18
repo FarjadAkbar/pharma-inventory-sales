@@ -244,7 +244,7 @@ export default function RolesPage() {
 
           <PermissionGuard module="IDENTITY" action="create">
             <Button onClick={handleAdd}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus />
               Add Role
             </Button>
           </PermissionGuard>

@@ -277,7 +277,7 @@ export default function QADeviationsPage() {
             <p className="text-muted-foreground">Manage quality deviations and investigations</p>
           </div>
           <Button className="bg-orange-600 hover:bg-orange-700">
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus />
             New Deviation
           </Button>
         </div>

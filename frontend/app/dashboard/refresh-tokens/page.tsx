@@ -219,7 +219,7 @@ export default function RefreshTokensPage() {
 
           <PermissionGuard module="IDENTITY" screen="refresh_tokens" action="delete">
             <Button variant="destructive" onClick={handleRevokeAll}>
-              <AlertTriangle className="mr-2 h-4 w-4" />
+              <AlertTriangle />
               Revoke All
             </Button>
           </PermissionGuard>

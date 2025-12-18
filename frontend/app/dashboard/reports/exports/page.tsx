@@ -320,7 +320,7 @@ export default function ExportsPage() {
 
           <PermissionGuard module="REPORTING" screen="exports" action="create">
             <Button onClick={() => (window.location.href = "/dashboard/reports/exports/new")}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus />
               Create Export
             </Button>
           </PermissionGuard>

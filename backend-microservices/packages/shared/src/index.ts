@@ -6,4 +6,5 @@ export * from './dto/permission.dto';
 export * from './dto/site.dto';
 export * from './dto/supplier.dto';
 export * from './dto/raw-material.dto';
+export * from './dto/purchase-order.dto';
 export * from './interfaces/message-patterns';

@@ -128,7 +128,7 @@ export default function ExecutiveDashboardPage() {
           <h2 className="text-xl font-semibold mb-2">Failed to load dashboard</h2>
           <p className="text-muted-foreground mb-4">Unable to fetch executive dashboard data</p>
           <Button onClick={handleRefresh} className="bg-orange-600 hover:bg-orange-700">
-            <RefreshCw className="mr-2 h-4 w-4" />
+            <RefreshCw />
             Retry
           </Button>
         </div>
@@ -150,7 +150,7 @@ export default function ExecutiveDashboardPage() {
               Refresh
             </Button>
             <Button className="bg-orange-600 hover:bg-orange-700">
-              <Download className="mr-2 h-4 w-4" />
+              <Download />
               Export
             </Button>
             <Button variant="outline">

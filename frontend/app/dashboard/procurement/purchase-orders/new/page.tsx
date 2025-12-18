@@ -2,17 +2,30 @@
 
 import { useRouter } from "next/navigation"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { PurchaseOrderForm } from "@/components/procurement/purchase-order-form"
+import { PurchaseOrderForm } from "@/components/purchase-orders/purchase-order-form"
+import { purchaseOrdersApi } from "@/services"
 
 export default function NewPurchaseOrderPage() {
   const router = useRouter()
 
-  const handleSuccess = () => {
-    router.push("/dashboard/procurement/purchase-orders")
-  }
-
-  const handleCancel = () => {
-    router.push("/dashboard/procurement/purchase-orders")
+  const handleSubmit = async (data: {
+    supplierId: number
+    siteId?: number
+    expectedDate: string
+    items: Array<{
+      rawMaterialId: number
+      quantity: number
+      unitPrice: number
+    }>
+    status?: 'Draft' | 'Pending' | 'Approved' | 'Received' | 'Cancelled'
+  }) => {
+    try {
+      await purchaseOrdersApi.createPurchaseOrder(data)
+      router.push("/dashboard/procurement/purchase-orders")
+    } catch (error) {
+      console.error("Failed to create purchase order:", error)
+      throw error
+    }
   }
 
   return (
@@ -26,8 +39,8 @@ export default function NewPurchaseOrderPage() {
         </div>
 
         <PurchaseOrderForm
-          onSuccess={handleSuccess}
-          onCancel={handleCancel}
+          onSubmit={handleSubmit}
+          submitLabel="Create Purchase Order"
         />
       </div>
     </DashboardLayout>

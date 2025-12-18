@@ -201,7 +201,7 @@ export default function SitesPage() {
 
           <PermissionGuard module="MASTER_DATA" action="create">
             <Button onClick={handleAdd}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus />
               Add Site
             </Button>
           </PermissionGuard>
