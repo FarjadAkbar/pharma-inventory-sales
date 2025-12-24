@@ -2,45 +2,63 @@
 
 import { useRouter } from "next/navigation"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { PurchaseOrderForm } from "@/components/purchase-orders/purchase-order-form"
-import { purchaseOrdersApi } from "@/services"
+import { PurchaseOrderForm } from "@/components/procurement/purchase-order-form"
+import { Button } from "@/components/ui/button"
+import { ArrowLeft, FileText } from "lucide-react"
+import Link from "next/link"
 
 export default function NewPurchaseOrderPage() {
   const router = useRouter()
 
-  const handleSubmit = async (data: {
-    supplierId: number
-    siteId?: number
-    expectedDate: string
-    items: Array<{
-      rawMaterialId: number
-      quantity: number
-      unitPrice: number
-    }>
-    status?: 'Draft' | 'Pending' | 'Approved' | 'Received' | 'Cancelled'
-  }) => {
-    try {
-      await purchaseOrdersApi.createPurchaseOrder(data)
-      router.push("/dashboard/procurement/purchase-orders")
-    } catch (error) {
-      console.error("Failed to create purchase order:", error)
-      throw error
-    }
+  const handleSuccess = () => {
+    router.push("/dashboard/procurement/purchase-orders")
+  }
+
+  const handleCancel = () => {
+    router.push("/dashboard/procurement/purchase-orders")
   }
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {/* Breadcrumbs */}
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Link 
+            href="/dashboard/procurement/purchase-orders" 
+            className="hover:text-foreground transition-colors"
+          >
+            Purchase Orders
+          </Link>
+          <span>/</span>
+          <span className="text-foreground">Create New</span>
+        </div>
+
+        {/* Header */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Create Purchase Order</h1>
-            <p className="text-muted-foreground">Create a new purchase order for procurement</p>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleCancel}
+              className="h-9 w-9"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+                <FileText className="h-8 w-8 text-primary" />
+                Create Purchase Order
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                Create a new purchase order for procurement
+              </p>
+            </div>
           </div>
         </div>
 
         <PurchaseOrderForm
-          onSubmit={handleSubmit}
-          submitLabel="Create Purchase Order"
+          onSuccess={handleSuccess}
+          onCancel={handleCancel}
         />
       </div>
     </DashboardLayout>

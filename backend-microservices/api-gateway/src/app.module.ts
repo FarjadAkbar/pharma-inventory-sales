@@ -9,6 +9,11 @@ import { SitesController } from './sites/sites.controller';
 import { SuppliersController } from './suppliers/suppliers.controller';
 import { RawMaterialsController } from './raw-materials/raw-materials.controller';
 import { PurchaseOrdersController } from './purchase-orders/purchase-orders.controller';
+import { GoodsReceiptsController } from './goods-receipts/goods-receipts.controller';
+import { QCSamplesController } from './qc-samples/qc-samples.controller';
+import { QCTestsController } from './qc-tests/qc-tests.controller';
+import { QCResultsController } from './qc-results/qc-results.controller';
+import { QAReleasesController } from './qa-releases/qa-releases.controller';
 
 @Module({
   imports: [
@@ -78,6 +83,46 @@ import { PurchaseOrdersController } from './purchase-orders/purchase-orders.cont
           port: parseInt(process.env.PURCHASE_ORDER_SERVICE_PORT),
         },
       },
+      {
+        name: 'GOODS_RECEIPT_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: process.env.GOODS_RECEIPT_SERVICE_HOST,
+          port: parseInt(process.env.GOODS_RECEIPT_SERVICE_PORT || '3010'),
+        },
+      },
+      {
+        name: 'QC_SAMPLE_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: process.env.QC_SAMPLE_SERVICE_HOST,
+          port: parseInt(process.env.QC_SAMPLE_SERVICE_PORT),
+        },
+      },
+      {
+        name: 'QC_TEST_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: process.env.QC_TEST_SERVICE_HOST,
+          port: parseInt(process.env.QC_TEST_SERVICE_PORT),
+        },
+      },
+      {
+        name: 'QC_RESULT_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: process.env.QC_RESULT_SERVICE_HOST,
+          port: parseInt(process.env.QC_RESULT_SERVICE_PORT),
+        },
+      },
+      {
+        name: 'QA_RELEASE_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: process.env.QA_RELEASE_SERVICE_HOST,
+          port: parseInt(process.env.QA_RELEASE_SERVICE_PORT),
+        },
+      },
     ]),
   ],
   controllers: [
@@ -89,6 +134,11 @@ import { PurchaseOrdersController } from './purchase-orders/purchase-orders.cont
     SuppliersController,
     RawMaterialsController,
     PurchaseOrdersController,
+    GoodsReceiptsController,
+    QCSamplesController,
+    QCTestsController,
+    QCResultsController,
+    QAReleasesController,
   ],
 })
 export class AppModule {}

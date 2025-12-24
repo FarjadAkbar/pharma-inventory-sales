@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/auth.context"
 import { ConditionalStoreProvider } from "@/components/providers/conditional-store-provider"
 import { GlobalLoader } from "@/components/ui/global-loader"
 import { RouteChangeListener } from "@/components/ui/route-change-listener"
+import { Toaster } from "@/components/ui/toast"
 
 export const metadata: Metadata = {
   title: "Pharma Inventory Sales System", // Updated title from CRM System
@@ -36,6 +37,7 @@ html {
             <GlobalLoader />
             <RouteChangeListener />
             {children}
+            <Toaster />
           </ConditionalStoreProvider>
         </AuthProvider>
       </body>

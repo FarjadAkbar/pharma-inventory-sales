@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Plus, ShoppingCart, User, Calendar, MapPin, DollarSign, Package } from "lucide-react"
 import { apiService } from "@/services/api.service"
 import { toast } from "sonner"
+import { UNIT_OPTIONS } from "@/lib/constants"
 
 interface SalesOrderFormProps {
   onSuccess?: () => void
@@ -262,9 +263,11 @@ export function SalesOrderForm({ onSuccess, trigger }: SalesOrderFormProps) {
                       <SelectValue placeholder="Unit" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="pcs">Pieces</SelectItem>
-                      <SelectItem value="boxes">Boxes</SelectItem>
-                      <SelectItem value="strips">Strips</SelectItem>
+                      {UNIT_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

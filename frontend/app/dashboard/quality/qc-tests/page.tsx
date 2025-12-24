@@ -23,9 +23,11 @@ import {
   Target
 } from "lucide-react"
 import Link from "next/link"
-import { apiService } from "@/services/api.service"
+import { qualityControlApi } from "@/services"
 import type { QCTest, QCTestFilters } from "@/types/quality-control"
 import { formatDateISO } from "@/lib/utils"
+import { toast } from "@/lib/toast"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
 export default function QCTestsPage() {
   const [qcTests, setQCTests] = useState<QCTest[]>([])
@@ -41,19 +43,16 @@ export default function QCTestsPage() {
   const fetchQCTests = async () => {
     try {
       setLoading(true)
-      const response = await apiService.getQCTests({
+      const response = await qualityControlApi.getQCTests({
         search: searchQuery,
         ...filters,
         page: pagination.page,
         limit: 10,
       })
-
-      if (response.success && response.data) {
-        setQCTests(response.data.qcTests || [])
-        setPagination(response.data.pagination || { page: 1, pages: 1, total: 0 })
-      }
+      setQCTests(Array.isArray(response) ? response : [])
     } catch (error) {
       console.error("Failed to fetch QC tests:", error)
+      toast.error("Failed to fetch QC tests", "Please try again later.")
     } finally {
       setLoading(false)
     }
@@ -73,19 +72,27 @@ export default function QCTestsPage() {
     setPagination((prev) => ({ ...prev, page }))
   }
 
-  const handleDeleteQCTest = async (test: QCTest) => {
-    if (confirm(`Are you sure you want to delete QC Test ${test.code}?`)) {
-      try {
-        const response = await apiService.deleteQCTest(test.id)
-        if (response.success) {
-          fetchQCTests() // Refresh the list
-        } else {
-          alert("Failed to delete QC test")
-        }
-      } catch (error) {
-        console.error("Failed to delete QC test:", error)
-        alert("Failed to delete QC test")
-      }
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [testToDelete, setTestToDelete] = useState<QCTest | null>(null)
+
+  const handleDeleteClick = (test: QCTest) => {
+    setTestToDelete(test)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!testToDelete) return
+    
+    try {
+      await qualityControlApi.deleteQCTest(testToDelete.id?.toString() || "")
+      toast.success("QC test deleted successfully", `Test ${testToDelete.code} has been deleted.`)
+      fetchQCTests()
+    } catch (error) {
+      console.error("Failed to delete QC test:", error)
+      toast.error("Failed to delete QC test", "Please try again later.")
+    } finally {
+      setDeleteDialogOpen(false)
+      setTestToDelete(null)
     }
   }
 
@@ -273,7 +280,7 @@ export default function QCTestsPage() {
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => handleDeleteQCTest(test)}
+        onClick={() => handleDeleteClick(test)}
         className="text-red-600 hover:text-red-700"
       >
         <Trash2 className="h-4 w-4" />
@@ -290,7 +297,7 @@ export default function QCTestsPage() {
             <p className="text-muted-foreground">Manage quality control test methods and specifications</p>
           </div>
           <Link href="/dashboard/quality/qc-tests/new">
-            <Button className="bg-orange-600 hover:bg-orange-700">
+            <Button>
               <Plus />
               Add Test Method
             </Button>
@@ -360,6 +367,17 @@ export default function QCTestsPage() {
           onRefresh={fetchQCTests}
           onExport={() => console.log("Export QC tests")}
           emptyMessage="No QC tests found. Add your first test method to get started."
+        />
+
+        <ConfirmDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          title="Delete QC Test"
+          description={`Are you sure you want to delete QC Test ${testToDelete?.code}? This action cannot be undone.`}
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={handleDeleteConfirm}
+          variant="destructive"
         />
       </div>
     </DashboardLayout>

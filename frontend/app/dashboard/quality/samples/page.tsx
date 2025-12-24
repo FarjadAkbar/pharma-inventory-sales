@@ -30,9 +30,11 @@ import {
   Target,
   FileText
 } from "lucide-react"
-import { apiService } from "@/services/api.service"
+import { qualityControlApi } from "@/services"
 import type { QCSample, QCSampleFilters } from "@/types/quality-control"
 import { formatDateISO } from "@/lib/utils"
+import { toast } from "@/lib/toast"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
 export default function QCSamplesPage() {
   const [qcSamples, setQCSamples] = useState<QCSample[]>([])
@@ -48,19 +50,16 @@ export default function QCSamplesPage() {
   const fetchQCSamples = async () => {
     try {
       setLoading(true)
-      const response = await apiService.getQCSamples({
+      const response = await qualityControlApi.getQCSamples({
         search: searchQuery,
         ...filters,
         page: pagination.page,
         limit: 10,
       })
-
-      if (response.success && response.data) {
-        setQCSamples(response.data.qcSamples || [])
-        setPagination(response.data.pagination || { page: 1, pages: 1, total: 0 })
-      }
+      setQCSamples(Array.isArray(response) ? response : [])
     } catch (error) {
       console.error("Failed to fetch QC samples:", error)
+      toast.error("Failed to fetch QC samples", "Please try again later.")
     } finally {
       setLoading(false)
     }

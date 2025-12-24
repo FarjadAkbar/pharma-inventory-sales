@@ -1,30 +1,33 @@
 "use client"
 
-import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { GoodsReceiptForm } from "@/components/procurement/goods-receipt-form"
-import { apiService } from "@/services/api.service"
-import type { GoodsReceipt } from "@/types/procurement"
+import { goodsReceiptsApi, purchaseOrdersApi } from "@/services"
 
 export default function NewGoodsReceiptPage() {
   const router = useRouter()
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSubmit = async (data: GoodsReceipt) => {
-    setIsSubmitting(true)
+  const handleSubmit = async (data: {
+    purchaseOrderId: number
+    receivedDate: string
+    remarks?: string
+    items: Array<{
+      purchaseOrderItemId: number
+      receivedQuantity: number
+      acceptedQuantity: number
+      rejectedQuantity: number
+      batchNumber?: string
+      expiryDate?: string
+    }>
+    status?: 'Draft' | 'Verified' | 'Completed'
+  }) => {
     try {
-      const response = await apiService.createGoodsReceipt(data)
-      if (response.success) {
-        router.push("/dashboard/procurement/goods-receipts")
-      } else {
-        throw new Error(response.message || "Failed to create goods receipt")
-      }
-    } catch (error: any) {
+      await goodsReceiptsApi.createGoodsReceipt(data)
+      router.push("/dashboard/procurement/goods-receipts")
+    } catch (error) {
       console.error("Failed to create goods receipt:", error)
       throw error
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
@@ -45,7 +48,7 @@ export default function NewGoodsReceiptPage() {
         <GoodsReceiptForm
           onSubmit={handleSubmit}
           onCancel={handleCancel}
-          submitLabel={isSubmitting ? "Creating..." : "Create GRN"}
+          submitLabel="Create GRN"
         />
       </div>
     </DashboardLayout>

@@ -9,6 +9,7 @@ import { SitesApiService, type Site } from "./sites-api.service"
 import { SuppliersApiService, type Supplier } from "./suppliers-api.service"
 import { RawMaterialsApiService, type RawMaterial } from "./raw-materials-api.service"
 import { PurchaseOrdersApiService, type PurchaseOrder } from "./purchase-orders-api.service"
+import { GoodsReceiptsApiService, type GoodsReceipt } from "./goods-receipts-api.service"
 import { DistributionApiService } from "./distribution-api.service"
 import { ManufacturingApiService } from "./manufacturing-api.service"
 import { MasterDataApiService } from "./master-data-api.service"
@@ -37,6 +38,8 @@ export const rawMaterialsApi = new RawMaterialsApiService()
 export type { RawMaterial } from "./raw-materials-api.service"
 export const purchaseOrdersApi = new PurchaseOrdersApiService()
 export type { PurchaseOrder } from "./purchase-orders-api.service"
+export const goodsReceiptsApi = new GoodsReceiptsApiService()
+export type { GoodsReceipt } from "./goods-receipts-api.service"
 export const usersApi = new UsersApiService()
 export const rolesApi = new RolesApiService()
 export const permissionsApi = new PermissionsApiService()
@@ -58,6 +61,7 @@ export const api = {
   suppliers: suppliersApi,
   rawMaterials: rawMaterialsApi,
   purchaseOrders: purchaseOrdersApi,
+  goodsReceipts: goodsReceiptsApi,
   users: usersApi,
   roles: rolesApi,
   permissions: permissionsApi,

@@ -47,9 +47,9 @@ export function LoginForm() {
 
 
   return (
-    <Card className="w-full max-w-md mx-auto border-orange-200">
+    <Card className="w-full max-w-md mx-auto">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold text-orange-600">Ziauddin Hospital</CardTitle>
+        <CardTitle className="text-2xl font-bold">Ziauddin Hospital</CardTitle>
         <CardDescription className="text-gray-600">Pharma Sales & Inventory System</CardDescription>
       </CardHeader>
       <CardContent>
@@ -65,7 +65,7 @@ export function LoginForm() {
                     <Input
                       type="email"
                       placeholder="Enter your email address"
-                      className="border-gray-300 focus:border-orange-500"
+                      className="border-gray-300"
                       {...field}
                     />
                   </FormControl>
@@ -85,7 +85,7 @@ export function LoginForm() {
                       <Input
                         type={showPassword ? "text" : "password"}
                         placeholder="Enter your password"
-                        className="border-gray-300 focus:border-orange-500 pr-10"
+                        className="border-gray-300 pr-10"
                         {...field}
                       />
                       <button
@@ -110,14 +110,14 @@ export function LoginForm() {
 
             <Button 
               type="submit" 
-              className="w-full bg-orange-600 hover:bg-orange-700 text-white" 
+              className="w-full" 
               disabled={form.formState.isSubmitting}
             >
               {form.formState.isSubmitting ? "Signing in..." : "Sign In"}
             </Button>
 
             <div className="text-center space-y-2">
-              <Link href="/auth/forgot-password" className="text-sm text-orange-600 hover:text-orange-700">
+              <Link href="/auth/forgot-password" className="text-sm">
                 Forgot your password?
               </Link>
             </div>

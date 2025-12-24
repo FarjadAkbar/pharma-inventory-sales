@@ -1,28 +1,60 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Form, FormField, FormInput, FormSelect, FormCheckbox, FormActions } from "@/components/ui/form"
 import { useFormState } from "@/lib/api-response"
 import { useFormValidation, commonValidationRules } from "@/lib/form-validation"
-import type { GoodsReceipt } from "@/types/procurement"
 import { Button } from "@/components/ui/button"
 import { Plus, Trash2, Package } from "lucide-react"
+import { goodsReceiptsApi, purchaseOrdersApi, sitesApi, suppliersApi, type PurchaseOrder } from "@/services"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 interface GoodsReceiptItem {
-  materialId: string
-  materialName: string
-  materialCode: string
-  orderedQuantity: number
+  purchaseOrderItemId: number
   receivedQuantity: number
-  unitOfMeasure: string
+  acceptedQuantity: number
+  rejectedQuantity: number
   batchNumber?: string
-  condition?: string
+  expiryDate?: string
+  // Display fields (from PO item)
+  materialName?: string
+  materialCode?: string
+  orderedQuantity?: number
+  unitOfMeasure?: string
 }
 
 interface GoodsReceiptFormProps {
-  initialData?: Partial<GoodsReceipt>
-  onSubmit: (data: GoodsReceipt) => Promise<void>
+  initialData?: {
+    poId?: string
+    poNumber?: string
+    receivedDate?: string
+    remarks?: string
+    status?: 'Draft' | 'Verified' | 'Completed'
+    items?: Array<{
+      purchaseOrderItemId: number
+      receivedQuantity: number
+      acceptedQuantity: number
+      rejectedQuantity: number
+      batchNumber?: string
+      expiryDate?: string
+    }>
+  }
+  onSubmit: (data: {
+    purchaseOrderId: number
+    receivedDate: string
+    remarks?: string
+    items: Array<{
+      purchaseOrderItemId: number
+      receivedQuantity: number
+      acceptedQuantity: number
+      rejectedQuantity: number
+      batchNumber?: string
+      expiryDate?: string
+    }>
+    status?: 'Draft' | 'Verified' | 'Completed'
+  }) => Promise<void>
   onCancel: () => void
   submitLabel?: string
 }
@@ -33,21 +65,16 @@ export function GoodsReceiptForm({
   onCancel, 
   submitLabel = "Save" 
 }: GoodsReceiptFormProps) {
+  const [purchaseOrders, setPurchaseOrders] = useState<Array<{ value: string; label: string }>>([])
+  const [selectedPO, setSelectedPO] = useState<PurchaseOrder | null>(null)
+  const [loadingPOs, setLoadingPOs] = useState(true)
+  const [items, setItems] = useState<GoodsReceiptItem[]>([])
+
   const initialFormData = {
     poId: initialData?.poId || "",
-    poNumber: initialData?.poNumber || "",
-    supplierId: initialData?.supplierId || "",
-    supplierName: initialData?.supplierName || "",
-    siteId: initialData?.siteId || "",
-    siteName: initialData?.siteName || "",
     receivedDate: initialData?.receivedDate || new Date().toISOString().split('T')[0],
-    receivedById: initialData?.receivedById || "",
-    receivedByName: initialData?.receivedByName || "",
+    remarks: initialData?.remarks || "",
     status: initialData?.status || "Draft",
-    qcSampleRequested: initialData?.qcSampleRequested || false,
-    coaAttached: initialData?.coaAttached || false,
-    notes: initialData?.notes || "",
-    items: initialData?.items || []
   }
 
   const formState = useFormState(initialFormData)
@@ -56,28 +83,88 @@ export function GoodsReceiptForm({
       required: true,
       message: "Please select a purchase order"
     },
-    supplierId: {
-      required: true,
-      message: "Please select a supplier"
-    },
-    siteId: {
-      required: true,
-      message: "Please select a site"
-    },
     receivedDate: {
       required: true,
       message: "Please select a received date"
-    },
-    receivedById: {
-      required: true,
-      message: "Please select who received the goods"
     }
   })
 
-  const [items, setItems] = useState<GoodsReceiptItem[]>(initialFormData.items)
+  useEffect(() => {
+    fetchPurchaseOrders()
+    if (initialData?.poId) {
+      fetchPurchaseOrder(parseInt(initialData.poId))
+    }
+  }, [])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  useEffect(() => {
+    if (initialData?.items && initialData.items.length > 0) {
+      // Map initial items
+      const mappedItems = initialData.items.map(item => ({
+        purchaseOrderItemId: item.purchaseOrderItemId,
+        receivedQuantity: item.receivedQuantity,
+        acceptedQuantity: item.acceptedQuantity,
+        rejectedQuantity: item.rejectedQuantity,
+        batchNumber: item.batchNumber,
+        expiryDate: item.expiryDate,
+      }))
+      setItems(mappedItems)
+    }
+  }, [initialData])
+
+  const fetchPurchaseOrders = async () => {
+    try {
+      setLoadingPOs(true)
+      const pos = await purchaseOrdersApi.getPurchaseOrders()
+      // Filter only approved POs
+      const approvedPOs = pos.filter(po => po.status === 'Approved')
+      setPurchaseOrders(approvedPOs.map(po => ({
+        value: po.id.toString(),
+        label: `${po.poNumber} - ${po.supplier?.name || `Supplier #${po.supplierId}`}`
+      })))
+    } catch (error) {
+      console.error("Failed to fetch purchase orders:", error)
+    } finally {
+      setLoadingPOs(false)
+    }
+  }
+
+  const fetchPurchaseOrder = async (poId: number) => {
+    try {
+      const po = await purchaseOrdersApi.getPurchaseOrder(poId.toString())
+      setSelectedPO(po)
+      
+      // Initialize items from PO items
+      if (po.items && po.items.length > 0) {
+        const poItems = po.items.map(item => ({
+          purchaseOrderItemId: item.id,
+          receivedQuantity: 0,
+          acceptedQuantity: 0,
+          rejectedQuantity: 0,
+          batchNumber: "",
+          expiryDate: "",
+          materialName: item.rawMaterial?.name || `Material #${item.rawMaterialId}`,
+          materialCode: item.rawMaterial?.code || "",
+          orderedQuantity: Number(item.quantity),
+          unitOfMeasure: "", // Will be fetched from raw material if needed
+        }))
+        setItems(poItems)
+      }
+    } catch (error) {
+      console.error("Failed to fetch purchase order:", error)
+    }
+  }
+
+  const handlePOChange = (poId: string) => {
+    formState.updateField('poId', poId)
+    if (poId) {
+      fetchPurchaseOrder(parseInt(poId))
+    } else {
+      setSelectedPO(null)
+      setItems([])
+    }
+  }
+
+  const handleSubmit = async () => {
     formState.setLoading(true)
     formState.clearErrors()
 
@@ -93,13 +180,36 @@ export function GoodsReceiptForm({
         return
       }
 
+      // Validate items
+      for (const item of items) {
+        if (item.receivedQuantity <= 0) {
+          formState.setError(`Received quantity must be greater than 0 for item ${item.purchaseOrderItemId}`)
+          return
+        }
+        if (item.acceptedQuantity + item.rejectedQuantity !== item.receivedQuantity) {
+          formState.setError(`Accepted + Rejected must equal Received quantity for item ${item.purchaseOrderItemId}`)
+          return
+        }
+        if (item.receivedQuantity > (item.orderedQuantity || 0)) {
+          formState.setError(`Received quantity (${item.receivedQuantity}) cannot exceed ordered quantity (${item.orderedQuantity})`)
+          return
+        }
+      }
+
       await onSubmit({
-        ...formState.data,
-        items,
-        grnNumber: initialData?.grnNumber || `GRN-${Date.now()}`,
-        createdAt: initialData?.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      } as GoodsReceipt)
+        purchaseOrderId: parseInt(formState.data.poId),
+        receivedDate: formState.data.receivedDate,
+        remarks: formState.data.remarks || undefined,
+        items: items.map(item => ({
+          purchaseOrderItemId: item.purchaseOrderItemId,
+          receivedQuantity: item.receivedQuantity,
+          acceptedQuantity: item.acceptedQuantity,
+          rejectedQuantity: item.rejectedQuantity,
+          batchNumber: item.batchNumber || undefined,
+          expiryDate: item.expiryDate || undefined,
+        })),
+        status: formState.data.status as 'Draft' | 'Verified' | 'Completed',
+      })
 
       formState.setSuccess("Goods receipt saved successfully")
     } catch (error: any) {
@@ -109,73 +219,26 @@ export function GoodsReceiptForm({
     }
   }
 
-  const addItem = () => {
-    const newItem: GoodsReceiptItem = {
-      materialId: "",
-      materialName: "",
-      materialCode: "",
-      orderedQuantity: 0,
-      receivedQuantity: 0,
-      unitOfMeasure: "",
-      batchNumber: "",
-      condition: ""
-    }
-    setItems([...items, newItem])
-  }
-
-  const removeItem = (index: number) => {
-    setItems(items.filter((_, i) => i !== index))
-  }
-
   const updateItem = (index: number, field: keyof GoodsReceiptItem, value: any) => {
     const updatedItems = [...items]
     updatedItems[index] = { ...updatedItems[index], [field]: value }
+    
+    // Auto-calculate accepted quantity if received changes
+    if (field === 'receivedQuantity') {
+      const received = parseFloat(value) || 0
+      const rejected = updatedItems[index].rejectedQuantity || 0
+      updatedItems[index].acceptedQuantity = Math.max(0, received - rejected)
+    }
+    
+    // Auto-calculate rejected quantity if received changes
+    if (field === 'rejectedQuantity') {
+      const received = updatedItems[index].receivedQuantity || 0
+      const rejected = parseFloat(value) || 0
+      updatedItems[index].acceptedQuantity = Math.max(0, received - rejected)
+    }
+    
     setItems(updatedItems)
   }
-
-  // Mock data for dropdowns
-  const purchaseOrders = [
-    { value: "1", label: "PO-2024-001 - MediChem Supplies" },
-    { value: "2", label: "PO-2024-002 - PharmaExcipients Ltd" },
-    { value: "3", label: "PO-2024-003 - Global Pharma Ingredients" }
-  ]
-
-  const suppliers = [
-    { value: "1", label: "MediChem Supplies" },
-    { value: "2", label: "PharmaExcipients Ltd" },
-    { value: "3", label: "Global Pharma Ingredients" },
-    { value: "4", label: "Chemical Solutions Inc" }
-  ]
-
-  const sites = [
-    { value: "1", label: "Main Campus" },
-    { value: "2", label: "Clifton" },
-    { value: "3", label: "North Nazimabad" },
-    { value: "4", label: "Korangi" }
-  ]
-
-  const users = [
-    { value: "1", label: "John Doe" },
-    { value: "2", label: "Jane Smith" },
-    { value: "3", label: "Mike Johnson" },
-    { value: "4", label: "Sarah Wilson" }
-  ]
-
-  const materials = [
-    { value: "1", label: "Paracetamol - PAR-001" },
-    { value: "2", label: "Ibuprofen - IBU-002" },
-    { value: "3", label: "Aspirin - ASP-003" },
-    { value: "4", label: "Lactose - LAC-004" }
-  ]
-
-  const units = [
-    { value: "kg", label: "Kilogram (kg)" },
-    { value: "g", label: "Gram (g)" },
-    { value: "mg", label: "Milligram (mg)" },
-    { value: "L", label: "Liter (L)" },
-    { value: "ml", label: "Milliliter (ml)" },
-    { value: "pcs", label: "Pieces" }
-  ]
 
   return (
     <Card>
@@ -192,52 +255,19 @@ export function GoodsReceiptForm({
           <div className="grid md:grid-cols-2 gap-4">
             <FormSelect
               name="poId"
-              label="Purchase Order"
+              label="Purchase Order *"
               value={formState.data.poId}
-              onChange={(e) => {
-                const po = purchaseOrders.find(p => p.value === e.target.value)
-                formState.updateField('poId', e.target.value)
-                formState.updateField('poNumber', po?.label.split(' - ')[0] || '')
-              }}
+              onChange={(value) => handlePOChange(value)}
               error={formState.errors.poId}
               required
               options={purchaseOrders}
-              placeholder="Select a purchase order"
-            />
-
-            <FormSelect
-              name="supplierId"
-              label="Supplier"
-              value={formState.data.supplierId}
-              onChange={(e) => {
-                const supplier = suppliers.find(s => s.value === e.target.value)
-                formState.updateField('supplierId', e.target.value)
-                formState.updateField('supplierName', supplier?.label || '')
-              }}
-              error={formState.errors.supplierId}
-              required
-              options={suppliers}
-              placeholder="Select a supplier"
-            />
-
-            <FormSelect
-              name="siteId"
-              label="Site"
-              value={formState.data.siteId}
-              onChange={(e) => {
-                const site = sites.find(s => s.value === e.target.value)
-                formState.updateField('siteId', e.target.value)
-                formState.updateField('siteName', site?.label || '')
-              }}
-              error={formState.errors.siteId}
-              required
-              options={sites}
-              placeholder="Select a site"
+              placeholder={loadingPOs ? "Loading purchase orders..." : "Select a purchase order"}
+              disabled={loadingPOs}
             />
 
             <FormInput
               name="receivedDate"
-              label="Received Date"
+              label="Received Date *"
               type="date"
               value={formState.data.receivedDate}
               onChange={(e) => formState.updateField('receivedDate', e.target.value)}
@@ -246,156 +276,142 @@ export function GoodsReceiptForm({
             />
 
             <FormSelect
-              name="receivedById"
-              label="Received By"
-              value={formState.data.receivedById}
-              onChange={(e) => {
-                const user = users.find(u => u.value === e.target.value)
-                formState.updateField('receivedById', e.target.value)
-                formState.updateField('receivedByName', user?.label || '')
-              }}
-              error={formState.errors.receivedById}
-              required
-              options={users}
-              placeholder="Select who received the goods"
-            />
-
-            <FormSelect
               name="status"
               label="Status"
               value={formState.data.status}
-              onChange={(e) => formState.updateField('status', e.target.value)}
+              onChange={(value) => formState.updateField('status', value)}
               options={[
                 { value: "Draft", label: "Draft" },
-                { value: "Pending QC", label: "Pending QC" },
-                { value: "QC Approved", label: "QC Approved" },
-                { value: "QC Rejected", label: "QC Rejected" },
+                { value: "Verified", label: "Verified" },
                 { value: "Completed", label: "Completed" },
-                { value: "Cancelled", label: "Cancelled" }
               ]}
               placeholder="Select status"
             />
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
-            <FormCheckbox
-              name="qcSampleRequested"
-              label="QC Sample Requested"
-              checked={formState.data.qcSampleRequested}
-              onChange={(e) => formState.updateField('qcSampleRequested', e.target.checked)}
-            />
-
-            <FormCheckbox
-              name="coaAttached"
-              label="CoA Attached"
-              checked={formState.data.coaAttached}
-              onChange={(e) => formState.updateField('coaAttached', e.target.checked)}
-            />
-          </div>
-
           <FormInput
-            name="notes"
-            label="Notes"
-            value={formState.data.notes}
-            onChange={(e) => formState.updateField('notes', e.target.value)}
+            name="remarks"
+            label="Remarks"
+            value={formState.data.remarks}
+            onChange={(e) => formState.updateField('remarks', e.target.value)}
             placeholder="Additional notes or comments"
             multiline
             rows={3}
           />
 
           {/* Items Section */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Received Items</h3>
-              <Button type="button" onClick={addItem} variant="outline" size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Item
-              </Button>
-            </div>
-
-            {items.map((item, index) => (
-              <Card key={index} className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="font-medium">Item {index + 1}</h4>
-                  <Button
-                    type="button"
-                    onClick={() => removeItem(index)}
-                    variant="destructive"
-                    size="sm"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+          {selectedPO && (
+            <div className="space-y-4 mt-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Received Items</h3>
+                <div className="text-sm text-muted-foreground">
+                  PO: {selectedPO.poNumber} | Supplier: {selectedPO.supplier?.name || `#${selectedPO.supplierId}`}
                 </div>
-
-                <div className="grid md:grid-cols-2 gap-4">
-                  <FormSelect
-                    name={`materialId_${index}`}
-                    label="Material"
-                    value={item.materialId}
-                    onChange={(e) => {
-                      const material = materials.find(m => m.value === e.target.value)
-                      updateItem(index, 'materialId', e.target.value)
-                      updateItem(index, 'materialName', material?.label.split(' - ')[0] || '')
-                      updateItem(index, 'materialCode', material?.label.split(' - ')[1] || '')
-                    }}
-                    options={materials}
-                    placeholder="Select material"
-                  />
-
-                  <FormInput
-                    name={`batchNumber_${index}`}
-                    label="Batch Number"
-                    value={item.batchNumber || ''}
-                    onChange={(e) => updateItem(index, 'batchNumber', e.target.value)}
-                    placeholder="Enter batch number"
-                  />
-
-                  <FormInput
-                    name={`orderedQuantity_${index}`}
-                    label="Ordered Quantity"
-                    type="number"
-                    value={item.orderedQuantity}
-                    onChange={(e) => updateItem(index, 'orderedQuantity', parseFloat(e.target.value) || 0)}
-                    placeholder="0"
-                  />
-
-                  <FormInput
-                    name={`receivedQuantity_${index}`}
-                    label="Received Quantity"
-                    type="number"
-                    value={item.receivedQuantity}
-                    onChange={(e) => updateItem(index, 'receivedQuantity', parseFloat(e.target.value) || 0)}
-                    placeholder="0"
-                    required
-                  />
-
-                  <FormSelect
-                    name={`unitOfMeasure_${index}`}
-                    label="Unit of Measure"
-                    value={item.unitOfMeasure}
-                    onChange={(e) => updateItem(index, 'unitOfMeasure', e.target.value)}
-                    options={units}
-                    placeholder="Select unit"
-                  />
-
-                  <FormInput
-                    name={`condition_${index}`}
-                    label="Condition"
-                    value={item.condition || ''}
-                    onChange={(e) => updateItem(index, 'condition', e.target.value)}
-                    placeholder="Good, Damaged, etc."
-                  />
-                </div>
-              </Card>
-            ))}
-
-            {items.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No items added yet. Click "Add Item" to get started.</p>
               </div>
-            )}
-          </div>
+
+              {items.map((item, index) => (
+                <Card key={index} className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h4 className="font-medium">{item.materialName || `Item ${index + 1}`}</h4>
+                      {item.materialCode && (
+                        <p className="text-sm text-muted-foreground">Code: {item.materialCode}</p>
+                      )}
+                      <p className="text-sm text-muted-foreground">
+                        Ordered: {item.orderedQuantity || 0} {item.unitOfMeasure || ""}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        const updated = items.filter((_, i) => i !== index)
+                        setItems(updated)
+                      }}
+                      variant="destructive"
+                      size="sm"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label>Received Quantity *</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        max={item.orderedQuantity || 0}
+                        value={item.receivedQuantity}
+                        onChange={(e) => updateItem(index, 'receivedQuantity', parseFloat(e.target.value) || 0)}
+                        placeholder="0"
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Max: {item.orderedQuantity || 0}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Accepted Quantity *</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={item.acceptedQuantity}
+                        onChange={(e) => updateItem(index, 'acceptedQuantity', parseFloat(e.target.value) || 0)}
+                        placeholder="0"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Rejected Quantity *</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={item.rejectedQuantity}
+                        onChange={(e) => updateItem(index, 'rejectedQuantity', parseFloat(e.target.value) || 0)}
+                        placeholder="0"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Batch Number</Label>
+                      <Input
+                        type="text"
+                        value={item.batchNumber || ""}
+                        onChange={(e) => updateItem(index, 'batchNumber', e.target.value)}
+                        placeholder="Enter batch number"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Expiry Date</Label>
+                      <Input
+                        type="date"
+                        value={item.expiryDate ? new Date(item.expiryDate).toISOString().split('T')[0] : ""}
+                        onChange={(e) => updateItem(index, 'expiryDate', e.target.value || undefined)}
+                      />
+                    </div>
+                  </div>
+                </Card>
+              ))}
+
+              {items.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No items in this purchase order or items already received.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {!selectedPO && formState.data.poId && (
+            <div className="text-center py-8 text-muted-foreground">
+              <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Loading purchase order details...</p>
+            </div>
+          )}
 
           <FormActions
             loading={formState.isLoading}

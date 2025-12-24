@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Plus, Package, MapPin, User, AlertCircle, Thermometer } from "lucide-react"
 import { apiService } from "@/services/api.service"
 import { toast } from "sonner"
+import { UNIT_OPTIONS } from "@/lib/constants"
 
 interface PutawayTaskFormProps {
   onSuccess?: () => void
@@ -175,13 +176,11 @@ export function PutawayTaskForm({ onSuccess, trigger }: PutawayTaskFormProps) {
                   <SelectValue placeholder="Select unit" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="kg">Kilogram (kg)</SelectItem>
-                  <SelectItem value="g">Gram (g)</SelectItem>
-                  <SelectItem value="mg">Milligram (mg)</SelectItem>
-                  <SelectItem value="L">Liter (L)</SelectItem>
-                  <SelectItem value="ml">Milliliter (ml)</SelectItem>
-                  <SelectItem value="pcs">Pieces</SelectItem>
-                  <SelectItem value="boxes">Boxes</SelectItem>
+                  {UNIT_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

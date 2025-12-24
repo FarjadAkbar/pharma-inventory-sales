@@ -5,6 +5,7 @@ import { BaseApiService } from "./base-api.service"
 export class QualityAssuranceApiService extends BaseApiService {
   // QA Releases API
   async getQAReleases(params?: {
+    sampleId?: number
     search?: string
     entityType?: string
     status?: string
@@ -16,6 +17,7 @@ export class QualityAssuranceApiService extends BaseApiService {
     limit?: number
   }) {
     const searchParams = new URLSearchParams()
+    if (params?.sampleId) searchParams.set("sampleId", params.sampleId.toString())
     if (params?.search) searchParams.set("search", params.search)
     if (params?.entityType) searchParams.set("entityType", params.entityType)
     if (params?.status) searchParams.set("status", params.status)
@@ -27,30 +29,49 @@ export class QualityAssuranceApiService extends BaseApiService {
     if (params?.limit) searchParams.set("limit", params.limit.toString())
 
     const query = searchParams.toString()
-    return this.request(`/quality-assurance/qa-releases${query ? `?${query}` : ""}`)
+    return this.rawRequest(`/qa-releases${query ? `?${query}` : ""}`)
   }
 
   async getQARelease(id: string) {
-    return this.request(`/quality-assurance/qa-releases/${id}`)
+    return this.rawRequest(`/qa-releases/${id}`)
   }
 
   async createQARelease(releaseData: any) {
-    return this.request("/quality-assurance/qa-releases", {
+    return this.rawRequest("/qa-releases", {
       method: "POST",
       body: JSON.stringify(releaseData),
     })
   }
 
-  async updateQARelease(releaseData: any) {
-    return this.request("/quality-assurance/qa-releases", {
+  async updateQARelease(id: string, releaseData: any) {
+    return this.rawRequest(`/qa-releases/${id}`, {
       method: "PUT",
       body: JSON.stringify(releaseData),
     })
   }
 
+  async completeChecklist(id: string, reviewedBy: number) {
+    return this.rawRequest(`/qa-releases/${id}/complete-checklist`, {
+      method: "POST",
+      body: JSON.stringify({ reviewedBy }),
+    })
+  }
+
+  async makeDecision(id: string, decisionData: any) {
+    return this.rawRequest(`/qa-releases/${id}/make-decision`, {
+      method: "POST",
+      body: JSON.stringify(decisionData),
+    })
+  }
+
+  async notifyWarehouse(id: string) {
+    return this.rawRequest(`/qa-releases/${id}/notify-warehouse`, {
+      method: "POST",
+    })
+  }
+
   async deleteQARelease(id: string) {
-    const sp = new URLSearchParams({ id })
-    return this.request(`/quality-assurance/qa-releases?${sp.toString()}`, { method: "DELETE" })
+    return this.rawRequest(`/qa-releases/${id}`, { method: "DELETE" })
   }
 
   // QA Deviations API

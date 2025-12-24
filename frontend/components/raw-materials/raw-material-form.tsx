@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Form, FormInput, FormTextarea, FormSelect, FormActions } from "@/components/ui/form"
 import { useFormState } from "@/lib/api-response"
 import { useFormValidation, commonValidationRules } from "@/lib/form-validation"
 import { rawMaterialsApi, suppliersApi, type RawMaterial } from "@/services"
 import { Switch } from "@/components/ui/switch"
+import { getUnitOptions } from "@/lib/constants"
 
 interface RawMaterialFormProps {
   initialData?: Partial<RawMaterial>
@@ -51,6 +52,11 @@ export function RawMaterialForm({ initialData, onSubmit, submitLabel = "Save" }:
     supplierId: initialData?.supplierId?.toString() || "",
     status: initialData?.status || "Active",
   }
+
+  // Get unit options, including custom unit if present in initialData
+  const unitOptions = useMemo(() => {
+    return getUnitOptions(initialData?.unitOfMeasure)
+  }, [initialData?.unitOfMeasure])
 
   const formState = useFormState(initialFormData)
   const validation = useFormValidation({
@@ -160,13 +166,14 @@ export function RawMaterialForm({ initialData, onSubmit, submitLabel = "Save" }:
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
-        <FormInput
+        <FormSelect
           name="unitOfMeasure"
           label="Unit of Measure"
           value={formState.data.unitOfMeasure}
-          onChange={(e) => formState.updateField('unitOfMeasure', e.target.value)}
+          onChange={(value) => formState.updateField('unitOfMeasure', value)}
           error={formState.errors.unitOfMeasure}
-          placeholder="e.g., kg, g, L, ml"
+          options={unitOptions}
+          placeholder="Select unit of measure"
         />
         <FormSelect
           name="supplierId"

@@ -16,7 +16,7 @@ async function bootstrap() {
   );
   app.useGlobalPipes(new ValidationPipe());
   await app.listen();
-  console.log('Purchase Orders Service is listening on port 3007');
+  console.log(`Purchase Orders Service is listening on port ${process.env.PORT}`);
 }
 bootstrap();
 

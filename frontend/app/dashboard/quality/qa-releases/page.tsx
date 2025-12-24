@@ -31,9 +31,11 @@ import {
   Pause,
   Play
 } from "lucide-react"
-import { apiService } from "@/services/api.service"
+import { qualityAssuranceApi } from "@/services"
 import type { QARelease, QAReleaseFilters } from "@/types/quality-assurance"
 import { formatDateISO } from "@/lib/utils"
+import { toast } from "@/lib/toast"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
 export default function QAReleasesPage() {
   const [qaReleases, setQAReleases] = useState<QARelease[]>([])
@@ -49,19 +51,16 @@ export default function QAReleasesPage() {
   const fetchQAReleases = async () => {
     try {
       setLoading(true)
-      const response = await apiService.getQAReleases({
+      const response = await qualityAssuranceApi.getQAReleases({
         search: searchQuery,
         ...filters,
         page: pagination.page,
         limit: 10,
       })
-
-      if (response.success && response.data) {
-        setQAReleases(response.data.qaReleases || [])
-        setPagination(response.data.pagination || { page: 1, pages: 1, total: 0 })
-      }
+      setQAReleases(Array.isArray(response) ? response : [])
     } catch (error) {
       console.error("Failed to fetch QA releases:", error)
+      toast.error("Failed to fetch QA releases", "Please try again later.")
     } finally {
       setLoading(false)
     }
@@ -271,7 +270,7 @@ export default function QAReleasesPage() {
             <h1 className="text-3xl font-bold tracking-tight">QA Release Board</h1>
             <p className="text-muted-foreground">Manage quality assurance releases and verification workflow</p>
           </div>
-          <Button className="bg-orange-600 hover:bg-orange-700">
+          <Button>
             <Plus />
             New Release
           </Button>

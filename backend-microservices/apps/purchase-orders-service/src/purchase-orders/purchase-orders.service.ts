@@ -115,17 +115,17 @@ export class PurchaseOrdersService {
   }
 
   async update(id: number, updateDto: UpdatePurchaseOrderDto): Promise<PurchaseOrderResponseDto> {
-    const purchaseOrder = await this.purchaseOrderRepository.findOne({
-      where: { id },
-      relations: ['items'],
-    });
-    if (!purchaseOrder) {
-      throw new NotFoundException('Purchase order not found');
-    }
-
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
+
+    const purchaseOrder = await this.purchaseOrderRepository.findOne({
+      where: { id },
+    });
+   
+    if (!purchaseOrder) {
+      throw new NotFoundException('Purchase order not found');
+    }
 
     try {
       // Update purchase order fields
@@ -141,7 +141,8 @@ export class PurchaseOrdersService {
 
         // Create new items
         const items = updateDto.items.map(item => {
-          return this.purchaseOrderItemRepository.create({
+        //   console.log(item, id, "items")
+          return queryRunner.manager.create(PurchaseOrderItem, {
             purchaseOrderId: id,
             rawMaterialId: item.rawMaterialId,
             quantity: item.quantity,
@@ -151,7 +152,6 @@ export class PurchaseOrdersService {
         });
 
         await queryRunner.manager.save(PurchaseOrderItem, items);
-
         // Recalculate total amount
         purchaseOrder.totalAmount = updateDto.items.reduce((sum, item) => {
           return sum + (item.quantity * item.unitPrice);

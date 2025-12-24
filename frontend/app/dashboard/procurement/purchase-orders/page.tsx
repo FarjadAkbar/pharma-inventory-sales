@@ -7,28 +7,25 @@ import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { 
   Plus, 
   ShoppingCart, 
   CheckCircle,
   Clock,
   XCircle,
-  AlertTriangle,
   Eye,
   Edit,
   Trash2,
   DollarSign,
   Calendar,
-  Building2,
-  User
+  Building2
 } from "lucide-react"
 import Link from "next/link"
-import { purchaseOrdersApi, sitesApi, suppliersApi, type PurchaseOrder } from "@/services"
+import { purchaseOrdersApi, type PurchaseOrder } from "@/services"
 import { PermissionGuard } from "@/components/auth/permission-guard"
-import { useAuth } from "@/contexts/auth.context"
 import { formatDateISO } from "@/lib/utils"
+import { toast } from "@/lib/toast"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
 // Map backend PurchaseOrder to frontend format
 function mapBackendToFrontend(backendPO: PurchaseOrder): any {
@@ -60,27 +57,14 @@ function mapBackendToFrontend(backendPO: PurchaseOrder): any {
 
 export default function PurchaseOrdersPage() {
   const [purchaseOrders, setPurchaseOrders] = useState<any[]>([])
-  const [suppliers, setSuppliers] = useState<Array<{ id: number; name: string }>>([])
-  const [sites, setSites] = useState<Array<{ id: number; name: string }>>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedSiteId, setSelectedSiteId] = useState<number | null>(null)
-  const [activeTab, setActiveTab] = useState("all")
-  const { user } = useAuth()
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [poToDelete, setPoToDelete] = useState<any>(null)
 
   useEffect(() => {
     fetchPurchaseOrders()
-    fetchSuppliers()
-    fetchSites()
   }, [])
-
-  useEffect(() => {
-    if (activeTab === "by-site" && selectedSiteId) {
-      fetchPurchaseOrdersBySite(selectedSiteId)
-    } else if (activeTab === "all") {
-      fetchPurchaseOrders()
-    }
-  }, [activeTab, selectedSiteId])
 
   const fetchPurchaseOrders = async () => {
     try {
@@ -99,51 +83,24 @@ export default function PurchaseOrdersPage() {
     }
   }
 
-  const fetchPurchaseOrdersBySite = async (siteId: number) => {
-    try {
-      setLoading(true)
-      const response = await purchaseOrdersApi.getPurchaseOrders({
-        search: searchQuery || undefined,
-      })
+  const handleDeleteClick = (po: any) => {
+    setPoToDelete(po)
+    setDeleteDialogOpen(true)
+  }
 
-      // Filter by site and map
-      const filtered = response.filter(po => po.siteId === siteId)
-      const mappedOrders = filtered.map(mapBackendToFrontend)
-      setPurchaseOrders(mappedOrders)
+  const handleDeleteConfirm = async () => {
+    if (!poToDelete) return
+    
+    try {
+      await purchaseOrdersApi.deletePurchaseOrder(poToDelete.id)
+      toast.success("Purchase order deleted successfully", `Purchase Order ${poToDelete.poNumber} has been deleted.`)
+      fetchPurchaseOrders() // Refresh the list
     } catch (error) {
-      console.error("Failed to fetch purchase orders by site:", error)
+      console.error("Failed to delete purchase order:", error)
+      toast.error("Failed to delete purchase order", "Please try again later.")
     } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchSuppliers = async () => {
-    try {
-      const suppliersData = await suppliersApi.getSuppliers()
-      setSuppliers(suppliersData.map((s: any) => ({ id: s.id, name: s.name })))
-    } catch (error) {
-      console.error("Failed to fetch suppliers:", error)
-    }
-  }
-
-  const fetchSites = async () => {
-    try {
-      const sitesData = await sitesApi.getSites()
-      setSites(sitesData.map((site: any) => ({ id: site.id, name: site.name })))
-    } catch (error) {
-      console.error("Failed to fetch sites:", error)
-    }
-  }
-
-  const handleDeletePurchaseOrder = async (po: any) => {
-    if (confirm(`Are you sure you want to delete Purchase Order ${po.poNumber}?`)) {
-      try {
-        await purchaseOrdersApi.deletePurchaseOrder(po.id)
-        fetchPurchaseOrders() // Refresh the list
-      } catch (error) {
-        console.error("Failed to delete purchase order:", error)
-        alert("Failed to delete purchase order")
-      }
+      setDeleteDialogOpen(false)
+      setPoToDelete(null)
     }
   }
 
@@ -284,7 +241,7 @@ export default function PurchaseOrdersPage() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => handleDeletePurchaseOrder(po)}
+          onClick={() => handleDeleteClick(po)}
           className="text-red-600 hover:text-red-700"
         >
           <Trash2 className="h-4 w-4" />
@@ -356,86 +313,30 @@ export default function PurchaseOrdersPage() {
           </Card>
         </div>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="all">All Orders</TabsTrigger>
-            <TabsTrigger value="by-site">By Site</TabsTrigger>
-            <TabsTrigger value="suppliers">Suppliers</TabsTrigger>
-          </TabsList>
+        {/* Purchase Orders Table */}
+        <UnifiedDataTable
+          data={purchaseOrders}
+          columns={columns}
+          loading={loading}
+          searchPlaceholder="Search purchase orders..."
+          searchValue={searchQuery}
+          onSearch={setSearchQuery}
+          actions={actions}
+          onRefresh={fetchPurchaseOrders}
+          onExport={() => console.log("Export purchase orders")}
+          emptyMessage="No purchase orders found. Create your first purchase order to get started."
+        />
 
-          <TabsContent value="all" className="space-y-4">
-            <UnifiedDataTable
-              data={purchaseOrders}
-              columns={columns}
-              loading={loading}
-              searchPlaceholder="Search purchase orders..."
-              searchValue={searchQuery}
-              onSearch={setSearchQuery}
-              actions={actions}
-              onRefresh={fetchPurchaseOrders}
-              onExport={() => console.log("Export purchase orders")}
-              emptyMessage="No purchase orders found. Create your first purchase order to get started."
-            />
-          </TabsContent>
-
-          <TabsContent value="by-site" className="space-y-4">
-            <div className="flex items-center gap-4 mb-4">
-              <Select
-                value={selectedSiteId?.toString() || ""}
-                onValueChange={(value) => setSelectedSiteId(value ? parseInt(value) : null)}
-              >
-                <SelectTrigger className="w-[300px]">
-                  <SelectValue placeholder="Select a site" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sites.map((site) => (
-                    <SelectItem key={site.id} value={site.id.toString()}>
-                      {site.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <UnifiedDataTable
-              data={purchaseOrders}
-              columns={columns}
-              loading={loading}
-              searchPlaceholder="Search purchase orders..."
-              searchValue={searchQuery}
-              onSearch={setSearchQuery}
-              actions={actions}
-              onRefresh={() => selectedSiteId ? fetchPurchaseOrdersBySite(selectedSiteId) : fetchPurchaseOrders()}
-              onExport={() => console.log("Export purchase orders")}
-              emptyMessage="No purchase orders found for the selected site."
-            />
-          </TabsContent>
-
-          <TabsContent value="suppliers" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Suppliers List</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {suppliers.map((supplier) => (
-                    <div key={supplier.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <div className="font-medium">{supplier.name}</div>
-                        <div className="text-sm text-muted-foreground">ID: {supplier.id}</div>
-                      </div>
-                    </div>
-                  ))}
-                  {suppliers.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      No suppliers found
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        <ConfirmDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          title="Delete Purchase Order"
+          description={`Are you sure you want to delete Purchase Order ${poToDelete?.poNumber}? This action cannot be undone.`}
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={handleDeleteConfirm}
+          variant="destructive"
+        />
       </div>
     </DashboardLayout>
   )

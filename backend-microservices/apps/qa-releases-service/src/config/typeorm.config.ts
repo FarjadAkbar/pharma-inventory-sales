@@ -1,0 +1,48 @@
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { TypeOrmOptionsFactory, TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { DataSource, DataSourceOptions } from 'typeorm';
+import { QARelease } from '../entities/qa-release.entity';
+import { QAChecklistItem } from '../entities/qa-checklist-item.entity';
+import * as dotenv from 'dotenv';
+
+// Load env vars for CLI usage
+dotenv.config();
+
+// Shared configuration function
+function getTypeOrmOptions(configService?: ConfigService): DataSourceOptions {
+  const isRuntime = !!configService;
+
+  const host = configService?.get<string>('DATABASE_HOST') || process.env.DATABASE_HOST || 'localhost';
+  const port = configService?.get<number>('DATABASE_PORT') || (process.env.DATABASE_PORT ? parseInt(process.env.DATABASE_PORT, 10) : 5432);
+  const username = configService?.get<string>('DATABASE_USER') || process.env.DATABASE_USER || 'postgres';
+  const password = configService?.get<string>('DATABASE_PASSWORD') || process.env.DATABASE_PASSWORD || 'postgres';
+  const database = configService?.get<string>('DATABASE_NAME') || process.env.DATABASE_NAME;
+
+  return {
+    type: 'postgres',
+    host,
+    port,
+    username,
+    password,
+    database,
+    entities: [QARelease, QAChecklistItem],
+    migrations: isRuntime ? [] : ['src/migrations/*.ts'],
+    synchronize: false,
+    logging: configService?.get<string>('NODE_ENV') === 'development' || process.env.NODE_ENV === 'development',
+  };
+}
+
+// For NestJS runtime
+@Injectable()
+export class TypeOrmConfigService implements TypeOrmOptionsFactory {
+  constructor(private configService: ConfigService) {}
+
+  createTypeOrmOptions(): TypeOrmModuleOptions {
+    return getTypeOrmOptions(this.configService);
+  }
+}
+
+// For TypeORM CLI (migrations)
+export default new DataSource(getTypeOrmOptions());
+

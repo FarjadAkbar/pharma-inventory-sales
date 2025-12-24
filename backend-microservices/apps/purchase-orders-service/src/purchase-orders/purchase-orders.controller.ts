@@ -22,9 +22,10 @@ export class PurchaseOrdersController {
   }
 
   @MessagePattern(PURCHASE_ORDER_PATTERNS.GET_BY_ID)
-  findOne(@Payload() id: number) {
-    return this.purchaseOrdersService.findOne(id);
+  findOne(@Payload() data: { id: number }) {
+    return this.purchaseOrdersService.findOne(data.id);
   }
+  
 
   @MessagePattern(PURCHASE_ORDER_PATTERNS.UPDATE)
   update(@Payload() data: { id: number; updateDto: UpdatePurchaseOrderDto }) {
