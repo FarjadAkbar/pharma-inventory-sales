@@ -13,8 +13,8 @@ import { RawMaterial } from '../entities/raw-material.entity';
         name: 'SUPPLIER_SERVICE',
         transport: Transport.TCP,
         options: {
-          host: process.env.SUPPLIER_SERVICE_HOST || 'localhost',
-          port: parseInt(process.env.SUPPLIER_SERVICE_PORT || '3006'),
+          host: process.env.SUPPLIER_SERVICE_HOST,
+          port: parseInt(process.env.SUPPLIER_SERVICE_PORT ?? '3006'),
         },
       },
     ]),

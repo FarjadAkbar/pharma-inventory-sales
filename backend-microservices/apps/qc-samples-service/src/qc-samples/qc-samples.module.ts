@@ -13,16 +13,16 @@ import { QCSample } from '../entities/qc-sample.entity';
         name: 'GOODS_RECEIPT_SERVICE',
         transport: Transport.TCP,
         options: {
-          host: process.env.GOODS_RECEIPT_SERVICE_HOST || 'localhost',
-          port: parseInt(process.env.GOODS_RECEIPT_SERVICE_PORT || '3010'),
+          host: process.env.GOODS_RECEIPT_SERVICE_HOST,
+          port: parseInt(process.env.GOODS_RECEIPT_SERVICE_PORT),
         },
       },
       {
         name: 'QC_TEST_SERVICE',
         transport: Transport.TCP,
         options: {
-          host: process.env.QC_TEST_SERVICE_HOST || 'localhost',
-          port: parseInt(process.env.QC_TEST_SERVICE_PORT || '3012'),
+          host: process.env.QC_TEST_SERVICE_HOST,
+          port: parseInt(process.env.QC_TEST_SERVICE_PORT),
         },
       },
     ]),

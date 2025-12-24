@@ -13,8 +13,8 @@ import { Role } from '../entities/role.entity';
         name: 'PERMISSION_SERVICE',
         transport: Transport.TCP,
         options: {
-          host: process.env.PERMISSION_SERVICE_HOST || 'localhost',
-          port: parseInt(process.env.PERMISSION_SERVICE_PORT || '3002'),
+          host: process.env.PERMISSION_SERVICE_HOST,
+          port: parseInt(process.env.PERMISSION_SERVICE_PORT ?? '3002'),
         },
       },
     ]),

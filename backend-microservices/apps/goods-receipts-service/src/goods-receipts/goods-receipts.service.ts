@@ -57,53 +57,10 @@ export class GoodsReceiptsService {
 
   async create(createGoodsReceiptDto: CreateGoodsReceiptDto): Promise<GoodsReceiptResponseDto> {
     // Verify PO exists and is approved
-    console.log(`[GoodsReceiptsService] Creating goods receipt for PO ID: ${createGoodsReceiptDto.purchaseOrderId}`);
-    console.log(`[GoodsReceiptsService] Using pattern: ${JSON.stringify(PURCHASE_ORDER_PATTERNS.GET_BY_ID)}`);
-    
-    let purchaseOrder: PurchaseOrderResponseDto;
-    try {
-      purchaseOrder = await firstValueFrom(
+    let purchaseOrder = await firstValueFrom(
         this.purchaseOrderClient.send<PurchaseOrderResponseDto>(PURCHASE_ORDER_PATTERNS.GET_BY_ID, createGoodsReceiptDto.purchaseOrderId)
       );
-      console.log(`[GoodsReceiptsService] Successfully fetched purchase order: ${purchaseOrder?.id}, status: ${purchaseOrder?.status}`);
-    } catch (error: any) {
-      console.error('Error fetching purchase order:', {
-        error: error?.message || error,
-        name: error?.name,
-        code: error?.code,
-        purchaseOrderId: createGoodsReceiptDto.purchaseOrderId,
-        pattern: PURCHASE_ORDER_PATTERNS.GET_BY_ID
-      });
-      
-      // Check for "no matching handler" error - means service isn't running or pattern doesn't match
-      if (error?.message?.includes('no matching message handler') || error?.message?.includes('There is no matching message handler')) {
-        const configuredPort = process.env.PURCHASE_ORDER_SERVICE_PORT || '3009';
-        const configuredHost = process.env.PURCHASE_ORDER_SERVICE_HOST || 'localhost';
-        const expectedPort = '3009'; // Purchase order service default port
-        
-        throw new BadRequestException(
-          `Cannot connect to Purchase Order Service. ` +
-          `Configured to connect to ${configuredHost}:${configuredPort}, but the service may be running on port ${expectedPort}. ` +
-          `Please check your .env file: set PURCHASE_ORDER_SERVICE_PORT=${expectedPort} if the service is running on port ${expectedPort}, ` +
-          `or ensure the purchase order service is running on port ${configuredPort}. ` +
-          `Pattern sent: ${JSON.stringify(PURCHASE_ORDER_PATTERNS.GET_BY_ID)}`
-        );
-      }
-      
-      // Check if it's a NotFoundException from the purchase order service
-      if (error?.status === 404 || error?.message?.toLowerCase().includes('not found')) {
-        throw new NotFoundException(`Purchase order ${createGoodsReceiptDto.purchaseOrderId} not found`);
-      }
-      
-      // Re-throw NotFoundException as-is
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      
-      // For other errors
-      throw new BadRequestException(`Failed to fetch purchase order: ${error?.message || 'Unknown error'}`);
-    }
-    
+      console.log(purchaseOrder, 'purchaseOrder');
     if (!purchaseOrder) {
       throw new NotFoundException('Purchase order not found');
     }

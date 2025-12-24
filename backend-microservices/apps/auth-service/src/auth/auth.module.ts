@@ -17,7 +17,7 @@ import { RefreshToken } from '../entities/refresh-token.entity';
         name: 'USER_SERVICE',
         transport: Transport.TCP,
         options: {
-          host: process.env.USER_SERVICE_HOST || 'localhost',
+          host: process.env.USER_SERVICE_HOST,
           port: parseInt(process.env.USER_SERVICE_PORT || '3004'),
         },
       },

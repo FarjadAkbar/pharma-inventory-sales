@@ -14,7 +14,7 @@ import { GoodsReceiptItem } from '../entities/goods-receipt-item.entity';
         name: 'PURCHASE_ORDER_SERVICE',
         transport: Transport.TCP,
         options: {
-          host: process.env.PURCHASE_ORDER_SERVICE_HOST || 'localhost',
+          host: process.env.PURCHASE_ORDER_SERVICE_HOST,
           port: parseInt(process.env.PURCHASE_ORDER_SERVICE_PORT || '3008'),
         },
       },
@@ -22,7 +22,7 @@ import { GoodsReceiptItem } from '../entities/goods-receipt-item.entity';
         name: 'QC_SAMPLE_SERVICE',
         transport: Transport.TCP,
         options: {
-          host: process.env.QC_SAMPLE_SERVICE_HOST || 'localhost',
+          host: process.env.QC_SAMPLE_SERVICE_HOST,
           port: parseInt(process.env.QC_SAMPLE_SERVICE_PORT || '3011'),
         },
       },
@@ -30,8 +30,8 @@ import { GoodsReceiptItem } from '../entities/goods-receipt-item.entity';
         name: 'RAW_MATERIAL_SERVICE',
         transport: Transport.TCP,
         options: {
-          host: process.env.RAW_MATERIAL_SERVICE_HOST || 'localhost',
-          port: parseInt(process.env.RAW_MATERIAL_SERVICE_PORT || '3008'),
+          host: process.env.RAW_MATERIAL_SERVICE_HOST,
+          port: parseInt(process.env.RAW_MATERIAL_SERVICE_PORT || '3007'),
         },
       },
     ]),

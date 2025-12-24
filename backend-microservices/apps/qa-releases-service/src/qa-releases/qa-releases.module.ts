@@ -14,24 +14,24 @@ import { QAChecklistItem } from '../entities/qa-checklist-item.entity';
         name: 'QC_SAMPLE_SERVICE',
         transport: Transport.TCP,
         options: {
-          host: process.env.QC_SAMPLE_SERVICE_HOST || 'localhost',
-          port: parseInt(process.env.QC_SAMPLE_SERVICE_PORT || '3011'),
+          host: process.env.QC_SAMPLE_SERVICE_HOST,
+          port: parseInt(process.env.QC_SAMPLE_SERVICE_PORT),
         },
       },
       {
         name: 'QC_RESULT_SERVICE',
         transport: Transport.TCP,
         options: {
-          host: process.env.QC_RESULT_SERVICE_HOST || 'localhost',
-          port: parseInt(process.env.QC_RESULT_SERVICE_PORT || '3013'),
+          host: process.env.QC_RESULT_SERVICE_HOST,
+          port: parseInt(process.env.QC_RESULT_SERVICE_PORT),
         },
       },
       {
         name: 'GOODS_RECEIPT_SERVICE',
         transport: Transport.TCP,
         options: {
-          host: process.env.GOODS_RECEIPT_SERVICE_HOST || 'localhost',
-          port: parseInt(process.env.GOODS_RECEIPT_SERVICE_PORT || '3010'),
+          host: process.env.GOODS_RECEIPT_SERVICE_HOST,
+          port: parseInt(process.env.GOODS_RECEIPT_SERVICE_PORT),
         },
       },
     ]),

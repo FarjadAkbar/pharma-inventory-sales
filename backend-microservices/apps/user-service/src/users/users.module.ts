@@ -13,16 +13,16 @@ import { User } from '../entities/user.entity';
         name: 'ROLE_SERVICE',
         transport: Transport.TCP,
         options: {
-          host: process.env.ROLE_SERVICE_HOST || 'localhost',
-          port: parseInt(process.env.ROLE_SERVICE_PORT || '3003'),
+          host: process.env.ROLE_SERVICE_HOST,
+          port: parseInt(process.env.ROLE_SERVICE_PORT ?? '3003'),
         },
       },
       {
         name: 'SITE_SERVICE',
         transport: Transport.TCP,
         options: {
-          host: process.env.SITE_SERVICE_HOST || 'localhost',
-          port: parseInt(process.env.SITE_SERVICE_PORT || '3005'),
+          host: process.env.SITE_SERVICE_HOST,
+          port: parseInt(process.env.SITE_SERVICE_PORT ?? '3005'),
         },
       },
     ]),
