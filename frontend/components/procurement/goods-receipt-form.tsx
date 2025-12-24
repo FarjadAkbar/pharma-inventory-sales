@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Form, FormField, FormInput, FormSelect, FormCheckbox, FormActions } from "@/components/ui/form"
+import { Form, FormField, FormInput, FormSelect, FormCheckbox, FormActions, FormTextarea } from "@/components/ui/form"
 import { useFormState } from "@/lib/api-response"
 import { useFormValidation, commonValidationRules } from "@/lib/form-validation"
 import { Button } from "@/components/ui/button"
@@ -13,6 +13,8 @@ import { Label } from "@/components/ui/label"
 
 interface GoodsReceiptItem {
   purchaseOrderItemId: number
+  // Raw material id (from PO item) - display only
+  rawMaterialId?: number
   receivedQuantity: number
   acceptedQuantity: number
   rejectedQuantity: number
@@ -137,6 +139,7 @@ export function GoodsReceiptForm({
       if (po.items && po.items.length > 0) {
         const poItems = po.items.map(item => ({
           purchaseOrderItemId: item.id,
+          rawMaterialId: item.rawMaterialId,
           receivedQuantity: 0,
           acceptedQuantity: 0,
           rejectedQuantity: 0,
@@ -249,8 +252,8 @@ export function GoodsReceiptForm({
         <Form
           onSubmit={handleSubmit}
           loading={formState.isLoading}
-          error={formState.error}
-          success={formState.success}
+          error={formState.error || undefined}
+          success={formState.success || undefined}
         >
           <div className="grid md:grid-cols-2 gap-4">
             <FormSelect
@@ -289,13 +292,12 @@ export function GoodsReceiptForm({
             />
           </div>
 
-          <FormInput
+          <FormTextarea
             name="remarks"
             label="Remarks"
             value={formState.data.remarks}
             onChange={(e) => formState.updateField('remarks', e.target.value)}
             placeholder="Additional notes or comments"
-            multiline
             rows={3}
           />
 
@@ -317,6 +319,10 @@ export function GoodsReceiptForm({
                       {item.materialCode && (
                         <p className="text-sm text-muted-foreground">Code: {item.materialCode}</p>
                       )}
+                      <p className="text-xs text-muted-foreground">
+                        PO Item ID: {item.purchaseOrderItemId}
+                        {item.rawMaterialId ? ` • Material ID: ${item.rawMaterialId}` : ""}
+                      </p>
                       <p className="text-sm text-muted-foreground">
                         Ordered: {item.orderedQuantity || 0} {item.unitOfMeasure || ""}
                       </p>
