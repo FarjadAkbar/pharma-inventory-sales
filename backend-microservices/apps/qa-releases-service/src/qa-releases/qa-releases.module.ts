@@ -15,7 +15,7 @@ import { QAChecklistItem } from '../entities/qa-checklist-item.entity';
         transport: Transport.TCP,
         options: {
           host: process.env.QC_SAMPLE_SERVICE_HOST,
-          port: parseInt(process.env.QC_SAMPLE_SERVICE_PORT),
+          port: parseInt(process.env.QC_SAMPLE_SERVICE_PORT || '3010'),
         },
       },
       {
@@ -23,7 +23,7 @@ import { QAChecklistItem } from '../entities/qa-checklist-item.entity';
         transport: Transport.TCP,
         options: {
           host: process.env.QC_RESULT_SERVICE_HOST,
-          port: parseInt(process.env.QC_RESULT_SERVICE_PORT),
+          port: parseInt(process.env.QC_RESULT_SERVICE_PORT || '3012'),
         },
       },
       {
@@ -31,7 +31,7 @@ import { QAChecklistItem } from '../entities/qa-checklist-item.entity';
         transport: Transport.TCP,
         options: {
           host: process.env.GOODS_RECEIPT_SERVICE_HOST,
-          port: parseInt(process.env.GOODS_RECEIPT_SERVICE_PORT),
+          port: parseInt(process.env.GOODS_RECEIPT_SERVICE_PORT || '3009'),
         },
       },
     ]),

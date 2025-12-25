@@ -138,7 +138,7 @@ export default function QCTestsPage() {
 
   const calculateStats = () => {
     const total = qcTests.length
-    const active = qcTests.filter(test => test.isActive).length
+    const active = qcTests.filter(test => (test as any).status === 'Active' || (test as any).isActive).length
     const physical = qcTests.filter(test => test.category === "Physical").length
     const chemical = qcTests.filter(test => test.category === "Chemical").length
 
@@ -175,8 +175,8 @@ export default function QCTestsPage() {
       sortable: true,
       render: (test: QCTest) => (
         <div className="flex items-center gap-2">
-          {getCategoryIcon(test.category)}
-          {getCategoryBadge(test.category)}
+          {getCategoryIcon(test.category || "")}
+          {getCategoryBadge(test.category || "")}
         </div>
       ),
     },
@@ -186,8 +186,8 @@ export default function QCTestsPage() {
       sortable: true,
       render: (test: QCTest) => (
         <div className="text-sm">
-          <div className="font-medium">{test.method}</div>
-          <div className="text-muted-foreground">{test.unit}</div>
+          <div className="font-medium">{test.category || "N/A"}</div>
+          <div className="text-muted-foreground">{test.specifications?.[0]?.unit || "N/A"}</div>
         </div>
       ),
     },
@@ -209,11 +209,14 @@ export default function QCTestsPage() {
       key: "status",
       header: "Status",
       sortable: true,
-      render: (test: QCTest) => (
-        <Badge className={test.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
-          {test.isActive ? "Active" : "Inactive"}
-        </Badge>
-      ),
+      render: (test: QCTest) => {
+        const status = (test as any).status || ((test as any).isActive ? 'Active' : 'Inactive')
+        return (
+          <Badge className={status === 'Active' ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
+            {status}
+          </Badge>
+        )
+      },
     },
     {
       key: "createdBy",
@@ -229,7 +232,7 @@ export default function QCTestsPage() {
       key: "createdAt",
       header: "Created",
       sortable: true,
-      render: (test: QCTest) => formatDateISO(test.createdAt),
+      render: (test: QCTest) => test.createdAt ? formatDateISO(test.createdAt) : "N/A",
     },
   ]
 
@@ -251,12 +254,12 @@ export default function QCTestsPage() {
       ],
     },
     {
-      key: "isActive",
+      key: "status",
       label: "Status",
       type: "select" as const,
       options: [
-        { value: "true", label: "Active" },
-        { value: "false", label: "Inactive" },
+        { value: "Active", label: "Active" },
+        { value: "Inactive", label: "Inactive" },
       ],
     },
   ]

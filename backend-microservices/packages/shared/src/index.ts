@@ -12,4 +12,5 @@ export * from './dto/qc-sample.dto';
 export * from './dto/qc-test.dto';
 export * from './dto/qc-result.dto';
 export * from './dto/qa-release.dto';
+export * from './dto/qa-deviation.dto';
 export * from './interfaces/message-patterns';

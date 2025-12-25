@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { QCTestForm } from "@/components/quality/qc-test-form"
-import { apiService } from "@/services/api.service"
+import { qualityControlApi } from "@/services"
 import type { QCTest } from "@/types/quality-control"
 
 export default function EditQCTestPage() {
@@ -23,12 +23,8 @@ export default function EditQCTestPage() {
   const fetchQCTest = async (id: string) => {
     try {
       setLoading(true)
-      const response = await apiService.getQCTests({ search: id, limit: 1 })
-      if (response.success && response.data?.qcTests?.length > 0) {
-        setQCTest(response.data.qcTests[0])
-      } else {
-        throw new Error("QC test not found")
-      }
+      const response = await qualityControlApi.getQCTest(id)
+      setQCTest(response)
     } catch (error) {
       console.error("Failed to fetch QC test:", error)
       router.push("/dashboard/quality/qc-tests")
@@ -40,12 +36,8 @@ export default function EditQCTestPage() {
   const handleSubmit = async (data: QCTest) => {
     setIsSubmitting(true)
     try {
-      const response = await apiService.updateQCTest({ ...data, id: params.id })
-      if (response.success) {
-        router.push("/dashboard/quality/qc-tests")
-      } else {
-        throw new Error(response.message || "Failed to update QC test")
-      }
+      await qualityControlApi.updateQCTest(params.id as string, data)
+      router.push("/dashboard/quality/qc-tests")
     } catch (error: any) {
       console.error("Failed to update QC test:", error)
       throw error

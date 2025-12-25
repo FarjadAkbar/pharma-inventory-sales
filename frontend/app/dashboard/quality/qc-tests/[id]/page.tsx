@@ -166,23 +166,15 @@ export default function ViewQCTestPage() {
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Category</label>
                 <div className="flex items-center gap-2">
-                  {getCategoryIcon(qcTest.category)}
-                  {getCategoryBadge(qcTest.category)}
+                  {getCategoryIcon(qcTest.category || "")}
+                  {getCategoryBadge(qcTest.category || "")}
                 </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Method</label>
-                <p className="text-lg">{qcTest.method}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Unit</label>
-                <p className="text-lg">{qcTest.unit}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Status</label>
                 <div className="mt-1">
-                  <Badge className={qcTest.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
-                    {qcTest.isActive ? "Active" : "Inactive"}
+                  <Badge className={(qcTest as any).status === 'Active' || (qcTest as any).isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
+                    {(qcTest as any).status || ((qcTest as any).isActive ? "Active" : "Inactive")}
                   </Badge>
                 </div>
               </div>
@@ -197,27 +189,15 @@ export default function ViewQCTestPage() {
             <CardContent className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Description</label>
-                <p className="text-lg">{qcTest.description}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Equipment Required</label>
-                <p className="text-lg">{qcTest.equipmentRequired || "N/A"}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Test Duration</label>
-                <p className="text-lg">{qcTest.duration || "N/A"}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Temperature</label>
-                <p className="text-lg">{qcTest.temperature || "N/A"}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Created By</label>
-                <p className="text-lg">{qcTest.createdByName}</p>
+                <p className="text-lg">{qcTest.description || "N/A"}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Created</label>
-                <p className="text-sm">{formatDateISO(qcTest.createdAt)}</p>
+                <p className="text-sm">{qcTest.createdAt ? formatDateISO(qcTest.createdAt) : "N/A"}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Last Updated</label>
+                <p className="text-sm">{qcTest.updatedAt ? formatDateISO(qcTest.updatedAt) : "N/A"}</p>
               </div>
             </CardContent>
           </Card>
@@ -232,28 +212,44 @@ export default function ViewQCTestPage() {
             <div className="space-y-4">
               {qcTest.specifications.map((spec, index) => (
                 <div key={index} className="border rounded-lg p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Parameter</label>
                       <p className="font-semibold">{spec.parameter}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Specification</label>
-                      <p className="text-lg">{spec.specification}</p>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Unit</label>
                       <p className="text-lg">{spec.unit}</p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-muted-foreground">Type</label>
-                      <Badge variant="outline">{spec.type}</Badge>
+                      <label className="text-sm font-medium text-muted-foreground">Method</label>
+                      <p className="text-lg">{spec.method || "N/A"}</p>
                     </div>
                   </div>
-                  {spec.description && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                    {(spec as any).minValue && (
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Min Value</label>
+                        <p className="text-lg">{(spec as any).minValue}</p>
+                      </div>
+                    )}
+                    {(spec as any).maxValue && (
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Max Value</label>
+                        <p className="text-lg">{(spec as any).maxValue}</p>
+                      </div>
+                    )}
+                    {(spec as any).targetValue && (
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Target Value</label>
+                        <p className="text-lg">{(spec as any).targetValue}</p>
+                      </div>
+                    )}
+                  </div>
+                  {!((spec as any).minValue || (spec as any).maxValue || (spec as any).targetValue) && (spec as any).specification && (
                     <div className="mt-2">
-                      <label className="text-sm font-medium text-muted-foreground">Description</label>
-                      <p className="text-sm">{spec.description}</p>
+                      <label className="text-sm font-medium text-muted-foreground">Specification</label>
+                      <p className="text-sm">{(spec as any).specification}</p>
                     </div>
                   )}
                 </div>
@@ -262,18 +258,8 @@ export default function ViewQCTestPage() {
           </CardContent>
         </Card>
 
-        {/* Notes */}
-        {qcTest.notes && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Notes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">{qcTest.notes}</p>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </DashboardLayout>
   )
 }
+

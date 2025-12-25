@@ -50,10 +50,12 @@ export class QCSamplesService {
     // Verify goods receipt item exists
     let goodsReceipt: GoodsReceiptResponseDto | null = null;
     try {
+      console.log(createQCSampleDto, "createQCSampleDto")
       goodsReceipt = await firstValueFrom(
         this.goodsReceiptClient.send<GoodsReceiptResponseDto>(GOODS_RECEIPT_PATTERNS.GET_BY_ID, createQCSampleDto.sourceId)
       );
     } catch (error) {
+      console.log(error, "error")
       throw new NotFoundException('Goods receipt not found');
     }
 

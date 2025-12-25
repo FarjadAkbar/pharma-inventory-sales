@@ -8,7 +8,7 @@ export class QualityControlApiService extends BaseApiService {
     materialId?: number
     search?: string
     category?: string
-    isActive?: boolean
+    status?: 'Active' | 'Inactive'
     page?: number
     limit?: number
   }) {
@@ -16,7 +16,7 @@ export class QualityControlApiService extends BaseApiService {
     if (params?.materialId) searchParams.set("materialId", params.materialId.toString())
     if (params?.search) searchParams.set("search", params.search)
     if (params?.category) searchParams.set("category", params.category)
-    if (params?.isActive !== undefined) searchParams.set("isActive", params.isActive.toString())
+    if (params?.status) searchParams.set("status", params.status)
     if (params?.page) searchParams.set("page", params.page.toString())
     if (params?.limit) searchParams.set("limit", params.limit.toString())
 

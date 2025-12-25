@@ -39,7 +39,8 @@ import {
   Calendar,
   AlertTriangle,
   Workflow,
-  Zap
+  Zap,
+  Beaker
 } from "lucide-react"
 
 interface NavItem {
@@ -120,10 +121,10 @@ export function Sidebar() {
       title: "Quality (QC/QA)",
       icon: TestTube,
       items: [
-        { title: "Quality Control Tests", href: "/dashboard/quality/qc-tests", icon: TestTube },
-        { title: "Sample Requests", href: "/dashboard/quality/samples", icon: TestTube },
-        { title: "Sample Results", href: "/dashboard/quality/sample-results", icon: TestTube },
-        { title: "Quality Assurance Releases", href: "/dashboard/quality/qa-releases", icon: Shield },
+        { title: "QC Test Methods", href: "/dashboard/quality/qc-tests", icon: TestTube },
+        { title: "QC Sample Requests", href: "/dashboard/quality/samples", icon: Beaker },
+        { title: "QC Test Results", href: "/dashboard/quality/qc-results", icon: FileCheck },
+        { title: "QA Releases", href: "/dashboard/quality/qa-releases", icon: Shield },
         { title: "Deviations / CAPA", href: "/dashboard/quality/deviations", icon: AlertTriangle },
       ]
     },

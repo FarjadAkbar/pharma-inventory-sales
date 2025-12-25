@@ -210,7 +210,7 @@ export default function QCResultsPage() {
             <p className="text-muted-foreground">Manage quality control test results</p>
           </div>
           <Link href="/dashboard/quality/qc-results/new">
-            <Button className="bg-orange-600 hover:bg-orange-700">
+            <Button>
               <Plus />
               Add Result
             </Button>

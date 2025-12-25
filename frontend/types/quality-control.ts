@@ -1,15 +1,19 @@
 // Quality Control Module Types
 
 export interface QCTest {
-  id?: string
-  code: string
+  id?: string | number
+  code?: string
   name: string
-  description: string
-  category: QCTestCategory
-  method: string
+  description?: string
+  category?: QCTestCategory
   specifications: QCTestSpecification[]
-  unit: string
-  isActive: boolean
+  status: 'Active' | 'Inactive'
+  createdAt?: string | Date
+  updatedAt?: string | Date
+  // Legacy fields for backward compatibility (not sent to backend)
+  method?: string
+  unit?: string
+  isActive?: boolean
   equipmentRequired?: string
   duration?: string
   temperature?: string
@@ -17,20 +21,20 @@ export interface QCTest {
   createdById?: string
   createdByName?: string
   createdBy?: string
-  createdAt: string
-  updatedAt: string
 }
 
 export interface QCTestSpecification {
-  id?: string
+  id?: string | number
   parameter: string
-  specification: string
+  minValue?: string
+  maxValue?: string
+  targetValue?: string
   unit: string
-  type: string
+  method?: string
+  // Legacy fields for backward compatibility (not sent to backend)
+  specification?: string
+  type?: string
   description?: string
-  minValue?: number
-  maxValue?: number
-  targetValue?: number
   criteria?: string
   isRequired?: boolean
 }

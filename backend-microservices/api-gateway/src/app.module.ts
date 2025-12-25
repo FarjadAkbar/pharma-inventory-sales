@@ -14,6 +14,7 @@ import { QCSamplesController } from './qc-samples/qc-samples.controller';
 import { QCTestsController } from './qc-tests/qc-tests.controller';
 import { QCResultsController } from './qc-results/qc-results.controller';
 import { QAReleasesController } from './qa-releases/qa-releases.controller';
+import { QADeviationsController } from './qa-deviations/qa-deviations.controller';
 
 @Module({
   imports: [
@@ -123,6 +124,14 @@ import { QAReleasesController } from './qa-releases/qa-releases.controller';
           port: parseInt(process.env.QA_RELEASE_SERVICE_PORT),
         },
       },
+      {
+        name: 'QA_DEVIATION_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: process.env.QA_DEVIATION_SERVICE_HOST,
+          port: parseInt(process.env.QA_DEVIATION_SERVICE_PORT),
+        },
+      },
     ]),
   ],
   controllers: [
@@ -139,6 +148,7 @@ import { QAReleasesController } from './qa-releases/qa-releases.controller';
     QCTestsController,
     QCResultsController,
     QAReleasesController,
+    QADeviationsController,
   ],
 })
 export class AppModule {}

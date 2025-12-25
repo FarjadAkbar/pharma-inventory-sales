@@ -14,7 +14,7 @@ import { QCResult } from '../entities/qc-result.entity';
         transport: Transport.TCP,
         options: {
           host: process.env.QC_SAMPLE_SERVICE_HOST,
-          port: parseInt(process.env.QC_SAMPLE_SERVICE_PORT),
+          port: parseInt(process.env.QC_SAMPLE_SERVICE_PORT || '3010'),
         },
       },
       {
@@ -22,7 +22,7 @@ import { QCResult } from '../entities/qc-result.entity';
         transport: Transport.TCP,
         options: {
           host: process.env.QC_TEST_SERVICE_HOST,
-          port: parseInt(process.env.QC_TEST_SERVICE_PORT),
+          port: parseInt(process.env.QC_TEST_SERVICE_PORT || '3011'),
         },
       },
     ]),

@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { DataTable } from "@/components/ui/data-table"
 import { Button } from "@/components/ui/button"
@@ -34,6 +35,7 @@ import type { QADeviation, QADeviationFilters } from "@/types/quality-assurance"
 import { formatDateISO } from "@/lib/utils"
 
 export default function QADeviationsPage() {
+  const router = useRouter()
   const [deviations, setDeviations] = useState<QADeviation[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -276,7 +278,10 @@ export default function QADeviationsPage() {
             <h1 className="text-3xl font-bold tracking-tight">Deviation Tracker</h1>
             <p className="text-muted-foreground">Manage quality deviations and investigations</p>
           </div>
-          <Button className="bg-orange-600 hover:bg-orange-700">
+          <Button 
+            className="bg-orange-600 hover:bg-orange-700"
+            onClick={() => router.push("/dashboard/quality/deviations/new")}
+          >
             <Plus />
             New Deviation
           </Button>
@@ -350,7 +355,7 @@ export default function QADeviationsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Filter className="h-5 w-5" />
-              Filters
+              Filters & Search
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -462,32 +467,52 @@ export default function QADeviationsPage() {
               data={deviations}
               columns={columns}
               loading={loading}
-              onSearch={handleSearch}
               pagination={{
                 page: pagination.page,
                 pages: pagination.pages,
                 total: pagination.total,
                 onPageChange: handlePageChange
               }}
-              searchPlaceholder="Search deviations..."
-              actions={(deviation: QADeviation) => (
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  {deviation.status === "Open" && (
-                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
-                      <User className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
+              actions={[
+                {
+                  label: "View",
+                  icon: <Eye className="h-4 w-4" />,
+                  onClick: (deviation: QADeviation) => router.push(`/dashboard/quality/deviations/${deviation.id}`),
+                  variant: "ghost" as const
+                },
+                {
+                  label: "Edit",
+                  icon: <Edit className="h-4 w-4" />,
+                  onClick: (deviation: QADeviation) => router.push(`/dashboard/quality/deviations/${deviation.id}/edit`),
+                  variant: "ghost" as const
+                },
+                {
+                  label: "Assign",
+                  icon: <User className="h-4 w-4" />,
+                  onClick: (deviation: QADeviation) => {
+                    // TODO: Implement assign functionality
+                    console.log("Assign deviation:", deviation.id)
+                  },
+                  variant: "ghost" as const,
+                  show: (deviation: QADeviation) => deviation.status === "Open"
+                },
+                {
+                  label: "Delete",
+                  icon: <Trash2 className="h-4 w-4" />,
+                  onClick: async (deviation: QADeviation) => {
+                    if (confirm(`Are you sure you want to delete deviation ${deviation.deviationNumber}?`)) {
+                      try {
+                        await apiService.deleteQADeviation(deviation.id.toString())
+                        fetchDeviations()
+                      } catch (error) {
+                        console.error("Failed to delete deviation:", error)
+                      }
+                    }
+                  },
+                  variant: "ghost" as const,
+                  className: "text-red-600 hover:text-red-700"
+                }
+              ]}
             />
           </CardContent>
         </Card>

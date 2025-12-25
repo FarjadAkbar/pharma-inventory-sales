@@ -35,8 +35,10 @@ import type { QCSample, QCSampleFilters } from "@/types/quality-control"
 import { formatDateISO } from "@/lib/utils"
 import { toast } from "@/lib/toast"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { useRouter } from "next/navigation"
 
 export default function QCSamplesPage() {
+  const router = useRouter()
   const [qcSamples, setQCSamples] = useState<QCSample[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -178,24 +180,31 @@ export default function QCSamplesPage() {
     {
       key: "tests",
       header: "Tests",
-      render: (sample: QCSample) => (
-        <div className="space-y-1">
-          <div className="text-sm font-medium">{sample.tests.length} tests</div>
-          <div className="flex flex-wrap gap-1">
-            {sample.tests.slice(0, 2).map((test) => (
-              <div key={test.id} className="flex items-center gap-1 text-xs bg-gray-100 px-2 py-1 rounded">
-                {getTestIcon(test.testName)}
-                {test.testName}
+      render: (sample: QCSample) => {
+        const tests = sample.tests || []
+        return (
+          <div className="space-y-1">
+            <div className="text-sm font-medium">{tests.length} tests</div>
+            {tests.length > 0 ? (
+              <div className="flex flex-wrap gap-1">
+                {tests.slice(0, 2).map((test) => (
+                  <div key={test.id} className="flex items-center gap-1 text-xs bg-gray-100 px-2 py-1 rounded">
+                    {getTestIcon(test.testName)}
+                    {test.testName}
+                  </div>
+                ))}
+                {tests.length > 2 && (
+                  <div className="text-xs bg-gray-100 px-2 py-1 rounded">
+                    +{tests.length - 2} more
+                  </div>
+                )}
               </div>
-            ))}
-            {sample.tests.length > 2 && (
-              <div className="text-xs bg-gray-100 px-2 py-1 rounded">
-                +{sample.tests.length - 2} more
-              </div>
+            ) : (
+              <div className="text-xs text-muted-foreground">No tests assigned</div>
             )}
           </div>
-        </div>
-      ),
+        )
+      },
     },
     {
       key: "priority",
@@ -248,8 +257,8 @@ export default function QCSamplesPage() {
             <h1 className="text-3xl font-bold tracking-tight">QC Samples Queue</h1>
             <p className="text-muted-foreground">Manage quality control samples and testing workflow</p>
           </div>
-          <Button className="bg-orange-600 hover:bg-orange-700">
-            <Plus />
+          <Button onClick={() => router.push("/dashboard/quality/samples/new")}>
+            <Plus className="h-4 w-4 mr-2" />
             Add Sample
           </Button>
         </div>
@@ -312,7 +321,7 @@ export default function QCSamplesPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Filter className="h-5 w-5" />
-              Filters
+              Filters & Search
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -322,7 +331,7 @@ export default function QCSamplesPage() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search samples..."
+                    placeholder="Search by sample #, material, batch..."
                     value={searchQuery}
                     onChange={(e) => handleSearch(e.target.value)}
                     className="pl-10"
@@ -405,32 +414,45 @@ export default function QCSamplesPage() {
               data={qcSamples}
               columns={columns}
               loading={loading}
-              onSearch={handleSearch}
               pagination={{
                 page: pagination.page,
                 pages: pagination.pages,
                 total: pagination.total,
                 onPageChange: handlePageChange
               }}
-              searchPlaceholder="Search QC samples..."
-              actions={(sample: QCSample) => (
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  {sample.status === "Pending" && (
-                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
-                      <User className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
+              actions={[
+                {
+                  label: "View Results",
+                  icon: <Eye className="h-4 w-4" />,
+                  onClick: (sample: QCSample) => router.push(`/dashboard/quality/samples/${sample.id}/results`),
+                  variant: "ghost" as const
+                },
+                {
+                  label: "Edit",
+                  icon: <Edit className="h-4 w-4" />,
+                  onClick: (sample: QCSample) => router.push(`/dashboard/quality/samples/${sample.id}/edit`),
+                  variant: "ghost" as const
+                },
+                {
+                  label: "Assign Analyst",
+                  icon: <User className="h-4 w-4" />,
+                  onClick: (sample: QCSample) => {
+                    // TODO: Implement assign analyst
+                    console.log("Assign analyst to", sample.id)
+                  },
+                  variant: "ghost" as const,
+                  hidden: (sample: QCSample) => sample.status !== "Pending"
+                },
+                {
+                  label: "Delete",
+                  icon: <Trash2 className="h-4 w-4" />,
+                  onClick: (sample: QCSample) => {
+                    // TODO: Implement delete with confirmation
+                    console.log("Delete sample", sample.id)
+                  },
+                  variant: "ghost" as const
+                }
+              ]}
             />
           </CardContent>
         </Card>

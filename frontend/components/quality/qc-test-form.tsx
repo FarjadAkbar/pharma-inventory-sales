@@ -2,19 +2,21 @@
 
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Form, FormField, FormInput, FormSelect, FormCheckbox, FormActions } from "@/components/ui/form"
+import { Form, FormField, FormInput, FormSelect, FormCheckbox, FormActions, FormTextarea } from "@/components/ui/form"
 import { useFormState } from "@/lib/api-response"
 import { useFormValidation, commonValidationRules } from "@/lib/form-validation"
 import type { QCTest } from "@/types/quality-control"
 import { Button } from "@/components/ui/button"
 import { Plus, Trash2, TestTube } from "lucide-react"
+import { MEASUREMENT_UNITS } from "@/lib/constants/units"
 
 interface QCSpecification {
   parameter: string
-  specification: string
+  minValue?: string
+  maxValue?: string
+  targetValue?: string
   unit: string
-  type: string
-  description?: string
+  method?: string
 }
 
 interface QCTestFormProps {
@@ -30,49 +32,38 @@ export function QCTestForm({
   onCancel, 
   submitLabel = "Save" 
 }: QCTestFormProps) {
+  // Map initial specifications to form format
+  const mapInitialSpecifications = (specs: any[]): QCSpecification[] => {
+    return specs.map(spec => ({
+      parameter: spec.parameter || "",
+      minValue: spec.minValue?.toString() || "",
+      maxValue: spec.maxValue?.toString() || "",
+      targetValue: spec.targetValue?.toString() || "",
+      unit: spec.unit || "",
+      method: spec.method || "",
+    }))
+  }
+
   const initialFormData = {
     code: initialData?.code || "",
     name: initialData?.name || "",
     description: initialData?.description || "",
     category: initialData?.category || "",
-    method: initialData?.method || "",
-    unit: initialData?.unit || "",
-    equipmentRequired: initialData?.equipmentRequired || "",
-    duration: initialData?.duration || "",
-    temperature: initialData?.temperature || "",
-    isActive: initialData?.isActive ?? true,
-    notes: initialData?.notes || "",
-    specifications: initialData?.specifications || []
+    status: (initialData as any)?.status || ((initialData as any)?.isActive ? 'Active' : 'Inactive') || 'Active',
+    specifications: initialData?.specifications ? mapInitialSpecifications(initialData.specifications) : []
   }
 
   const formState = useFormState(initialFormData)
   const validation = useFormValidation({
-    code: {
-      required: true,
-      message: "Please enter a test code"
-    },
     name: {
       required: true,
       message: "Please enter a test name"
-    },
-    category: {
-      required: true,
-      message: "Please select a category"
-    },
-    method: {
-      required: true,
-      message: "Please enter a test method"
-    },
-    unit: {
-      required: true,
-      message: "Please enter a unit of measurement"
     }
   })
 
   const [specifications, setSpecifications] = useState<QCSpecification[]>(initialFormData.specifications)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async () => {
     formState.setLoading(true)
     formState.clearErrors()
 
@@ -88,14 +79,32 @@ export function QCTestForm({
         return
       }
 
-      await onSubmit({
-        ...formState.data,
-        specifications,
-        createdById: "1", // Mock user ID
-        createdByName: "Current User", // Mock user name
-        createdAt: initialData?.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      } as QCTest)
+      // Map specifications to backend format
+      const mappedSpecifications = specifications.map(spec => ({
+        parameter: spec.parameter,
+        minValue: spec.minValue || undefined,
+        maxValue: spec.maxValue || undefined,
+        targetValue: spec.targetValue || undefined,
+        unit: spec.unit,
+        method: spec.method || undefined,
+      }))
+
+      const testData: any = {
+        name: formState.data.name,
+        code: formState.data.code || undefined,
+        description: formState.data.description || undefined,
+        category: formState.data.category || undefined,
+        status: formState.data.status as 'Active' | 'Inactive',
+        specifications: mappedSpecifications,
+      }
+
+      // Add optional fields if they exist in initialData (for backward compatibility)
+      if (initialData?.createdAt) testData.createdAt = initialData.createdAt
+      if (initialData?.updatedAt) testData.updatedAt = new Date().toISOString()
+      if (initialData?.createdById) testData.createdById = initialData.createdById
+      if (initialData?.createdByName) testData.createdByName = initialData.createdByName
+
+      await onSubmit(testData as QCTest)
 
       formState.setSuccess("QC test saved successfully")
     } catch (error: any) {
@@ -108,10 +117,11 @@ export function QCTestForm({
   const addSpecification = () => {
     const newSpec: QCSpecification = {
       parameter: "",
-      specification: "",
+      minValue: "",
+      maxValue: "",
+      targetValue: "",
       unit: "",
-      type: "Numeric",
-      description: ""
+      method: ""
     }
     setSpecifications([...specifications, newSpec])
   }
@@ -138,26 +148,7 @@ export function QCTestForm({
     { value: "Identification", label: "Identification" }
   ]
 
-  const specTypes = [
-    { value: "Numeric", label: "Numeric" },
-    { value: "Text", label: "Text" },
-    { value: "Boolean", label: "Boolean" },
-    { value: "Range", label: "Range" }
-  ]
 
-  const units = [
-    { value: "%", label: "Percentage (%)" },
-    { value: "mg", label: "Milligram (mg)" },
-    { value: "g", label: "Gram (g)" },
-    { value: "ml", label: "Milliliter (ml)" },
-    { value: "L", label: "Liter (L)" },
-    { value: "°C", label: "Celsius (°C)" },
-    { value: "pH", label: "pH" },
-    { value: "min", label: "Minutes (min)" },
-    { value: "hr", label: "Hours (hr)" },
-    { value: "days", label: "Days" },
-    { value: "N/A", label: "Not Applicable" }
-  ]
 
   return (
     <Card>
@@ -168,8 +159,8 @@ export function QCTestForm({
         <Form
           onSubmit={handleSubmit}
           loading={formState.isLoading}
-          error={formState.error}
-          success={formState.success}
+          error={formState.error || undefined}
+          success={formState.success || undefined}
         >
           <div className="grid md:grid-cols-2 gap-4">
             <FormInput
@@ -196,85 +187,34 @@ export function QCTestForm({
               name="category"
               label="Category"
               value={formState.data.category}
-              onChange={(e) => formState.updateField('category', e.target.value)}
+              onChange={(value) => formState.updateField('category', value)}
               error={formState.errors.category}
-              required
               options={categories}
-              placeholder="Select category"
-            />
-
-            <FormInput
-              name="method"
-              label="Test Method"
-              value={formState.data.method}
-              onChange={(e) => formState.updateField('method', e.target.value)}
-              error={formState.errors.method}
-              required
-              placeholder="e.g., HPLC"
+              placeholder="Select category (optional)"
             />
 
             <FormSelect
-              name="unit"
-              label="Unit of Measurement"
-              value={formState.data.unit}
-              onChange={(e) => formState.updateField('unit', e.target.value)}
-              error={formState.errors.unit}
-              required
-              options={units}
-              placeholder="Select unit"
-            />
-
-            <FormInput
-              name="equipmentRequired"
-              label="Equipment Required"
-              value={formState.data.equipmentRequired}
-              onChange={(e) => formState.updateField('equipmentRequired', e.target.value)}
-              placeholder="e.g., HPLC, UV-Vis Spectrophotometer"
-            />
-
-            <FormInput
-              name="duration"
-              label="Test Duration"
-              value={formState.data.duration}
-              onChange={(e) => formState.updateField('duration', e.target.value)}
-              placeholder="e.g., 30 minutes"
-            />
-
-            <FormInput
-              name="temperature"
-              label="Temperature"
-              value={formState.data.temperature}
-              onChange={(e) => formState.updateField('temperature', e.target.value)}
-              placeholder="e.g., 25°C ± 2°C"
+              name="status"
+              label="Status"
+              value={formState.data.status}
+              onChange={(value) => formState.updateField('status', value)}
+              options={[
+                { value: "Active", label: "Active" },
+                { value: "Inactive", label: "Inactive" }
+              ]}
+              placeholder="Select status"
             />
           </div>
 
-          <FormInput
+          <FormTextarea
             name="description"
             label="Description"
             value={formState.data.description}
             onChange={(e) => formState.updateField('description', e.target.value)}
             placeholder="Detailed description of the test method"
-            multiline
             rows={3}
           />
 
-          <FormCheckbox
-            name="isActive"
-            label="Active Test"
-            checked={formState.data.isActive}
-            onChange={(e) => formState.updateField('isActive', e.target.checked)}
-          />
-
-          <FormInput
-            name="notes"
-            label="Notes"
-            value={formState.data.notes}
-            onChange={(e) => formState.updateField('notes', e.target.value)}
-            placeholder="Additional notes or special instructions"
-            multiline
-            rows={2}
-          />
 
           {/* Specifications Section */}
           <div className="space-y-4">
@@ -303,49 +243,54 @@ export function QCTestForm({
                 <div className="grid md:grid-cols-2 gap-4">
                   <FormInput
                     name={`parameter_${index}`}
-                    label="Parameter"
+                    label="Parameter *"
                     value={spec.parameter}
                     onChange={(e) => updateSpecification(index, 'parameter', e.target.value)}
                     placeholder="e.g., Assay"
                     required
                   />
 
-                  <FormInput
-                    name={`specification_${index}`}
-                    label="Specification"
-                    value={spec.specification}
-                    onChange={(e) => updateSpecification(index, 'specification', e.target.value)}
-                    placeholder="e.g., 95.0-105.0"
+                  <FormSelect
+                    name={`unit_${index}`}
+                    label="Unit *"
+                    value={spec.unit}
+                    onChange={(value) => updateSpecification(index, 'unit', value)}
+                    options={MEASUREMENT_UNITS}
+                    placeholder="Select unit"
                     required
                   />
 
-                  <FormSelect
-                    name={`unit_${index}`}
-                    label="Unit"
-                    value={spec.unit}
-                    onChange={(e) => updateSpecification(index, 'unit', e.target.value)}
-                    options={units}
-                    placeholder="Select unit"
+                  <FormInput
+                    name={`minValue_${index}`}
+                    label="Min Value"
+                    value={spec.minValue || ''}
+                    onChange={(e) => updateSpecification(index, 'minValue', e.target.value)}
+                    placeholder="e.g., 95.0"
                   />
 
-                  <FormSelect
-                    name={`type_${index}`}
-                    label="Type"
-                    value={spec.type}
-                    onChange={(e) => updateSpecification(index, 'type', e.target.value)}
-                    options={specTypes}
-                    placeholder="Select type"
+                  <FormInput
+                    name={`maxValue_${index}`}
+                    label="Max Value"
+                    value={spec.maxValue || ''}
+                    onChange={(e) => updateSpecification(index, 'maxValue', e.target.value)}
+                    placeholder="e.g., 105.0"
                   />
 
-                  <div className="md:col-span-2">
-                    <FormInput
-                      name={`description_${index}`}
-                      label="Description"
-                      value={spec.description || ''}
-                      onChange={(e) => updateSpecification(index, 'description', e.target.value)}
-                      placeholder="Parameter description"
-                    />
-                  </div>
+                  <FormInput
+                    name={`targetValue_${index}`}
+                    label="Target Value"
+                    value={spec.targetValue || ''}
+                    onChange={(e) => updateSpecification(index, 'targetValue', e.target.value)}
+                    placeholder="e.g., 100.0"
+                  />
+
+                  <FormInput
+                    name={`method_${index}`}
+                    label="Method"
+                    value={spec.method || ''}
+                    onChange={(e) => updateSpecification(index, 'method', e.target.value)}
+                    placeholder="e.g., HPLC"
+                  />
                 </div>
               </Card>
             ))}

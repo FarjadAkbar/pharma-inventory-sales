@@ -36,8 +36,10 @@ import type { QARelease, QAReleaseFilters } from "@/types/quality-assurance"
 import { formatDateISO } from "@/lib/utils"
 import { toast } from "@/lib/toast"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { useRouter } from "next/navigation"
 
 export default function QAReleasesPage() {
+  const router = useRouter()
   const [qaReleases, setQAReleases] = useState<QARelease[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -186,33 +188,47 @@ export default function QAReleasesPage() {
     {
       key: "qcResults",
       header: "QC Results",
-      render: (release: QARelease) => (
-        <div className="space-y-1">
-          <div className="text-sm font-medium">{release.qcResults.length} tests</div>
-          <div className="flex items-center gap-2">
-            <div className="text-xs">
-              Pass: {release.qcResults.filter(r => r.passed).length}
-            </div>
-            <div className="text-xs">
-              Fail: {release.qcResults.filter(r => !r.passed).length}
-            </div>
+      render: (release: QARelease) => {
+        const qcResults = release.qcResults || []
+        return (
+          <div className="space-y-1">
+            <div className="text-sm font-medium">{qcResults.length} tests</div>
+            {qcResults.length > 0 ? (
+              <div className="flex items-center gap-2">
+                <div className="text-xs">
+                  Pass: {qcResults.filter(r => r.passed).length}
+                </div>
+                <div className="text-xs">
+                  Fail: {qcResults.filter(r => !r.passed).length}
+                </div>
+              </div>
+            ) : (
+              <div className="text-xs text-muted-foreground">No results</div>
+            )}
           </div>
-        </div>
-      ),
+        )
+      },
     },
     {
       key: "checklist",
       header: "Checklist",
-      render: (release: QARelease) => (
-        <div className="space-y-1">
-          <div className="text-sm font-medium">
-            {release.checklistItems.filter(item => item.checked).length}/{release.checklistItems.length} items
+      render: (release: QARelease) => {
+        const checklistItems = release.checklistItems || []
+        return (
+          <div className="space-y-1">
+            <div className="text-sm font-medium">
+              {checklistItems.filter(item => item.checked).length}/{checklistItems.length} items
+            </div>
+            {checklistItems.length > 0 ? (
+              <div className="text-xs text-muted-foreground">
+                {checklistItems.filter(item => item.isRequired && !item.checked).length} required pending
+              </div>
+            ) : (
+              <div className="text-xs text-muted-foreground">No checklist</div>
+            )}
           </div>
-          <div className="text-xs text-muted-foreground">
-            {release.checklistItems.filter(item => item.isRequired && !item.checked).length} required pending
-          </div>
-        </div>
-      ),
+        )
+      },
     },
     {
       key: "priority",
@@ -270,7 +286,7 @@ export default function QAReleasesPage() {
             <h1 className="text-3xl font-bold tracking-tight">QA Release Board</h1>
             <p className="text-muted-foreground">Manage quality assurance releases and verification workflow</p>
           </div>
-          <Button>
+          <Button onClick={() => router.push("/dashboard/quality/qa-releases/new")}>
             <Plus />
             New Release
           </Button>
@@ -344,7 +360,7 @@ export default function QAReleasesPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Filter className="h-5 w-5" />
-              Filters
+              Filters & Search
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -354,7 +370,7 @@ export default function QAReleasesPage() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search releases..."
+                    placeholder="Search by release #, material, batch..."
                     value={searchQuery}
                     onChange={(e) => handleSearch(e.target.value)}
                     className="pl-10"
@@ -436,32 +452,42 @@ export default function QAReleasesPage() {
               data={qaReleases}
               columns={columns}
               loading={loading}
-              onSearch={handleSearch}
               pagination={{
                 page: pagination.page,
                 pages: pagination.pages,
                 total: pagination.total,
                 onPageChange: handlePageChange
               }}
-              searchPlaceholder="Search QA releases..."
-              actions={(release: QARelease) => (
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  {release.status === "Pending" && (
-                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
-                      <Shield className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
+              actions={[
+                {
+                  label: "View",
+                  icon: <Eye className="h-4 w-4" />,
+                  onClick: (release: QARelease) => router.push(`/dashboard/quality/qa-releases/${release.id}`),
+                  variant: "ghost" as const
+                },
+                {
+                  label: "Edit",
+                  icon: <Edit className="h-4 w-4" />,
+                  onClick: (release: QARelease) => router.push(`/dashboard/quality/qa-releases/${release.id}/edit`),
+                  variant: "ghost" as const
+                },
+                {
+                  label: "Verify",
+                  icon: <Shield className="h-4 w-4" />,
+                  onClick: (release: QARelease) => router.push(`/dashboard/quality/qa-releases/${release.id}/verify`),
+                  variant: "ghost" as const,
+                  hidden: (release: QARelease) => release.status !== "Pending" && release.status !== "Under Review"
+                },
+                {
+                  label: "Delete",
+                  icon: <Trash2 className="h-4 w-4" />,
+                  onClick: (release: QARelease) => {
+                    // TODO: Implement delete with confirmation
+                    console.log("Delete release", release.id)
+                  },
+                  variant: "ghost" as const
+                }
+              ]}
             />
           </CardContent>
         </Card>
