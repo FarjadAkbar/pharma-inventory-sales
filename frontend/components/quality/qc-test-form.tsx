@@ -221,7 +221,7 @@ export function QCTestForm({
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Test Specifications</h3>
               <Button type="button" onClick={addSpecification} variant="outline" size="sm">
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus  />
                 Add Specification
               </Button>
             </div>

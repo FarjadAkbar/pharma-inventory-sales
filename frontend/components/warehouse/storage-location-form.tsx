@@ -126,7 +126,10 @@ export function StorageLocationForm({
       </CardHeader>
       <CardContent>
         <Form
-          onSubmit={handleSubmit}
+          onSubmit={async (e) => {
+            e.preventDefault()
+            await handleSubmit()
+          }}
           loading={formState.isLoading}
           error={formState.error || undefined}
           success={formState.success || undefined}
@@ -299,14 +302,14 @@ export function StorageLocationForm({
               name="requiresTemperatureControl"
               label="Requires Temperature Control"
               checked={formState.data.requiresTemperatureControl}
-              onChange={(checked) => formState.updateField('requiresTemperatureControl', checked)}
+              onChange={(e) => formState.updateField('requiresTemperatureControl', e.target.checked)}
             />
 
             <FormCheckbox
               name="requiresHumidityControl"
               label="Requires Humidity Control"
               checked={formState.data.requiresHumidityControl}
-              onChange={(checked) => formState.updateField('requiresHumidityControl', checked)}
+              onChange={(e) => formState.updateField('requiresHumidityControl', e.target.checked)}
             />
           </div>
 

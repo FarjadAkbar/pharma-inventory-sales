@@ -258,7 +258,7 @@ export default function QCSamplesPage() {
             <p className="text-muted-foreground">Manage quality control samples and testing workflow</p>
           </div>
           <Button onClick={() => router.push("/dashboard/quality/samples/new")}>
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus  />
             Add Sample
           </Button>
         </div>

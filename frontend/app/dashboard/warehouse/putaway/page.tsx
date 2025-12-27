@@ -260,7 +260,7 @@ export default function PutawayPage() {
             <p className="text-muted-foreground">Manage putaway tasks with location assignment and temperature compliance</p>
           </div>
           <Button onClick={() => router.push("/dashboard/warehouse/putaway/new")}>
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus  />
             New Putaway Task
           </Button>
         </div>

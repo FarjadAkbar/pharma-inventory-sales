@@ -252,7 +252,7 @@ export function BOMForm({
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Material Requirements</h3>
               <Button type="button" onClick={addItem} variant="outline" size="sm">
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus  />
                 Add Material
               </Button>
             </div>

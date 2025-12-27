@@ -255,7 +255,7 @@ export const FormCheckbox = forwardRef<HTMLInputElement, FormCheckboxProps>(
 FormCheckbox.displayName = "FormCheckbox"
 
 export interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {
-  onSubmit: (data: any) => Promise<void> | void
+  onSubmit: ((data: any) => Promise<void> | void) | ((e: React.FormEvent<HTMLFormElement>) => Promise<void> | void)
   validation?: FormValidator
   loading?: boolean
   error?: string
@@ -278,20 +278,31 @@ export function Form({
     
     if (loading) return
 
-    const formData = new FormData(e.currentTarget)
-    const data = Object.fromEntries(formData.entries())
-
-    if (validation) {
-      const errors = validation.validateForm(data)
-      if (validation.hasErrors()) {
-        return
-      }
-    }
-
     try {
-      await onSubmit(data)
+      // Try calling onSubmit with event first (for controlled components)
+      // If it's a function that expects an event, it will handle it
+      const result = onSubmit(e as any)
+      if (result instanceof Promise) {
+        await result
+      }
+      return
     } catch (err) {
-      console.error('Form submission error:', err)
+      // If calling with event fails, try with FormData (for uncontrolled components)
+      const formData = new FormData(e.currentTarget)
+      const data = Object.fromEntries(formData.entries())
+
+      if (validation) {
+        const errors = validation.validateForm(data)
+        if (validation.hasErrors()) {
+          return
+        }
+      }
+
+      try {
+        await onSubmit(data)
+      } catch (submitErr) {
+        console.error('Form submission error:', submitErr)
+      }
     }
   }
 

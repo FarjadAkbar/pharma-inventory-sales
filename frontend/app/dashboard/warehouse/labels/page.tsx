@@ -246,7 +246,7 @@ export default function LabelsPage() {
             <p className="text-muted-foreground">Manage labels and barcodes for warehouse items</p>
           </div>
           <Button onClick={() => router.push("/dashboard/warehouse/labels/new")}>
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus  />
             Create Label
           </Button>
         </div>

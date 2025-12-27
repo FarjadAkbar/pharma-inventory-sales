@@ -222,7 +222,7 @@ export default function TemperatureLogsPage() {
             <p className="text-muted-foreground">Monitor temperature and humidity readings</p>
           </div>
           <Button onClick={() => router.push("/dashboard/warehouse/temperature/new")}>
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus  />
             Log Temperature
           </Button>
         </div>

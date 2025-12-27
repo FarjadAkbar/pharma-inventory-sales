@@ -299,7 +299,7 @@ export default function CycleCountsPage() {
             <p className="text-muted-foreground">Manage inventory cycle counting operations</p>
           </div>
           <Button onClick={() => router.push("/dashboard/warehouse/cycle-counts/new")}>
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus  />
             New Cycle Count
           </Button>
         </div>

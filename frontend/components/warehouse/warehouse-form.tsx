@@ -44,7 +44,7 @@ export function WarehouseForm({
     description: initialData?.description || "",
     type: initialData?.type || "Main",
     status: initialData?.status || "Active",
-    siteId: initialData?.siteId?.toString() || "",
+    siteId: initialData?.siteId?.toString() || "none",
     address: initialData?.address || "",
     city: initialData?.city || "",
     state: initialData?.state || "",
@@ -87,7 +87,7 @@ export function WarehouseForm({
         description: formState.data.description || undefined,
         type: formState.data.type,
         status: formState.data.status,
-        siteId: formState.data.siteId ? parseInt(formState.data.siteId) : undefined,
+        siteId: formState.data.siteId && formState.data.siteId !== "none" ? parseInt(formState.data.siteId) : undefined,
         address: formState.data.address || undefined,
         city: formState.data.city || undefined,
         state: formState.data.state || undefined,
@@ -175,9 +175,9 @@ export function WarehouseForm({
               name="siteId"
               label="Site"
               value={formState.data.siteId}
-              onChange={(value) => formState.updateField('siteId', value)}
+              onChange={(value) => formState.updateField('siteId', value === "none" ? "" : value)}
               options={[
-                { value: "", label: "None (Optional)" },
+                { value: "none", label: "None (Optional)" },
                 ...sites.map(site => ({ value: site.id.toString(), label: site.name }))
               ]}
               placeholder="Select site (optional)"

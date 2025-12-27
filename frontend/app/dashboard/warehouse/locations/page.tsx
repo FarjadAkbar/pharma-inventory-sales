@@ -48,13 +48,28 @@ export default function StorageLocationsPage() {
         ...filters,
       })
       
+      console.log("Storage locations response:", response)
+      
       if (response && Array.isArray(response)) {
         setLocations(response)
         setPagination({ page: 1, pages: 1, total: response.length })
+      } else if (response && response.data && Array.isArray(response.data)) {
+        // Handle paginated response
+        setLocations(response.data)
+        setPagination({
+          page: response.pagination?.page || 1,
+          pages: response.pagination?.pages || 1,
+          total: response.pagination?.total || response.data.length
+        })
+      } else {
+        console.warn("Unexpected response format:", response)
+        setLocations([])
+        setPagination({ page: 1, pages: 1, total: 0 })
       }
     } catch (error) {
       console.error("Failed to fetch storage locations:", error)
       toast.error("Failed to load storage locations")
+      setLocations([])
     } finally {
       setLoading(false)
     }
@@ -110,63 +125,71 @@ export default function StorageLocationsPage() {
 
   const columns = [
     {
+      key: "locationCode",
       header: "Location Code",
-      accessorKey: "locationCode",
-      cell: ({ row }: any) => (
-        <div className="font-medium">{row.original.locationCode}</div>
+      sortable: true,
+      render: (location: StorageLocation) => (
+        <div className="font-medium">{location.locationCode}</div>
       ),
     },
     {
+      key: "name",
       header: "Name",
-      accessorKey: "name",
-      cell: ({ row }: any) => (
+      sortable: true,
+      render: (location: StorageLocation) => (
         <div className="flex items-center gap-2">
           <MapPin className="h-4 w-4" />
-          <span>{row.original.name}</span>
+          <span>{location.name}</span>
         </div>
       ),
     },
     {
+      key: "type",
       header: "Type",
-      accessorKey: "type",
+      sortable: true,
+      render: (location: StorageLocation) => location.type,
     },
     {
+      key: "status",
       header: "Status",
-      accessorKey: "status",
-      cell: ({ row }: any) => getStatusBadge(row.original.status),
+      sortable: true,
+      render: (location: StorageLocation) => getStatusBadge(location.status),
     },
     {
+      key: "zone",
       header: "Zone/Aisle",
-      accessorKey: "zone",
-      cell: ({ row }: any) => (
+      sortable: true,
+      render: (location: StorageLocation) => (
         <div className="text-sm">
-          {row.original.zone && <div>Zone: {row.original.zone}</div>}
-          {row.original.aisle && <div>Aisle: {row.original.aisle}</div>}
-          {!row.original.zone && !row.original.aisle && <span className="text-muted-foreground">N/A</span>}
+          {location.zone && <div>Zone: {location.zone}</div>}
+          {location.aisle && <div>Aisle: {location.aisle}</div>}
+          {!location.zone && !location.aisle && <span className="text-muted-foreground">N/A</span>}
         </div>
       ),
     },
     {
+      key: "rack",
       header: "Rack/Shelf/Position",
-      accessorKey: "rack",
-      cell: ({ row }: any) => (
+      sortable: true,
+      render: (location: StorageLocation) => (
         <div className="text-sm">
-          {row.original.rack && <div>Rack: {row.original.rack}</div>}
-          {row.original.shelf && <div>Shelf: {row.original.shelf}</div>}
-          {row.original.position && <div>Pos: {row.original.position}</div>}
-          {!row.original.rack && !row.original.shelf && <span className="text-muted-foreground">N/A</span>}
+          {location.rack && <div>Rack: {location.rack}</div>}
+          {location.shelf && <div>Shelf: {location.shelf}</div>}
+          {location.position && <div>Pos: {location.position}</div>}
+          {!location.rack && !location.shelf && <span className="text-muted-foreground">N/A</span>}
         </div>
       ),
     },
     {
+      key: "temperature",
       header: "Temperature",
-      accessorKey: "temperature",
-      cell: ({ row }: any) => {
-        if (row.original.minTemperature && row.original.maxTemperature) {
+      sortable: true,
+      render: (location: StorageLocation) => {
+        if (location.minTemperature && location.maxTemperature) {
           return (
             <div className="flex items-center gap-1 text-sm">
               <Thermometer className="h-3 w-3" />
-              {row.original.minTemperature}°C - {row.original.maxTemperature}°C
+              {location.minTemperature}°C - {location.maxTemperature}°C
             </div>
           )
         }
@@ -174,13 +197,14 @@ export default function StorageLocationsPage() {
       },
     },
     {
+      key: "capacity",
       header: "Capacity",
-      accessorKey: "capacity",
-      cell: ({ row }: any) => {
-        if (row.original.capacity) {
+      sortable: true,
+      render: (location: StorageLocation) => {
+        if (location.capacity) {
           return (
             <div className="text-sm">
-              {row.original.capacity} {row.original.capacityUnit || ""}
+              {location.capacity} {location.capacityUnit || ""}
             </div>
           )
         }
@@ -218,26 +242,32 @@ export default function StorageLocationsPage() {
     },
   ]
 
-  const actions = [
-    {
-      label: "View",
-      icon: <Eye className="h-4 w-4" />,
-      onClick: (location: StorageLocation) => router.push(`/dashboard/warehouse/locations/${location.id}`),
-      variant: "ghost" as const,
-    },
-    {
-      label: "Edit",
-      icon: <Edit className="h-4 w-4" />,
-      onClick: (location: StorageLocation) => router.push(`/dashboard/warehouse/locations/${location.id}/edit`),
-      variant: "ghost" as const,
-    },
-    {
-      label: "Delete",
-      icon: <Trash2 className="h-4 w-4" />,
-      onClick: handleDelete,
-      variant: "ghost" as const,
-    },
-  ]
+  const actions = (location: StorageLocation) => (
+    <div className="flex items-center gap-2">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => router.push(`/dashboard/warehouse/locations/${location.id}`)}
+      >
+        <Eye className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => router.push(`/dashboard/warehouse/locations/${location.id}/edit`)}
+      >
+        <Edit className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => handleDelete(location)}
+        className="text-red-600 hover:text-red-700"
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  )
 
   const stats = {
     total: locations.length,
@@ -255,7 +285,7 @@ export default function StorageLocationsPage() {
             <p className="text-muted-foreground">Manage warehouse storage locations and zones</p>
           </div>
           <Button onClick={() => router.push("/dashboard/warehouse/locations/new")}>
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus  />
             Add Location
           </Button>
         </div>

@@ -147,6 +147,10 @@ export class UpdateInventoryItemDto {
   @IsOptional()
   humidity?: number;
 
+  @IsDateString()
+  @IsOptional()
+  expiryDate?: string;
+
   @IsString()
   @IsOptional()
   remarks?: string;

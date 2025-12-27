@@ -143,7 +143,7 @@ export default function PermissionsDemoPage() {
                 <div className="flex gap-2 flex-wrap">
                   <PermissionGuard module="POS" action="create">
                     <Button>
-                      <Plus className="h-4 w-4 mr-2" />
+                      <Plus  />
                       Add Product
                     </Button>
                   </PermissionGuard>
@@ -220,7 +220,7 @@ export default function PermissionsDemoPage() {
                 <div className="flex gap-2 flex-wrap">
                   <PermissionGuard module="PHARMA" action="create">
                     <Button>
-                      <Plus className="h-4 w-4 mr-2" />
+                      <Plus  />
                       Add Pharma Product
                     </Button>
                   </PermissionGuard>
@@ -297,7 +297,7 @@ export default function PermissionsDemoPage() {
                 <div className="flex gap-2 flex-wrap">
                   <PermissionGuard module="USER_MANAGEMENT" action="create">
                     <Button>
-                      <Plus className="h-4 w-4 mr-2" />
+                      <Plus  />
                       Add User
                     </Button>
                   </PermissionGuard>
