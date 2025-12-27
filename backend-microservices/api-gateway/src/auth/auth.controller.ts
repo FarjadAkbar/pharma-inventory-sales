@@ -10,6 +10,7 @@ import {
   ResetPasswordSendEmailDto,
   ResetPasswordConfirmDto,
 } from '@repo/shared';
+import { Public } from '../common/decorators/public.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -17,6 +18,7 @@ export class AuthController {
     @Inject('AUTH_SERVICE') private authClient: ClientProxy,
   ) {}
 
+  @Public()
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
     try {
@@ -100,6 +102,7 @@ export class AuthController {
     }
   }
 
+  @Public()
   @Post('refresh')
   async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
     try {
@@ -124,6 +127,7 @@ export class AuthController {
     }
   }
 
+  @Public()
   @Post('logout')
   async logout(@Body() logoutDto: LogoutDto) {
     try {
@@ -142,6 +146,7 @@ export class AuthController {
     }
   }
 
+  @Public()
   @Post('reset-password/send-email')
   async resetPasswordSendEmail(@Body() dto: ResetPasswordSendEmailDto) {
     try {
@@ -160,6 +165,7 @@ export class AuthController {
     }
   }
 
+  @Public()
   @Post('reset-password/confirm')
   async resetPasswordConfirm(@Body() dto: ResetPasswordConfirmDto) {
     try {

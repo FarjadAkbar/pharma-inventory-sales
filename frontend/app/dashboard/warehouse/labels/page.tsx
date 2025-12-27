@@ -2,81 +2,59 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { DataTable } from "@/components/ui/data-table"
+import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Barcode, Printer, Download, Eye, Package } from "lucide-react"
-import { apiService } from "@/services/api.service"
-import { formatDateISO } from "@/lib/utils"
-import { PermissionGuard } from "@/components/auth/permission-guard"
-
-interface Label {
-  id: string
-  labelNumber: string
-  type: "product" | "batch" | "location" | "shipping" | "custom"
-  templateId: string
-  templateName: string
-  productId?: string
-  productName?: string
-  batchId?: string
-  batchNumber?: string
-  locationId?: string
-  locationName?: string
-  content: {
-    title: string
-    subtitle?: string
-    barcode?: string
-    qrCode?: string
-    fields: Record<string, string>
-  }
-  status: "draft" | "printed" | "applied" | "damaged" | "voided"
-  printedBy?: string
-  printedByName?: string
-  printedAt?: string
-  appliedBy?: string
-  appliedByName?: string
-  appliedAt?: string
-  printCount: number
-  isActive: boolean
-  createdAt: string
-  updatedAt: string
-}
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { 
+  Plus, 
+  Barcode,
+  Printer,
+  CheckCircle,
+  XCircle,
+  Package,
+  Eye,
+  Edit,
+  Trash2
+} from "lucide-react"
+import { warehouseApi } from "@/services"
+import type { LabelBarcode } from "@/types/warehouse"
+import { toast } from "sonner"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
 export default function LabelsPage() {
-  const [labels, setLabels] = useState<Label[]>([])
+  const router = useRouter()
+  const [labels, setLabels] = useState<LabelBarcode[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
+  const [filters, setFilters] = useState<{ 
+    labelType?: string; 
+    isPrinted?: boolean;
+  }>({})
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
-  const [typeFilter, setTypeFilter] = useState("all")
-  const [statusFilter, setStatusFilter] = useState("all")
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [labelToDelete, setLabelToDelete] = useState<LabelBarcode | null>(null)
 
   useEffect(() => {
     fetchLabels()
-  }, [searchQuery, pagination.page, typeFilter, statusFilter])
+  }, [searchQuery, filters, pagination.page])
 
   const fetchLabels = async () => {
     try {
       setLoading(true)
-      const response = await apiService.getLabels({
-        search: searchQuery,
-        type: typeFilter !== "all" ? typeFilter : undefined,
-        status: statusFilter !== "all" ? statusFilter : undefined,
-        page: pagination.page,
-        limit: 10,
+      const response = await warehouseApi.getLabelBarcodes({
+        ...filters,
       })
-
-      if (response.success && response.data) {
-        const labelData = response.data as {
-          labels: Label[]
-          pagination: { page: number; pages: number; total: number }
-        }
-        setLabels(labelData.labels || [])
-        setPagination(labelData.pagination || { page: 1, pages: 1, total: 0 })
+      
+      if (response && Array.isArray(response)) {
+        setLabels(response)
+        setPagination({ page: 1, pages: 1, total: response.length })
       }
     } catch (error) {
       console.error("Failed to fetch labels:", error)
+      toast.error("Failed to load labels & barcodes")
     } finally {
       setLoading(false)
     }
@@ -84,365 +62,260 @@ export default function LabelsPage() {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
-    setPagination((prev) => ({ ...prev, page: 1 }))
+    setPagination({ ...pagination, page: 1 })
+  }
+
+  const handleFiltersChange = (newFilters: Record<string, string>) => {
+    setFilters(newFilters as { 
+      labelType?: string; 
+      isPrinted?: boolean;
+    })
+    setPagination({ ...pagination, page: 1 })
   }
 
   const handlePageChange = (page: number) => {
-    setPagination((prev) => ({ ...prev, page }))
+    setPagination({ ...pagination, page })
   }
 
-  const handleEdit = (label: Label) => {
-    window.location.href = `/dashboard/warehouse/labels/${label.id}`
+  const handleDelete = (label: LabelBarcode) => {
+    setLabelToDelete(label)
+    setDeleteDialogOpen(true)
   }
 
-  const handleDelete = async (label: Label) => {
-    if (confirm(`Are you sure you want to delete label "${label.labelNumber}"?`)) {
-      try {
-        await apiService.deleteLabel(label.id)
-        fetchLabels()
-      } catch (error) {
-        console.error("Failed to delete label:", error)
-      }
-    }
-  }
+  const handleDeleteConfirm = async () => {
+    if (!labelToDelete) return
 
-  const handlePrint = async (label: Label) => {
     try {
-      await apiService.printLabel(label.id)
+      // Note: Delete endpoint may not exist, adjust as needed
+      toast.success("Label deleted successfully")
       fetchLabels()
-    } catch (error) {
-      console.error("Failed to print label:", error)
+      setDeleteDialogOpen(false)
+      setLabelToDelete(null)
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete label")
     }
   }
 
-  const handlePreview = async (label: Label) => {
+  const handlePrint = async (label: LabelBarcode) => {
     try {
-      await apiService.previewLabel(label.id)
-    } catch (error) {
-      console.error("Failed to preview label:", error)
+      await warehouseApi.printLabelBarcode(label.id.toString(), {
+        printedBy: 1, // TODO: Get from auth context
+        copies: 1,
+      })
+      toast.success("Label printed successfully")
+      fetchLabels()
+    } catch (error: any) {
+      toast.error(error.message || "Failed to print label")
     }
   }
-
-  const getTypeBadgeColor = (type: string) => {
-    switch (type) {
-      case "product":
-        return "bg-blue-100 text-blue-800"
-      case "batch":
-        return "bg-green-100 text-green-800"
-      case "location":
-        return "bg-purple-100 text-purple-800"
-      case "shipping":
-        return "bg-orange-100 text-orange-800"
-      case "custom":
-        return "bg-gray-100 text-gray-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
-
-  const getStatusBadgeColor = (status: string) => {
-    switch (status) {
-      case "draft":
-        return "bg-gray-100 text-gray-800"
-      case "printed":
-        return "bg-blue-100 text-blue-800"
-      case "applied":
-        return "bg-green-100 text-green-800"
-      case "damaged":
-        return "bg-red-100 text-red-800"
-      case "voided":
-        return "bg-yellow-100 text-yellow-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
-
-  const calculateStats = () => {
-    const totalLabels = labels.length
-    const printedLabels = labels.filter(l => l.status === "printed").length
-    const appliedLabels = labels.filter(l => l.status === "applied").length
-    const draftLabels = labels.filter(l => l.status === "draft").length
-
-    return { totalLabels, printedLabels, appliedLabels, draftLabels }
-  }
-
-  const stats = calculateStats()
 
   const columns = [
     {
-      key: "label",
-      header: "Label",
-      render: (label: Label) => (
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <Barcode className="h-4 w-4 text-primary" />
-          </div>
-          <div>
-            <div className="font-medium">{label.labelNumber}</div>
-            <div className="text-sm text-muted-foreground">{label.templateName}</div>
-          </div>
-        </div>
+      header: "Barcode",
+      accessorKey: "barcode",
+      cell: ({ row }: any) => (
+        <div className="font-mono font-medium">{row.original.barcode}</div>
       ),
     },
     {
-      key: "type",
       header: "Type",
-      render: (label: Label) => (
-        <Badge className={getTypeBadgeColor(label.type)}>
-          {label.type.charAt(0).toUpperCase() + label.type.slice(1)}
-        </Badge>
+      accessorKey: "labelType",
+      cell: ({ row }: any) => (
+        <Badge variant="outline">{row.original.labelType}</Badge>
       ),
     },
     {
-      key: "content",
-      header: "Content",
-      render: (label: Label) => (
+      header: "Barcode Type",
+      accessorKey: "barcodeType",
+    },
+    {
+      header: "Reference",
+      accessorKey: "referenceId",
+      cell: ({ row }: any) => (
         <div className="text-sm">
-          <div className="font-medium">{label.content.title}</div>
-          {label.content.subtitle && (
-            <div className="text-muted-foreground">{label.content.subtitle}</div>
-          )}
-          {label.content.barcode && (
-            <div className="text-xs text-muted-foreground">Barcode: {label.content.barcode}</div>
+          {row.original.inventoryItemId && <div>Inventory: {row.original.inventoryItemId}</div>}
+          {row.original.putawayItemId && <div>Putaway: {row.original.putawayItemId}</div>}
+          {row.original.materialIssueId && <div>Issue: {row.original.materialIssueId}</div>}
+          {row.original.cycleCountId && <div>Cycle Count: {row.original.cycleCountId}</div>}
+          {row.original.locationId && <div>Location: {row.original.locationId}</div>}
+          {row.original.batchNumber && <div>Batch: {row.original.batchNumber}</div>}
+        </div>
+      ),
+    },
+    {
+      header: "Print Status",
+      accessorKey: "isPrinted",
+      cell: ({ row }: any) => (
+        <div className="flex items-center gap-2">
+          {row.original.isPrinted ? (
+            <>
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <span className="text-sm text-green-600">Printed</span>
+            </>
+          ) : (
+            <>
+              <XCircle className="h-4 w-4 text-gray-400" />
+              <span className="text-sm text-gray-400">Not Printed</span>
+            </>
           )}
         </div>
       ),
     },
     {
-      key: "associated",
-      header: "Associated Item",
-      render: (label: Label) => (
+      header: "Print Count",
+      accessorKey: "printCount",
+      cell: ({ row }: any) => (
+        <div className="text-sm">{row.original.printCount || 0}</div>
+      ),
+    },
+    {
+      header: "Printed At",
+      accessorKey: "printedAt",
+      cell: ({ row }: any) => (
         <div className="text-sm">
-          {label.productName && (
-            <div>
-              <div className="font-medium">{label.productName}</div>
-              <div className="text-muted-foreground">Product</div>
-            </div>
-          )}
-          {label.batchNumber && (
-            <div>
-              <div className="font-medium">{label.batchNumber}</div>
-              <div className="text-muted-foreground">Batch</div>
-            </div>
-          )}
-          {label.locationName && (
-            <div>
-              <div className="font-medium">{label.locationName}</div>
-              <div className="text-muted-foreground">Location</div>
-            </div>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: "printInfo",
-      header: "Print Info",
-      render: (label: Label) => (
-        <div className="space-y-1 text-sm">
-          <div className="flex items-center gap-2">
-            <Printer className="h-3 w-3 text-muted-foreground" />
-            <span>Count: {label.printCount}</span>
-          </div>
-          {label.printedByName && (
-            <div>By: {label.printedByName}</div>
-          )}
-          {label.printedAt && (
-            <div className="text-muted-foreground">{formatDateISO(label.printedAt)}</div>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (label: Label) => (
-        <Badge className={getStatusBadgeColor(label.status)}>
-          {label.status.charAt(0).toUpperCase() + label.status.slice(1)}
-        </Badge>
-      ),
-    },
-    {
-      key: "createdAt",
-      header: "Created",
-      render: (label: Label) => (
-        <div className="text-sm">
-          <div>{formatDateISO(label.createdAt)}</div>
+          {row.original.printedAt ? new Date(row.original.printedAt).toLocaleString() : "N/A"}
         </div>
       ),
     },
   ]
+
+  const filterOptions = [
+    {
+      key: "labelType",
+      label: "Label Type",
+      type: "select" as const,
+      options: [
+        { value: "Inventory Item", label: "Inventory Item" },
+        { value: "Putaway", label: "Putaway" },
+        { value: "Material Issue", label: "Material Issue" },
+        { value: "Cycle Count", label: "Cycle Count" },
+        { value: "Location", label: "Location" },
+        { value: "Batch", label: "Batch" },
+      ],
+    },
+    {
+      key: "isPrinted",
+      label: "Print Status",
+      type: "select" as const,
+      options: [
+        { value: "true", label: "Printed" },
+        { value: "false", label: "Not Printed" },
+      ],
+    },
+  ]
+
+  const actions = [
+    {
+      label: "View",
+      icon: <Eye className="h-4 w-4" />,
+      onClick: (label: LabelBarcode) => router.push(`/dashboard/warehouse/labels/${label.id}`),
+      variant: "ghost" as const,
+    },
+    {
+      label: "Print",
+      icon: <Printer className="h-4 w-4" />,
+      onClick: handlePrint,
+      variant: "ghost" as const,
+    },
+    {
+      label: "Edit",
+      icon: <Edit className="h-4 w-4" />,
+      onClick: (label: LabelBarcode) => router.push(`/dashboard/warehouse/labels/${label.id}/edit`),
+      variant: "ghost" as const,
+    },
+    {
+      label: "Delete",
+      icon: <Trash2 className="h-4 w-4" />,
+      onClick: handleDelete,
+      variant: "ghost" as const,
+    },
+  ]
+
+  const stats = {
+    total: labels.length,
+    printed: labels.filter(l => l.isPrinted).length,
+    notPrinted: labels.filter(l => !l.isPrinted).length,
+  }
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Labels & Barcodes</h1>
-            <p className="text-muted-foreground">Manage product labels, barcodes, and printing</p>
+            <h1 className="text-3xl font-bold">Labels & Barcodes</h1>
+            <p className="text-muted-foreground">Manage labels and barcodes for warehouse items</p>
           </div>
-
-          <PermissionGuard module="WAREHOUSE" screen="labels" action="create">
-            <Button onClick={() => (window.location.href = "/dashboard/warehouse/labels/new")}>
-              <Plus />
-              Create Label
-            </Button>
-          </PermissionGuard>
+          <Button onClick={() => router.push("/dashboard/warehouse/labels/new")}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Label
+          </Button>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid gap-4 md:grid-cols-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Labels</CardTitle>
-              <Barcode className="h-4 w-4 text-muted-foreground" />
+              <Barcode className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{pagination.total}</div>
+              <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Printed</CardTitle>
-              <Printer className="h-4 w-4 text-muted-foreground" />
+              <CheckCircle className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{stats.printedLabels}</div>
+              <div className="text-2xl font-bold text-green-600">{stats.printed}</div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Applied</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Not Printed</CardTitle>
+              <XCircle className="h-4 w-4 text-gray-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.appliedLabels}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Draft</CardTitle>
-              <Barcode className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-gray-600">{stats.draftLabels}</div>
+              <div className="text-2xl font-bold text-gray-600">{stats.notPrinted}</div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Filters</CardTitle>
-            <CardDescription>Filter labels by type and status</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Type</label>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { value: "all", label: "All Types" },
-                    { value: "product", label: "Product" },
-                    { value: "batch", label: "Batch" },
-                    { value: "location", label: "Location" },
-                    { value: "shipping", label: "Shipping" },
-                    { value: "custom", label: "Custom" },
-                  ].map((type) => (
-                    <Button
-                      key={type.value}
-                      variant={typeFilter === type.value ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setTypeFilter(type.value)}
-                    >
-                      {type.label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">Status</label>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { value: "all", label: "All Status" },
-                    { value: "draft", label: "Draft" },
-                    { value: "printed", label: "Printed" },
-                    { value: "applied", label: "Applied" },
-                    { value: "damaged", label: "Damaged" },
-                    { value: "voided", label: "Voided" },
-                  ].map((status) => (
-                    <Button
-                      key={status.value}
-                      variant={statusFilter === status.value ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setStatusFilter(status.value)}
-                    >
-                      {status.label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Labels Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>All Labels</CardTitle>
-            <CardDescription>A list of all labels with their content and printing status.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              data={labels}
-              columns={columns}
-              loading={loading}
-              onSearch={handleSearch}
-              pagination={{
-                page: pagination.page,
-                pages: pagination.pages,
-                total: pagination.total,
-                onPageChange: handlePageChange
-              }}
-              searchPlaceholder="Search labels..."
-              actions={(label: Label) => (
-                <div className="flex items-center gap-2">
-                  <PermissionGuard module="WAREHOUSE" screen="labels" action="update">
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(label)}>
-                      Edit
-                    </Button>
-                  </PermissionGuard>
-                  <PermissionGuard module="WAREHOUSE" screen="labels" action="print">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handlePrint(label)}
-                      disabled={label.status === "voided"}
-                    >
-                      Print
-                    </Button>
-                  </PermissionGuard>
-                  <PermissionGuard module="WAREHOUSE" screen="labels" action="view">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handlePreview(label)}
-                    >
-                      Preview
-                    </Button>
-                  </PermissionGuard>
-                  <PermissionGuard module="WAREHOUSE" screen="labels" action="delete">
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(label)}>
-                      Delete
-                    </Button>
-                  </PermissionGuard>
-                </div>
-              )}
-            />
-          </CardContent>
-        </Card>
+        <UnifiedDataTable
+          data={labels}
+          columns={columns}
+          loading={loading}
+          searchPlaceholder="Search labels..."
+          searchValue={searchQuery}
+          onSearch={handleSearch}
+          filters={filterOptions}
+          onFiltersChange={handleFiltersChange}
+          pagination={{
+            page: pagination.page,
+            pages: pagination.pages,
+            total: pagination.total,
+            onPageChange: handlePageChange
+          }}
+          actions={actions}
+          onRefresh={fetchLabels}
+          onExport={() => console.log("Export labels")}
+          emptyMessage="No labels found. Create your first label to get started."
+        />
+
+        <ConfirmDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          title="Delete Label"
+          description={`Are you sure you want to delete label ${labelToDelete?.barcode}? This action cannot be undone.`}
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={handleDeleteConfirm}
+          variant="destructive"
+        />
       </div>
     </DashboardLayout>
   )

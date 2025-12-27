@@ -2,88 +2,59 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, MapPin, Package, AlertTriangle, CheckCircle } from "lucide-react"
-import { apiService } from "@/services/api.service"
-import { formatDateISO } from "@/lib/utils"
-import { PermissionGuard } from "@/components/auth/permission-guard"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { 
+  Plus, 
+  MapPin, 
+  Package, 
+  CheckCircle,
+  XCircle,
+  Wrench,
+  Eye,
+  Edit,
+  Trash2,
+  Thermometer,
+  Droplets,
+  Building2
+} from "lucide-react"
+import { warehouseApi } from "@/services"
+import type { StorageLocation } from "@/types/warehouse"
+import { toast } from "sonner"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
-interface WarehouseLocation {
-  id: string
-  name: string
-  code: string
-  type: "zone" | "aisle" | "rack" | "shelf" | "bin" | "floor"
-  siteId: string
-  siteName: string
-  parentLocationId?: string
-  parentLocationName?: string
-  capacity: {
-    volume: number
-    weight: number
-    unit: string
-  }
-  dimensions: {
-    length: number
-    width: number
-    height: number
-    unit: string
-  }
-  temperature: {
-    min: number
-    max: number
-    current: number
-    unit: "celsius" | "fahrenheit"
-  }
-  humidity: {
-    min: number
-    max: number
-    current: number
-  }
-  accessLevel: "public" | "restricted" | "secure"
-  isActive: boolean
-  isFull: boolean
-  currentUtilization: number
-  itemsCount: number
-  lastUpdated: string
-  createdAt: string
-  updatedAt: string
-}
-
-export default function WarehouseLocationsPage() {
-  const [locations, setLocations] = useState<WarehouseLocation[]>([])
+export default function StorageLocationsPage() {
+  const router = useRouter()
+  const [locations, setLocations] = useState<StorageLocation[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
+  const [filters, setFilters] = useState<{ warehouseId?: number; status?: string; type?: string }>({})
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
-  const [filters, setFilters] = useState<Record<string, any>>({})
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [locationToDelete, setLocationToDelete] = useState<StorageLocation | null>(null)
 
   useEffect(() => {
     fetchLocations()
-  }, [searchQuery, pagination.page, filters])
+  }, [searchQuery, filters, pagination.page])
 
   const fetchLocations = async () => {
     try {
       setLoading(true)
-      const response = await apiService.getWarehouseLocations({
-        search: searchQuery,
+      const response = await warehouseApi.getStorageLocations({
         ...filters,
-        page: pagination.page,
-        limit: 10,
       })
-
-      if (response.success && response.data) {
-        const locationData = response.data as {
-          locations: WarehouseLocation[]
-          pagination: { page: number; pages: number; total: number }
-        }
-        setLocations(locationData.locations || [])
-        setPagination(locationData.pagination || { page: 1, pages: 1, total: 0 })
+      
+      if (response && Array.isArray(response)) {
+        setLocations(response)
+        setPagination({ page: 1, pages: 1, total: response.length })
       }
     } catch (error) {
-      console.error("Failed to fetch warehouse locations:", error)
+      console.error("Failed to fetch storage locations:", error)
+      toast.error("Failed to load storage locations")
     } finally {
       setLoading(false)
     }
@@ -91,294 +62,243 @@ export default function WarehouseLocationsPage() {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
-    setPagination((prev) => ({ ...prev, page: 1 }))
+    setPagination({ ...pagination, page: 1 })
+  }
+
+  const handleFiltersChange = (newFilters: Record<string, string>) => {
+    setFilters(newFilters as { warehouseId?: number; status?: string; type?: string })
+    setPagination({ ...pagination, page: 1 })
   }
 
   const handlePageChange = (page: number) => {
-    setPagination((prev) => ({ ...prev, page }))
+    setPagination({ ...pagination, page })
   }
 
-  const handleEdit = (location: WarehouseLocation) => {
-    window.location.href = `/dashboard/warehouse/locations/${location.id}`
+  const handleDelete = (location: StorageLocation) => {
+    setLocationToDelete(location)
+    setDeleteDialogOpen(true)
   }
 
-  const handleDelete = async (location: WarehouseLocation) => {
-    if (confirm(`Are you sure you want to delete warehouse location "${location.name}"?`)) {
-      try {
-        await apiService.deleteWarehouseLocation(location.id)
-        fetchLocations()
-      } catch (error) {
-        console.error("Failed to delete warehouse location:", error)
-      }
-    }
-  }
+  const handleDeleteConfirm = async () => {
+    if (!locationToDelete) return
 
-  const handleToggleStatus = async (location: WarehouseLocation) => {
     try {
-      await apiService.updateWarehouseLocation(location.id, { isActive: !location.isActive })
+      await warehouseApi.deleteStorageLocation(locationToDelete.id.toString())
+      toast.success("Storage location deleted successfully")
       fetchLocations()
-    } catch (error) {
-      console.error("Failed to toggle warehouse location status:", error)
+      setDeleteDialogOpen(false)
+      setLocationToDelete(null)
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete storage location")
     }
   }
 
-  const getTypeBadgeColor = (type: string) => {
-    switch (type) {
-      case "zone":
-        return "bg-blue-100 text-blue-800"
-      case "aisle":
-        return "bg-green-100 text-green-800"
-      case "rack":
-        return "bg-purple-100 text-purple-800"
-      case "shelf":
-        return "bg-orange-100 text-orange-800"
-      case "bin":
-        return "bg-yellow-100 text-yellow-800"
-      case "floor":
-        return "bg-gray-100 text-gray-800"
-      default:
-        return "bg-gray-100 text-gray-800"
+  const getStatusBadge = (status: string) => {
+    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+      Available: "default",
+      Occupied: "secondary",
+      Reserved: "outline",
+      Blocked: "destructive",
+      Maintenance: "outline",
     }
+    return (
+      <Badge variant={variants[status] || "default"}>
+        {status}
+      </Badge>
+    )
   }
-
-  const getAccessLevelBadgeColor = (level: string) => {
-    switch (level) {
-      case "public":
-        return "bg-green-100 text-green-800"
-      case "restricted":
-        return "bg-yellow-100 text-yellow-800"
-      case "secure":
-        return "bg-red-100 text-red-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
-
-  const calculateStats = () => {
-    const activeLocations = locations.filter(l => l.isActive).length
-    const fullLocations = locations.filter(l => l.isFull).length
-    const totalItems = locations.reduce((sum, l) => sum + l.itemsCount, 0)
-    const avgUtilization = locations.length > 0 
-      ? (locations.reduce((sum, l) => sum + l.currentUtilization, 0) / locations.length).toFixed(1)
-      : "0.0"
-
-    return { activeLocations, fullLocations, totalItems, avgUtilization }
-  }
-
-  const stats = calculateStats()
 
   const columns = [
     {
-      key: "name",
-      header: "Location",
-      sortable: true,
-      render: (location: WarehouseLocation) => (
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <MapPin className="h-4 w-4 text-primary" />
-          </div>
-          <div>
-            <div className="font-medium">{location.name}</div>
-            <div className="text-sm text-muted-foreground">{location.code}</div>
-          </div>
+      header: "Location Code",
+      accessorKey: "locationCode",
+      cell: ({ row }: any) => (
+        <div className="font-medium">{row.original.locationCode}</div>
+      ),
+    },
+    {
+      header: "Name",
+      accessorKey: "name",
+      cell: ({ row }: any) => (
+        <div className="flex items-center gap-2">
+          <MapPin className="h-4 w-4" />
+          <span>{row.original.name}</span>
         </div>
       ),
     },
     {
-      key: "type",
       header: "Type",
-      sortable: true,
-      render: (location: WarehouseLocation) => (
-        <Badge className={getTypeBadgeColor(location.type)}>
-          {location.type.charAt(0).toUpperCase() + location.type.slice(1)}
-        </Badge>
-      ),
+      accessorKey: "type",
     },
     {
-      key: "site",
-      header: "Site",
-      sortable: true,
-      render: (location: WarehouseLocation) => (
-        <div className="text-sm">
-          <div className="font-medium">{location.siteName}</div>
-          <div className="text-muted-foreground">{location.parentLocationName || "Root Location"}</div>
-        </div>
-      ),
-    },
-    {
-      key: "capacity",
-      header: "Capacity",
-      sortable: true,
-      render: (location: WarehouseLocation) => (
-        <div className="space-y-1 text-sm">
-          <div>Volume: {location.capacity.volume} {location.capacity.unit}</div>
-          <div>Weight: {location.capacity.weight} kg</div>
-        </div>
-      ),
-    },
-    {
-      key: "utilization",
-      header: "Utilization",
-      sortable: true,
-      render: (location: WarehouseLocation) => (
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Package className="h-3 w-3 text-muted-foreground" />
-            <span className="text-sm">{location.currentUtilization}%</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className={`h-2 rounded-full ${
-                location.currentUtilization > 90 ? "bg-red-500" :
-                location.currentUtilization > 70 ? "bg-yellow-500" : "bg-green-500"
-              }`}
-              style={{ width: `${Math.min(location.currentUtilization, 100)}%` }}
-            />
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: "items",
-      header: "Items",
-      sortable: true,
-      render: (location: WarehouseLocation) => (
-        <div className="text-sm">
-          <div className="font-medium">{location.itemsCount} items</div>
-          <div className="text-muted-foreground">Last updated: {formatDateISO(location.lastUpdated)}</div>
-        </div>
-      ),
-    },
-    {
-      key: "accessLevel",
-      header: "Access",
-      sortable: true,
-      render: (location: WarehouseLocation) => (
-        <Badge className={getAccessLevelBadgeColor(location.accessLevel)}>
-          {location.accessLevel.charAt(0).toUpperCase() + location.accessLevel.slice(1)}
-        </Badge>
-      ),
-    },
-    {
-      key: "status",
       header: "Status",
-      sortable: true,
-      render: (location: WarehouseLocation) => (
-        <div className="space-y-1">
-          <Badge variant={location.isActive ? "default" : "secondary"}>
-            {location.isActive ? "Active" : "Inactive"}
-          </Badge>
-          {location.isFull && (
-            <Badge variant="destructive" className="text-xs">
-              Full
-            </Badge>
-          )}
+      accessorKey: "status",
+      cell: ({ row }: any) => getStatusBadge(row.original.status),
+    },
+    {
+      header: "Zone/Aisle",
+      accessorKey: "zone",
+      cell: ({ row }: any) => (
+        <div className="text-sm">
+          {row.original.zone && <div>Zone: {row.original.zone}</div>}
+          {row.original.aisle && <div>Aisle: {row.original.aisle}</div>}
+          {!row.original.zone && !row.original.aisle && <span className="text-muted-foreground">N/A</span>}
         </div>
       ),
+    },
+    {
+      header: "Rack/Shelf/Position",
+      accessorKey: "rack",
+      cell: ({ row }: any) => (
+        <div className="text-sm">
+          {row.original.rack && <div>Rack: {row.original.rack}</div>}
+          {row.original.shelf && <div>Shelf: {row.original.shelf}</div>}
+          {row.original.position && <div>Pos: {row.original.position}</div>}
+          {!row.original.rack && !row.original.shelf && <span className="text-muted-foreground">N/A</span>}
+        </div>
+      ),
+    },
+    {
+      header: "Temperature",
+      accessorKey: "temperature",
+      cell: ({ row }: any) => {
+        if (row.original.minTemperature && row.original.maxTemperature) {
+          return (
+            <div className="flex items-center gap-1 text-sm">
+              <Thermometer className="h-3 w-3" />
+              {row.original.minTemperature}°C - {row.original.maxTemperature}°C
+            </div>
+          )
+        }
+        return <span className="text-muted-foreground">N/A</span>
+      },
+    },
+    {
+      header: "Capacity",
+      accessorKey: "capacity",
+      cell: ({ row }: any) => {
+        if (row.original.capacity) {
+          return (
+            <div className="text-sm">
+              {row.original.capacity} {row.original.capacityUnit || ""}
+            </div>
+          )
+        }
+        return <span className="text-muted-foreground">N/A</span>
+      },
     },
   ]
 
   const filterOptions = [
     {
+      key: "status",
+      label: "Status",
+      type: "select" as const,
+      options: [
+        { value: "Available", label: "Available" },
+        { value: "Occupied", label: "Occupied" },
+        { value: "Reserved", label: "Reserved" },
+        { value: "Blocked", label: "Blocked" },
+        { value: "Maintenance", label: "Maintenance" },
+      ],
+    },
+    {
       key: "type",
       label: "Type",
       type: "select" as const,
       options: [
-        { value: "zone", label: "Zone" },
-        { value: "aisle", label: "Aisle" },
-        { value: "rack", label: "Rack" },
-        { value: "shelf", label: "Shelf" },
-        { value: "bin", label: "Bin" },
-        { value: "floor", label: "Floor" },
+        { value: "Bin", label: "Bin" },
+        { value: "Rack", label: "Rack" },
+        { value: "Shelf", label: "Shelf" },
+        { value: "Pallet", label: "Pallet" },
+        { value: "Bulk", label: "Bulk" },
+        { value: "Cold Room", label: "Cold Room" },
+        { value: "Freezer", label: "Freezer" },
       ],
     },
   ]
 
-  const handleFiltersChange = (newFilters: Record<string, any>) => {
-    setFilters(newFilters)
-    setPagination((prev) => ({ ...prev, page: 1 }))
-  }
+  const actions = [
+    {
+      label: "View",
+      icon: <Eye className="h-4 w-4" />,
+      onClick: (location: StorageLocation) => router.push(`/dashboard/warehouse/locations/${location.id}`),
+      variant: "ghost" as const,
+    },
+    {
+      label: "Edit",
+      icon: <Edit className="h-4 w-4" />,
+      onClick: (location: StorageLocation) => router.push(`/dashboard/warehouse/locations/${location.id}/edit`),
+      variant: "ghost" as const,
+    },
+    {
+      label: "Delete",
+      icon: <Trash2 className="h-4 w-4" />,
+      onClick: handleDelete,
+      variant: "ghost" as const,
+    },
+  ]
 
-  const actions = (location: WarehouseLocation) => (
-    <div className="flex items-center gap-2">
-      <PermissionGuard module="WAREHOUSE" screen="locations" action="update">
-        <Button variant="ghost" size="sm" onClick={() => handleEdit(location)}>
-          Edit
-        </Button>
-      </PermissionGuard>
-      <PermissionGuard module="WAREHOUSE" screen="locations" action="update">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => handleToggleStatus(location)}
-        >
-          {location.isActive ? "Deactivate" : "Activate"}
-        </Button>
-      </PermissionGuard>
-      <PermissionGuard module="WAREHOUSE" screen="locations" action="delete">
-        <Button variant="ghost" size="sm" onClick={() => handleDelete(location)}>
-          Delete
-        </Button>
-      </PermissionGuard>
-    </div>
-  )
+  const stats = {
+    total: locations.length,
+    available: locations.filter(l => l.status === "Available").length,
+    occupied: locations.filter(l => l.status === "Occupied").length,
+    reserved: locations.filter(l => l.status === "Reserved").length,
+  }
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Warehouse Locations</h1>
-            <p className="text-muted-foreground">Manage warehouse storage locations and capacity</p>
+            <h1 className="text-3xl font-bold">Storage Locations</h1>
+            <p className="text-muted-foreground">Manage warehouse storage locations and zones</p>
           </div>
-
-          <PermissionGuard module="WAREHOUSE" screen="locations" action="create">
-            <Button onClick={() => (window.location.href = "/dashboard/warehouse/locations/new")}>
-              <Plus />
-              Add Location
-            </Button>
-          </PermissionGuard>
+          <Button onClick={() => router.push("/dashboard/warehouse/locations/new")}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Location
+          </Button>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Locations</CardTitle>
-              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <MapPin className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{pagination.total}</div>
+              <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Locations</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Available</CardTitle>
+              <CheckCircle className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.activeLocations}</div>
+              <div className="text-2xl font-bold text-green-600">{stats.available}</div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Full Locations</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Occupied</CardTitle>
+              <Package className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">{stats.fullLocations}</div>
+              <div className="text-2xl font-bold text-orange-600">{stats.occupied}</div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Items</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Reserved</CardTitle>
+              <XCircle className="h-4 w-4 text-yellow-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{stats.totalItems}</div>
+              <div className="text-2xl font-bold text-yellow-600">{stats.reserved}</div>
             </CardContent>
           </Card>
         </div>
@@ -402,7 +322,18 @@ export default function WarehouseLocationsPage() {
           actions={actions}
           onRefresh={fetchLocations}
           onExport={() => console.log("Export locations")}
-          emptyMessage="No warehouse locations found. Add your first location to get started."
+          emptyMessage="No storage locations found. Add your first location to get started."
+        />
+
+        <ConfirmDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          title="Delete Storage Location"
+          description={`Are you sure you want to delete location ${locationToDelete?.locationCode}? This action cannot be undone.`}
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={handleDeleteConfirm}
+          variant="destructive"
         />
       </div>
     </DashboardLayout>

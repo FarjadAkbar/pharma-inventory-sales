@@ -26,18 +26,22 @@ import {
   Pause,
   RotateCcw
 } from "lucide-react"
-import { apiService } from "@/services/api.service"
+import { warehouseApi } from "@/services"
 import type { InventoryItem, InventoryFilters } from "@/types/warehouse"
 import { formatDateISO } from "@/lib/utils"
-import { InventoryMovementForm } from "@/components/warehouse/inventory-movement-form"
 import { toast } from "sonner"
+import { useRouter } from "next/navigation"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
 export default function InventoryPage() {
+  const router = useRouter()
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [filters, setFilters] = useState<InventoryFilters>({})
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState<InventoryItem | null>(null)
 
   useEffect(() => {
     fetchInventoryItems()
@@ -46,19 +50,17 @@ export default function InventoryPage() {
   const fetchInventoryItems = async () => {
     try {
       setLoading(true)
-      const response = await apiService.getInventoryItems({
-        search: searchQuery,
+      const response = await warehouseApi.getInventoryItems({
         ...filters,
-        page: pagination.page,
-        limit: 10,
       })
 
-      if (response.success && response.data) {
-        setInventoryItems(response.data.inventoryItems || [])
-        setPagination(response.data.pagination || { page: 1, pages: 1, total: 0 })
+      if (response && Array.isArray(response)) {
+        setInventoryItems(response)
+        setPagination({ page: 1, pages: 1, total: response.length })
       }
     } catch (error) {
       console.error("Failed to fetch inventory items:", error)
+      toast.error("Failed to load inventory items")
     } finally {
       setLoading(false)
     }
@@ -78,36 +80,27 @@ export default function InventoryPage() {
     setPagination((prev) => ({ ...prev, page }))
   }
 
-  const handleView = (item: InventoryItem) => {
-    // TODO: Implement view functionality
-    console.log("View item:", item)
+  const handleDelete = (item: InventoryItem) => {
+    setItemToDelete(item)
+    setDeleteDialogOpen(true)
   }
 
-  const handleEdit = (item: InventoryItem) => {
-    // TODO: Implement edit functionality
-    console.log("Edit item:", item)
-  }
+  const handleDeleteConfirm = async () => {
+    if (!itemToDelete) return
 
-  const handleDelete = async (item: InventoryItem) => {
-    if (confirm("Are you sure you want to delete this inventory item?")) {
-      try {
-        const response = await apiService.deleteInventoryItem(item.id)
-        if (response.success) {
-          toast.success("Inventory item deleted successfully")
-          fetchInventoryItems()
-        } else {
-          toast.error("Failed to delete inventory item")
-        }
-      } catch (error) {
-        console.error("Error deleting inventory item:", error)
-        toast.error("An error occurred while deleting the inventory item")
-      }
+    try {
+      await warehouseApi.deleteInventoryItem(itemToDelete.id.toString())
+      toast.success("Inventory item deleted successfully")
+      fetchInventoryItems()
+      setDeleteDialogOpen(false)
+      setItemToDelete(null)
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete inventory item")
     }
   }
 
   const handleMove = (item: InventoryItem) => {
-    // TODO: Implement move functionality
-    console.log("Move item:", item)
+    router.push(`/dashboard/warehouse/movements/new?fromItem=${item.id}`)
   }
 
   const getStatusBadge = (status: string) => {
@@ -214,9 +207,14 @@ export default function InventoryPage() {
         <div className="text-sm">
           <div className="flex items-center gap-1">
             <MapPin className="h-3 w-3" />
-            {item.location}
+            {item.locationId || item.location || "N/A"}
           </div>
-          <div className="text-muted-foreground">Zone {item.zone}</div>
+          {item.zone && (
+            <div className="text-muted-foreground">Zone {item.zone}</div>
+          )}
+          {item.rack && item.shelf && (
+            <div className="text-muted-foreground text-xs">Rack {item.rack}, Shelf {item.shelf}</div>
+          )}
         </div>
       ),
     },
@@ -232,45 +230,38 @@ export default function InventoryPage() {
       sortable: true,
       render: (item: InventoryItem) => (
         <div className="text-sm">
-          <div className="flex items-center gap-1">
-            <Thermometer className="h-3 w-3" />
-            {item.temperature}°C
-          </div>
-          <div className="flex items-center gap-1">
-            <Droplets className="h-3 w-3" />
-            {item.humidity}%
-          </div>
+          {item.temperature !== undefined && (
+            <div className="flex items-center gap-1">
+              <Thermometer className="h-3 w-3" />
+              {item.temperature}°C
+            </div>
+          )}
+          {item.humidity !== undefined && (
+            <div className="flex items-center gap-1">
+              <Droplets className="h-3 w-3" />
+              {item.humidity}%
+            </div>
+          )}
+          {item.temperature === undefined && item.humidity === undefined && (
+            <span className="text-muted-foreground">N/A</span>
+          )}
         </div>
       ),
     },
     {
       key: "expiry",
-      header: "Expiry Status",
+      header: "Expiry Date",
       sortable: true,
       render: (item: InventoryItem) => {
+        if (!item.expiryDate) return <span className="text-muted-foreground">N/A</span>
         const expiryStatus = getExpiryStatus(item.expiryDate)
         return (
-          <div className={`text-sm ${expiryStatus.color}`}>
-            {expiryStatus.status}
+          <div className="text-sm">
+            <div className={expiryStatus.color}>{formatDateISO(item.expiryDate)}</div>
+            <div className={`text-xs ${expiryStatus.color}`}>{expiryStatus.status}</div>
           </div>
         )
       },
-    },
-    {
-      key: "lastUpdated",
-      header: "Last Updated",
-      sortable: true,
-      render: (item: InventoryItem) => (
-        <div className="text-sm">
-          <div className="flex items-center gap-1">
-            <User className="h-3 w-3" />
-            {item.lastUpdatedByName}
-          </div>
-          <div className="text-muted-foreground">
-            {formatDateISO(item.lastUpdated)}
-          </div>
-        </div>
-      ),
     },
   ]
 
@@ -327,14 +318,14 @@ export default function InventoryPage() {
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => handleView(item)}
+        onClick={() => router.push(`/dashboard/warehouse/inventory/${item.id}`)}
       >
         <Eye className="h-4 w-4" />
       </Button>
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => handleEdit(item)}
+        onClick={() => router.push(`/dashboard/warehouse/inventory/${item.id}/edit`)}
       >
         <Edit className="h-4 w-4" />
       </Button>
@@ -344,6 +335,7 @@ export default function InventoryPage() {
           size="sm"
           className="text-blue-600 hover:text-blue-700"
           onClick={() => handleMove(item)}
+          title="Create Movement"
         >
           <RotateCcw className="h-4 w-4" />
         </Button>
@@ -365,9 +357,8 @@ export default function InventoryPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Inventory Management</h1>
-            <p className="text-muted-foreground">Manage warehouse inventory with FEFO display and location mapping</p>
+            <p className="text-muted-foreground">View and manage current stock levels, locations, and status</p>
           </div>
-          <InventoryMovementForm onSuccess={fetchInventoryItems} />
         </div>
 
         {/* Stats Cards */}
@@ -452,7 +443,18 @@ export default function InventoryPage() {
           actions={actions}
           onRefresh={fetchInventoryItems}
           onExport={() => console.log("Export inventory")}
-          emptyMessage="No inventory items found. Add your first item to get started."
+          emptyMessage="No inventory items found."
+        />
+
+        <ConfirmDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          title="Delete Inventory Item"
+          description={`Are you sure you want to delete inventory item ${itemToDelete?.itemCode}? This action cannot be undone.`}
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={handleDeleteConfirm}
+          variant="destructive"
         />
       </div>
     </DashboardLayout>

@@ -98,30 +98,29 @@ export class QualityAssuranceApiService extends BaseApiService {
     if (params?.limit) searchParams.set("limit", params.limit.toString())
 
     const query = searchParams.toString()
-    return this.request(`/quality-assurance/deviations${query ? `?${query}` : ""}`)
+    return this.rawRequest(`/quality-assurance/deviations${query ? `?${query}` : ""}`)
   }
 
   async getQADeviation(id: string) {
-    return this.request(`/quality-assurance/deviations/${id}`)
+    return this.rawRequest(`/quality-assurance/deviations/${id}`)
   }
 
   async createQADeviation(deviationData: any) {
-    return this.request("/quality-assurance/deviations", {
+    return this.rawRequest("/quality-assurance/deviations", {
       method: "POST",
       body: JSON.stringify(deviationData),
     })
   }
 
-  async updateQADeviation(deviationData: any) {
-    return this.request("/quality-assurance/deviations", {
+  async updateQADeviation(id: string, deviationData: any) {
+    return this.rawRequest(`/quality-assurance/deviations/${id}`, {
       method: "PUT",
       body: JSON.stringify(deviationData),
     })
   }
 
   async deleteQADeviation(id: string) {
-    const sp = new URLSearchParams({ id })
-    return this.request(`/quality-assurance/deviations?${sp.toString()}`, { method: "DELETE" })
+    return this.rawRequest(`/quality-assurance/deviations/${id}`, { method: "DELETE" })
   }
 
   // Cache invalidation for quality assurance data

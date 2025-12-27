@@ -19,11 +19,11 @@ import { GoodsReceiptItem } from '../entities/goods-receipt-item.entity';
         },
       },
       {
-        name: 'QC_SAMPLE_SERVICE',
+        name: 'QUALITY_CONTROL_SERVICE',
         transport: Transport.TCP,
         options: {
-          host: process.env.QC_SAMPLE_SERVICE_HOST,
-          port: parseInt(process.env.QC_SAMPLE_SERVICE_PORT || '3011'),
+          host: process.env.QUALITY_CONTROL_SERVICE_HOST,
+          port: parseInt(process.env.QUALITY_CONTROL_SERVICE_PORT || '3010'),
         },
       },
       {

@@ -40,7 +40,8 @@ import {
   AlertTriangle,
   Workflow,
   Zap,
-  Beaker
+  Beaker,
+  MapPin
 } from "lucide-react"
 
 interface NavItem {
@@ -132,11 +133,14 @@ export function Sidebar() {
       title: "Warehouse",
       icon: Store,
       items: [
+        { title: "Warehouses", href: "/dashboard/warehouse/warehouses", icon: Building2 },
+        { title: "Storage Locations", href: "/dashboard/warehouse/locations", icon: MapPin },
         { title: "Inventory Lots", href: "/dashboard/warehouse/inventory", icon: Store },
+        { title: "Putaway Tasks", href: "/dashboard/warehouse/putaway", icon: Package },
+        { title: "Material Issues", href: "/dashboard/warehouse/material-issues", icon: ShoppingCart },
         { title: "Stock Movements", href: "/dashboard/warehouse/movements", icon: Store },
-        { title: "Storage Locations", href: "/dashboard/warehouse/locations", icon: Store },
-        { title: "Temperature Logs", href: "/dashboard/warehouse/temperature", icon: Thermometer },
         { title: "Cycle Counts", href: "/dashboard/warehouse/cycle-counts", icon: Store },
+        { title: "Temperature Logs", href: "/dashboard/warehouse/temperature", icon: Thermometer },
         { title: "Labels & Barcodes", href: "/dashboard/warehouse/labels", icon: Barcode },
       ]
     },

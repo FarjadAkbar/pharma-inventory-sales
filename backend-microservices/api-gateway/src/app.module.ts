@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { JwtModule } from '@nestjs/jwt';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { UsersController } from './users/users.controller';
 import { AuthController } from './auth/auth.controller';
 import { RolesController } from './roles/roles.controller';
@@ -15,10 +18,15 @@ import { QCTestsController } from './qc-tests/qc-tests.controller';
 import { QCResultsController } from './qc-results/qc-results.controller';
 import { QAReleasesController } from './qa-releases/qa-releases.controller';
 import { QADeviationsController } from './qa-deviations/qa-deviations.controller';
+import { WarehouseController } from './warehouse/warehouse.controller';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
+    JwtModule.register({
+      secret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+      signOptions: { expiresIn: '15m' },
+    }),
     ClientsModule.register([
       {
         name: 'USER_SERVICE',
@@ -89,50 +97,40 @@ import { QADeviationsController } from './qa-deviations/qa-deviations.controller
         transport: Transport.TCP,
         options: {
           host: process.env.GOODS_RECEIPT_SERVICE_HOST,
-          port: parseInt(process.env.GOODS_RECEIPT_SERVICE_PORT || '3010'),
+          port: parseInt(process.env.GOODS_RECEIPT_SERVICE_PORT),
         },
       },
       {
-        name: 'QC_SAMPLE_SERVICE',
+        name: 'QUALITY_CONTROL_SERVICE',
         transport: Transport.TCP,
         options: {
-          host: process.env.QC_SAMPLE_SERVICE_HOST,
-          port: parseInt(process.env.QC_SAMPLE_SERVICE_PORT),
+          host: process.env.QUALITY_CONTROL_SERVICE_HOST,
+          port: parseInt(process.env.QUALITY_CONTROL_SERVICE_PORT),
         },
       },
       {
-        name: 'QC_TEST_SERVICE',
+        name: 'QUALITY_ASSURANCE_SERVICE',
         transport: Transport.TCP,
         options: {
-          host: process.env.QC_TEST_SERVICE_HOST,
-          port: parseInt(process.env.QC_TEST_SERVICE_PORT),
+          host: process.env.QUALITY_ASSURANCE_SERVICE_HOST,
+          port: parseInt(process.env.QUALITY_ASSURANCE_SERVICE_PORT),
         },
       },
       {
-        name: 'QC_RESULT_SERVICE',
+        name: 'WAREHOUSE_SERVICE',
         transport: Transport.TCP,
         options: {
-          host: process.env.QC_RESULT_SERVICE_HOST,
-          port: parseInt(process.env.QC_RESULT_SERVICE_PORT),
-        },
-      },
-      {
-        name: 'QA_RELEASE_SERVICE',
-        transport: Transport.TCP,
-        options: {
-          host: process.env.QA_RELEASE_SERVICE_HOST,
-          port: parseInt(process.env.QA_RELEASE_SERVICE_PORT),
-        },
-      },
-      {
-        name: 'QA_DEVIATION_SERVICE',
-        transport: Transport.TCP,
-        options: {
-          host: process.env.QA_DEVIATION_SERVICE_HOST,
-          port: parseInt(process.env.QA_DEVIATION_SERVICE_PORT),
+          host: process.env.WAREHOUSE_SERVICE_HOST,
+          port: parseInt(process.env.WAREHOUSE_SERVICE_PORT),
         },
       },
     ]),
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
   ],
   controllers: [
     UsersController,
@@ -149,6 +147,7 @@ import { QADeviationsController } from './qa-deviations/qa-deviations.controller
     QCResultsController,
     QAReleasesController,
     QADeviationsController,
+    WarehouseController,
   ],
 })
 export class AppModule {}

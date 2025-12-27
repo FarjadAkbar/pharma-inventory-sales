@@ -3,17 +3,13 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { DataTable } from "@/components/ui/data-table"
+import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { 
   Plus, 
   Package, 
-  Search, 
-  Filter,
   CheckCircle,
   Clock,
   XCircle,
@@ -27,16 +23,16 @@ import {
   MapPin,
   AlertCircle,
   Play,
-  Pause,
-  RotateCcw
+  Pause
 } from "lucide-react"
-import { apiService } from "@/services/api.service"
+import { warehouseApi } from "@/services"
 import type { PutawayTask, PutawayFilters } from "@/types/warehouse"
 import { formatDateISO } from "@/lib/utils"
-import { PutawayTaskForm } from "@/components/warehouse/putaway-task-form"
 import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 export default function PutawayPage() {
+  const router = useRouter()
   const [putawayTasks, setPutawayTasks] = useState<PutawayTask[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -50,19 +46,20 @@ export default function PutawayPage() {
   const fetchPutawayTasks = async () => {
     try {
       setLoading(true)
-      const response = await apiService.getPutawayTasks({
+      const response = await warehouseApi.getPutawayTasks({
         search: searchQuery,
         ...filters,
         page: pagination.page,
         limit: 10,
       })
 
-      if (response.success && response.data) {
-        setPutawayTasks(response.data.putawayTasks || [])
-        setPagination(response.data.pagination || { page: 1, pages: 1, total: 0 })
+      if (response && Array.isArray(response)) {
+        setPutawayTasks(response)
+        setPagination({ page: 1, pages: 1, total: response.length })
       }
     } catch (error) {
       console.error("Failed to fetch putaway tasks:", error)
+      toast.error("Failed to load putaway tasks")
     } finally {
       setLoading(false)
     }
@@ -73,11 +70,8 @@ export default function PutawayPage() {
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
-  const handleFilterChange = (key: keyof PutawayFilters, value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value
-    }))
+  const handleFilterChange = (newFilters: Record<string, any>) => {
+    setFilters(newFilters as PutawayFilters)
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
@@ -98,16 +92,12 @@ export default function PutawayPage() {
   const handleDelete = async (task: PutawayTask) => {
     if (confirm("Are you sure you want to delete this putaway task?")) {
       try {
-        const response = await apiService.deletePutawayTask(task.id)
-        if (response.success) {
-          toast.success("Putaway task deleted successfully")
-          fetchPutawayTasks()
-        } else {
-          toast.error("Failed to delete putaway task")
-        }
-      } catch (error) {
+        await warehouseApi.deletePutawayTask(task.id.toString())
+        toast.success("Putaway task deleted successfully")
+        fetchPutawayTasks()
+      } catch (error: any) {
         console.error("Error deleting putaway task:", error)
-        toast.error("An error occurred while deleting the putaway task")
+        toast.error(error.message || "Failed to delete putaway task")
       }
     }
   }
@@ -178,27 +168,19 @@ export default function PutawayPage() {
 
   const columns = [
     {
-      key: "taskNumber",
+      key: "putawayNumber",
       header: "Task #",
-      render: (task: PutawayTask) => (
+      sortable: true,
+      render: (task: any) => (
         <div className="font-mono text-sm font-medium text-orange-600">
-          {task.taskNumber}
-        </div>
-      ),
-    },
-    {
-      key: "grn",
-      header: "GRN",
-      render: (task: PutawayTask) => (
-        <div className="text-sm">
-          <div className="font-medium">{task.grnNumber}</div>
-          <div className="text-muted-foreground">ID: {task.grnId}</div>
+          {task.putawayNumber || task.taskNumber || `PUT-${task.id}`}
         </div>
       ),
     },
     {
       key: "material",
       header: "Material",
+      sortable: true,
       render: (task: PutawayTask) => (
         <div>
           <div className="flex items-center gap-2">
@@ -212,6 +194,7 @@ export default function PutawayPage() {
     {
       key: "batch",
       header: "Batch",
+      sortable: true,
       render: (task: PutawayTask) => (
         <div className="text-sm">
           <div className="font-medium">{task.batchNumber}</div>
@@ -220,72 +203,46 @@ export default function PutawayPage() {
       ),
     },
     {
-      key: "locations",
-      header: "Locations",
-      render: (task: PutawayTask) => (
+      key: "location",
+      header: "Location",
+      sortable: true,
+      render: (task: any) => (
         <div className="text-sm">
-          <div className="flex items-center gap-1">
-            <MapPin className="h-3 w-3" />
-            From: {task.sourceLocation}
-          </div>
-          {task.targetLocation && (
-            <div className="flex items-center gap-1 text-muted-foreground">
+          {task.locationId ? (
+            <div className="flex items-center gap-1">
               <MapPin className="h-3 w-3" />
-              To: {task.targetLocation}
+              {task.locationId}
             </div>
+          ) : (
+            <span className="text-muted-foreground">Not assigned</span>
+          )}
+          {task.zone && (
+            <div className="text-muted-foreground">Zone: {task.zone}</div>
+          )}
+          {task.rack && task.shelf && (
+            <div className="text-muted-foreground text-xs">Rack {task.rack}, Shelf {task.shelf}</div>
           )}
         </div>
       ),
     },
     {
-      key: "priority",
-      header: "Priority",
-      render: (task: PutawayTask) => getPriorityBadge(task.priority),
-    },
-    {
       key: "status",
       header: "Status",
+      sortable: true,
       render: (task: PutawayTask) => getStatusBadge(task.status),
     },
     {
-      key: "assignedTo",
-      header: "Assigned To",
-      render: (task: PutawayTask) => (
-        <div className="text-sm">
-          <div className="flex items-center gap-1">
-            <User className="h-3 w-3" />
-            {task.assignedToName}
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: "temperature",
-      header: "Temp Compliance",
-      render: (task: PutawayTask) => (
-        <div className="text-sm">
-          <div className="flex items-center gap-1">
-            <Thermometer className="h-3 w-3" />
-            {task.temperatureCompliance ? (
-              <span className="text-green-600">Compliant</span>
-            ) : (
-              <span className="text-red-600">Non-compliant</span>
-            )}
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: "timeline",
-      header: "Timeline",
-      render: (task: PutawayTask) => (
+      key: "requestedAt",
+      header: "Requested",
+      sortable: true,
+      render: (task: any) => (
         <div className="text-sm">
           <div className="flex items-center gap-1">
             <Calendar className="h-3 w-3" />
-            {formatDateISO(task.assignedAt)}
+            {formatDateISO(task.requestedAt || task.assignedAt || task.createdAt)}
           </div>
           {task.completedAt && (
-            <div className="text-muted-foreground">
+            <div className="text-muted-foreground text-xs">
               Completed: {formatDateISO(task.completedAt)}
             </div>
           )}
@@ -302,7 +259,10 @@ export default function PutawayPage() {
             <h1 className="text-3xl font-bold tracking-tight">Putaway Management</h1>
             <p className="text-muted-foreground">Manage putaway tasks with location assignment and temperature compliance</p>
           </div>
-          <PutawayTaskForm onSuccess={fetchPutawayTasks} />
+          <Button onClick={() => router.push("/dashboard/warehouse/putaway/new")}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Putaway Task
+          </Button>
         </div>
 
         {/* Stats Cards */}
@@ -368,137 +328,62 @@ export default function PutawayPage() {
           </Card>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Filters
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Search</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search putaway tasks..."
-                    value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status</label>
-                <Select value={filters.status || ""} onValueChange={(value) => handleFilterChange("status", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Pending">Pending</SelectItem>
-                    <SelectItem value="Assigned">Assigned</SelectItem>
-                    <SelectItem value="In Progress">In Progress</SelectItem>
-                    <SelectItem value="Completed">Completed</SelectItem>
-                    <SelectItem value="Failed">Failed</SelectItem>
-                    <SelectItem value="Cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Priority</label>
-                <Select value={filters.priority || ""} onValueChange={(value) => handleFilterChange("priority", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Priorities" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Low">Low</SelectItem>
-                    <SelectItem value="Normal">Normal</SelectItem>
-                    <SelectItem value="High">High</SelectItem>
-                    <SelectItem value="Urgent">Urgent</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Assigned To</label>
-                <Select value={filters.assignedTo || ""} onValueChange={(value) => handleFilterChange("assignedTo", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Assignees" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="8">Mr. Muhammad Ali</SelectItem>
-                    <SelectItem value="9">Ms. Fatima Hassan</SelectItem>
-                    <SelectItem value="10">Mr. Ahmed Khan</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Zone</label>
-                <Select value={filters.zone || ""} onValueChange={(value) => handleFilterChange("zone", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Zones" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="A">Zone A (Raw Materials)</SelectItem>
-                    <SelectItem value="B">Zone B (Finished Goods)</SelectItem>
-                    <SelectItem value="C">Zone C (Quarantine)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Putaway Tasks Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Putaway Tasks</CardTitle>
-            <CardDescription>A comprehensive view of all putaway tasks with location assignment and temperature compliance tracking.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              data={putawayTasks}
-              columns={columns}
-              loading={loading}
-              onSearch={handleSearch}
-              pagination={{
-                page: pagination.page,
-                pages: pagination.pages,
-                total: pagination.total,
-                onPageChange: handlePageChange
-              }}
-              searchPlaceholder="Search putaway tasks..."
-              actions={(task: PutawayTask) => (
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => handleView(task)}>
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleEdit(task)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  {task.status === "Pending" && (
-                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700" onClick={() => handleStart(task)}>
-                      <Play className="h-4 w-4" />
-                    </Button>
-                  )}
-                  {task.status === "In Progress" && (
-                    <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700" onClick={() => handleComplete(task)}>
-                      <CheckCircle className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={() => handleDelete(task)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+        <UnifiedDataTable
+          data={putawayTasks}
+          columns={columns}
+          loading={loading}
+          searchPlaceholder="Search putaway tasks..."
+          searchValue={searchQuery}
+          onSearch={handleSearch}
+          filters={[
+            {
+              key: "status",
+              label: "Status",
+              type: "select" as const,
+              options: [
+                { value: "Pending", label: "Pending" },
+                { value: "Assigned", label: "Assigned" },
+                { value: "In Progress", label: "In Progress" },
+                { value: "Completed", label: "Completed" },
+                { value: "Cancelled", label: "Cancelled" },
+              ],
+            },
+          ]}
+          onFiltersChange={handleFilterChange}
+          pagination={{
+            page: pagination.page,
+            pages: pagination.pages,
+            total: pagination.total,
+            onPageChange: handlePageChange
+          }}
+          actions={(task: PutawayTask) => (
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={() => handleView(task)}>
+                <Eye className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => handleEdit(task)}>
+                <Edit className="h-4 w-4" />
+              </Button>
+              {task.status === "Pending" && (
+                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700" onClick={() => handleStart(task)}>
+                  <Play className="h-4 w-4" />
+                </Button>
               )}
-            />
-          </CardContent>
-        </Card>
+              {task.status === "In Progress" && (
+                <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700" onClick={() => handleComplete(task)}>
+                  <CheckCircle className="h-4 w-4" />
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={() => handleDelete(task)}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+          onRefresh={fetchPutawayTasks}
+          onExport={() => console.log("Export putaway tasks")}
+          emptyMessage="No putaway tasks found."
+        />
       </div>
     </DashboardLayout>
   )

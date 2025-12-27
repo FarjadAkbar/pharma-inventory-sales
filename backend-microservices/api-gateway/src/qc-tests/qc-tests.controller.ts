@@ -11,15 +11,15 @@ import {
 @Controller('qc-tests')
 export class QCTestsController {
   constructor(
-    @Inject('QC_TEST_SERVICE')
-    private qcTestClient: ClientProxy,
+    @Inject('QUALITY_CONTROL_SERVICE')
+    private qualityControlClient: ClientProxy,
   ) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createDto: CreateQCTestDto) {
     return await firstValueFrom(
-      this.qcTestClient.send(QC_TEST_PATTERNS.CREATE, createDto)
+      this.qualityControlClient.send(QC_TEST_PATTERNS.CREATE, createDto)
     );
   }
 
@@ -27,25 +27,25 @@ export class QCTestsController {
   async findAll(@Query('materialId') materialId?: string) {
     if (materialId) {
       return await firstValueFrom(
-        this.qcTestClient.send(QC_TEST_PATTERNS.GET_BY_MATERIAL, parseInt(materialId, 10))
+        this.qualityControlClient.send(QC_TEST_PATTERNS.GET_BY_MATERIAL, parseInt(materialId, 10))
       );
     }
     return await firstValueFrom(
-      this.qcTestClient.send(QC_TEST_PATTERNS.LIST, {})
+      this.qualityControlClient.send(QC_TEST_PATTERNS.LIST, {})
     );
   }
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return await firstValueFrom(
-      this.qcTestClient.send(QC_TEST_PATTERNS.GET_BY_ID, parseInt(id, 10))
+      this.qualityControlClient.send(QC_TEST_PATTERNS.GET_BY_ID, parseInt(id, 10))
     );
   }
 
   @Put(':id')
   async update(@Param('id') id: string, @Body() updateDto: UpdateQCTestDto) {
     return await firstValueFrom(
-      this.qcTestClient.send(QC_TEST_PATTERNS.UPDATE, {
+      this.qualityControlClient.send(QC_TEST_PATTERNS.UPDATE, {
         id: parseInt(id, 10),
         updateDto,
       })
@@ -56,7 +56,7 @@ export class QCTestsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param('id') id: string) {
     await firstValueFrom(
-      this.qcTestClient.send(QC_TEST_PATTERNS.DELETE, parseInt(id, 10))
+      this.qualityControlClient.send(QC_TEST_PATTERNS.DELETE, parseInt(id, 10))
     );
   }
 }

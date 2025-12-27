@@ -33,7 +33,7 @@ export default function EditQADeviationPage() {
 
   const handleSubmit = async (data: any) => {
     try {
-      await qualityAssuranceApi.updateQADeviation({ ...data, id: parseInt(id) })
+      await qualityAssuranceApi.updateQADeviation(id, data)
       router.push("/dashboard/quality/deviations")
     } catch (error: any) {
       console.error("Failed to update deviation:", error)

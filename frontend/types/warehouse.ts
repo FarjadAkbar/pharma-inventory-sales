@@ -1,27 +1,32 @@
 // Warehouse Operations Module Types
 
 export interface InventoryItem {
-  id: string
+  id: number
   itemCode: string
-  materialId: string
+  materialId: number
   materialName: string
   materialCode: string
   batchNumber: string
-  expiryDate: string
+  expiryDate?: string
   quantity: number
   unit: string
-  location: string
-  zone: string
-  rack: string
-  shelf: string
-  position: string
+  locationId?: string
+  location?: string
+  zone?: string
+  rack?: string
+  shelf?: string
+  position?: string
   status: InventoryStatus
-  temperature: number
-  humidity: number
-  lastUpdated: string
-  lastUpdatedBy: string
-  lastUpdatedByName: string
+  temperature?: number
+  humidity?: number
+  lastUpdated?: string
+  lastUpdatedBy?: number
+  lastUpdatedByName?: string
+  goodsReceiptItemId?: number
+  qaReleaseId?: number
   remarks?: string
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface PutawayTask {
@@ -260,6 +265,48 @@ export type WarehousePriority =
   | 'High'
   | 'Urgent'
 
+export type MaterialIssueStatus = 
+  | 'Pending'
+  | 'Approved'
+  | 'Picked'
+  | 'Issued'
+  | 'Cancelled'
+
+export interface MaterialIssue {
+  id: number
+  issueNumber: string
+  materialId: number
+  materialName: string
+  materialCode: string
+  batchNumber?: string
+  quantity: number
+  unit: string
+  fromLocationId?: string
+  toLocationId?: string
+  workOrderId?: string
+  batchId?: string
+  referenceId?: string
+  referenceType?: string
+  status: MaterialIssueStatus
+  requestedBy: number
+  requestedAt: string
+  approvedBy?: number
+  approvedAt?: string
+  pickedBy?: number
+  pickedAt?: string
+  issuedBy?: number
+  issuedAt?: string
+  remarks?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface MaterialIssueFilters {
+  status?: MaterialIssueStatus
+  workOrderId?: string
+  batchId?: string
+}
+
 // Filter Types
 export interface InventoryFilters {
   search?: string
@@ -393,4 +440,99 @@ export interface WarehouseMetrics {
   spaceUtilization: number
   temperatureCompliance: number
   onTimeDelivery: number
+}
+
+// New Entity Types
+export interface Warehouse {
+  id: number
+  code: string
+  name: string
+  description?: string
+  type: 'Main' | 'Distribution' | 'Cold Storage' | 'Quarantine' | 'Hold'
+  status: 'Active' | 'Inactive' | 'Maintenance'
+  siteId?: number
+  address?: string
+  city?: string
+  state?: string
+  country?: string
+  postalCode?: string
+  minTemperature?: number
+  maxTemperature?: number
+  minHumidity?: number
+  maxHumidity?: number
+  managerId?: number
+  remarks?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface StorageLocation {
+  id: number
+  locationCode: string
+  warehouseId: number
+  name: string
+  type: 'Bin' | 'Rack' | 'Shelf' | 'Pallet' | 'Bulk' | 'Cold Room' | 'Freezer'
+  status: 'Available' | 'Occupied' | 'Reserved' | 'Blocked' | 'Maintenance'
+  zone?: string
+  aisle?: string
+  rack?: string
+  shelf?: string
+  position?: string
+  capacity?: number
+  capacityUnit?: string
+  minTemperature?: number
+  maxTemperature?: number
+  minHumidity?: number
+  maxHumidity?: number
+  requiresTemperatureControl: boolean
+  requiresHumidityControl: boolean
+  remarks?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface TemperatureLog {
+  id: number
+  logType: 'Warehouse' | 'Location' | 'Inventory Item' | 'Putaway'
+  warehouseId?: number
+  locationId?: string
+  inventoryItemId?: number
+  putawayItemId?: number
+  temperature: number
+  humidity?: number
+  status: 'Normal' | 'Warning' | 'Critical' | 'Out of Range'
+  minThreshold?: number
+  maxThreshold?: number
+  isOutOfRange: boolean
+  sensorId?: string
+  sensorName?: string
+  remarks?: string
+  loggedAt: string
+  loggedBy?: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface LabelBarcode {
+  id: number
+  barcode: string
+  labelType: 'Inventory Item' | 'Putaway' | 'Material Issue' | 'Cycle Count' | 'Location' | 'Batch'
+  referenceId?: number
+  referenceType?: string
+  inventoryItemId?: number
+  putawayItemId?: number
+  materialIssueId?: number
+  cycleCountId?: number
+  locationId?: string
+  batchNumber?: string
+  barcodeType: 'CODE128' | 'CODE39' | 'EAN13' | 'QR Code' | 'Data Matrix'
+  labelData?: string
+  labelTemplate?: string
+  isPrinted: boolean
+  printedAt?: string
+  printedBy?: number
+  printCount: number
+  remarks?: string
+  createdAt: string
+  updatedAt: string
 }

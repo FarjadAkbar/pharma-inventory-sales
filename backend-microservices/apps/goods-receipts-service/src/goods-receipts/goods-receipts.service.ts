@@ -29,8 +29,8 @@ export class GoodsReceiptsService {
     private goodsReceiptItemsRepository: Repository<GoodsReceiptItem>,
     @Inject('PURCHASE_ORDER_SERVICE')
     private purchaseOrderClient: ClientProxy,
-    @Inject('QC_SAMPLE_SERVICE')
-    private qcSampleClient: ClientProxy,
+    @Inject('QUALITY_CONTROL_SERVICE')
+    private qualityControlClient: ClientProxy,
     @Inject('RAW_MATERIAL_SERVICE')
     private rawMaterialClient: ClientProxy,
   ) {}
@@ -183,7 +183,7 @@ export class GoodsReceiptsService {
 
         try {
           await firstValueFrom(
-            this.qcSampleClient.send(QC_SAMPLE_PATTERNS.CREATE, createQCSampleDto)
+            this.qualityControlClient.send(QC_SAMPLE_PATTERNS.CREATE, createQCSampleDto)
           );
         } catch (error) {
           console.error(`Failed to create QC sample for GR item ${item.id}:`, error);

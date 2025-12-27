@@ -30,7 +30,7 @@ import {
   Beaker,
   Package
 } from "lucide-react"
-import { apiService } from "@/services/api.service"
+import { qualityAssuranceApi } from "@/services"
 import type { QADeviation, QADeviationFilters } from "@/types/quality-assurance"
 import { formatDateISO } from "@/lib/utils"
 
@@ -49,16 +49,17 @@ export default function QADeviationsPage() {
   const fetchDeviations = async () => {
     try {
       setLoading(true)
-      const response = await apiService.getQADeviations({
+      const response = await qualityAssuranceApi.getQADeviations({
         search: searchQuery,
         ...filters,
         page: pagination.page,
         limit: 10,
       })
 
-      if (response.success && response.data) {
-        setDeviations(response.data.deviations || [])
-        setPagination(response.data.pagination || { page: 1, pages: 1, total: 0 })
+      // API gateway returns { deviations, pagination } directly
+      if (response) {
+        setDeviations(response.deviations || [])
+        setPagination(response.pagination || { page: 1, pages: 1, total: 0 })
       }
     } catch (error) {
       console.error("Failed to fetch deviations:", error)
@@ -279,7 +280,6 @@ export default function QADeviationsPage() {
             <p className="text-muted-foreground">Manage quality deviations and investigations</p>
           </div>
           <Button 
-            className="bg-orange-600 hover:bg-orange-700"
             onClick={() => router.push("/dashboard/quality/deviations/new")}
           >
             <Plus />
@@ -502,7 +502,7 @@ export default function QADeviationsPage() {
                   onClick: async (deviation: QADeviation) => {
                     if (confirm(`Are you sure you want to delete deviation ${deviation.deviationNumber}?`)) {
                       try {
-                        await apiService.deleteQADeviation(deviation.id.toString())
+                        await qualityAssuranceApi.deleteQADeviation(deviation.id.toString())
                         fetchDeviations()
                       } catch (error) {
                         console.error("Failed to delete deviation:", error)

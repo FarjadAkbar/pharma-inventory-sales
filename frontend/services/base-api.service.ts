@@ -3,18 +3,71 @@
 import { authService } from "./auth.service"
 import type { ApiResponse } from "@/types/auth"
 import { BASE_URL } from "@/config"
+import { isTokenValid, decodeToken } from "@/lib/jwt"
 
 export class BaseApiService {
   protected baseUrl = BASE_URL
+  private isRefreshing = false
+  private refreshPromise: Promise<{ accessToken: string; refreshToken: string } | null> | null = null
 
   protected getCurrentStoreId(): string | null {
     if (typeof window === "undefined") return null
     return localStorage.getItem("current_store_id")
   }
 
+  // Check if token is about to expire (within 2 minutes)
+  private isTokenExpiringSoon(token: string | null): boolean {
+    if (!token) return true
+    
+    try {
+      const decoded = decodeToken(token)
+      if (!decoded || !decoded.exp) return true
+      
+      const currentTime = Math.floor(Date.now() / 1000)
+      const timeUntilExpiry = decoded.exp - currentTime
+      
+      // Refresh if token expires in less than 2 minutes
+      return timeUntilExpiry < 120
+    } catch {
+      return true
+    }
+  }
+
+  // Ensure token is valid, refresh if needed
+  private async ensureValidToken(): Promise<string | null> {
+    const token = authService.getToken()
+    
+    // If no token, return null
+    if (!token) return null
+    
+    // If token is valid and not expiring soon, return it
+    if (isTokenValid(token) && !this.isTokenExpiringSoon(token)) {
+      return token
+    }
+    
+    // If already refreshing, wait for that promise
+    if (this.isRefreshing && this.refreshPromise) {
+      const result = await this.refreshPromise
+      return result?.accessToken || null
+    }
+    
+    // Start refresh process
+    this.isRefreshing = true
+    this.refreshPromise = authService.refreshToken()
+    
+    try {
+      const result = await this.refreshPromise
+      return result?.accessToken || null
+    } finally {
+      this.isRefreshing = false
+      this.refreshPromise = null
+    }
+  }
+
   // Generic request method with authentication
   protected async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
-    const token = authService.getToken()
+    // Ensure token is valid before making request
+    const token = await this.ensureValidToken()
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       ...(options.headers as Record<string, string>),
@@ -31,10 +84,29 @@ export class BaseApiService {
 
     try {
       window.dispatchEvent(new Event("api:request:start"))
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      let response = await fetch(`${this.baseUrl}${endpoint}`, {
         ...options,
         headers,
       })
+
+      // If 401, try to refresh token and retry once
+      if (response.status === 401 && token) {
+        const refreshResult = await authService.refreshToken()
+        if (refreshResult?.accessToken) {
+          headers["Authorization"] = `Bearer ${refreshResult.accessToken}`
+          response = await fetch(`${this.baseUrl}${endpoint}`, {
+            ...options,
+            headers,
+          })
+        } else {
+          // Refresh failed, redirect to login
+          authService.removeToken()
+          if (typeof window !== "undefined") {
+            window.location.href = "/login"
+          }
+          throw new Error("Session expired. Please login again.")
+        }
+      }
 
       const contentType = response.headers.get("content-type") || ""
       const data = contentType.includes("application/json") ? await response.json() : ({} as any)
@@ -60,7 +132,8 @@ export class BaseApiService {
   protected async rawRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     console.log(`HTTP ${options.method || 'GET'} request to: ${this.baseUrl}${endpoint} at:`, new Date().toISOString())
     
-    const token = authService.getToken()
+    // Ensure token is valid before making request
+    const token = await this.ensureValidToken()
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       ...(options.headers as Record<string, string>),
@@ -77,10 +150,29 @@ export class BaseApiService {
 
     try {
       window.dispatchEvent(new Event("api:request:start"))
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      let response = await fetch(`${this.baseUrl}${endpoint}`, {
         ...options,
         headers,
       })
+
+      // If 401, try to refresh token and retry once
+      if (response.status === 401 && token) {
+        const refreshResult = await authService.refreshToken()
+        if (refreshResult?.accessToken) {
+          headers["Authorization"] = `Bearer ${refreshResult.accessToken}`
+          response = await fetch(`${this.baseUrl}${endpoint}`, {
+            ...options,
+            headers,
+          })
+        } else {
+          // Refresh failed, redirect to login
+          authService.removeToken()
+          if (typeof window !== "undefined") {
+            window.location.href = "/login"
+          }
+          throw new Error("Session expired. Please login again.")
+        }
+      }
 
       const contentType = response.headers.get("content-type") || ""
       const data = contentType.includes("application/json") ? await response.json() : ({} as any)

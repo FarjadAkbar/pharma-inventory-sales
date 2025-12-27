@@ -16,5 +16,6 @@ async function bootstrap() {
   const port = process.env.PORT || 8000;
   await app.listen(port);
   console.log(`API Gateway running on http://localhost:${port}`);
+  console.log(`JWT Authentication Guard is ACTIVE - All routes require authentication except /auth/*`);
 }
 bootstrap();

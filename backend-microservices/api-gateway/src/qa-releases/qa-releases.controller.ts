@@ -12,15 +12,15 @@ import {
 @Controller('qa-releases')
 export class QAReleasesController {
   constructor(
-    @Inject('QA_RELEASE_SERVICE')
-    private qaReleaseClient: ClientProxy,
+    @Inject('QUALITY_ASSURANCE_SERVICE')
+    private qualityAssuranceClient: ClientProxy,
   ) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createDto: CreateQAReleaseDto) {
     return await firstValueFrom(
-      this.qaReleaseClient.send(QA_RELEASE_PATTERNS.CREATE, createDto)
+      this.qualityAssuranceClient.send(QA_RELEASE_PATTERNS.CREATE, createDto)
     );
   }
 
@@ -28,25 +28,25 @@ export class QAReleasesController {
   async findAll(@Query('sampleId') sampleId?: string) {
     if (sampleId) {
       return await firstValueFrom(
-        this.qaReleaseClient.send(QA_RELEASE_PATTERNS.GET_BY_SAMPLE, parseInt(sampleId, 10))
+        this.qualityAssuranceClient.send(QA_RELEASE_PATTERNS.GET_BY_SAMPLE, parseInt(sampleId, 10))
       );
     }
     return await firstValueFrom(
-      this.qaReleaseClient.send(QA_RELEASE_PATTERNS.LIST, {})
+      this.qualityAssuranceClient.send(QA_RELEASE_PATTERNS.LIST, {})
     );
   }
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return await firstValueFrom(
-      this.qaReleaseClient.send(QA_RELEASE_PATTERNS.GET_BY_ID, parseInt(id, 10))
+      this.qualityAssuranceClient.send(QA_RELEASE_PATTERNS.GET_BY_ID, parseInt(id, 10))
     );
   }
 
   @Put(':id')
   async update(@Param('id') id: string, @Body() updateDto: UpdateQAReleaseDto) {
     return await firstValueFrom(
-      this.qaReleaseClient.send(QA_RELEASE_PATTERNS.UPDATE, {
+      this.qualityAssuranceClient.send(QA_RELEASE_PATTERNS.UPDATE, {
         id: parseInt(id, 10),
         updateDto,
       })
@@ -56,7 +56,7 @@ export class QAReleasesController {
   @Post(':id/complete-checklist')
   async completeChecklist(@Param('id') id: string, @Body() body: { reviewedBy: number }) {
     return await firstValueFrom(
-      this.qaReleaseClient.send(QA_RELEASE_PATTERNS.COMPLETE_CHECKLIST, {
+      this.qualityAssuranceClient.send(QA_RELEASE_PATTERNS.COMPLETE_CHECKLIST, {
         id: parseInt(id, 10),
         reviewedBy: body.reviewedBy,
       })
@@ -66,7 +66,7 @@ export class QAReleasesController {
   @Post(':id/make-decision')
   async makeDecision(@Param('id') id: string, @Body() makeDecisionDto: MakeReleaseDecisionDto) {
     return await firstValueFrom(
-      this.qaReleaseClient.send(QA_RELEASE_PATTERNS.MAKE_DECISION, {
+      this.qualityAssuranceClient.send(QA_RELEASE_PATTERNS.MAKE_DECISION, {
         id: parseInt(id, 10),
         makeDecisionDto,
       })
@@ -76,7 +76,7 @@ export class QAReleasesController {
   @Post(':id/notify-warehouse')
   async notifyWarehouse(@Param('id') id: string) {
     return await firstValueFrom(
-      this.qaReleaseClient.send(QA_RELEASE_PATTERNS.NOTIFY_WAREHOUSE, parseInt(id, 10))
+      this.qualityAssuranceClient.send(QA_RELEASE_PATTERNS.NOTIFY_WAREHOUSE, parseInt(id, 10))
     );
   }
 
@@ -84,7 +84,7 @@ export class QAReleasesController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param('id') id: string) {
     await firstValueFrom(
-      this.qaReleaseClient.send(QA_RELEASE_PATTERNS.DELETE, parseInt(id, 10))
+      this.qualityAssuranceClient.send(QA_RELEASE_PATTERNS.DELETE, parseInt(id, 10))
     );
   }
 }

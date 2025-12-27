@@ -12,15 +12,15 @@ import {
 @Controller('quality-assurance/deviations')
 export class QADeviationsController {
   constructor(
-    @Inject('QA_DEVIATION_SERVICE')
-    private qaDeviationClient: ClientProxy,
+    @Inject('QUALITY_ASSURANCE_SERVICE')
+    private qualityAssuranceClient: ClientProxy,
   ) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createDto: CreateQADeviationDto) {
     return await firstValueFrom(
-      this.qaDeviationClient.send(QA_DEVIATION_PATTERNS.CREATE, createDto)
+      this.qualityAssuranceClient.send(QA_DEVIATION_PATTERNS.CREATE, createDto)
     );
   }
 
@@ -38,7 +38,7 @@ export class QADeviationsController {
   ) {
     // For now, return all deviations. Filtering can be added later
     const deviations = await firstValueFrom(
-      this.qaDeviationClient.send(QA_DEVIATION_PATTERNS.LIST, {})
+      this.qualityAssuranceClient.send(QA_DEVIATION_PATTERNS.LIST, {})
     );
     
     // Apply client-side filtering (can be moved to service later)
@@ -91,7 +91,7 @@ export class QADeviationsController {
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return await firstValueFrom(
-      this.qaDeviationClient.send(QA_DEVIATION_PATTERNS.GET_BY_ID, parseInt(id, 10))
+      this.qualityAssuranceClient.send(QA_DEVIATION_PATTERNS.GET_BY_ID, parseInt(id, 10))
     );
   }
 
@@ -101,7 +101,7 @@ export class QADeviationsController {
     @Param('sourceId') sourceId: string,
   ) {
     return await firstValueFrom(
-      this.qaDeviationClient.send(QA_DEVIATION_PATTERNS.GET_BY_SOURCE, {
+      this.qualityAssuranceClient.send(QA_DEVIATION_PATTERNS.GET_BY_SOURCE, {
         sourceType,
         sourceId: parseInt(sourceId, 10),
       })
@@ -111,7 +111,7 @@ export class QADeviationsController {
   @Put(':id')
   async update(@Param('id') id: string, @Body() updateDto: UpdateQADeviationDto) {
     return await firstValueFrom(
-      this.qaDeviationClient.send(QA_DEVIATION_PATTERNS.UPDATE, {
+      this.qualityAssuranceClient.send(QA_DEVIATION_PATTERNS.UPDATE, {
         id: parseInt(id, 10),
         updateDto,
       })
@@ -121,7 +121,7 @@ export class QADeviationsController {
   @Post(':id/assign')
   async assign(@Param('id') id: string, @Body() body: { assignedTo: number }) {
     return await firstValueFrom(
-      this.qaDeviationClient.send(QA_DEVIATION_PATTERNS.ASSIGN, {
+      this.qualityAssuranceClient.send(QA_DEVIATION_PATTERNS.ASSIGN, {
         id: parseInt(id, 10),
         assignedTo: body.assignedTo,
       })
@@ -131,7 +131,7 @@ export class QADeviationsController {
   @Post(':id/status')
   async updateStatus(@Param('id') id: string, @Body() body: { status: DeviationStatus }) {
     return await firstValueFrom(
-      this.qaDeviationClient.send(QA_DEVIATION_PATTERNS.UPDATE_STATUS, {
+      this.qualityAssuranceClient.send(QA_DEVIATION_PATTERNS.UPDATE_STATUS, {
         id: parseInt(id, 10),
         status: body.status,
       })
@@ -142,7 +142,7 @@ export class QADeviationsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param('id') id: string) {
     await firstValueFrom(
-      this.qaDeviationClient.send(QA_DEVIATION_PATTERNS.DELETE, parseInt(id, 10))
+      this.qualityAssuranceClient.send(QA_DEVIATION_PATTERNS.DELETE, parseInt(id, 10))
     );
   }
 }

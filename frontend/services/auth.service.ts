@@ -128,6 +128,42 @@ class AuthService {
     throw new Error("Registration failed")
   }
 
+  async refreshToken(): Promise<{ accessToken: string; refreshToken: string } | null> {
+    const refreshToken = this.getRefreshToken()
+    if (!refreshToken) {
+      return null
+    }
+
+    try {
+      const response = await fetch(`${BASE_URL}/auth/refresh`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ refreshToken }),
+      })
+
+      if (!response.ok) {
+        // Refresh token is invalid, clear tokens
+        this.removeToken()
+        return null
+      }
+
+      const data = await response.json()
+      if (data.accessToken && data.refreshToken) {
+        this.setToken(data.accessToken)
+        this.setRefreshToken(data.refreshToken)
+        return { accessToken: data.accessToken, refreshToken: data.refreshToken }
+      }
+
+      return null
+    } catch (error) {
+      console.error("Token refresh failed:", error)
+      this.removeToken()
+      return null
+    }
+  }
+
   async logout(): Promise<void> {
     try {
       const refreshToken = this.getRefreshToken()
