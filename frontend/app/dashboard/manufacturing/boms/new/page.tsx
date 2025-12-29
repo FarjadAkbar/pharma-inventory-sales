@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { BOMForm } from "@/components/manufacturing/bom-form"
-import { apiService } from "@/services/api.service"
+import { manufacturingApi } from "@/services"
 import type { BOM } from "@/types/manufacturing"
 
 export default function NewBOMPage() {
@@ -14,7 +14,7 @@ export default function NewBOMPage() {
   const handleSubmit = async (data: BOM) => {
     setIsSubmitting(true)
     try {
-      const response = await apiService.createBOM(data)
+      const response = await manufacturingApi.createBOM(data)
       if (response.success) {
         router.push("/dashboard/manufacturing/boms")
       } else {

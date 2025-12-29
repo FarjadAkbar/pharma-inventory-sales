@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
@@ -26,11 +27,13 @@ import {
   Pause,
   AlertCircle
 } from "lucide-react"
-import { apiService } from "@/services/api.service"
+import { manufacturingApi } from "@/services"
+import { toast } from "sonner"
 import type { WorkOrder, WorkOrderFilters } from "@/types/manufacturing"
 import { formatDateISO } from "@/lib/utils"
 
 export default function WorkOrdersPage() {
+  const router = useRouter()
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -44,7 +47,7 @@ export default function WorkOrdersPage() {
   const fetchWorkOrders = async () => {
     try {
       setLoading(true)
-      const response = await apiService.getWorkOrders({
+      const response = await manufacturingApi.getWorkOrders({
         search: searchQuery,
         ...filters,
         page: pagination.page,
@@ -52,8 +55,14 @@ export default function WorkOrdersPage() {
       })
 
       if (response.success && response.data) {
-        setWorkOrders(response.data.workOrders || [])
-        setPagination(response.data.pagination || { page: 1, pages: 1, total: 0 })
+        // Handle different response structures
+        const data = response.data as any
+        const workOrders = Array.isArray(data) 
+          ? data 
+          : data.workOrders || []
+        const paginationData = data.pagination || { page: 1, pages: 1, total: 0 }
+        setWorkOrders(workOrders)
+        setPagination(paginationData)
       }
     } catch (error) {
       console.error("Failed to fetch work orders:", error)
@@ -162,11 +171,6 @@ export default function WorkOrdersPage() {
       render: (workOrder: WorkOrder) => (
         <div className="text-sm">
           <div className="font-medium">{workOrder.plannedQuantity.toLocaleString()} {workOrder.unit}</div>
-          {workOrder.actualQuantity && (
-            <div className="text-muted-foreground">
-              Actual: {workOrder.actualQuantity.toLocaleString()}
-            </div>
-          )}
         </div>
       ),
     },
@@ -300,25 +304,84 @@ export default function WorkOrdersPage() {
     },
   ]
 
+  const handleView = (workOrder: WorkOrder) => {
+    router.push(`/dashboard/manufacturing/work-orders/${workOrder.id}`)
+  }
+
+  const handleEdit = (workOrder: WorkOrder) => {
+    router.push(`/dashboard/manufacturing/work-orders/${workOrder.id}`)
+  }
+
+  const handleStart = async (workOrder: WorkOrder) => {
+    // TODO: Implement start work order functionality
+    console.log("Start work order:", workOrder.id)
+  }
+
+  const handlePause = async (workOrder: WorkOrder) => {
+    // TODO: Implement pause work order functionality
+    console.log("Pause work order:", workOrder.id)
+  }
+
+  const handleDelete = async (workOrder: WorkOrder) => {
+    if (confirm(`Are you sure you want to delete work order ${workOrder.workOrderNumber}?`)) {
+      try {
+        await manufacturingApi.deleteWorkOrder(workOrder.id)
+        toast.success("Work order deleted successfully")
+        fetchWorkOrders() // Refresh the list
+      } catch (error: any) {
+        console.error("Failed to delete work order:", error)
+        toast.error(error?.message || "Failed to delete work order")
+      }
+    }
+  }
+
   const actions = (workOrder: WorkOrder) => (
     <div className="flex items-center gap-2">
-      <Button variant="ghost" size="sm">
+      <Button 
+        variant="ghost" 
+        size="sm"
+        onClick={() => handleView(workOrder)}
+        title="View details"
+      >
         <Eye className="h-4 w-4" />
       </Button>
-      <Button variant="ghost" size="sm">
+      <Button 
+        variant="ghost" 
+        size="sm"
+        onClick={() => handleEdit(workOrder)}
+        title="Edit work order"
+      >
         <Edit className="h-4 w-4" />
       </Button>
       {workOrder.status === "Planned" && (
-        <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="text-blue-600 hover:text-blue-700"
+          onClick={() => handleStart(workOrder)}
+          title="Start work order"
+        >
           <Play className="h-4 w-4" />
         </Button>
       )}
       {workOrder.status === "In Progress" && (
-        <Button variant="ghost" size="sm" className="text-orange-600 hover:text-orange-700">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="text-orange-600 hover:text-orange-700"
+          onClick={() => handlePause(workOrder)}
+          title="Pause work order"
+        >
           <Pause className="h-4 w-4" />
         </Button>
       )}
-      <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        className="text-red-600 hover:text-red-700"
+        onClick={() => handleDelete(workOrder)}
+        title="Delete work order"
+      >
         <Trash2 className="h-4 w-4" />
       </Button>
     </div>
@@ -332,7 +395,7 @@ export default function WorkOrdersPage() {
             <h1 className="text-3xl font-bold tracking-tight">Work Orders</h1>
             <p className="text-muted-foreground">Manage production work orders and planning</p>
           </div>
-          <Button className="bg-orange-600 hover:bg-orange-700">
+          <Button onClick={() => router.push("/dashboard/manufacturing/work-orders/new")}>
             <Plus />
             New Work Order
           </Button>

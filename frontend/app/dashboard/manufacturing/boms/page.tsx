@@ -25,7 +25,7 @@ import {
   FileCheck
 } from "lucide-react"
 import Link from "next/link"
-import { apiService } from "@/services/api.service"
+import { manufacturingApi } from "@/services"
 import type { BOM, BOMFilters } from "@/types/manufacturing"
 import { formatDateISO } from "@/lib/utils"
 
@@ -43,7 +43,7 @@ export default function BOMsPage() {
   const fetchBOMs = async () => {
     try {
       setLoading(true)
-      const response = await apiService.getBOMs({
+      const response = await manufacturingApi.getBOMs({
         search: searchQuery,
         ...filters,
         page: pagination.page,
@@ -78,7 +78,7 @@ export default function BOMsPage() {
   const handleDeleteBOM = async (bom: BOM) => {
     if (confirm(`Are you sure you want to delete BOM ${bom.bomNumber}?`)) {
       try {
-        const response = await apiService.deleteBOM(bom.id)
+        const response = await manufacturingApi.deleteBOM(bom.id)
         if (response.success) {
           fetchBOMs() // Refresh the list
         } else {
@@ -94,7 +94,8 @@ export default function BOMsPage() {
   const handleApproveBOM = async (bom: BOM) => {
     if (confirm(`Are you sure you want to approve BOM ${bom.bomNumber}?`)) {
       try {
-        const response = await apiService.approveBOM(bom.id)
+        // TODO: Implement approveBOM in manufacturingApi if backend supports it
+        const response = { success: false, message: "Approve BOM not yet implemented" }
         if (response.success) {
           fetchBOMs() // Refresh the list
         } else {

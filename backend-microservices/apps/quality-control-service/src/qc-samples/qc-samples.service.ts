@@ -46,25 +46,33 @@ export class QCSamplesService {
   }
 
   async create(createQCSampleDto: CreateQCSampleDto): Promise<QCSampleResponseDto> {
-    // Verify goods receipt item exists
-    let goodsReceipt: GoodsReceiptResponseDto | null = null;
-    try {
-      goodsReceipt = await firstValueFrom(
-        this.goodsReceiptClient.send<GoodsReceiptResponseDto>(GOODS_RECEIPT_PATTERNS.GET_BY_ID, createQCSampleDto.sourceId)
-      );
-    } catch (error) {
-      throw new NotFoundException('Goods receipt not found');
-    }
+    // For GoodsReceipt source type, verify goods receipt item exists
+    if (createQCSampleDto.sourceType === 'GoodsReceipt') {
+      if (!createQCSampleDto.goodsReceiptItemId) {
+        throw new BadRequestException('goodsReceiptItemId is required for GoodsReceipt source type');
+      }
 
-    if (!goodsReceipt) {
-      throw new NotFoundException('Goods receipt not found');
-    }
+      let goodsReceipt: GoodsReceiptResponseDto | null = null;
+      try {
+        goodsReceipt = await firstValueFrom(
+          this.goodsReceiptClient.send<GoodsReceiptResponseDto>(GOODS_RECEIPT_PATTERNS.GET_BY_ID, createQCSampleDto.sourceId)
+        );
+      } catch (error) {
+        throw new NotFoundException('Goods receipt not found');
+      }
 
-    // Verify goods receipt item exists
-    const item = goodsReceipt.items?.find(i => i.id === createQCSampleDto.goodsReceiptItemId);
-    if (!item) {
-      throw new NotFoundException('Goods receipt item not found');
+      if (!goodsReceipt) {
+        throw new NotFoundException('Goods receipt not found');
+      }
+
+      // Verify goods receipt item exists
+      const item = goodsReceipt.items?.find(i => i.id === createQCSampleDto.goodsReceiptItemId);
+      if (!item) {
+        throw new NotFoundException('Goods receipt item not found');
+      }
     }
+    // For BATCH source type, goodsReceiptItemId is optional
+    // We can validate batch exists via manufacturing service if needed in the future
 
     // Generate sample number
     const sampleNumber = await this.generateSampleNumber();

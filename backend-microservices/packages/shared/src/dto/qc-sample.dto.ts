@@ -34,7 +34,8 @@ export class CreateQCSampleDto {
   sourceReference: string;
 
   @IsNumber()
-  goodsReceiptItemId: number;
+  @IsOptional()
+  goodsReceiptItemId?: number;
 
   @IsNumber()
   materialId: number;
@@ -105,7 +106,7 @@ export class QCSampleResponseDto {
   sourceType: QCSampleSourceType;
   sourceId: number;
   sourceReference: string;
-  goodsReceiptItemId: number;
+  goodsReceiptItemId?: number;
   materialId: number;
   materialName: string;
   materialCode: string;

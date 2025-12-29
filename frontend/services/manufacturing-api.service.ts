@@ -78,6 +78,10 @@ export class ManufacturingApiService extends BaseApiService {
     return this.request(`/manufacturing/work-orders${query ? `?${query}` : ""}`)
   }
 
+  async getWorkOrder(id: string) {
+    return this.request(`/manufacturing/work-orders/${id}`)
+  }
+
   async createWorkOrder(workOrderData: any) {
     return this.request("/manufacturing/work-orders", {
       method: "POST",
@@ -85,16 +89,15 @@ export class ManufacturingApiService extends BaseApiService {
     })
   }
 
-  async updateWorkOrder(workOrderData: any) {
-    return this.request("/manufacturing/work-orders", {
+  async updateWorkOrder(id: string, workOrderData: any) {
+    return this.request(`/manufacturing/work-orders/${id}`, {
       method: "PUT",
       body: JSON.stringify(workOrderData),
     })
   }
 
   async deleteWorkOrder(id: string) {
-    const sp = new URLSearchParams({ id })
-    return this.request(`/manufacturing/work-orders?${sp.toString()}`, { method: "DELETE" })
+    return this.request(`/manufacturing/work-orders/${id}`, { method: "DELETE" })
   }
 
   // Batches API
@@ -126,6 +129,10 @@ export class ManufacturingApiService extends BaseApiService {
     return this.request(`/manufacturing/batches${query ? `?${query}` : ""}`)
   }
 
+  async getBatch(id: string) {
+    return this.request(`/manufacturing/batches/${id}`)
+  }
+
   async createBatch(batchData: any) {
     return this.request("/manufacturing/batches", {
       method: "POST",
@@ -133,16 +140,54 @@ export class ManufacturingApiService extends BaseApiService {
     })
   }
 
-  async updateBatch(batchData: any) {
-    return this.request("/manufacturing/batches", {
-      method: "PUT",
-      body: JSON.stringify(batchData),
+  async startBatch(id: string, startData: any) {
+    return this.request(`/manufacturing/batches/${id}/start`, {
+      method: "POST",
+      body: JSON.stringify(startData),
     })
   }
 
-  async deleteBatch(id: string) {
-    const sp = new URLSearchParams({ id })
-    return this.request(`/manufacturing/batches?${sp.toString()}`, { method: "DELETE" })
+  async consumeMaterial(batchId: string, consumeData: any) {
+    return this.request(`/manufacturing/batches/${batchId}/consume-material`, {
+      method: "POST",
+      body: JSON.stringify(consumeData),
+    })
+  }
+
+  async executeBatchStep(batchId: string, stepData: any) {
+    return this.request(`/manufacturing/batches/${batchId}/execute-step`, {
+      method: "POST",
+      body: JSON.stringify(stepData),
+    })
+  }
+
+  async completeBatch(id: string, completeData: any) {
+    return this.request(`/manufacturing/batches/${id}/complete`, {
+      method: "POST",
+      body: JSON.stringify(completeData),
+    })
+  }
+
+  async submitBatchToQC(id: string, submitData: any) {
+    return this.request(`/manufacturing/batches/${id}/submit-to-qc`, {
+      method: "POST",
+      body: JSON.stringify(submitData),
+    })
+  }
+
+  async receiveFinishedGoods(id: string, receiveData: any) {
+    return this.request(`/manufacturing/batches/${id}/receive-finished-goods`, {
+      method: "POST",
+      body: JSON.stringify(receiveData),
+    })
+  }
+
+  async getBatchSteps(batchId: string) {
+    return this.request(`/manufacturing/batches/${batchId}/steps`)
+  }
+
+  async getMaterialConsumption(batchId: string) {
+    return this.request(`/manufacturing/batches/${batchId}/material-consumption`)
   }
 
   // Cache invalidation for manufacturing data

@@ -26,7 +26,7 @@ import {
   Pause,
   AlertCircle
 } from "lucide-react"
-import { apiService } from "@/services/api.service"
+import { manufacturingApi } from "@/services"
 import type { Batch, BatchFilters } from "@/types/manufacturing"
 import { formatDateISO } from "@/lib/utils"
 
@@ -44,7 +44,7 @@ export default function BatchesPage() {
   const fetchBatches = async () => {
     try {
       setLoading(true)
-      const response = await apiService.getBatches({
+      const response = await manufacturingApi.getBatches({
         search: searchQuery,
         ...filters,
         page: pagination.page,

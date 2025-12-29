@@ -14,4 +14,5 @@ export * from './dto/qc-result.dto';
 export * from './dto/qa-release.dto';
 export * from './dto/qa-deviation.dto';
 export * from './dto/warehouse.dto';
+export * from './dto/manufacturing.dto';
 export * from './interfaces/message-patterns';

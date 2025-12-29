@@ -20,9 +20,9 @@ export class QCSample {
   @Column()
   sourceReference: string;
 
-  @Column()
+  @Column({ nullable: true })
   @Index()
-  goodsReceiptItemId: number;
+  goodsReceiptItemId?: number;
 
   @Column()
   @Index()

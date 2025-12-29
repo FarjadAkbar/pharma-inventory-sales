@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Edit, Trash2, CheckCircle, Clock, XCircle, FileText, FileCheck, User, Calendar, Package, Beaker, Activity, Target, AlertCircle } from "lucide-react"
 import Link from "next/link"
-import { apiService } from "@/services/api.service"
+import { manufacturingApi } from "@/services"
 import type { BOM } from "@/types/manufacturing"
 import { formatDateISO } from "@/lib/utils"
 
@@ -27,7 +27,7 @@ export default function ViewBOMPage() {
   const fetchBOM = async (id: string) => {
     try {
       setLoading(true)
-      const response = await apiService.getBOMs({ search: id, limit: 1 })
+      const response = await manufacturingApi.getBOMs({ search: id, limit: 1 })
       if (response.success && response.data?.boms?.length > 0) {
         setBOM(response.data.boms[0])
       } else {
@@ -44,7 +44,7 @@ export default function ViewBOMPage() {
   const handleDeleteBOM = async () => {
     if (confirm(`Are you sure you want to delete BOM ${bom?.bomNumber}?`)) {
       try {
-        const response = await apiService.deleteBOM(bom!.id)
+        const response = await manufacturingApi.deleteBOM(bom!.id)
         if (response.success) {
           router.push("/dashboard/manufacturing/boms")
         } else {
@@ -60,7 +60,8 @@ export default function ViewBOMPage() {
   const handleApproveBOM = async () => {
     if (confirm(`Are you sure you want to approve BOM ${bom?.bomNumber}?`)) {
       try {
-        const response = await apiService.approveBOM(bom!.id)
+        // TODO: Implement approveBOM in manufacturingApi if backend supports it
+        const response = { success: false, message: "Approve BOM not yet implemented" }
         if (response.success) {
           fetchBOM(params.id as string) // Refresh data
         } else {

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { BOMForm } from "@/components/manufacturing/bom-form"
-import { apiService } from "@/services/api.service"
+import { manufacturingApi } from "@/services"
 import type { BOM } from "@/types/manufacturing"
 
 export default function EditBOMPage() {
@@ -23,7 +23,7 @@ export default function EditBOMPage() {
   const fetchBOM = async (id: string) => {
     try {
       setLoading(true)
-      const response = await apiService.getBOMs({ search: id, limit: 1 })
+      const response = await manufacturingApi.getBOMs({ search: id, limit: 1 })
       if (response.success && response.data?.boms?.length > 0) {
         setBOM(response.data.boms[0])
       } else {
@@ -40,7 +40,7 @@ export default function EditBOMPage() {
   const handleSubmit = async (data: BOM) => {
     setIsSubmitting(true)
     try {
-      const response = await apiService.updateBOM({ ...data, id: params.id })
+      const response = await manufacturingApi.updateBOM({ ...data, id: params.id })
       if (response.success) {
         router.push("/dashboard/manufacturing/boms")
       } else {
