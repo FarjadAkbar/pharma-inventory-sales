@@ -20,6 +20,7 @@ import { QAReleasesController } from './qa-releases/qa-releases.controller';
 import { QADeviationsController } from './qa-deviations/qa-deviations.controller';
 import { WarehouseController } from './warehouse/warehouse.controller';
 import { ManufacturingController } from './manufacturing/manufacturing.controller';
+import { DrugsController } from './drugs/drugs.controller';
 
 @Module({
   imports: [
@@ -133,6 +134,14 @@ import { ManufacturingController } from './manufacturing/manufacturing.controlle
           port: parseInt(process.env.MANUFACTURING_SERVICE_PORT),
         },
       },
+      {
+        name: 'DRUGS_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: process.env.DRUGS_SERVICE_HOST,
+          port: parseInt(process.env.DRUGS_SERVICE_PORT),
+        },
+      },
     ]),
   ],
   providers: [
@@ -158,6 +167,7 @@ import { ManufacturingController } from './manufacturing/manufacturing.controlle
     QADeviationsController,
     WarehouseController,
     ManufacturingController,
+    DrugsController,
   ],
 })
 export class AppModule {}

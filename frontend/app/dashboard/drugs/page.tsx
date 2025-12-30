@@ -19,7 +19,7 @@ import {
   Trash2
 } from "lucide-react"
 import Link from "next/link"
-import { apiService } from "@/services/api.service"
+import { masterDataApi } from "@/services"
 import type { Drug, DrugFilters } from "@/types/pharma"
 import { formatDateISO } from "@/lib/utils"
 
@@ -37,7 +37,7 @@ export default function DrugsPage() {
   const fetchDrugs = async () => {
     try {
       setLoading(true)
-      const response = await apiService.getDrugs({
+      const response = await masterDataApi.getDrugs({
         search: searchQuery,
         ...filters,
         page: pagination.page,
@@ -72,7 +72,7 @@ export default function DrugsPage() {
   const handleDeleteDrug = async (drug: Drug) => {
     if (confirm(`Are you sure you want to delete ${drug.name}?`)) {
       try {
-        const response = await apiService.deleteDrug(drug.id)
+        const response = await masterDataApi.deleteDrug(drug.id)
         if (response.success) {
           fetchDrugs() // Refresh the list
         } else {
