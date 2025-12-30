@@ -159,7 +159,7 @@ export const FormSelect = forwardRef<HTMLButtonElement, FormSelectProps>(
           <input type="hidden" name={name} value={value || ""} />
         )}
         <Select
-          value={value}
+          value={value && value !== "" ? value : undefined}
           onValueChange={handleValueChange}
           disabled={disabled}
         >
@@ -175,7 +175,7 @@ export const FormSelect = forwardRef<HTMLButtonElement, FormSelectProps>(
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>
           <SelectContent>
-            {options.map((option) => (
+            {(options || []).map((option) => (
               <SelectItem
                 key={option.value}
                 value={option.value}

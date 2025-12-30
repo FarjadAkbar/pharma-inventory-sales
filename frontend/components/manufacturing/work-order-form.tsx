@@ -98,6 +98,13 @@ export function WorkOrderForm({
         drugName: drug.name,
         drugCode: drug.code,
       }))
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        drugId: "",
+        drugName: "",
+        drugCode: "",
+      }))
     }
   }
 
@@ -109,6 +116,12 @@ export function WorkOrderForm({
         siteId: site.id.toString(),
         siteName: site.name,
       }))
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        siteId: "",
+        siteName: "",
+      }))
     }
   }
 
@@ -116,37 +129,33 @@ export function WorkOrderForm({
     <Form onSubmit={handleSubmit}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
-          <Label htmlFor="drugId">Drug *</Label>
           <FormSelect
-            id="drugId"
-            value={formData.drugId}
-            onValueChange={handleDrugChange}
+            name="drugId"
+            label="Drug"
+            value={formData.drugId || undefined}
+            onChange={handleDrugChange}
+            options={drugs.map((drug) => ({
+              value: drug.id.toString(),
+              label: `${drug.name} (${drug.code})`,
+            }))}
+            placeholder="Select Drug"
             required
-          >
-            <option value="">Select Drug</option>
-            {drugs.map((drug) => (
-              <option key={drug.id} value={drug.id.toString()}>
-                {drug.name} ({drug.code})
-              </option>
-            ))}
-          </FormSelect>
+          />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="siteId">Site *</Label>
           <FormSelect
-            id="siteId"
-            value={formData.siteId}
-            onValueChange={handleSiteChange}
+            name="siteId"
+            label="Site"
+            value={formData.siteId || undefined}
+            onChange={handleSiteChange}
+            options={sites.map((site) => ({
+              value: site.id.toString(),
+              label: site.name,
+            }))}
+            placeholder="Select Site"
             required
-          >
-            <option value="">Select Site</option>
-            {sites.map((site) => (
-              <option key={site.id} value={site.id.toString()}>
-                {site.name}
-              </option>
-            ))}
-          </FormSelect>
+          />
         </div>
 
         <div className="space-y-2">
@@ -185,33 +194,37 @@ export function WorkOrderForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="status">Status</Label>
           <FormSelect
-            id="status"
+            name="status"
+            label="Status"
             value={formData.status}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
-          >
-            <option value="Draft">Draft</option>
-            <option value="Planned">Planned</option>
-            <option value="In Progress">In Progress</option>
-            <option value="On Hold">On Hold</option>
-            <option value="Completed">Completed</option>
-            <option value="Cancelled">Cancelled</option>
-          </FormSelect>
+            onChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+            options={[
+              { value: "Draft", label: "Draft" },
+              { value: "Planned", label: "Planned" },
+              { value: "In Progress", label: "In Progress" },
+              { value: "On Hold", label: "On Hold" },
+              { value: "Completed", label: "Completed" },
+              { value: "Cancelled", label: "Cancelled" },
+            ]}
+            placeholder="Select Status"
+          />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="priority">Priority</Label>
           <FormSelect
-            id="priority"
+            name="priority"
+            label="Priority"
             value={formData.priority}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}
-          >
-            <option value="Low">Low</option>
-            <option value="Normal">Normal</option>
-            <option value="High">High</option>
-            <option value="Urgent">Urgent</option>
-          </FormSelect>
+            onChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}
+            options={[
+              { value: "Low", label: "Low" },
+              { value: "Normal", label: "Normal" },
+              { value: "High", label: "High" },
+              { value: "Urgent", label: "Urgent" },
+            ]}
+            placeholder="Select Priority"
+          />
         </div>
 
         <div className="space-y-2">
