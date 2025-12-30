@@ -349,7 +349,7 @@ export default function BatchesPage() {
             <h1 className="text-3xl font-bold tracking-tight">Batch Management</h1>
             <p className="text-muted-foreground">Manage production batches and Electronic Batch Records</p>
           </div>
-          <Button className="bg-orange-600 hover:bg-orange-700">
+          <Button>
             <Plus />
             New Batch
           </Button>
