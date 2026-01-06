@@ -58,6 +58,14 @@ export class DistributionApiService extends BaseApiService {
     return this.request(`/distribution/shipments?${queryParams.toString()}`)
   }
 
+  async getShipment(id: string) {
+    return this.request(`/distribution/shipments/${id}`)
+  }
+
+  async getShipmentsBySalesOrder(salesOrderId: string) {
+    return this.request(`/distribution/shipments/sales-order/${salesOrderId}`)
+  }
+
   async createShipment(shipmentData: any) {
     return this.request("/distribution/shipments", {
       method: "POST",
@@ -69,6 +77,40 @@ export class DistributionApiService extends BaseApiService {
     return this.request(`/distribution/shipments`, {
       method: "PUT",
       body: JSON.stringify({ id, ...shipmentData }),
+    })
+  }
+
+  async allocateStock(allocateData: any) {
+    return this.request("/distribution/shipments/allocate-stock", {
+      method: "POST",
+      body: JSON.stringify(allocateData),
+    })
+  }
+
+  async pickItem(pickData: any) {
+    return this.request("/distribution/shipments/pick-item", {
+      method: "POST",
+      body: JSON.stringify(pickData),
+    })
+  }
+
+  async packItem(packData: any) {
+    return this.request("/distribution/shipments/pack-item", {
+      method: "POST",
+      body: JSON.stringify(packData),
+    })
+  }
+
+  async shipOrder(id: string, shipData: any) {
+    return this.request(`/distribution/shipments/${id}/ship`, {
+      method: "POST",
+      body: JSON.stringify(shipData),
+    })
+  }
+
+  async cancelShipment(id: string) {
+    return this.request(`/distribution/shipments/${id}/cancel`, {
+      method: "POST",
     })
   }
 
@@ -149,26 +191,28 @@ export class DistributionApiService extends BaseApiService {
         queryParams.append(key, String(value))
       }
     })
-    return this.request(`/distribution/pod?${queryParams.toString()}`)
+    return this.request(`/distribution/proof-of-delivery?${queryParams.toString()}`)
+  }
+
+  async getProofOfDelivery(id: string) {
+    return this.request(`/distribution/proof-of-delivery/${id}`)
+  }
+
+  async getProofOfDeliveriesByShipment(shipmentId: string) {
+    return this.request(`/distribution/proof-of-delivery/shipment/${shipmentId}`)
   }
 
   async createProofOfDelivery(podData: any) {
-    return this.request("/distribution/pod", {
+    return this.request("/distribution/proof-of-delivery", {
       method: "POST",
       body: JSON.stringify(podData),
     })
   }
 
-  async updateProofOfDelivery(id: string, podData: any) {
-    return this.request(`/distribution/pod`, {
-      method: "PUT",
-      body: JSON.stringify({ id, ...podData }),
-    })
-  }
-
-  async deleteProofOfDelivery(id: string) {
-    return this.request(`/distribution/pod?id=${id}`, {
-      method: "DELETE",
+  async completeProofOfDelivery(id: string, completedBy: number) {
+    return this.request(`/distribution/proof-of-delivery/${id}/complete`, {
+      method: "POST",
+      body: JSON.stringify({ completedBy }),
     })
   }
 

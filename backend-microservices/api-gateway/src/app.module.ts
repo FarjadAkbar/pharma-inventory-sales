@@ -151,6 +151,14 @@ import { DistributionController } from './distribution/distribution.controller';
           port: parseInt(process.env.SALES_ORDER_SERVICE_PORT),
         },
       },
+      {
+        name: 'SHIPMENT_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: process.env.SHIPMENT_SERVICE_HOST,
+          port: parseInt(process.env.SHIPMENT_SERVICE_PORT),
+        },
+      },
     ]),
   ],
   providers: [
