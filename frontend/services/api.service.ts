@@ -1020,6 +1020,13 @@ class ApiService {
     })
   }
 
+  async approveSalesOrder(id: string, approvedBy: number) {
+    return this.request(`/distribution/sales-orders/${id}/approve`, {
+      method: "POST",
+      body: JSON.stringify({ approvedBy }),
+    })
+  }
+
   async deleteSalesOrder(id: string) {
     return this.request(`/distribution/sales-orders?id=${id}`, {
       method: "DELETE",

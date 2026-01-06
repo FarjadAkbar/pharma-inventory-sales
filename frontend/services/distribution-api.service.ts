@@ -28,6 +28,19 @@ export class DistributionApiService extends BaseApiService {
     })
   }
 
+  async approveSalesOrder(id: string, approvedBy: number) {
+    return this.request(`/distribution/sales-orders/${id}/approve`, {
+      method: "POST",
+      body: JSON.stringify({ approvedBy }),
+    })
+  }
+
+  async cancelSalesOrder(id: string) {
+    return this.request(`/distribution/sales-orders/${id}/cancel`, {
+      method: "POST",
+    })
+  }
+
   async deleteSalesOrder(id: string) {
     return this.request(`/distribution/sales-orders?id=${id}`, {
       method: "DELETE",

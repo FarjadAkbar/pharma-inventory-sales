@@ -16,4 +16,5 @@ export * from './dto/qa-deviation.dto';
 export * from './dto/warehouse.dto';
 export * from './dto/manufacturing.dto';
 export * from './dto/drug.dto';
+export * from './dto/sales-order.dto';
 export * from './interfaces/message-patterns';

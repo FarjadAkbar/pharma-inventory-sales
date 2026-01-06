@@ -265,3 +265,13 @@ export const DRUG_PATTERNS = {
   LIST: { cmd: 'DRUGS_LIST' },
   DELETE: { cmd: 'DRUGS_DELETE' },
 };
+
+export const SALES_ORDER_PATTERNS = {
+  CREATE: { cmd: 'SALES_ORDER_CREATE' },
+  UPDATE: { cmd: 'SALES_ORDER_UPDATE' },
+  GET_BY_ID: { cmd: 'SALES_ORDER_GET_BY_ID' },
+  LIST: { cmd: 'SALES_ORDER_LIST' },
+  DELETE: { cmd: 'SALES_ORDER_DELETE' },
+  APPROVE: { cmd: 'SALES_ORDER_APPROVE' },
+  CANCEL: { cmd: 'SALES_ORDER_CANCEL' },
+};

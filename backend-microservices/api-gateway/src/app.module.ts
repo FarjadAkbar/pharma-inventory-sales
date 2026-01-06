@@ -21,6 +21,7 @@ import { QADeviationsController } from './qa-deviations/qa-deviations.controller
 import { WarehouseController } from './warehouse/warehouse.controller';
 import { ManufacturingController } from './manufacturing/manufacturing.controller';
 import { DrugsController } from './drugs/drugs.controller';
+import { DistributionController } from './distribution/distribution.controller';
 
 @Module({
   imports: [
@@ -142,6 +143,14 @@ import { DrugsController } from './drugs/drugs.controller';
           port: parseInt(process.env.DRUGS_SERVICE_PORT),
         },
       },
+      {
+        name: 'SALES_ORDER_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: process.env.SALES_ORDER_SERVICE_HOST,
+          port: parseInt(process.env.SALES_ORDER_SERVICE_PORT),
+        },
+      },
     ]),
   ],
   providers: [
@@ -168,6 +177,7 @@ import { DrugsController } from './drugs/drugs.controller';
     WarehouseController,
     ManufacturingController,
     DrugsController,
+    DistributionController,
   ],
 })
 export class AppModule {}

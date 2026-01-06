@@ -89,10 +89,9 @@ export default function SalesOrdersPage() {
 
   const handleApprove = async (order: SalesOrder) => {
     try {
-      const response = await apiService.updateSalesOrder(order.id, {
-        ...order,
-        status: "Approved"
-      })
+      // TODO: Get actual user ID from auth context
+      const approvedBy = 1; // Placeholder
+      const response = await apiService.approveSalesOrder(order.id, approvedBy)
       
       if (response.success) {
         toast.success("Order approved successfully")

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Plus, ShoppingCart, User, Calendar, MapPin, DollarSign, Package } from "lucide-react"
 import { apiService } from "@/services/api.service"
+import { masterDataApi, sitesApi } from "@/services"
 import { toast } from "sonner"
 import { UNIT_OPTIONS } from "@/lib/constants"
 
@@ -29,15 +30,41 @@ interface OrderItem {
 export function SalesOrderForm({ onSuccess, trigger }: SalesOrderFormProps) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [drugs, setDrugs] = useState<any[]>([])
+  const [sites, setSites] = useState<any[]>([])
   const [formData, setFormData] = useState({
     accountId: "",
+    accountName: "",
+    accountCode: "",
     siteId: "",
+    siteName: "",
     requestedShipDate: "",
     priority: "Normal",
     specialInstructions: "",
     currency: "PKR"
   })
   const [items, setItems] = useState<OrderItem[]>([])
+
+  // Fetch drugs and sites when component mounts
+  React.useEffect(() => {
+    if (open) {
+      Promise.all([
+        masterDataApi.getDrugs().catch(() => ({ data: [] })),
+        sitesApi.getSites().catch(() => ({ data: [] })),
+      ]).then(([drugsRes, sitesRes]) => {
+        if (drugsRes?.data) {
+          setDrugs(Array.isArray(drugsRes.data) ? drugsRes.data : [])
+        } else if (Array.isArray(drugsRes)) {
+          setDrugs(drugsRes)
+        }
+        if (sitesRes?.data) {
+          setSites(Array.isArray(sitesRes.data) ? sitesRes.data : [])
+        } else if (Array.isArray(sitesRes)) {
+          setSites(sitesRes)
+        }
+      })
+    }
+  }, [open])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -46,18 +73,53 @@ export function SalesOrderForm({ onSuccess, trigger }: SalesOrderFormProps) {
     try {
       const totalAmount = items.reduce((sum, item) => sum + item.totalPrice, 0)
       
+      // Get selected account and site details
+      const selectedSite = sites.find(s => s.id.toString() === formData.siteId)
+      
+      // Default addresses (should be fetched from account in future)
+      const defaultShippingAddress = {
+        street: "123 Main Street",
+        city: "Karachi",
+        state: "Sindh",
+        postalCode: "75500",
+        country: "Pakistan",
+        contactPerson: "Contact Person",
+        phone: "+92-300-1234567",
+        email: "contact@example.com",
+        deliveryInstructions: formData.specialInstructions || ""
+      }
+      
+      const defaultBillingAddress = {
+        ...defaultShippingAddress,
+        taxId: "TAX-123456"
+      }
+      
       const response = await apiService.createSalesOrder({
-        ...formData,
-        items: items.map(item => ({
-          drugId: item.drugId,
-          quantity: item.quantity,
-          unit: item.unit,
-          price: item.price
-        })),
+        accountId: parseInt(formData.accountId),
+        accountName: formData.accountName || "Customer Account",
+        accountCode: formData.accountCode || `ACC-${formData.accountId}`,
+        siteId: parseInt(formData.siteId),
+        siteName: selectedSite?.name || formData.siteName || "Site",
+        requestedShipDate: formData.requestedShipDate,
+        priority: formData.priority,
         totalAmount,
-        status: "Draft",
-        createdBy: "current-user-id", // This should come from auth context
-        createdAt: new Date().toISOString()
+        currency: formData.currency,
+        specialInstructions: formData.specialInstructions || undefined,
+        items: items.map(item => {
+          const drug = drugs.find(d => d.id.toString() === item.drugId)
+          return {
+            drugId: parseInt(item.drugId),
+            drugName: drug?.name || item.drugName || "Drug",
+            drugCode: drug?.code || `DRUG-${item.drugId}`,
+            quantity: item.quantity,
+            unit: item.unit,
+            unitPrice: item.price,
+            totalPrice: item.totalPrice
+          }
+        }),
+        shippingAddress: defaultShippingAddress,
+        billingAddress: defaultBillingAddress,
+        createdBy: 1 // TODO: Get from auth context
       })
 
       if (response.success) {
@@ -65,7 +127,10 @@ export function SalesOrderForm({ onSuccess, trigger }: SalesOrderFormProps) {
         setOpen(false)
         setFormData({
           accountId: "",
+          accountName: "",
+          accountCode: "",
           siteId: "",
+          siteName: "",
           requestedShipDate: "",
           priority: "Normal",
           specialInstructions: "",
@@ -142,7 +207,24 @@ export function SalesOrderForm({ onSuccess, trigger }: SalesOrderFormProps) {
             {/* Customer */}
             <div className="space-y-2">
               <Label htmlFor="accountId">Customer *</Label>
-              <Select value={formData.accountId} onValueChange={(value) => handleInputChange("accountId", value)}>
+              <Select 
+                value={formData.accountId} 
+                onValueChange={(value) => {
+                  // TODO: Fetch account details from API
+                  const accountMap: Record<string, { name: string; code: string }> = {
+                    "1": { name: "Ziauddin Hospital - Clifton", code: "ACC-001" },
+                    "2": { name: "Aga Khan University Hospital", code: "ACC-002" },
+                    "3": { name: "Liaquat National Hospital", code: "ACC-003" },
+                  }
+                  const account = accountMap[value] || { name: "", code: "" }
+                  setFormData(prev => ({
+                    ...prev,
+                    accountId: value,
+                    accountName: account.name,
+                    accountCode: account.code
+                  }))
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select customer" />
                 </SelectTrigger>
@@ -157,14 +239,33 @@ export function SalesOrderForm({ onSuccess, trigger }: SalesOrderFormProps) {
             {/* Site */}
             <div className="space-y-2">
               <Label htmlFor="siteId">Shipping Site *</Label>
-              <Select value={formData.siteId} onValueChange={(value) => handleInputChange("siteId", value)}>
+              <Select 
+                value={formData.siteId} 
+                onValueChange={(value) => {
+                  const site = sites.find(s => s.id.toString() === value)
+                  setFormData(prev => ({
+                    ...prev,
+                    siteId: value,
+                    siteName: site?.name || ""
+                  }))
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select site" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">Main Warehouse - Karachi</SelectItem>
-                  <SelectItem value="2">Distribution Center - Lahore</SelectItem>
-                  <SelectItem value="3">Cold Storage - Islamabad</SelectItem>
+                  {sites.map((site) => (
+                    <SelectItem key={site.id} value={site.id.toString()}>
+                      {site.name}
+                    </SelectItem>
+                  ))}
+                  {sites.length === 0 && (
+                    <>
+                      <SelectItem value="1">Main Warehouse - Karachi</SelectItem>
+                      <SelectItem value="2">Distribution Center - Lahore</SelectItem>
+                      <SelectItem value="3">Cold Storage - Islamabad</SelectItem>
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -228,20 +329,30 @@ export function SalesOrderForm({ onSuccess, trigger }: SalesOrderFormProps) {
               <div key={index} className="grid grid-cols-1 md:grid-cols-6 gap-4 p-4 border rounded-lg">
                 <div className="space-y-2">
                   <Label>Drug</Label>
-                  <Select value={item.drugId} onValueChange={(value) => {
-                    const drugName = value === "1" ? "Paracetamol Tablets" : 
-                                   value === "2" ? "Ibuprofen Tablets" : 
-                                   value === "3" ? "Aspirin Tablets" : ""
-                    updateItem(index, "drugId", value)
-                    updateItem(index, "drugName", drugName)
-                  }}>
+                  <Select 
+                    value={item.drugId} 
+                    onValueChange={(value) => {
+                      const drug = drugs.find(d => d.id.toString() === value)
+                      updateItem(index, "drugId", value)
+                      updateItem(index, "drugName", drug?.name || "")
+                    }}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select drug" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">Paracetamol Tablets</SelectItem>
-                      <SelectItem value="2">Ibuprofen Tablets</SelectItem>
-                      <SelectItem value="3">Aspirin Tablets</SelectItem>
+                      {drugs.map((drug) => (
+                        <SelectItem key={drug.id} value={drug.id.toString()}>
+                          {drug.name} ({drug.code})
+                        </SelectItem>
+                      ))}
+                      {drugs.length === 0 && (
+                        <>
+                          <SelectItem value="1">Paracetamol Tablets</SelectItem>
+                          <SelectItem value="2">Ibuprofen Tablets</SelectItem>
+                          <SelectItem value="3">Aspirin Tablets</SelectItem>
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
