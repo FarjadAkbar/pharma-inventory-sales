@@ -31,8 +31,8 @@ import {
   FileText,
   Download
 } from "lucide-react"
-import { apiService } from "@/services/api.service"
-import { ShipmentForm } from "@/components/sales/shipment-form"
+import { distributionApi } from "@/services/distribution-api.service"
+import Link from "next/link"
 import { toast } from "sonner"
 import type { Shipment, ShipmentFilters } from "@/types/distribution"
 import { formatDateISO } from "@/lib/utils"
@@ -51,7 +51,7 @@ export default function ShipmentsPage() {
   const fetchShipments = async () => {
     try {
       setLoading(true)
-      const response = await apiService.getShipments({
+      const response = await distributionApi.getShipments({
         search: searchQuery,
         ...filters,
         page: pagination.page,
@@ -59,11 +59,13 @@ export default function ShipmentsPage() {
       })
 
       if (response.success && response.data) {
-        setShipments(response.data.shipments || [])
-        setPagination(response.data.pagination || { page: 1, pages: 1, total: 0 })
+        const data = response.data.data || response.data
+        setShipments(Array.isArray(data) ? data : data.shipments || [])
+        setPagination(data.pagination || { page: 1, pages: 1, total: data.total || 0 })
       }
     } catch (error) {
       console.error("Failed to fetch shipments:", error)
+      toast.error("Failed to fetch shipments")
     } finally {
       setLoading(false)
     }
@@ -87,8 +89,7 @@ export default function ShipmentsPage() {
   }
 
   const handleView = (shipment: Shipment) => {
-    console.log("View shipment:", shipment)
-    // TODO: Implement view shipment functionality
+    window.location.href = `/dashboard/distribution/shipments/${shipment.id}`
   }
 
   const handleEdit = (shipment: Shipment) => {
@@ -97,41 +98,11 @@ export default function ShipmentsPage() {
   }
 
   const handleProcess = async (shipment: Shipment) => {
-    try {
-      const response = await apiService.updateShipment(shipment.id, {
-        ...shipment,
-        status: "In Progress"
-      })
-      
-      if (response.success) {
-        toast.success("Shipment processing started")
-        fetchShipments()
-      } else {
-        toast.error("Failed to start processing")
-      }
-    } catch (error) {
-      console.error("Error processing shipment:", error)
-      toast.error("Failed to start processing")
-    }
+    window.location.href = `/dashboard/distribution/shipments/${shipment.id}`
   }
 
   const handlePack = async (shipment: Shipment) => {
-    try {
-      const response = await apiService.updateShipment(shipment.id, {
-        ...shipment,
-        status: "Packed"
-      })
-      
-      if (response.success) {
-        toast.success("Shipment packed successfully")
-        fetchShipments()
-      } else {
-        toast.error("Failed to pack shipment")
-      }
-    } catch (error) {
-      console.error("Error packing shipment:", error)
-      toast.error("Failed to pack shipment")
-    }
+    window.location.href = `/dashboard/distribution/shipments/${shipment.id}`
   }
 
   const handleGenerateDocs = (shipment: Shipment) => {
@@ -147,7 +118,7 @@ export default function ShipmentsPage() {
   const handleDelete = async (shipment: Shipment) => {
     if (window.confirm("Are you sure you want to delete this shipment?")) {
       try {
-        const response = await apiService.deleteShipment(shipment.id)
+        const response = await distributionApi.deleteShipment(shipment.id)
         
         if (response.success) {
           toast.success("Shipment deleted successfully")
@@ -310,10 +281,10 @@ export default function ShipmentsPage() {
         <div className="text-sm">
           <div className="flex items-center gap-1">
             <Thermometer className="h-3 w-3" />
-            {shipment.temperatureRequirements.minTemperature}°C - {shipment.temperatureRequirements.maxTemperature}°C
+            {shipment.temperatureRequirements?.minTemperature}°C - {shipment.temperatureRequirements?.maxTemperature}°C
           </div>
           <div className="text-muted-foreground">
-            {shipment.temperatureRequirements.monitoringRequired ? "Monitoring" : "No Monitoring"}
+            {shipment.temperatureRequirements?.monitoringRequired ? "Monitoring" : "No Monitoring"}
           </div>
         </div>
       ),
@@ -412,14 +383,9 @@ export default function ShipmentsPage() {
       <Button variant="ghost" size="sm" onClick={() => handleEdit(shipment)}>
         <Edit className="h-4 w-4" />
       </Button>
-      {shipment.status === "Pending" && (
-        <Button variant="ghost" size="sm" onClick={() => handleProcess(shipment)}>
+      {(shipment.status === "Draft" || shipment.status === "Pending" || shipment.status === "Allocated" || shipment.status === "Picked" || shipment.status === "Packed") && (
+        <Button variant="ghost" size="sm" onClick={() => handleView(shipment)}>
           <Play className="h-4 w-4" />
-        </Button>
-      )}
-      {shipment.status === "In Progress" && (
-        <Button variant="ghost" size="sm" onClick={() => handlePack(shipment)}>
-          <Package className="h-4 w-4" />
         </Button>
       )}
       <Button variant="ghost" size="sm" onClick={() => handleGenerateDocs(shipment)}>
@@ -439,7 +405,12 @@ export default function ShipmentsPage() {
             <h1 className="text-3xl font-bold tracking-tight">Shipment Management</h1>
             <p className="text-muted-foreground">Manage shipments with FEFO allocation and pick list generation</p>
           </div>
-          <ShipmentForm onSuccess={fetchShipments} />
+          <Link href="/dashboard/distribution/shipments/new">
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Plan Shipment
+            </Button>
+          </Link>
         </div>
 
         {/* Stats Cards */}

@@ -33,7 +33,7 @@ import {
   Upload,
   Signature
 } from "lucide-react"
-import { apiService } from "@/services/api.service"
+import { distributionApi } from "@/services/distribution-api.service"
 import { ProofOfDeliveryForm } from "@/components/sales/proof-of-delivery-form"
 import { toast } from "sonner"
 import type { ProofOfDelivery, PODFilters } from "@/types/distribution"
@@ -55,7 +55,7 @@ export default function PODPage() {
   const fetchPODs = async () => {
     try {
       setLoading(true)
-      const response = await apiService.getProofOfDeliveries({
+      const response = await distributionApi.getProofOfDeliveries({
         search: searchQuery,
         ...filters,
         page: pagination.page,
@@ -63,11 +63,13 @@ export default function PODPage() {
       })
 
       if (response.success && response.data) {
-        setPODs(response.data.pods || [])
-        setPagination(response.data.pagination || { page: 1, pages: 1, total: 0 })
+        const data = response.data.data || response.data
+        setPODs(Array.isArray(data) ? data : data.pods || [])
+        setPagination(data.pagination || { page: 1, pages: 1, total: data.total || 0 })
       }
     } catch (error) {
       console.error("Failed to fetch PODs:", error)
+      toast.error("Failed to fetch PODs")
     } finally {
       setLoading(false)
     }
@@ -118,18 +120,28 @@ export default function PODPage() {
   const handleDelete = async (pod: ProofOfDelivery) => {
     if (window.confirm("Are you sure you want to delete this POD?")) {
       try {
-        const response = await apiService.deleteProofOfDelivery(pod.id)
-        
-        if (response.success) {
-          toast.success("POD deleted successfully")
-          fetchPODs()
-        } else {
-          toast.error("Failed to delete POD")
-        }
+        // Note: Delete endpoint may not be available, handle gracefully
+        toast.info("Delete functionality not yet implemented")
       } catch (error) {
         console.error("Error deleting POD:", error)
         toast.error("Failed to delete POD")
       }
+    }
+  }
+
+  const handleComplete = async (pod: ProofOfDelivery) => {
+    try {
+      const response = await distributionApi.completeProofOfDelivery(pod.id, 1) // TODO: Get from auth context
+      
+      if (response.success) {
+        toast.success("POD completed successfully")
+        fetchPODs()
+      } else {
+        toast.error("Failed to complete POD")
+      }
+    } catch (error) {
+      console.error("Error completing POD:", error)
+      toast.error("Failed to complete POD")
     }
   }
 
