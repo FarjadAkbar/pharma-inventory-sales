@@ -8,12 +8,11 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus, FileText, CheckCircle, Clock, AlertTriangle, User } from "lucide-react"
-import { apiService } from "@/services/api.service"
+import { manufacturingApi } from "@/services"
 import { formatDateISO } from "@/lib/utils"
 import { PermissionGuard } from "@/components/auth/permission-guard"
 
 interface ElectronicBatchRecord {
-  id: string
   batchId: string
   batchNumber: string
   drugId: string
@@ -61,7 +60,7 @@ export default function ElectronicBatchRecordsPage() {
   const fetchEbrs = async () => {
     try {
       setLoading(true)
-      const response = await apiService.getElectronicBatchRecords({
+      const response = await manufacturingApi.getEBRs({
         search: searchQuery,
         status: statusFilter !== "all" ? statusFilter : undefined,
         page: pagination.page,
@@ -69,6 +68,14 @@ export default function ElectronicBatchRecordsPage() {
       })
 
       if (response.success && response.data) {
+        const ebrData = response.data as {
+          ebrs: ElectronicBatchRecord[]
+          pagination: { page: number; pages: number; total: number }
+        }
+        setEbrs(ebrData.ebrs || [])
+        setPagination(ebrData.pagination || { page: 1, pages: 1, total: 0 })
+      } else if (response.data) {
+        // Handle case where data is directly in response
         const ebrData = response.data as {
           ebrs: ElectronicBatchRecord[]
           pagination: { page: number; pages: number; total: number }
@@ -92,42 +99,10 @@ export default function ElectronicBatchRecordsPage() {
     setPagination((prev) => ({ ...prev, page }))
   }
 
-  const handleEdit = (ebr: ElectronicBatchRecord) => {
-    window.location.href = `/dashboard/manufacturing/ebr/${ebr.id}`
+  const handleView = (ebr: ElectronicBatchRecord) => {
+    window.location.href = `/dashboard/manufacturing/ebr/${ebr.batchId}`
   }
 
-  const handleDelete = async (ebr: ElectronicBatchRecord) => {
-    if (confirm(`Are you sure you want to delete EBR for batch "${ebr.batchNumber}"?`)) {
-      try {
-        await apiService.deleteElectronicBatchRecord(ebr.id)
-        fetchEbrs()
-      } catch (error) {
-        console.error("Failed to delete electronic batch record:", error)
-      }
-    }
-  }
-
-  const handleApprove = async (ebr: ElectronicBatchRecord) => {
-    if (confirm(`Are you sure you want to approve EBR for batch "${ebr.batchNumber}"?`)) {
-      try {
-        await apiService.approveElectronicBatchRecord(ebr.id)
-        fetchEbrs()
-      } catch (error) {
-        console.error("Failed to approve electronic batch record:", error)
-      }
-    }
-  }
-
-  const handleReject = async (ebr: ElectronicBatchRecord) => {
-    if (confirm(`Are you sure you want to reject EBR for batch "${ebr.batchNumber}"?`)) {
-      try {
-        await apiService.rejectElectronicBatchRecord(ebr.id)
-        fetchEbrs()
-      } catch (error) {
-        console.error("Failed to reject electronic batch record:", error)
-      }
-    }
-  }
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
@@ -300,12 +275,6 @@ export default function ElectronicBatchRecordsPage() {
             <p className="text-muted-foreground">Manage electronic batch records and manufacturing steps</p>
           </div>
 
-          <PermissionGuard module="MANUFACTURING" screen="ebr" action="create">
-            <Button onClick={() => (window.location.href = "/dashboard/manufacturing/ebr/new")}>
-              <Plus />
-              Add EBR
-            </Button>
-          </PermissionGuard>
         </div>
 
         {/* Stats Cards */}
@@ -401,38 +370,9 @@ export default function ElectronicBatchRecordsPage() {
               searchPlaceholder="Search EBRs..."
               actions={(ebr: ElectronicBatchRecord) => (
                 <div className="flex items-center gap-2">
-                  <PermissionGuard module="MANUFACTURING" screen="ebr" action="update">
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(ebr)}>
-                      Edit
-                    </Button>
-                  </PermissionGuard>
-                  {ebr.status === "completed" && (
-                    <>
-                      <PermissionGuard module="MANUFACTURING" screen="ebr" action="approve">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => handleApprove(ebr)}
-                          className="text-green-600"
-                        >
-                          Approve
-                        </Button>
-                      </PermissionGuard>
-                      <PermissionGuard module="MANUFACTURING" screen="ebr" action="reject">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => handleReject(ebr)}
-                          className="text-red-600"
-                        >
-                          Reject
-                        </Button>
-                      </PermissionGuard>
-                    </>
-                  )}
-                  <PermissionGuard module="MANUFACTURING" screen="ebr" action="delete">
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(ebr)}>
-                      Delete
+                  <PermissionGuard module="MANUFACTURING" screen="ebr" action="read">
+                    <Button variant="ghost" size="sm" onClick={() => handleView(ebr)}>
+                      View
                     </Button>
                   </PermissionGuard>
                 </div>

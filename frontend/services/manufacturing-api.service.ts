@@ -45,8 +45,7 @@ export class ManufacturingApiService extends BaseApiService {
   }
 
   async deleteBOM(id: string) {
-    const sp = new URLSearchParams({ id })
-    return this.request(`/manufacturing/boms?${sp.toString()}`, { method: "DELETE" })
+    return this.request(`/manufacturing/boms/${id}`, { method: "DELETE" })
   }
 
   // Work Orders API
@@ -190,6 +189,48 @@ export class ManufacturingApiService extends BaseApiService {
     return this.request(`/manufacturing/batches/${batchId}/material-consumption`)
   }
 
+  async getMaterialConsumptions(params?: {
+    batchId?: string
+    materialId?: string
+    status?: string
+    page?: number
+    limit?: number
+  }) {
+    const searchParams = new URLSearchParams()
+    if (params?.batchId) searchParams.set("batchId", params.batchId)
+    if (params?.materialId) searchParams.set("materialId", params.materialId)
+    if (params?.status) searchParams.set("status", params.status)
+    if (params?.page) searchParams.set("page", params.page.toString())
+    if (params?.limit) searchParams.set("limit", params.limit.toString())
+
+    const query = searchParams.toString()
+    return this.request(`/manufacturing/material-consumption${query ? `?${query}` : ""}`)
+  }
+
+  async getMaterialConsumptionById(id: string) {
+    return this.request(`/manufacturing/material-consumption/${id}`)
+  }
+
+  async createMaterialConsumption(batchId: string, consumeData: any) {
+    return this.request(`/manufacturing/batches/${batchId}/consume-material`, {
+      method: "POST",
+      body: JSON.stringify(consumeData),
+    })
+  }
+
+  async updateMaterialConsumption(id: string, updateData: any) {
+    return this.request(`/manufacturing/material-consumption/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(updateData),
+    })
+  }
+
+  async deleteMaterialConsumption(id: string) {
+    return this.request(`/manufacturing/material-consumption/${id}`, {
+      method: "DELETE",
+    })
+  }
+
   // Cache invalidation for manufacturing data
   invalidateBOMs() {
     this.invalidateCache("boms")
@@ -201,5 +242,28 @@ export class ManufacturingApiService extends BaseApiService {
 
   invalidateBatches() {
     this.invalidateCache("batches")
+  }
+
+  // EBR API
+  async getEBRs(params?: {
+    batchId?: string
+    drugId?: string
+    status?: string
+    page?: number
+    limit?: number
+  }) {
+    const searchParams = new URLSearchParams()
+    if (params?.batchId) searchParams.set("batchId", params.batchId)
+    if (params?.drugId) searchParams.set("drugId", params.drugId)
+    if (params?.status) searchParams.set("status", params.status)
+    if (params?.page) searchParams.set("page", params.page.toString())
+    if (params?.limit) searchParams.set("limit", params.limit.toString())
+
+    const query = searchParams.toString()
+    return this.request(`/manufacturing/ebr${query ? `?${query}` : ""}`)
+  }
+
+  async getEBRByBatch(batchId: string) {
+    return this.request(`/manufacturing/ebr/${batchId}`)
   }
 }

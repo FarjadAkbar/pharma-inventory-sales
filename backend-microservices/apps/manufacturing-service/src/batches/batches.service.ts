@@ -88,11 +88,53 @@ export class BatchesService {
     return this.toResponseDto(saved);
   }
 
-  async findAll(): Promise<BatchResponseDto[]> {
-    const batches = await this.batchesRepository.find({
-      order: { createdAt: 'DESC' },
-    });
-    return batches.map(batch => this.toResponseDto(batch));
+  async findAll(params?: {
+    search?: string;
+    drugId?: number;
+    siteId?: number;
+    status?: BatchStatus;
+    workOrderId?: number;
+    page?: number;
+    limit?: number;
+  }): Promise<{ batches: BatchResponseDto[]; pagination: { page: number; pages: number; total: number } }> {
+    const page = params?.page || 1;
+    const limit = params?.limit || 10;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.batchesRepository.createQueryBuilder('batch');
+
+    if (params?.drugId) {
+      queryBuilder.andWhere('batch.drugId = :drugId', { drugId: params.drugId });
+    }
+    if (params?.siteId) {
+      queryBuilder.andWhere('batch.siteId = :siteId', { siteId: params.siteId });
+    }
+    if (params?.status) {
+      queryBuilder.andWhere('batch.status = :status', { status: params.status });
+    }
+    if (params?.workOrderId) {
+      queryBuilder.andWhere('batch.workOrderId = :workOrderId', { workOrderId: params.workOrderId });
+    }
+    if (params?.search) {
+      queryBuilder.andWhere(
+        '(batch.batchNumber LIKE :search OR batch.drugName LIKE :search OR batch.drugCode LIKE :search)',
+        { search: `%${params.search}%` }
+      );
+    }
+
+    queryBuilder.orderBy('batch.createdAt', 'DESC');
+    queryBuilder.skip(skip).take(limit);
+
+    const [batches, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      batches: batches.map(batch => this.toResponseDto(batch)),
+      pagination: {
+        page,
+        pages: Math.ceil(total / limit),
+        total,
+      },
+    };
   }
 
   async findOne(id: number): Promise<BatchResponseDto> {

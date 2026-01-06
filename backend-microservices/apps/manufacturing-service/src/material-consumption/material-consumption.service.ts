@@ -7,6 +7,7 @@ import { MaterialConsumption } from '../entities/material-consumption.entity';
 import { Batch } from '../entities/batch.entity';
 import {
   ConsumeMaterialDto,
+  UpdateMaterialConsumptionDto,
   MaterialConsumptionResponseDto,
   MaterialConsumptionStatus,
   WAREHOUSE_PATTERNS,
@@ -98,6 +99,58 @@ export class MaterialConsumptionService {
       throw new NotFoundException(`Material consumption with ID ${id} not found`);
     }
     return this.toResponseDto(consumption);
+  }
+
+  async findAll(params?: {
+    batchId?: number;
+    materialId?: number;
+    status?: MaterialConsumptionStatus;
+    page?: number;
+    limit?: number;
+  }): Promise<{ consumptions: MaterialConsumptionResponseDto[]; pagination: { page: number; pages: number; total: number } }> {
+    const page = params?.page || 1;
+    const limit = params?.limit || 10;
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+    if (params?.batchId) where.batchId = params.batchId;
+    if (params?.materialId) where.materialId = params.materialId;
+    if (params?.status) where.status = params.status;
+
+    const [consumptions, total] = await this.materialConsumptionRepository.findAndCount({
+      where,
+      order: { consumedAt: 'DESC' },
+      skip,
+      take: limit,
+    });
+
+    return {
+      consumptions: consumptions.map(consumption => this.toResponseDto(consumption)),
+      pagination: {
+        page,
+        pages: Math.ceil(total / limit),
+        total,
+      },
+    };
+  }
+
+  async update(id: number, updateDto: UpdateMaterialConsumptionDto): Promise<MaterialConsumptionResponseDto> {
+    const consumption = await this.materialConsumptionRepository.findOne({ where: { id } });
+    if (!consumption) {
+      throw new NotFoundException(`Material consumption with ID ${id} not found`);
+    }
+
+    Object.assign(consumption, updateDto);
+    const updated = await this.materialConsumptionRepository.save(consumption);
+    return this.toResponseDto(updated);
+  }
+
+  async remove(id: number): Promise<void> {
+    const consumption = await this.materialConsumptionRepository.findOne({ where: { id } });
+    if (!consumption) {
+      throw new NotFoundException(`Material consumption with ID ${id} not found`);
+    }
+    await this.materialConsumptionRepository.remove(consumption);
   }
 
   private toResponseDto(consumption: MaterialConsumption): MaterialConsumptionResponseDto {

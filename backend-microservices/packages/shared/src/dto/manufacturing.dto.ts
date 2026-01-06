@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsArray, IsDateString, IsEnum, Min, ValidateNested, IsBoolean, IsObject } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsArray, IsDateString, IsEnum, Min, Max, ValidateNested, IsBoolean, IsObject } from 'class-validator';
 import { Type } from 'class-transformer';
 
 // Work Order Status
@@ -36,6 +36,15 @@ export enum MaterialConsumptionStatus {
   PENDING = 'Pending',
   CONSUMED = 'Consumed',
   REJECTED = 'Rejected',
+}
+
+// BOM Status
+export enum BOMStatus {
+  DRAFT = 'Draft',
+  UNDER_REVIEW = 'Under Review',
+  APPROVED = 'Approved',
+  ACTIVE = 'Active',
+  OBSOLETE = 'Obsolete',
 }
 
 // Manufacturing Priority
@@ -472,6 +481,29 @@ export class ConsumeMaterialDto {
   consumedBy: number;
 }
 
+export class UpdateMaterialConsumptionDto {
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  actualQuantity?: number;
+
+  @IsString()
+  @IsOptional()
+  unit?: string;
+
+  @IsNumber()
+  @IsOptional()
+  locationId?: number;
+
+  @IsEnum(MaterialConsumptionStatus)
+  @IsOptional()
+  status?: MaterialConsumptionStatus;
+
+  @IsString()
+  @IsOptional()
+  remarks?: string;
+}
+
 export class MaterialConsumptionResponseDto {
   id: number;
   batchId: number;
@@ -488,6 +520,155 @@ export class MaterialConsumptionResponseDto {
   consumedBy: number;
   consumedByName?: string;
   remarks?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// BOM DTOs
+export class BOMItemDto {
+  @IsNumber()
+  @IsOptional()
+  id?: number;
+
+  @IsNumber()
+  materialId: number;
+
+  @IsString()
+  materialName: string;
+
+  @IsString()
+  materialCode: string;
+
+  @IsNumber()
+  @Min(0)
+  quantityPerBatch: number;
+
+  @IsString()
+  unitOfMeasure: string;
+
+  @IsNumber()
+  @IsOptional()
+  tolerance?: number;
+
+  @IsBoolean()
+  @IsOptional()
+  isCritical?: boolean;
+
+  @IsNumber()
+  sequence: number;
+
+  @IsString()
+  @IsOptional()
+  remarks?: string;
+}
+
+export class CreateBOMDto {
+  @IsNumber()
+  drugId: number;
+
+  @IsString()
+  drugName: string;
+
+  @IsString()
+  drugCode: string;
+
+  @IsNumber()
+  @Min(0)
+  batchSize: number;
+
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  @IsOptional()
+  yield?: number;
+
+  @IsDateString()
+  @IsOptional()
+  effectiveDate?: string;
+
+  @IsDateString()
+  @IsOptional()
+  expiryDate?: string;
+
+  @IsEnum(BOMStatus)
+  @IsOptional()
+  status?: BOMStatus;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => BOMItemDto)
+  items: BOMItemDto[];
+
+  @IsString()
+  @IsOptional()
+  remarks?: string;
+
+  @IsNumber()
+  createdBy: number;
+}
+
+export class UpdateBOMDto {
+  @IsString()
+  @IsOptional()
+  drugName?: string;
+
+  @IsString()
+  @IsOptional()
+  drugCode?: string;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  batchSize?: number;
+
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  @IsOptional()
+  yield?: number;
+
+  @IsDateString()
+  @IsOptional()
+  effectiveDate?: string;
+
+  @IsDateString()
+  @IsOptional()
+  expiryDate?: string;
+
+  @IsEnum(BOMStatus)
+  @IsOptional()
+  status?: BOMStatus;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => BOMItemDto)
+  @IsOptional()
+  items?: BOMItemDto[];
+
+  @IsString()
+  @IsOptional()
+  remarks?: string;
+}
+
+export class BOMResponseDto {
+  id: number;
+  bomNumber: string;
+  drugId: number;
+  drugName: string;
+  drugCode: string;
+  version: number;
+  status: BOMStatus;
+  batchSize: number;
+  yield?: number;
+  effectiveDate?: Date;
+  expiryDate?: Date;
+  createdBy: number;
+  createdByName?: string;
+  approvedBy?: number;
+  approvedByName?: string;
+  approvedAt?: Date;
+  remarks?: string;
+  items: BOMItemDto[];
   createdAt: Date;
   updatedAt: Date;
 }

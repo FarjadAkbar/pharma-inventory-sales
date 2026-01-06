@@ -5,6 +5,8 @@ import { WorkOrdersModule } from './work-orders/work-orders.module';
 import { BatchesModule } from './batches/batches.module';
 import { BatchStepsModule } from './batch-steps/batch-steps.module';
 import { MaterialConsumptionModule } from './material-consumption/material-consumption.module';
+import { BOMsModule } from './boms/boms.module';
+import { EBRModule } from './ebr/ebr.module';
 import { TypeOrmConfigService } from './config/typeorm.config';
 
 @Module({
@@ -19,6 +21,8 @@ import { TypeOrmConfigService } from './config/typeorm.config';
     BatchesModule,
     BatchStepsModule,
     MaterialConsumptionModule,
+    BOMsModule,
+    EBRModule,
   ],
 })
 export class AppModule {}

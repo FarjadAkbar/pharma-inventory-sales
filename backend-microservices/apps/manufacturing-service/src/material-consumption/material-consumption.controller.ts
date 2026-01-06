@@ -4,6 +4,8 @@ import { MaterialConsumptionService } from './material-consumption.service';
 import {
   MANUFACTURING_PATTERNS,
   ConsumeMaterialDto,
+  UpdateMaterialConsumptionDto,
+  MaterialConsumptionStatus,
 } from '@repo/shared';
 
 @Controller()
@@ -23,6 +25,27 @@ export class MaterialConsumptionController {
   @MessagePattern(MANUFACTURING_PATTERNS.MATERIAL_CONSUMPTION_GET_BY_ID)
   findOne(@Payload() id: number) {
     return this.materialConsumptionService.findOne(id);
+  }
+
+  @MessagePattern(MANUFACTURING_PATTERNS.MATERIAL_CONSUMPTION_LIST)
+  findAll(@Payload() params?: {
+    batchId?: number;
+    materialId?: number;
+    status?: MaterialConsumptionStatus;
+    page?: number;
+    limit?: number;
+  }) {
+    return this.materialConsumptionService.findAll(params);
+  }
+
+  @MessagePattern(MANUFACTURING_PATTERNS.MATERIAL_CONSUMPTION_UPDATE)
+  update(@Payload() data: { id: number; updateDto: UpdateMaterialConsumptionDto }) {
+    return this.materialConsumptionService.update(data.id, data.updateDto);
+  }
+
+  @MessagePattern(MANUFACTURING_PATTERNS.MATERIAL_CONSUMPTION_DELETE)
+  remove(@Payload() id: number) {
+    return this.materialConsumptionService.remove(id);
   }
 }
 

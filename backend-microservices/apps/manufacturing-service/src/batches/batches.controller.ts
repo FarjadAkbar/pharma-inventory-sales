@@ -8,6 +8,7 @@ import {
   CompleteBatchDto,
   SubmitBatchToQCDto,
   ReceiveFinishedGoodsDto,
+  BatchStatus,
 } from '@repo/shared';
 
 @Controller()
@@ -20,8 +21,16 @@ export class BatchesController {
   }
 
   @MessagePattern(MANUFACTURING_PATTERNS.BATCH_LIST)
-  findAll() {
-    return this.batchesService.findAll();
+  findAll(@Payload() params?: {
+    search?: string;
+    drugId?: number;
+    siteId?: number;
+    status?: BatchStatus;
+    workOrderId?: number;
+    page?: number;
+    limit?: number;
+  }) {
+    return this.batchesService.findAll(params);
   }
 
   @MessagePattern(MANUFACTURING_PATTERNS.BATCH_GET_BY_ID)

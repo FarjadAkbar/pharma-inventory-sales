@@ -1,1 +1,0 @@
-export * from './qc-test';

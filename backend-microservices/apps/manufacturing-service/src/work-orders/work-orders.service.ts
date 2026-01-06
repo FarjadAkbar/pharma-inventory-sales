@@ -7,6 +7,7 @@ import {
   UpdateWorkOrderDto,
   WorkOrderResponseDto,
   WorkOrderStatus,
+  ManufacturingPriority,
 } from '@repo/shared';
 
 @Injectable()
@@ -61,11 +62,53 @@ export class WorkOrdersService {
     return this.toResponseDto(saved);
   }
 
-  async findAll(): Promise<WorkOrderResponseDto[]> {
-    const workOrders = await this.workOrdersRepository.find({
-      order: { createdAt: 'DESC' },
-    });
-    return workOrders.map(wo => this.toResponseDto(wo));
+  async findAll(params?: {
+    search?: string;
+    drugId?: number;
+    siteId?: number;
+    status?: WorkOrderStatus;
+    priority?: ManufacturingPriority;
+    page?: number;
+    limit?: number;
+  }): Promise<{ workOrders: WorkOrderResponseDto[]; pagination: { page: number; pages: number; total: number } }> {
+    const page = params?.page || 1;
+    const limit = params?.limit || 10;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.workOrdersRepository.createQueryBuilder('wo');
+
+    if (params?.drugId) {
+      queryBuilder.andWhere('wo.drugId = :drugId', { drugId: params.drugId });
+    }
+    if (params?.siteId) {
+      queryBuilder.andWhere('wo.siteId = :siteId', { siteId: params.siteId });
+    }
+    if (params?.status) {
+      queryBuilder.andWhere('wo.status = :status', { status: params.status });
+    }
+    if (params?.priority) {
+      queryBuilder.andWhere('wo.priority = :priority', { priority: params.priority });
+    }
+    if (params?.search) {
+      queryBuilder.andWhere(
+        '(wo.workOrderNumber LIKE :search OR wo.drugName LIKE :search OR wo.drugCode LIKE :search)',
+        { search: `%${params.search}%` }
+      );
+    }
+
+    queryBuilder.orderBy('wo.createdAt', 'DESC');
+    queryBuilder.skip(skip).take(limit);
+
+    const [workOrders, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      workOrders: workOrders.map(wo => this.toResponseDto(wo)),
+      pagination: {
+        page,
+        pages: Math.ceil(total / limit),
+        total,
+      },
+    };
   }
 
   async findOne(id: number): Promise<WorkOrderResponseDto> {

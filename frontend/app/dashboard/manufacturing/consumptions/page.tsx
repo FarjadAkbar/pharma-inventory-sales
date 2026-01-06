@@ -85,7 +85,7 @@ export default function BatchConsumptionsPage() {
   }
 
   const handleEdit = (consumption: BatchConsumption) => {
-    window.location.href = `/dashboard/manufacturing/consumptions/${consumption.id}`
+    window.location.href = `/dashboard/manufacturing/consumptions/${consumption.id}/edit`
   }
 
   const handleDelete = async (consumption: BatchConsumption) => {

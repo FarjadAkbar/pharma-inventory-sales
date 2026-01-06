@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { apiService } from "@/services/api.service"
-import { masterDataApi, sitesApi } from "@/services"
+import { masterDataApi, sitesApi, manufacturingApi } from "@/services"
 import type { WorkOrder, WorkOrderStatus, ManufacturingPriority } from "@/types/manufacturing"
 
 interface WorkOrderFormProps {
@@ -25,6 +25,8 @@ export function WorkOrderForm({
 }: WorkOrderFormProps) {
   const [drugs, setDrugs] = useState<any[]>([])
   const [sites, setSites] = useState<any[]>([])
+  const [boms, setBoms] = useState<any[]>([])
+  const [loadingBoms, setLoadingBoms] = useState(false)
   const [formData, setFormData] = useState({
     drugId: initialData?.drugId?.toString() || "",
     drugName: initialData?.drugName || "",
@@ -33,7 +35,8 @@ export function WorkOrderForm({
     siteName: initialData?.siteName || "",
     plannedQuantity: initialData?.plannedQuantity?.toString() || "",
     unit: initialData?.unit || "",
-    bomVersion: initialData?.bomVersion?.toString() || "1",
+    bomId: initialData?.bomId?.toString() || "",
+    bomVersion: initialData?.bomVersion?.toString() || "",
     status: (initialData?.status as string) || "Draft",
     priority: (initialData?.priority as string) || "Normal",
     plannedStartDate: initialData?.plannedStartDate 
@@ -77,7 +80,7 @@ export function WorkOrderForm({
       siteName: formData.siteName,
       plannedQuantity: parseFloat(formData.plannedQuantity),
       unit: formData.unit,
-      bomVersion: parseInt(formData.bomVersion),
+      bomVersion: formData.bomVersion ? parseInt(formData.bomVersion) : undefined,
       status: formData.status as WorkOrderStatus,
       priority: formData.priority as ManufacturingPriority,
       plannedStartDate: formData.plannedStartDate,
@@ -89,7 +92,7 @@ export function WorkOrderForm({
     await onSubmit(submitData)
   }
 
-  const handleDrugChange = (drugId: string) => {
+  const handleDrugChange = async (drugId: string) => {
     const drug = drugs.find(d => d.id.toString() === drugId)
     if (drug) {
       setFormData(prev => ({
@@ -97,13 +100,50 @@ export function WorkOrderForm({
         drugId: drug.id.toString(),
         drugName: drug.name,
         drugCode: drug.code,
+        bomId: "",
+        bomVersion: "",
       }))
+      
+      // Fetch BOMs for selected drug
+      if (drugId) {
+        setLoadingBoms(true)
+        try {
+          const response = await manufacturingApi.getBOMs({ drugId, status: 'Active' })
+          const bomsData = response.data?.boms || response.data || []
+          setBoms(bomsData)
+        } catch (error) {
+          console.error("Failed to fetch BOMs:", error)
+          setBoms([])
+        } finally {
+          setLoadingBoms(false)
+        }
+      }
     } else {
       setFormData(prev => ({
         ...prev,
         drugId: "",
         drugName: "",
         drugCode: "",
+        bomId: "",
+        bomVersion: "",
+      }))
+      setBoms([])
+    }
+  }
+
+  const handleBOMChange = (bomId: string) => {
+    const bom = boms.find(b => b.id.toString() === bomId)
+    if (bom) {
+      setFormData(prev => ({
+        ...prev,
+        bomId: bom.id.toString(),
+        bomVersion: bom.version.toString(),
+      }))
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        bomId: "",
+        bomVersion: "",
       }))
     }
   }
@@ -182,16 +222,33 @@ export function WorkOrderForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="bomVersion">BOM Version *</Label>
-          <FormInput
-            id="bomVersion"
-            type="number"
-            min="1"
-            value={formData.bomVersion}
-            onChange={(e) => setFormData(prev => ({ ...prev, bomVersion: e.target.value }))}
+          <FormSelect
+            name="bomId"
+            label="BOM"
+            value={formData.bomId || undefined}
+            onChange={handleBOMChange}
+            options={boms.map((bom) => ({
+              value: bom.id.toString(),
+              label: `${bom.bomNumber} v${bom.version} (${bom.status})`,
+            }))}
+            placeholder={loadingBoms ? "Loading BOMs..." : formData.drugId ? "Select BOM" : "Select Drug first"}
             required
+            disabled={!formData.drugId || loadingBoms}
           />
         </div>
+
+        {formData.bomVersion && (
+          <div className="space-y-2">
+            <Label htmlFor="bomVersion">BOM Version</Label>
+            <FormInput
+              id="bomVersion"
+              type="number"
+              min="1"
+              value={formData.bomVersion}
+              disabled
+            />
+          </div>
+        )}
 
         <div className="space-y-2">
           <FormSelect

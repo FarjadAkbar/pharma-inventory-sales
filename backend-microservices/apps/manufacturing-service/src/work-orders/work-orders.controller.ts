@@ -5,6 +5,8 @@ import {
   MANUFACTURING_PATTERNS,
   CreateWorkOrderDto,
   UpdateWorkOrderDto,
+  WorkOrderStatus,
+  ManufacturingPriority,
 } from '@repo/shared';
 
 @Controller()
@@ -17,8 +19,16 @@ export class WorkOrdersController {
   }
 
   @MessagePattern(MANUFACTURING_PATTERNS.WORK_ORDER_LIST)
-  findAll() {
-    return this.workOrdersService.findAll();
+  findAll(@Payload() params?: {
+    search?: string;
+    drugId?: number;
+    siteId?: number;
+    status?: WorkOrderStatus;
+    priority?: ManufacturingPriority;
+    page?: number;
+    limit?: number;
+  }) {
+    return this.workOrdersService.findAll(params);
   }
 
   @MessagePattern(MANUFACTURING_PATTERNS.WORK_ORDER_GET_BY_ID)
