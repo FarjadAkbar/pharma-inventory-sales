@@ -16,8 +16,10 @@ import {
   DRUG_PATTERNS,
   SALES_ORDER_PATTERNS,
   MANUFACTURING_PATTERNS,
-  QC_PATTERNS,
-  QA_PATTERNS,
+  QC_SAMPLE_PATTERNS,
+  QC_RESULT_PATTERNS,
+  QA_RELEASE_PATTERNS,
+  QA_DEVIATION_PATTERNS,
   SHIPMENT_PATTERNS,
   USER_PATTERNS,
 } from '@repo/shared';
@@ -234,7 +236,7 @@ export class DashboardService {
   private async addQCStats(stats: DashboardStatDto[]) {
     try {
       const samples = await firstValueFrom(
-        this.qcClient.send(QC_PATTERNS.SAMPLE_LIST, { status: 'PENDING' })
+        this.qcClient.send(QC_RESULT_PATTERNS.SAMPLE_LIST, { status: 'PENDING' })
       );
       stats.push({
         title: 'Sample Queue',

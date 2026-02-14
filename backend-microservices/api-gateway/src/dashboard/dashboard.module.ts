@@ -1,10 +1,17 @@
 import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { DashboardController } from './dashboard.controller';
 import { DashboardService } from './dashboard.service';
 
 @Module({
   imports: [
+    JwtModule.register({
+      secret: process.env.JWT_SECRET || 'sup3r_s3cr3tk3y_for_auth3ntication',
+      signOptions: { expiresIn: '15m' },
+    }),
+    ConfigModule,
     ClientsModule.register([
       {
         name: 'WAREHOUSE_SERVICE',
