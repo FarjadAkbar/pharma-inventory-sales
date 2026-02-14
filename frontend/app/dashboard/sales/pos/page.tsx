@@ -8,20 +8,21 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus, CreditCard, ShoppingCart, TrendingUp, CheckCircle, AlertTriangle } from "lucide-react"
-import { apiService } from "@/services/api.service"
+import { salesCrmApi } from "@/services/sales-crm-api.service"
+import { toast } from "sonner"
 import { formatDateISO } from "@/lib/utils"
 import { PermissionGuard } from "@/components/auth/permission-guard"
 
 interface POSTransaction {
-  id: string
+  id: number
   transactionNumber: string
   terminalId: string
   terminalName: string
-  siteId: string
+  siteId: number
   siteName: string
-  cashierId: string
+  cashierId: number
   cashierName: string
-  customerId?: string
+  customerId?: number
   customerName?: string
   items: {
     productId: string
@@ -57,7 +58,7 @@ export default function POSPage() {
   const fetchTransactions = async () => {
     try {
       setLoading(true)
-      const response = await apiService.getPOSTransactions({
+      const response = await salesCrmApi.getPOSTransactions({
         search: searchQuery,
         status: statusFilter !== "all" ? statusFilter : undefined,
         paymentMethod: paymentMethodFilter !== "all" ? paymentMethodFilter : undefined,
@@ -75,6 +76,7 @@ export default function POSPage() {
       }
     } catch (error) {
       console.error("Failed to fetch POS transactions:", error)
+      toast.error("Failed to fetch POS transactions")
     } finally {
       setLoading(false)
     }
@@ -96,7 +98,8 @@ export default function POSPage() {
   const handleDelete = async (transaction: POSTransaction) => {
     if (confirm(`Are you sure you want to delete transaction "${transaction.transactionNumber}"?`)) {
       try {
-        await apiService.deletePOSTransaction(transaction.id)
+        await salesCrmApi.deletePOSTransaction(transaction.id.toString())
+        toast.success("Transaction deleted successfully")
         fetchTransactions()
       } catch (error) {
         console.error("Failed to delete POS transaction:", error)

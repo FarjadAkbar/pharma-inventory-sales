@@ -6,6 +6,8 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
   app.useGlobalPipes(new ValidationPipe());
+  // app.useGlobalFilters(new GlobalHttpExceptionFilter());
+  // app.useGlobalInterceptors(new LoggingInterceptor(), new ResponseInterceptor());
   
   // Enable API versioning with /v1 prefix
   app.setGlobalPrefix('v1');

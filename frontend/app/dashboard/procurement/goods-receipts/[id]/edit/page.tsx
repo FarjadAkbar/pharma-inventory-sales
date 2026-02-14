@@ -99,7 +99,7 @@ export default function EditGoodsReceiptPage() {
       materialCode: "",
       orderedQuantity: item.purchaseOrderItem?.quantity || 0,
       receivedQuantity: Number(item.receivedQuantity),
-      unitOfMeasure: "",
+      unit: "",
       batchNumber: item.batchNumber,
       condition: "",
     })),

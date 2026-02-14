@@ -9,7 +9,7 @@ import { RefreshToken } from '../entities/refresh-token.entity';
 @Module({
   imports: [
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+      secret: process.env.JWT_SECRET || 'sup3r_s3cr3tk3y_for_auth3ntication',
       signOptions: { expiresIn: '15m' },
     }),
     ClientsModule.register([

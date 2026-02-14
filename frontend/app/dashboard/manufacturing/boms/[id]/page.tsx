@@ -256,7 +256,7 @@ export default function ViewBOMPage() {
                     </div>
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Quantity per Batch</label>
-                      <p className="text-lg font-semibold">{item.quantityPerBatch} {item.unitOfMeasure}</p>
+                      <p className="text-lg font-semibold">{item.quantityPerBatch} {item.unit}</p>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Tolerance</label>

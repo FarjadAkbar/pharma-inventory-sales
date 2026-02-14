@@ -39,6 +39,11 @@ export class UpdateUserDto {
   @IsNumber()
   @IsOptional()
   roleId?: number;
+
+  @IsArray()
+  @IsNumber({}, { each: true })
+  @IsOptional()
+  siteIds?: number[];
 }
 
 export class UserResponseDto {

@@ -3,6 +3,8 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 import { ContractsService } from './contracts.service';
 import {
   CONTRACT_PATTERNS,
+  ContractStatus,
+  ContractType,
   CreateContractDto,
   UpdateContractDto,
 } from '@repo/shared';
@@ -20,8 +22,8 @@ export class ContractsController {
   findAll(@Payload() params?: {
     search?: string;
     accountId?: number;
-    type?: string;
-    status?: string;
+    type?: ContractType;
+    status?: ContractStatus;
     page?: number;
     limit?: number;
   }) {

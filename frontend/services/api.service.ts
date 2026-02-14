@@ -1,10 +1,11 @@
 "use client"
 
 import { authService } from "./auth.service"
+import { BASE_URL } from "@/config"
 import type { ApiResponse } from "@/types/auth"
 
 class ApiService {
-  private baseUrl = process.env.NEXT_PUBLIC_API || 'http://localhost:3000/api'
+  private baseUrl = BASE_URL
   private getCurrentStoreId(): string | null {
     if (typeof window === "undefined") return null
     return localStorage.getItem("current_store_id")

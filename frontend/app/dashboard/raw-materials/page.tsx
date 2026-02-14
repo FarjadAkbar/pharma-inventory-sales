@@ -81,7 +81,7 @@ export default function RawMaterialsPage() {
     description?: string
     grade?: string
     storageRequirements?: string
-    unitOfMeasure?: string
+    unit?: string
     supplierId: number
     status?: 'Active' | 'InActive'
   }) => {
@@ -169,11 +169,11 @@ export default function RawMaterialsPage() {
       ),
     },
     {
-      key: "unitOfMeasure",
+      key: "unit",
       header: "Unit",
       render: (rm: RawMaterial) => (
         <div className="text-sm">
-          {rm.unitOfMeasure || "-"}
+          {rm.unit || "-"}
         </div>
       ),
     },

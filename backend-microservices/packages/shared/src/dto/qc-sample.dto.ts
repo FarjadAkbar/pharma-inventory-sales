@@ -102,7 +102,7 @@ export class AssignTestsToSampleDto {
 
 export class QCSampleResponseDto {
   id: number;
-  sampleNumber: string;
+  sampleCode: string;
   sourceType: QCSampleSourceType;
   sourceId: number;
   sourceReference: string;

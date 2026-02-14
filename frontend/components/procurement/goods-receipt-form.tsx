@@ -24,7 +24,7 @@ interface GoodsReceiptItem {
   materialName?: string
   materialCode?: string
   orderedQuantity?: number
-  unitOfMeasure?: string
+  unit?: string
 }
 
 interface GoodsReceiptFormProps {
@@ -148,7 +148,7 @@ export function GoodsReceiptForm({
           materialName: item.rawMaterial?.name || `Material #${item.rawMaterialId}`,
           materialCode: item.rawMaterial?.code || "",
           orderedQuantity: Number(item.quantity),
-          unitOfMeasure: "", // Will be fetched from raw material if needed
+          unit: "", // Will be fetched from raw material if needed
         }))
         setItems(poItems)
       }
@@ -324,7 +324,7 @@ export function GoodsReceiptForm({
                         {item.rawMaterialId ? ` • Material ID: ${item.rawMaterialId}` : ""}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Ordered: {item.orderedQuantity || 0} {item.unitOfMeasure || ""}
+                        Ordered: {item.orderedQuantity || 0} {item.unit || ""}
                       </p>
                     </div>
                     <Button

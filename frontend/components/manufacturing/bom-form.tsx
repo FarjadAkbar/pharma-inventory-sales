@@ -14,7 +14,7 @@ interface BOMItem {
   materialName: string
   materialCode: string
   quantityPerBatch: number
-  unitOfMeasure: string
+  unit: string
   tolerance: number
   isCritical: boolean
   remarks?: string
@@ -105,7 +105,7 @@ export function BOMForm({
       materialName: "",
       materialCode: "",
       quantityPerBatch: 0,
-      unitOfMeasure: "",
+      unit: "",
       tolerance: 5,
       isCritical: false,
       remarks: ""
@@ -298,10 +298,10 @@ export function BOMForm({
                   />
 
                   <FormSelect
-                    name={`unitOfMeasure_${index}`}
+                    name={`unit_${index}`}
                     label="Unit of Measure"
-                    value={item.unitOfMeasure}
-                    onChange={(e) => updateItem(index, 'unitOfMeasure', e.target.value)}
+                    value={item.unit}
+                    onChange={(e) => updateItem(index, 'unit', e.target.value)}
                     options={units}
                     placeholder="Select unit"
                   />

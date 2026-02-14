@@ -121,7 +121,7 @@ export const mockRawMaterials: RawMaterial[] = [
     name: "Paracetamol API",
     grade: "USP",
     specification: "99.5% purity, white crystalline powder",
-    unitOfMeasure: "kg",
+    unit: "kg",
     supplierId: "1",
     supplierName: "MediChem Supplies",
     storageRequirements: [
@@ -145,7 +145,7 @@ export const mockRawMaterials: RawMaterial[] = [
     name: "Microcrystalline Cellulose",
     grade: "Pharmaceutical",
     specification: "NF grade, 25-100 μm particle size",
-    unitOfMeasure: "kg",
+    unit: "kg",
     supplierId: "2",
     supplierName: "PharmaExcipients Ltd",
     storageRequirements: [
@@ -169,7 +169,7 @@ export const mockRawMaterials: RawMaterial[] = [
     name: "Magnesium Stearate",
     grade: "USP",
     specification: "Food grade, 40-60 μm particle size",
-    unitOfMeasure: "kg",
+    unit: "kg",
     supplierId: "1",
     supplierName: "MediChem Supplies",
     storageRequirements: [
@@ -193,7 +193,7 @@ export const mockRawMaterials: RawMaterial[] = [
     name: "Lactose Monohydrate",
     grade: "Pharmaceutical",
     specification: "Direct compression grade, 200 mesh",
-    unitOfMeasure: "kg",
+    unit: "kg",
     supplierId: "3",
     supplierName: "Global Pharma Ingredients",
     storageRequirements: [

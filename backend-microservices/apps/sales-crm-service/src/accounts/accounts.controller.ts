@@ -5,6 +5,8 @@ import {
   ACCOUNT_PATTERNS,
   CreateAccountDto,
   UpdateAccountDto,
+  AccountType,
+  AccountStatus,
 } from '@repo/shared';
 
 @Controller()
@@ -19,8 +21,8 @@ export class AccountsController {
   @MessagePattern(ACCOUNT_PATTERNS.LIST)
   findAll(@Payload() params?: {
     search?: string;
-    type?: string;
-    status?: string;
+    type?: AccountType;
+    status?: AccountStatus;
     page?: number;
     limit?: number;
   }) {

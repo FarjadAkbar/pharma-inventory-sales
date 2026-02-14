@@ -414,7 +414,7 @@ export const mockGoodsReceipts: GoodsReceipt[] = [
 export const mockQCSampleRequests: QCSampleRequest[] = [
   {
     id: "1",
-    sampleNumber: "QC-001",
+    sampleCode: "QC-001",
     grnId: "1",
     grnNumber: "GRN-2024-001",
     materialId: "1",
@@ -457,7 +457,7 @@ export const mockQCSampleRequests: QCSampleRequest[] = [
   },
   {
     id: "2",
-    sampleNumber: "QC-002",
+    sampleCode: "QC-002",
     grnId: "1",
     grnNumber: "GRN-2024-001",
     materialId: "2",
@@ -489,7 +489,7 @@ export const mockQCSampleRequests: QCSampleRequest[] = [
   },
   {
     id: "3",
-    sampleNumber: "QC-003",
+    sampleCode: "QC-003",
     grnId: "2",
     grnNumber: "GRN-2024-002",
     materialId: "5",

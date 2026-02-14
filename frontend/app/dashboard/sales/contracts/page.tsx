@@ -8,15 +8,16 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus, FileText, Calendar, DollarSign, AlertTriangle, CheckCircle } from "lucide-react"
-import { apiService } from "@/services/api.service"
+import { salesCrmApi } from "@/services/sales-crm-api.service"
+import { toast } from "sonner"
 import { formatDateISO } from "@/lib/utils"
 import { PermissionGuard } from "@/components/auth/permission-guard"
 
 interface Contract {
-  id: string
+  id: number
   contractNumber: string
   title: string
-  accountId: string
+  accountId: number
   accountName: string
   type: "sales" | "service" | "maintenance" | "supply" | "distribution"
   status: "draft" | "pending" | "active" | "expired" | "terminated" | "renewed"
@@ -26,9 +27,9 @@ interface Contract {
   value: number
   currency: string
   paymentTerms: string
-  contractManager: string
-  contractManagerName: string
-  signedBy?: string
+  contractManager: number
+  contractManagerName?: string
+  signedBy?: number
   signedByName?: string
   signedDate?: string
   autoRenewal: boolean
@@ -53,7 +54,7 @@ export default function ContractsPage() {
   const fetchContracts = async () => {
     try {
       setLoading(true)
-      const response = await apiService.getContracts({
+      const response = await salesCrmApi.getContracts({
         search: searchQuery,
         type: typeFilter !== "all" ? typeFilter : undefined,
         status: statusFilter !== "all" ? statusFilter : undefined,
@@ -71,6 +72,7 @@ export default function ContractsPage() {
       }
     } catch (error) {
       console.error("Failed to fetch contracts:", error)
+      toast.error("Failed to fetch contracts")
     } finally {
       setLoading(false)
     }
@@ -92,10 +94,12 @@ export default function ContractsPage() {
   const handleDelete = async (contract: Contract) => {
     if (confirm(`Are you sure you want to delete contract "${contract.contractNumber}"?`)) {
       try {
-        await apiService.deleteContract(contract.id)
+        await salesCrmApi.deleteContract(contract.id.toString())
+        toast.success("Contract deleted successfully")
         fetchContracts()
       } catch (error) {
         console.error("Failed to delete contract:", error)
+        toast.error("Failed to delete contract")
       }
     }
   }

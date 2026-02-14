@@ -26,19 +26,19 @@ export class QCSamplesService {
     private qcTestsService: QCTestsService, // Direct injection instead of microservice
   ) {}
 
-  async generateSampleNumber(): Promise<string> {
+  async generatesampleCode(): Promise<string> {
     const year = new Date().getFullYear();
     const prefix = `QC-SAM-${year}-`;
     
     const lastSample = await this.qcSamplesRepository
       .createQueryBuilder('sample')
-      .where('sample.sampleNumber LIKE :prefix', { prefix: `${prefix}%` })
-      .orderBy('sample.sampleNumber', 'DESC')
+      .where('sample.sampleCode LIKE :prefix', { prefix: `${prefix}%` })
+      .orderBy('sample.sampleCode', 'DESC')
       .getOne();
 
     let sequence = 1;
     if (lastSample) {
-      const lastSequence = parseInt(lastSample.sampleNumber.replace(prefix, ''), 10);
+      const lastSequence = parseInt(lastSample.sampleCode.replace(prefix, ''), 10);
       sequence = lastSequence + 1;
     }
 
@@ -74,12 +74,12 @@ export class QCSamplesService {
     // For BATCH source type, goodsReceiptItemId is optional
     // We can validate batch exists via manufacturing service if needed in the future
 
-    // Generate sample number
-    const sampleNumber = await this.generateSampleNumber();
+    // Generate Sample Code
+    const sampleCode = await this.generatesampleCode();
 
     // Create QC sample
     const qcSample = this.qcSamplesRepository.create({
-      sampleNumber,
+      sampleCode,
       sourceType: createQCSampleDto.sourceType,
       sourceId: createQCSampleDto.sourceId,
       sourceReference: createQCSampleDto.sourceReference,
@@ -201,7 +201,7 @@ export class QCSamplesService {
   private async toResponseDto(sample: QCSample): Promise<QCSampleResponseDto> {
     return {
       id: sample.id,
-      sampleNumber: sample.sampleNumber,
+      sampleCode: sample.sampleCode,
       sourceType: sample.sourceType,
       sourceId: sample.sourceId,
       sourceReference: sample.sourceReference,

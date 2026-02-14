@@ -12,7 +12,7 @@ export class CreateRawMaterialsTable1734567891000 implements MigrationInterface 
                 "description" text,
                 "grade" character varying,
                 "storageRequirements" text,
-                "unitOfMeasure" character varying,
+                "unit" character varying,
                 "supplierId" integer NOT NULL,
                 "status" character varying NOT NULL DEFAULT 'Active',
                 "createdAt" TIMESTAMP NOT NULL DEFAULT now(),

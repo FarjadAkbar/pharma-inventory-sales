@@ -117,7 +117,7 @@ export class RawMaterialsService {
       description: rawMaterial.description,
       grade: rawMaterial.grade,
       storageRequirements: rawMaterial.storageRequirements,
-      unitOfMeasure: rawMaterial.unitOfMeasure,
+      unit: rawMaterial.unit,
       supplierId: rawMaterial.supplierId,
       supplier: supplier,
       status: rawMaterial.status,

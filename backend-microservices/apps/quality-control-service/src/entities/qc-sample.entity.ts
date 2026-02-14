@@ -8,7 +8,7 @@ export class QCSample {
 
   @Column({ unique: true })
   @Index()
-  sampleNumber: string;
+  sampleCode: string;
 
   @Column({ type: 'varchar' })
   sourceType: QCSampleSourceType;

@@ -14,7 +14,6 @@ import { apiService } from "./api.service"
 import { BASE_URL } from "@/config"
 
 class AuthService {
-  private baseUrl = "/api/auth"
   private tokenKey = "pharma_inventory_sales_token"
   private refreshTokenKey = "pharma_inventory_sales_refresh_token"
   private permissionsKey = "pharma_inventory_sales_permissions"

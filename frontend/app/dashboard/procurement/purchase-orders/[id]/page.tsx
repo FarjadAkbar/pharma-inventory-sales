@@ -245,7 +245,7 @@ export default function ViewPurchaseOrderPage() {
                     </div>
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Quantity</label>
-                      <p className="text-lg">{item.quantity} {item.unitOfMeasure}</p>
+                      <p className="text-lg">{item.quantity} {item.unit}</p>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Unit Price</label>

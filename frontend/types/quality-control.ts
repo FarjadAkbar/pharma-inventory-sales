@@ -41,7 +41,7 @@ export interface QCTestSpecification {
 
 export interface QCSample {
   id: string
-  sampleNumber: string
+  sampleCode: string
   sourceType: 'GRN' | 'Batch' | 'Production' | 'Stability'
   sourceId: string
   sourceReference: string

@@ -30,7 +30,7 @@ export interface POItem {
   materialCode: string
   quantity: number
   unitId: string
-  unitOfMeasure: string
+  unit: string
   unitPrice: number
   totalPrice: number
   receivedQuantity?: number
@@ -68,7 +68,7 @@ export interface GRNItem {
   materialCode: string
   orderedQuantity: number
   receivedQuantity: number
-  unitOfMeasure: string
+  unit: string
   batchNumber?: string
   expiryDate?: string
   condition?: string
@@ -79,7 +79,7 @@ export interface GRNItem {
 
 export interface QCSampleRequest {
   id: string
-  sampleNumber: string
+  sampleCode: string
   grnId: string
   grnNumber: string
   materialId: string

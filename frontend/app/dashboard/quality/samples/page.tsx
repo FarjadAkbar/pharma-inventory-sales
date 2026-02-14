@@ -156,11 +156,11 @@ export default function QCSamplesPage() {
 
   const columns = [
     {
-      key: "sampleNumber",
+      key: "sampleCode",
       header: "Sample #",
       render: (sample: QCSample) => (
         <div className="font-mono text-sm font-medium text-orange-600">
-          {sample.sampleNumber}
+          {sample.sampleCode}
         </div>
       ),
     },

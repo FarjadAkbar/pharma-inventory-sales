@@ -100,7 +100,7 @@ export function ConsumptionForm({
         materialId: material.id.toString(),
         materialName: material.name,
         materialCode: material.code,
-        unit: material.unitOfMeasure || prev.unit,
+        unit: material.unit || prev.unit,
       }))
     }
   }

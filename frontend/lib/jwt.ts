@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken'
 import type { JwtPayload } from '@/types/auth'
 
-const JWT_SECRET = process.env.NEXT_JWT_SECRET || 'pharma-inventory-sales-jwt-secret-key-2024'
+const JWT_SECRET = process.env.NEXT_JWT_SECRET || 'sup3r_s3cr3tk3y_for_auth3ntication'
 
 export function decodeToken(token: string): JwtPayload | null {
   try {

@@ -1,5 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { TerminusModule } from '@nestjs/terminus';
+import { HttpModule } from '@nestjs/axios';
+import * as Joi from 'joi';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { JwtModule } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
@@ -22,12 +25,26 @@ import { WarehouseController } from './warehouse/warehouse.controller';
 import { ManufacturingController } from './manufacturing/manufacturing.controller';
 import { DrugsController } from './drugs/drugs.controller';
 import { DistributionController } from './distribution/distribution.controller';
+import { SalesCrmController } from './sales-crm/sales-crm.controller';
+import { HealthController } from './health/health.controller';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      validationSchema: Joi.object({
+        PORT: Joi.number().default(8000),
+        JWT_SECRET: Joi.string().required(),
+        USER_SERVICE_HOST: Joi.string().required(),
+        USER_SERVICE_PORT: Joi.number().required(),
+        AUTH_SERVICE_HOST: Joi.string().required(),
+        AUTH_SERVICE_PORT: Joi.number().required(),
+      }),
+    }),
+    TerminusModule,
+    HttpModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+      secret: process.env.JWT_SECRET || 'sup3r_s3cr3tk3y_for_auth3ntication',
       signOptions: { expiresIn: '15m' },
     }),
     ClientsModule.register([
@@ -159,7 +176,16 @@ import { DistributionController } from './distribution/distribution.controller';
           port: parseInt(process.env.SHIPMENT_SERVICE_PORT),
         },
       },
+      {
+        name: 'SALES_CRM_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: process.env.SALES_CRM_SERVICE_HOST,
+          port: parseInt(process.env.SALES_CRM_SERVICE_PORT),
+        },
+      },
     ]),
+    DashboardModule,
   ],
   providers: [
     {
@@ -186,6 +212,8 @@ import { DistributionController } from './distribution/distribution.controller';
     ManufacturingController,
     DrugsController,
     DistributionController,
+    SalesCrmController,
+    HealthController,
   ],
 })
 export class AppModule {}

@@ -544,7 +544,7 @@ export class BOMItemDto {
   quantityPerBatch: number;
 
   @IsString()
-  unitOfMeasure: string;
+  unit: string;
 
   @IsNumber()
   @IsOptional()

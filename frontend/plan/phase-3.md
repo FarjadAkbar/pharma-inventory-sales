@@ -48,7 +48,7 @@ interface RawMaterial {
   code: string;
   name: string;
   grade: string;
-  unitOfMeasure: string;
+  unit: string;
   supplierId: string;
   storageRequirements: string;
 }

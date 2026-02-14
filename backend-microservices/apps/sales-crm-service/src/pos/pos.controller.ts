@@ -5,6 +5,9 @@ import {
   POS_PATTERNS,
   CreatePOSTransactionDto,
   UpdatePOSTransactionDto,
+  PaymentStatus,
+  PaymentMethod,
+  TransactionStatus,
 } from '@repo/shared';
 
 @Controller()
@@ -22,9 +25,9 @@ export class POSController {
     siteId?: number;
     cashierId?: number;
     customerId?: number;
-    status?: string;
-    paymentStatus?: string;
-    paymentMethod?: string;
+    status?: TransactionStatus;
+    paymentStatus?: PaymentStatus;
+    paymentMethod?: PaymentMethod;
     page?: number;
     limit?: number;
   }) {

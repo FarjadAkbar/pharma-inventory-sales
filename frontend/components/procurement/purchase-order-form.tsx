@@ -27,7 +27,7 @@ interface RawMaterialOption {
   id: number
   name: string
   code: string
-  unitOfMeasure?: string
+  unit?: string
 }
 
 interface PurchaseOrderFormProps {
@@ -112,7 +112,7 @@ export function PurchaseOrderForm({ purchaseOrderId, onSuccess, onCancel }: Purc
         id: material.id,
         name: material.name,
         code: material.code,
-        unitOfMeasure: material.unitOfMeasure,
+        unit: material.unit,
       })))
     } catch (error) {
       console.error("Failed to fetch raw materials:", error)

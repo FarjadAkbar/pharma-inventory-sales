@@ -28,7 +28,7 @@ export class BOMItem {
   quantityPerBatch: number;
 
   @Column()
-  unitOfMeasure: string;
+  unit: string;
 
   @Column('decimal', { precision: 5, scale: 2, nullable: true })
   tolerance?: number;

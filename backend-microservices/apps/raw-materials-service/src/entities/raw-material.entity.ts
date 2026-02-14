@@ -23,7 +23,7 @@ export class RawMaterial {
   storageRequirements: string;
 
   @Column({ nullable: true })
-  unitOfMeasure: string;
+  unit: string;
 
   @Column()
   @Index()

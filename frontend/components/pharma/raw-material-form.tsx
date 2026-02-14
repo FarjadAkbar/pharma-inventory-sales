@@ -12,7 +12,7 @@ interface RawMaterial {
   name: string
   description: string
   grade: string
-  unitOfMeasure: string
+  unit: string
   supplierId: string
   storageRequirements: string
   isActive: boolean
@@ -51,7 +51,7 @@ export function RawMaterialForm({ initialData, onSubmit, submitLabel = "Save", o
     name: initialData?.name || "",
     description: initialData?.description || "",
     grade: initialData?.grade || "",
-    unitOfMeasure: initialData?.unitOfMeasure || "",
+    unit: initialData?.unit || "",
     supplierId: initialData?.supplierId || "",
     storageRequirements: initialData?.storageRequirements || "",
     isActive: initialData?.isActive ?? true,
@@ -64,7 +64,7 @@ export function RawMaterialForm({ initialData, onSubmit, submitLabel = "Save", o
       required: true,
       message: "Please select a grade"
     },
-    unitOfMeasure: {
+    unit: {
       required: true,
       message: "Please select a unit of measure"
     },
@@ -114,7 +114,7 @@ export function RawMaterialForm({ initialData, onSubmit, submitLabel = "Save", o
         name: data.name,
         description: data.description,
         grade: data.grade,
-        unitOfMeasure: data.unitOfMeasure,
+        unit: data.unit,
         supplierId: data.supplierId,
         storageRequirements: data.storageRequirements,
         isActive: data.isActive === "true" || data.isActive === true,
@@ -183,11 +183,11 @@ export function RawMaterialForm({ initialData, onSubmit, submitLabel = "Save", o
               placeholder="Select grade"
             />
             <FormSelect
-              name="unitOfMeasure"
+              name="unit"
               label="Unit of Measure"
-              value={formState.data.unitOfMeasure}
-              onChange={(e) => formState.updateField('unitOfMeasure', e.target.value)}
-              error={formState.errors.unitOfMeasure}
+              value={formState.data.unit}
+              onChange={(e) => formState.updateField('unit', e.target.value)}
+              error={formState.errors.unit}
               required
               options={UNITS_OF_MEASURE.map(unit => ({ value: unit, label: unit }))}
               placeholder="Select unit"

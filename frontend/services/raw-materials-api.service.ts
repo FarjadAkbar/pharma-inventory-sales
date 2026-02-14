@@ -9,7 +9,7 @@ export interface RawMaterial {
   description?: string
   grade?: string
   storageRequirements?: string
-  unitOfMeasure?: string
+  unit?: string
   supplierId: number
   supplier?: {
     id: number
@@ -53,7 +53,7 @@ export class RawMaterialsApiService extends BaseApiService {
     description?: string
     grade?: string
     storageRequirements?: string
-    unitOfMeasure?: string
+    unit?: string
     supplierId: number
     status?: 'Active' | 'InActive'
   }) {
@@ -69,7 +69,7 @@ export class RawMaterialsApiService extends BaseApiService {
     description?: string
     grade?: string
     storageRequirements?: string
-    unitOfMeasure?: string
+    unit?: string
     supplierId?: number
     status?: 'Active' | 'InActive'
   }) {

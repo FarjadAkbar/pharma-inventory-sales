@@ -59,7 +59,7 @@ export default function NewQCResultPage() {
       const samplesList = Array.isArray(response) ? response : []
       setSamples(samplesList.map((s: any) => ({
         value: s.id.toString(),
-        label: `${s.sampleNumber} - ${s.materialName} (${s.batchNumber})`
+        label: `${s.sampleCode} - ${s.materialName} (${s.batchNumber})`
       })))
     } catch (error) {
       console.error("Failed to fetch QC samples:", error)

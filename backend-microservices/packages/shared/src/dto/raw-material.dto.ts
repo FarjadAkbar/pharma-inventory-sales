@@ -32,7 +32,7 @@ export class CreateRawMaterialDto {
   @IsString()
   @IsOptional()
   @MaxLength(50)
-  unitOfMeasure?: string;
+  unit?: string;
 
   @IsNumber()
   supplierId: number;
@@ -71,7 +71,7 @@ export class UpdateRawMaterialDto {
   @IsString()
   @IsOptional()
   @MaxLength(50)
-  unitOfMeasure?: string;
+  unit?: string;
 
   @IsNumber()
   @IsOptional()
@@ -89,7 +89,7 @@ export class RawMaterialResponseDto {
   description?: string;
   grade?: string;
   storageRequirements?: string;
-  unitOfMeasure?: string;
+  unit?: string;
   supplierId: number;
   supplier?: {
     id: number;

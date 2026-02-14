@@ -26,7 +26,7 @@ export interface RawMaterial {
   name: string
   grade: string
   specification: string
-  unitOfMeasure: string
+  unit: string
   supplierId: string
   supplierName: string
   storageRequirements: StorageCondition[]

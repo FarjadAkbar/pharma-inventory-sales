@@ -85,14 +85,6 @@ export class MaterialConsumptionService {
     return this.toResponseDto(saved);
   }
 
-  async findAll(batchId: number): Promise<MaterialConsumptionResponseDto[]> {
-    const consumptions = await this.materialConsumptionRepository.find({
-      where: { batchId },
-      order: { consumedAt: 'DESC' },
-    });
-    return consumptions.map(consumption => this.toResponseDto(consumption));
-  }
-
   async findOne(id: number): Promise<MaterialConsumptionResponseDto> {
     const consumption = await this.materialConsumptionRepository.findOne({ where: { id } });
     if (!consumption) {

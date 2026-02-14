@@ -133,8 +133,8 @@ export default function EditQCSamplePage() {
           <CardContent className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Sample Number</label>
-                <p className="font-mono text-lg font-semibold text-orange-600">{sample.sampleNumber}</p>
+                <label className="text-sm font-medium text-muted-foreground">Sample Code</label>
+                <p className="font-mono text-lg font-semibold text-orange-600">{sample.sampleCode}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Material</label>

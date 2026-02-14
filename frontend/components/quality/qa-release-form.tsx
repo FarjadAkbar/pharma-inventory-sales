@@ -189,9 +189,9 @@ export function QAReleaseForm({
               <FormSelect
                 name="sampleId"
                 label="QC Sample *"
-                value={selectedSample?.sampleNumber || ""}
+                value={selectedSample?.sampleCode || ""}
                 onChange={(value) => {
-                  const sample = qcSamples.find(s => s.sampleNumber === value)
+                  const sample = qcSamples.find(s => s.sampleCode === value)
                   if (sample) {
                     handleSampleSelect(sample)
                   }
@@ -199,8 +199,8 @@ export function QAReleaseForm({
                 error={formState.errors.sampleId}
                 required
                 options={qcSamples.map(sample => ({
-                  value: sample.sampleNumber,
-                  label: `${sample.sampleNumber} - ${sample.materialName} (${sample.status})`
+                  value: sample.sampleCode,
+                  label: `${sample.sampleCode} - ${sample.materialName} (${sample.status})`
                 }))}
                 placeholder="Select QC sample"
               />

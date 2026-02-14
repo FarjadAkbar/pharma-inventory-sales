@@ -32,7 +32,7 @@ export interface BOMItem {
   materialName: string
   materialCode: string
   quantityPerBatch: number
-  unitOfMeasure: string
+  unit: string
   tolerance: number
   isCritical: boolean
   sequence?: number

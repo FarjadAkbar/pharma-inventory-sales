@@ -16,7 +16,7 @@ interface RawMaterialFormProps {
     description?: string
     grade?: string
     storageRequirements?: string
-    unitOfMeasure?: string
+    unit?: string
     supplierId: number
     status?: 'Active' | 'InActive'
   }) => Promise<void>
@@ -48,15 +48,15 @@ export function RawMaterialForm({ initialData, onSubmit, submitLabel = "Save" }:
     description: initialData?.description || "",
     grade: initialData?.grade || "",
     storageRequirements: initialData?.storageRequirements || "",
-    unitOfMeasure: initialData?.unitOfMeasure || "",
+    unit: initialData?.unit || "",
     supplierId: initialData?.supplierId?.toString() || "",
     status: initialData?.status || "Active",
   }
 
   // Get unit options, including custom unit if present in initialData
   const unitOptions = useMemo(() => {
-    return getUnitOptions(initialData?.unitOfMeasure)
-  }, [initialData?.unitOfMeasure])
+    return getUnitOptions(initialData?.unit)
+  }, [initialData?.unit])
 
   const formState = useFormState(initialFormData)
   const validation = useFormValidation({
@@ -97,7 +97,7 @@ export function RawMaterialForm({ initialData, onSubmit, submitLabel = "Save" }:
         description: data.description || undefined,
         grade: data.grade || undefined,
         storageRequirements: data.storageRequirements || undefined,
-        unitOfMeasure: data.unitOfMeasure || undefined,
+        unit: data.unit || undefined,
         supplierId: parseInt(data.supplierId, 10),
         status: data.status as 'Active' | 'InActive',
       })
@@ -167,11 +167,11 @@ export function RawMaterialForm({ initialData, onSubmit, submitLabel = "Save" }:
 
       <div className="grid md:grid-cols-2 gap-4">
         <FormSelect
-          name="unitOfMeasure"
+          name="unit"
           label="Unit of Measure"
-          value={formState.data.unitOfMeasure}
-          onChange={(value) => formState.updateField('unitOfMeasure', value)}
-          error={formState.errors.unitOfMeasure}
+          value={formState.data.unit}
+          onChange={(value) => formState.updateField('unit', value)}
+          error={formState.errors.unit}
           options={unitOptions}
           placeholder="Select unit of measure"
         />

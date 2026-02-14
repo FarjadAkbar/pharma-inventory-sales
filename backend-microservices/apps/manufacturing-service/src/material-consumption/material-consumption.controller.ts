@@ -19,7 +19,7 @@ export class MaterialConsumptionController {
 
   @MessagePattern(MANUFACTURING_PATTERNS.MATERIAL_CONSUMPTION_GET_BY_BATCH)
   findByBatch(@Payload() batchId: number) {
-    return this.materialConsumptionService.findAll(batchId);
+    return this.materialConsumptionService.findAll({ batchId });
   }
 
   @MessagePattern(MANUFACTURING_PATTERNS.MATERIAL_CONSUMPTION_GET_BY_ID)

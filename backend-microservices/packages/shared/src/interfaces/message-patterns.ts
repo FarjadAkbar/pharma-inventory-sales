@@ -5,6 +5,7 @@ export const USER_PATTERNS = {
   UPDATE: { cmd: 'update_user' },
   DELETE: { cmd: 'delete_user' },
   FIND_BY_EMAIL: { cmd: 'find_user_by_email' },
+  COUNT_ACTIVE: { cmd: 'count_active_users' },
 };
 
 export const AUTH_PATTERNS = {
@@ -112,6 +113,9 @@ export const QC_RESULT_PATTERNS = {
   GET_BY_SAMPLE: { cmd: 'QC_RESULTS_GET_BY_SAMPLE' },
   SUBMIT_TO_QA: { cmd: 'QC_RESULTS_SUBMIT_TO_QA' },
   COMPLETE_TESTING: { cmd: 'QC_RESULTS_COMPLETE_TESTING' },
+  
+  // Dashboard
+  SAMPLE_LIST: { cmd: 'QC_SAMPLE_LIST' },
 };
 
 export const QA_RELEASE_PATTERNS = {
@@ -207,6 +211,9 @@ export const WAREHOUSE_PATTERNS = {
   LABEL_BARCODE_GET_BY_BARCODE: { cmd: 'WAREHOUSE_LABEL_BARCODE_GET_BY_BARCODE' },
   LABEL_BARCODE_GET_BY_REFERENCE: { cmd: 'WAREHOUSE_LABEL_BARCODE_GET_BY_REFERENCE' },
   LABEL_BARCODE_PRINT: { cmd: 'WAREHOUSE_LABEL_BARCODE_PRINT' },
+  
+  // Dashboard
+  LIST_LOW_STOCK: { cmd: 'WAREHOUSE_LIST_LOW_STOCK' },
 };
 
 export const MANUFACTURING_PATTERNS = {
@@ -264,6 +271,7 @@ export const DRUG_PATTERNS = {
   GET_BY_ID: { cmd: 'DRUGS_GET_BY_ID' },
   LIST: { cmd: 'DRUGS_LIST' },
   DELETE: { cmd: 'DRUGS_DELETE' },
+  LIST_EXPIRING: { cmd: 'DRUGS_LIST_EXPIRING' },
 };
 
 export const SALES_ORDER_PATTERNS = {
@@ -297,4 +305,33 @@ export const PROOF_OF_DELIVERY_PATTERNS = {
   LIST: { cmd: 'POD_LIST' },
   GET_BY_SHIPMENT: { cmd: 'POD_GET_BY_SHIPMENT' },
   COMPLETE: { cmd: 'POD_COMPLETE' },
+};
+
+export const ACCOUNT_PATTERNS = {
+  CREATE: { cmd: 'ACCOUNT_CREATE' },
+  UPDATE: { cmd: 'ACCOUNT_UPDATE' },
+  GET_BY_ID: { cmd: 'ACCOUNT_GET_BY_ID' },
+  LIST: { cmd: 'ACCOUNT_LIST' },
+  DELETE: { cmd: 'ACCOUNT_DELETE' },
+  SEARCH: { cmd: 'ACCOUNT_SEARCH' },
+};
+
+export const CONTRACT_PATTERNS = {
+  CREATE: { cmd: 'CONTRACT_CREATE' },
+  UPDATE: { cmd: 'CONTRACT_UPDATE' },
+  GET_BY_ID: { cmd: 'CONTRACT_GET_BY_ID' },
+  LIST: { cmd: 'CONTRACT_LIST' },
+  DELETE: { cmd: 'CONTRACT_DELETE' },
+  RENEW: { cmd: 'CONTRACT_RENEW' },
+  TERMINATE: { cmd: 'CONTRACT_TERMINATE' },
+};
+
+export const POS_PATTERNS = {
+  CREATE: { cmd: 'POS_CREATE' },
+  UPDATE: { cmd: 'POS_UPDATE' },
+  GET_BY_ID: { cmd: 'POS_GET_BY_ID' },
+  LIST: { cmd: 'POS_LIST' },
+  DELETE: { cmd: 'POS_DELETE' },
+  VOID: { cmd: 'POS_VOID' },
+  REFUND: { cmd: 'POS_REFUND' },
 };

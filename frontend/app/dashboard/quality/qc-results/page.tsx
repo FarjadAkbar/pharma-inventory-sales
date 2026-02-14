@@ -124,7 +124,7 @@ export default function QCResultsPage() {
       header: "Sample",
       render: (result: any) => (
         <div className="text-sm">
-          {result.sampleNumber || result.sample?.sampleNumber || "N/A"}
+          {result.sampleCode || result.sample?.sampleCode || "N/A"}
         </div>
       ),
     },

@@ -1,5 +1,6 @@
 import { IsString, IsOptional, IsNumber, IsArray, IsDateString, IsEnum, Min, ValidateNested, IsObject } from 'class-validator';
 import { Type } from 'class-transformer';
+import { AddressDto } from './address.dto';
 
 // Sales Order Status
 export enum SalesOrderStatus {
@@ -33,31 +34,7 @@ export enum SalesOrderItemStatus {
   DELIVERED = 'Delivered',
 }
 
-// Address DTOs
-export class AddressDto {
-  @IsString()
-  street: string;
-
-  @IsString()
-  city: string;
-
-  @IsString()
-  state: string;
-
-  @IsString()
-  postalCode: string;
-
-  @IsString()
-  country: string;
-
-  @IsObject()
-  @IsOptional()
-  coordinates?: {
-    latitude: number;
-    longitude: number;
-  };
-}
-
+// Shipping Address DTO (extends base AddressDto)
 export class ShippingAddressDto extends AddressDto {
   @IsString()
   contactPerson: string;

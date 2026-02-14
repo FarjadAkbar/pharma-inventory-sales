@@ -237,7 +237,7 @@ export default function SampleResultsPage({ params }: ResultsPageProps) {
           </Button>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">QC Test Results Entry</h1>
-            <p className="text-muted-foreground">Enter test results for sample {sample.sampleNumber}</p>
+            <p className="text-muted-foreground">Enter test results for sample {sample.sampleCode}</p>
           </div>
         </div>
 
@@ -252,8 +252,8 @@ export default function SampleResultsPage({ params }: ResultsPageProps) {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <Label className="text-sm font-medium">Sample Number</Label>
-                <div className="text-sm font-mono text-orange-600">{sample.sampleNumber}</div>
+                <Label className="text-sm font-medium">Sample Code</Label>
+                <div className="text-sm font-mono text-orange-600">{sample.sampleCode}</div>
               </div>
               <div>
                 <Label className="text-sm font-medium">Material</Label>

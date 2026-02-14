@@ -7,37 +7,50 @@ import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Building2, Phone, Mail, MapPin, TrendingUp, Star } from "lucide-react"
-import { apiService } from "@/services/api.service"
+import { Plus, Building2, Phone, Mail, MapPin, TrendingUp } from "lucide-react"
+import { salesCrmApi } from "@/services/sales-crm-api.service"
+import { toast } from "sonner"
 import { formatDateISO } from "@/lib/utils"
 import { PermissionGuard } from "@/components/auth/permission-guard"
 
 interface Account {
-  id: string
-  name: string
-  code: string
-  type: "hospital" | "pharmacy" | "clinic" | "distributor" | "government" | "other"
-  industry: string
-  size: "small" | "medium" | "large" | "enterprise"
-  contactPerson: string
-  email: string
-  phone: string
-  address: string
-  city: string
-  state: string
-  country: string
-  postalCode: string
-  website?: string
+  id: number
+  accountNumber: string
+  accountName: string
+  accountCode: string
+  type: "customer" | "distributor" | "partner" | "vendor"
+  status: "active" | "inactive" | "suspended" | "closed"
+  phone?: string
+  email?: string
+  billingAddress?: {
+    street: string
+    city: string
+    state: string
+    postalCode: string
+    country: string
+    contactPerson?: string
+    phone?: string
+    email?: string
+  }
+  shippingAddress?: {
+    street: string
+    city: string
+    state: string
+    postalCode: string
+    country: string
+    contactPerson?: string
+    phone?: string
+    email?: string
+  }
+  creditLimit?: number
+  paymentTerms?: string
+  assignedSalesRep?: number
+  assignedSalesRepName?: string
   taxId?: string
-  creditLimit: number
-  paymentTerms: string
-  status: "active" | "inactive" | "suspended" | "prospect"
-  rating: number
-  totalOrders: number
-  totalRevenue: number
-  lastOrderDate?: string
-  assignedTo?: string
-  assignedToName?: string
+  registrationNumber?: string
+  notes?: string
+  tags?: string[]
+  createdBy: number
   createdAt: string
   updatedAt: string
 }
@@ -56,7 +69,7 @@ export default function AccountsPage() {
   const fetchAccounts = async () => {
     try {
       setLoading(true)
-      const response = await apiService.getAccounts({
+      const response = await salesCrmApi.getAccounts({
         search: searchQuery,
         ...filters,
         page: pagination.page,
@@ -73,6 +86,7 @@ export default function AccountsPage() {
       }
     } catch (error) {
       console.error("Failed to fetch accounts:", error)
+      toast.error("Failed to fetch accounts")
     } finally {
       setLoading(false)
     }
@@ -92,12 +106,14 @@ export default function AccountsPage() {
   }
 
   const handleDelete = async (account: Account) => {
-    if (confirm(`Are you sure you want to delete account "${account.name}"?`)) {
+    if (confirm(`Are you sure you want to delete account "${account.accountName}"?`)) {
       try {
-        await apiService.deleteAccount(account.id)
+        await salesCrmApi.deleteAccount(account.id.toString())
+        toast.success("Account deleted successfully")
         fetchAccounts()
       } catch (error) {
         console.error("Failed to delete account:", error)
+        toast.error("Failed to delete account")
       }
     }
   }
@@ -105,27 +121,25 @@ export default function AccountsPage() {
   const handleToggleStatus = async (account: Account) => {
     try {
       const newStatus = account.status === "active" ? "inactive" : "active"
-      await apiService.updateAccount(account.id, { status: newStatus })
+      await salesCrmApi.updateAccount(account.id.toString(), { status: newStatus })
+      toast.success("Account status updated")
       fetchAccounts()
     } catch (error) {
       console.error("Failed to toggle account status:", error)
+      toast.error("Failed to update account status")
     }
   }
 
   const getTypeBadgeColor = (type: string) => {
     switch (type) {
-      case "hospital":
+      case "customer":
         return "bg-blue-100 text-blue-800"
-      case "pharmacy":
-        return "bg-green-100 text-green-800"
-      case "clinic":
-        return "bg-purple-100 text-purple-800"
       case "distributor":
         return "bg-orange-100 text-orange-800"
-      case "government":
-        return "bg-red-100 text-red-800"
-      case "other":
-        return "bg-gray-100 text-gray-800"
+      case "partner":
+        return "bg-purple-100 text-purple-800"
+      case "vendor":
+        return "bg-green-100 text-green-800"
       default:
         return "bg-gray-100 text-gray-800"
     }
@@ -139,48 +153,20 @@ export default function AccountsPage() {
         return "bg-gray-100 text-gray-800"
       case "suspended":
         return "bg-red-100 text-red-800"
-      case "prospect":
-        return "bg-yellow-100 text-yellow-800"
+      case "closed":
+        return "bg-gray-100 text-gray-800"
       default:
         return "bg-gray-100 text-gray-800"
     }
-  }
-
-  const getSizeBadgeColor = (size: string) => {
-    switch (size) {
-      case "small":
-        return "bg-green-100 text-green-800"
-      case "medium":
-        return "bg-yellow-100 text-yellow-800"
-      case "large":
-        return "bg-orange-100 text-orange-800"
-      case "enterprise":
-        return "bg-red-100 text-red-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
-
-  const getRatingStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <Star
-        key={i}
-        className={`h-4 w-4 ${
-          i < rating ? "text-yellow-400 fill-current" : "text-gray-300"
-        }`}
-      />
-    ))
   }
 
   const calculateStats = () => {
     const activeAccounts = accounts.filter(a => a.status === "active").length
-    const prospectAccounts = accounts.filter(a => a.status === "prospect").length
-    const totalRevenue = accounts.reduce((sum, a) => sum + a.totalRevenue, 0)
-    const avgRating = accounts.length > 0 
-      ? (accounts.reduce((sum, a) => sum + a.rating, 0) / accounts.length).toFixed(1)
-      : "0.0"
+    const inactiveAccounts = accounts.filter(a => a.status === "inactive").length
+    const suspendedAccounts = accounts.filter(a => a.status === "suspended").length
+    const totalAccounts = pagination.total
 
-    return { activeAccounts, prospectAccounts, totalRevenue, avgRating }
+    return { activeAccounts, inactiveAccounts, suspendedAccounts, totalAccounts }
   }
 
   const stats = calculateStats()
@@ -196,25 +182,20 @@ export default function AccountsPage() {
             <Building2 className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <div className="font-medium">{account.name}</div>
-            <div className="text-sm text-muted-foreground">{account.code}</div>
+            <div className="font-medium">{account.accountName}</div>
+            <div className="text-sm text-muted-foreground">{account.accountCode} | {account.accountNumber}</div>
           </div>
         </div>
       ),
     },
     {
       key: "type",
-      header: "Type & Size",
+      header: "Type",
       sortable: true,
       render: (account: Account) => (
-        <div className="space-y-1">
-          <Badge className={getTypeBadgeColor(account.type)}>
-            {account.type.charAt(0).toUpperCase() + account.type.slice(1)}
-          </Badge>
-          <Badge className={getSizeBadgeColor(account.size)}>
-            {account.size.charAt(0).toUpperCase() + account.size.slice(1)}
-          </Badge>
-        </div>
+        <Badge className={getTypeBadgeColor(account.type)}>
+          {account.type.charAt(0).toUpperCase() + account.type.slice(1)}
+        </Badge>
       ),
     },
     {
@@ -223,14 +204,18 @@ export default function AccountsPage() {
       sortable: true,
       render: (account: Account) => (
         <div className="space-y-1 text-sm">
-          <div className="flex items-center gap-2">
-            <Mail className="h-3 w-3 text-muted-foreground" />
-            <span>{account.email}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Phone className="h-3 w-3 text-muted-foreground" />
-            <span>{account.phone}</span>
-          </div>
+          {account.email && (
+            <div className="flex items-center gap-2">
+              <Mail className="h-3 w-3 text-muted-foreground" />
+              <span>{account.email}</span>
+            </div>
+          )}
+          {account.phone && (
+            <div className="flex items-center gap-2">
+              <Phone className="h-3 w-3 text-muted-foreground" />
+              <span>{account.phone}</span>
+            </div>
+          )}
         </div>
       ),
     },
@@ -241,35 +226,29 @@ export default function AccountsPage() {
       render: (account: Account) => (
         <div className="flex items-center gap-2 text-sm">
           <MapPin className="h-3 w-3 text-muted-foreground" />
-          <span>{account.city}, {account.state}</span>
+          <span>
+            {account.billingAddress?.city || account.shippingAddress?.city || "N/A"}, {account.billingAddress?.state || account.shippingAddress?.state || ""}
+          </span>
         </div>
       ),
     },
     {
-      key: "rating",
-      header: "Rating",
+      key: "creditLimit",
+      header: "Credit Limit",
       sortable: true,
       render: (account: Account) => (
-        <div className="flex items-center gap-2">
-          <div className="flex">{getRatingStars(account.rating)}</div>
-          <span className="text-sm font-medium">{account.rating.toFixed(1)}</span>
+        <div className="text-sm">
+          {account.creditLimit ? `$${account.creditLimit.toLocaleString()}` : "N/A"}
         </div>
       ),
     },
     {
-      key: "performance",
-      header: "Performance",
+      key: "assignedTo",
+      header: "Sales Rep",
       sortable: true,
       render: (account: Account) => (
-        <div className="space-y-1 text-sm">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="h-3 w-3 text-muted-foreground" />
-            <span>Revenue: ${account.totalRevenue.toFixed(2)}</span>
-          </div>
-          <div>Orders: {account.totalOrders}</div>
-          {account.lastOrderDate && (
-            <div className="text-muted-foreground">Last: {formatDateISO(account.lastOrderDate)}</div>
-          )}
+        <div className="text-sm">
+          {account.assignedSalesRepName || "Unassigned"}
         </div>
       ),
     },
@@ -291,12 +270,10 @@ export default function AccountsPage() {
       label: "Type",
       type: "select" as const,
       options: [
-        { value: "hospital", label: "Hospital" },
-        { value: "pharmacy", label: "Pharmacy" },
-        { value: "clinic", label: "Clinic" },
+        { value: "customer", label: "Customer" },
         { value: "distributor", label: "Distributor" },
-        { value: "government", label: "Government" },
-        { value: "other", label: "Other" },
+        { value: "partner", label: "Partner" },
+        { value: "vendor", label: "Vendor" },
       ],
     },
     {
@@ -307,7 +284,7 @@ export default function AccountsPage() {
         { value: "active", label: "Active" },
         { value: "inactive", label: "Inactive" },
         { value: "suspended", label: "Suspended" },
-        { value: "prospect", label: "Prospect" },
+        { value: "closed", label: "Closed" },
       ],
     },
   ]
@@ -366,14 +343,14 @@ export default function AccountsPage() {
               <Building2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{pagination.total}</div>
+              <div className="text-2xl font-bold">{stats.totalAccounts}</div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Active Accounts</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <TrendingUp className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">{stats.activeAccounts}</div>
@@ -382,21 +359,21 @@ export default function AccountsPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Prospects</CardTitle>
-              <Star className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Inactive</CardTitle>
+              <Building2 className="h-4 w-4 text-gray-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{stats.prospectAccounts}</div>
+              <div className="text-2xl font-bold text-gray-600">{stats.inactiveAccounts}</div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Suspended</CardTitle>
+              <Building2 className="h-4 w-4 text-red-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">${stats.totalRevenue.toFixed(2)}</div>
+              <div className="text-2xl font-bold text-red-600">{stats.suspendedAccounts}</div>
             </CardContent>
           </Card>
         </div>

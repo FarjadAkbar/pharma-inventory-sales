@@ -1,6 +1,7 @@
 "use client"
 
 import { apiService } from "./api.service"
+import { BASE_URL } from "@/config"
 import type { ApiResponse } from "@/types/auth"
 
 // Integration workflow types
@@ -49,7 +50,7 @@ export interface IntegrationEvent {
 }
 
 class IntegrationService {
-  private baseUrl = "/api/integration"
+  private baseUrl = `${BASE_URL}/integration`
   private workflows: Map<string, IntegrationWorkflow> = new Map()
   private events: IntegrationEvent[] = []
 

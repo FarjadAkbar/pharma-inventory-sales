@@ -134,7 +134,7 @@ export const mockQCTests: QCTest[] = [
 export const mockQCSamples: QCSample[] = [
   {
     id: "1",
-    sampleNumber: "QC-SAM-001",
+    sampleCode: "QC-SAM-001",
     sourceType: "GRN",
     sourceId: "1",
     sourceReference: "GRN-2024-001",
@@ -181,7 +181,7 @@ export const mockQCSamples: QCSample[] = [
   },
   {
     id: "2",
-    sampleNumber: "QC-SAM-002",
+    sampleCode: "QC-SAM-002",
     sourceType: "GRN",
     sourceId: "1",
     sourceReference: "GRN-2024-001",
@@ -217,7 +217,7 @@ export const mockQCSamples: QCSample[] = [
   },
   {
     id: "3",
-    sampleNumber: "QC-SAM-003",
+    sampleCode: "QC-SAM-003",
     sourceType: "GRN",
     sourceId: "2",
     sourceReference: "GRN-2024-002",
@@ -260,7 +260,7 @@ export const mockQCSamples: QCSample[] = [
   },
   {
     id: "4",
-    sampleNumber: "QC-SAM-004",
+    sampleCode: "QC-SAM-004",
     sourceType: "Batch",
     sourceId: "1",
     sourceReference: "BATCH-2024-001",
