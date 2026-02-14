@@ -149,7 +149,7 @@ export default function ExecutiveDashboardPage() {
               <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
-            <Button className="bg-orange-600 hover:bg-orange-700">
+            <Button>
               <Download />
               Export
             </Button>

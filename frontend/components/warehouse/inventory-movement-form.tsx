@@ -99,7 +99,7 @@ export function InventoryMovementForm({ onSuccess, trigger }: InventoryMovementF
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button className="bg-orange-600 hover:bg-orange-700">
+          <Button>
             <Plus />
             New Movement
           </Button>

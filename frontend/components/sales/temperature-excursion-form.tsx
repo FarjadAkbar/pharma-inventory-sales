@@ -79,7 +79,7 @@ export function TemperatureExcursionForm({ onSuccess, excursion }: TemperatureEx
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-orange-600 hover:bg-orange-700">
+        <Button>
           <Plus />
           New Alert
         </Button>

@@ -73,7 +73,7 @@ export function CycleCountForm({ onSuccess, trigger }: CycleCountFormProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button className="bg-orange-600 hover:bg-orange-700">
+          <Button>
             <Plus />
             New Cycle Count
           </Button>

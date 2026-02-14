@@ -248,7 +248,7 @@ export default function AuditTrailPage() {
               <RefreshCw />
               Refresh
             </Button>
-            <Button className="bg-orange-600 hover:bg-orange-700">
+            <Button>
               <Download />
               Export
             </Button>

@@ -89,7 +89,7 @@ export function ProofOfDeliveryForm({ onSuccess, pod }: ProofOfDeliveryFormProps
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-orange-600 hover:bg-orange-700">
+        <Button>
           <Plus />
           New POD
         </Button>

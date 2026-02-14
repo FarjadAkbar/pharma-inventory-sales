@@ -290,7 +290,7 @@ export default function DrugsPage() {
             <p className="text-muted-foreground">Manage pharmaceutical drugs and their specifications</p>
           </div>
           <Link href="/dashboard/drugs/new">
-            <Button className="bg-orange-600 hover:bg-orange-700">
+            <Button>
               <Plus />
               Add Drug
             </Button>

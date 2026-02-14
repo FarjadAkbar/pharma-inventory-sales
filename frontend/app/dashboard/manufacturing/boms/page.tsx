@@ -311,7 +311,7 @@ export default function BOMsPage() {
             <p className="text-muted-foreground">Manage manufacturing recipes and material requirements</p>
           </div>
           <Link href="/dashboard/manufacturing/boms/new">
-            <Button className="bg-orange-600 hover:bg-orange-700">
+            <Button>
               <Plus />
               New BOM
             </Button>

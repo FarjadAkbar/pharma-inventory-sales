@@ -219,7 +219,7 @@ export default function POSPage() {
             <p className="text-muted-foreground">Manage retail transactions and sales receipts</p>
           </div>
           <Link href="/dashboard/sales/pos/new">
-            <Button className="bg-orange-600 hover:bg-orange-700">
+            <Button>
               <Plus />
               New Transaction
             </Button>
