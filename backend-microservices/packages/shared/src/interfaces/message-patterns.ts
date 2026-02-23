@@ -84,6 +84,14 @@ export const GOODS_RECEIPT_PATTERNS = {
   DELETE: { cmd: 'GOODS_RECEIPTS_DELETE' },
 };
 
+export const SUPPLIER_INVOICE_PATTERNS = {
+  CREATE: { cmd: 'SUPPLIER_INVOICES_CREATE' },
+  UPDATE: { cmd: 'SUPPLIER_INVOICES_UPDATE' },
+  GET_BY_ID: { cmd: 'SUPPLIER_INVOICES_GET_BY_ID' },
+  LIST: { cmd: 'SUPPLIER_INVOICES_LIST' },
+  DELETE: { cmd: 'SUPPLIER_INVOICES_DELETE' },
+};
+
 export const QC_SAMPLE_PATTERNS = {
   CREATE: { cmd: 'QC_SAMPLES_CREATE' },
   UPDATE: { cmd: 'QC_SAMPLES_UPDATE' },
@@ -272,6 +280,22 @@ export const DRUG_PATTERNS = {
   LIST: { cmd: 'DRUGS_LIST' },
   DELETE: { cmd: 'DRUGS_DELETE' },
   LIST_EXPIRING: { cmd: 'DRUGS_LIST_EXPIRING' },
+};
+
+export const UNIT_PATTERNS = {
+  CREATE: { cmd: 'UNITS_CREATE' },
+  UPDATE: { cmd: 'UNITS_UPDATE' },
+  GET_BY_ID: { cmd: 'UNITS_GET_BY_ID' },
+  LIST: { cmd: 'UNITS_LIST' },
+  DELETE: { cmd: 'UNITS_DELETE' },
+};
+
+export const CATEGORY_PATTERNS = {
+  CREATE: { cmd: 'CATEGORIES_CREATE' },
+  UPDATE: { cmd: 'CATEGORIES_UPDATE' },
+  GET_BY_ID: { cmd: 'CATEGORIES_GET_BY_ID' },
+  LIST: { cmd: 'CATEGORIES_LIST' },
+  DELETE: { cmd: 'CATEGORIES_DELETE' },
 };
 
 export const SALES_ORDER_PATTERNS = {

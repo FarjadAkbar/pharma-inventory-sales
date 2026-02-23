@@ -8,6 +8,7 @@ export * from './dto/supplier.dto';
 export * from './dto/raw-material.dto';
 export * from './dto/purchase-order.dto';
 export * from './dto/goods-receipt.dto';
+export * from './dto/supplier-invoice.dto';
 export * from './dto/qc-sample.dto';
 export * from './dto/qc-test.dto';
 export * from './dto/qc-result.dto';

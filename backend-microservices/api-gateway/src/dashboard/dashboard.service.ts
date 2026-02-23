@@ -24,17 +24,22 @@ import {
   USER_PATTERNS,
 } from '@repo/shared';
 
+/**
+ * Dashboard service lives in the API gateway as a BFF (Backend-for-Frontend):
+ * it aggregates data from multiple microservices (identity, master-data, quality,
+ * warehouse, manufacturing, sales, shipment) to build a single dashboard response
+ * for the UI, avoiding multiple round-trips from the client.
+ */
 @Injectable()
 export class DashboardService {
   constructor(
     @Inject('WAREHOUSE_SERVICE') private warehouseClient: ClientProxy,
-    @Inject('DRUGS_SERVICE') private drugsClient: ClientProxy,
+    @Inject('MASTER_DATA_SERVICE') private masterDataClient: ClientProxy,
     @Inject('SALES_ORDER_SERVICE') private salesOrderClient: ClientProxy,
     @Inject('MANUFACTURING_SERVICE') private manufacturingClient: ClientProxy,
-    @Inject('QUALITY_CONTROL_SERVICE') private qcClient: ClientProxy,
-    @Inject('QUALITY_ASSURANCE_SERVICE') private qaClient: ClientProxy,
+    @Inject('QUALITY_SERVICE') private qualityClient: ClientProxy,
     @Inject('SHIPMENT_SERVICE') private shipmentClient: ClientProxy,
-    @Inject('USER_SERVICE') private userClient: ClientProxy,
+    @Inject('IDENTITY_SERVICE') private identityClient: ClientProxy,
   ) {}
 
   async getStats(user: any): Promise<DashboardStatsResponseDto> {
@@ -114,7 +119,7 @@ export class DashboardService {
 
       // Get expiring drugs
       const expiringDrugs = await firstValueFrom(
-        this.drugsClient.send(DRUG_PATTERNS.LIST_EXPIRING, { days: 30 })
+        this.masterDataClient.send(DRUG_PATTERNS.LIST_EXPIRING, { days: 30 })
       ).catch(() => []);
 
       for (const drug of expiringDrugs.slice(0, 10)) {
@@ -180,7 +185,7 @@ export class DashboardService {
   private async getActiveUsersCount(): Promise<number> {
     try {
       const result = await firstValueFrom(
-        this.userClient.send(USER_PATTERNS.COUNT_ACTIVE, {})
+        this.identityClient.send(USER_PATTERNS.COUNT_ACTIVE, {})
       );
       return result?.count || 0;
     } catch {
@@ -236,7 +241,7 @@ export class DashboardService {
   private async addQCStats(stats: DashboardStatDto[]) {
     try {
       const samples = await firstValueFrom(
-        this.qcClient.send(QC_RESULT_PATTERNS.SAMPLE_LIST, { status: 'PENDING' })
+        this.qualityClient.send(QC_RESULT_PATTERNS.SAMPLE_LIST, { status: 'PENDING' })
       );
       stats.push({
         title: 'Sample Queue',

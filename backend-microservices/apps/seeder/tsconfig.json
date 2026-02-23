@@ -2,13 +2,12 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "module": "commonjs",
-    "target": "ES2021",
     "outDir": "./dist",
     "rootDir": "./src",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "strict": false
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }
-
