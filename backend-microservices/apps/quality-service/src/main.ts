@@ -4,7 +4,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
-  const port = parseInt(process.env.PORT || '3030', 10);
+  const port = parseInt(process.env.PORT || '3003', 10);
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
     transport: Transport.TCP,
     options: { host: '0.0.0.0', port },

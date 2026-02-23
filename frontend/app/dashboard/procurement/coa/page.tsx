@@ -44,19 +44,19 @@ export default function CertificateOfAnalysisPage() {
   const [coas, setCoas] = useState<CertificateOfAnalysis[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
+  const [filters, setFilters] = useState<Record<string, any>>({})
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
-  const [statusFilter, setStatusFilter] = useState("all")
 
   useEffect(() => {
     fetchCoas()
-  }, [searchQuery, pagination.page, statusFilter])
+  }, [searchQuery, filters, pagination.page])
 
   const fetchCoas = async () => {
     try {
       setLoading(true)
       const response = await apiService.getCertificatesOfAnalysis({
         search: searchQuery,
-        status: statusFilter !== "all" ? statusFilter : undefined,
+        status: filters.status || undefined,
         page: pagination.page,
         limit: 10,
       })
@@ -78,6 +78,11 @@ export default function CertificateOfAnalysisPage() {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
+    setPagination((prev) => ({ ...prev, page: 1 }))
+  }
+
+  const handleFiltersChange = (newFilters: Record<string, any>) => {
+    setFilters(newFilters)
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
@@ -352,94 +357,76 @@ export default function CertificateOfAnalysisPage() {
           </Card>
         </div>
 
-        {/* Status Filter */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Filter by Status</CardTitle>
-            <CardDescription>Select a status to filter certificates of analysis</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { value: "all", label: "All CoAs" },
+        {/* CoAs Table */}
+        <UnifiedDataTable
+          data={coas}
+          columns={columns}
+          loading={loading}
+          searchPlaceholder="Search CoAs..."
+          searchValue={searchQuery}
+          onSearch={handleSearch}
+          filters={[
+            {
+              key: "status",
+              label: "Status",
+              type: "select" as const,
+              options: [
                 { value: "approved", label: "Approved" },
                 { value: "pending", label: "Pending" },
                 { value: "rejected", label: "Rejected" },
                 { value: "expired", label: "Expired" },
-              ].map((status) => (
-                <Button
-                  key={status.value}
-                  variant={statusFilter === status.value ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setStatusFilter(status.value)}
-                >
-                  {status.label}
+              ],
+            },
+          ]}
+          onFiltersChange={handleFiltersChange}
+          pagination={{
+            page: pagination.page,
+            pages: pagination.pages,
+            total: pagination.total,
+            onPageChange: handlePageChange
+          }}
+          onRefresh={fetchCoas}
+          onExport={() => console.log("Export CoAs")}
+          emptyMessage="No certificates of analysis found. Add your first CoA to get started."
+          actions={(coa: CertificateOfAnalysis) => (
+            <div className="flex items-center gap-2">
+              <PermissionGuard module="PROCUREMENT" screen="coa" action="update">
+                <Button variant="ghost" size="sm" onClick={() => handleEdit(coa)}>
+                  Edit
                 </Button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* CoAs Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>All Certificates of Analysis</CardTitle>
-            <CardDescription>A list of all certificates of analysis with test results and approval status.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <UnifiedDataTable
-              data={coas}
-              columns={columns}
-              loading={loading}
-              onSearch={handleSearch}
-              pagination={{
-                page: pagination.page,
-                pages: pagination.pages,
-                total: pagination.total,
-                onPageChange: handlePageChange
-              }}
-              searchPlaceholder="Search CoAs..."
-              actions={(coa: CertificateOfAnalysis) => (
-                <div className="flex items-center gap-2">
-                  <PermissionGuard module="PROCUREMENT" screen="coa" action="update">
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(coa)}>
-                      Edit
+              </PermissionGuard>
+              {coa.overallStatus === "pending" && (
+                <>
+                  <PermissionGuard module="PROCUREMENT" screen="coa" action="approve">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => handleApprove(coa)}
+                      className="text-green-600"
+                    >
+                      Approve
                     </Button>
                   </PermissionGuard>
-                  {coa.overallStatus === "pending" && (
-                    <>
-                      <PermissionGuard module="PROCUREMENT" screen="coa" action="approve">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => handleApprove(coa)}
-                          className="text-green-600"
-                        >
-                          Approve
-                        </Button>
-                      </PermissionGuard>
-                      <PermissionGuard module="PROCUREMENT" screen="coa" action="reject">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => handleReject(coa)}
-                          className="text-red-600"
-                        >
-                          Reject
-                        </Button>
-                      </PermissionGuard>
-                    </>
-                  )}
+                  <PermissionGuard module="PROCUREMENT" screen="coa" action="reject">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => handleReject(coa)}
+                      className="text-red-600"
+                    >
+                      Reject
+                    </Button>
+                  </PermissionGuard>
+                </>
+              )}
                   <PermissionGuard module="PROCUREMENT" screen="coa" action="delete">
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(coa)}>
                       Delete
                     </Button>
                   </PermissionGuard>
                 </div>
-              )}
-            />
-          </CardContent>
-        </Card>
+          )}
+        />
       </div>
     </DashboardLayout>
   )

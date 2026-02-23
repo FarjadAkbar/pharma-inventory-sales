@@ -44,10 +44,11 @@ export class SuppliersService {
   }
 
   private async toResponseDto(supplier: Supplier): Promise<SupplierResponseDto> {
-    const siteIds = Array.isArray(supplier.siteIds)
-      ? supplier.siteIds
-      : typeof supplier.siteIds === 'string' && supplier.siteIds
-        ? supplier.siteIds.split(',').map((id) => parseInt(id.trim(), 10)).filter((id) => !isNaN(id))
+    const raw = supplier.siteIds as string | number[] | undefined;
+    const siteIds = Array.isArray(raw)
+      ? raw
+      : typeof raw === 'string' && raw
+        ? raw.split(',').map((id) => parseInt(id.trim(), 10)).filter((id) => !isNaN(id))
         : [];
     let sites: Array<{ id: number; name: string; address?: string; city?: string; type?: string }> = [];
     if (siteIds.length > 0) {

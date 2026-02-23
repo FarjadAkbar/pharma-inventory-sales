@@ -262,7 +262,7 @@ export class QAReleasesService {
     release.decisionReason = makeDecisionDto.reason;
     release.decidedBy = makeDecisionDto.decidedBy;
     release.decidedAt = new Date();
-    release.eSignature = makeDecisionDto.eSignature;
+    release.eSignature = makeDecisionDto.eSignature ?? '';
 
     if (makeDecisionDto.remarks) {
       release.remarks = release.remarks 

@@ -3,10 +3,10 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { DataTable } from "@/components/ui/data-table"
+import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Key, User, Clock, Shield, AlertTriangle } from "lucide-react"
 import { apiService } from "@/services/api.service"
 import { formatDateISO } from "@/lib/utils"
@@ -30,19 +30,19 @@ export default function RefreshTokensPage() {
   const [tokens, setTokens] = useState<RefreshToken[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
+  const [filters, setFilters] = useState<Record<string, any>>({})
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
-  const [statusFilter, setStatusFilter] = useState("all")
 
   useEffect(() => {
     fetchTokens()
-  }, [searchQuery, pagination.page, statusFilter])
+  }, [searchQuery, filters, pagination.page])
 
   const fetchTokens = async () => {
     try {
       setLoading(true)
       const response = await apiService.getRefreshTokens({
         search: searchQuery,
-        status: statusFilter !== "all" ? statusFilter : undefined,
+        status: filters.status || undefined,
         page: pagination.page,
         limit: 10,
       })
@@ -64,6 +64,11 @@ export default function RefreshTokensPage() {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
+    setPagination((prev) => ({ ...prev, page: 1 }))
+  }
+
+  const handleFiltersChange = (newFilters: Record<string, any>) => {
+    setFilters(newFilters)
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
@@ -268,70 +273,52 @@ export default function RefreshTokensPage() {
           </Card>
         </div>
 
-        {/* Status Filter */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Filter by Status</CardTitle>
-            <CardDescription>Select a status to filter refresh tokens</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { value: "all", label: "All Tokens" },
+        {/* Tokens Table */}
+        <UnifiedDataTable
+          data={tokens}
+          columns={columns}
+          loading={loading}
+          searchPlaceholder="Search tokens..."
+          searchValue={searchQuery}
+          onSearch={handleSearch}
+          filters={[
+            {
+              key: "status",
+              label: "Status",
+              type: "select",
+              options: [
                 { value: "active", label: "Active" },
                 { value: "expiring", label: "Expiring Soon" },
                 { value: "expired", label: "Expired" },
                 { value: "revoked", label: "Revoked" },
-              ].map((status) => (
+              ],
+            },
+          ]}
+          onFiltersChange={handleFiltersChange}
+          pagination={{
+            page: pagination.page,
+            pages: pagination.pages,
+            total: pagination.total,
+            onPageChange: handlePageChange
+          }}
+          onRefresh={fetchTokens}
+          onExport={() => console.log("Export tokens")}
+          emptyMessage="No refresh tokens found."
+          actions={(token: RefreshToken) => (
+            <div className="flex items-center gap-2">
+              <PermissionGuard module="IDENTITY" screen="refresh_tokens" action="delete">
                 <Button
-                  key={status.value}
-                  variant={statusFilter === status.value ? "default" : "outline"}
+                  variant="ghost"
                   size="sm"
-                  onClick={() => setStatusFilter(status.value)}
+                  onClick={() => handleRevoke(token)}
+                  disabled={!token.isActive}
                 >
-                  {status.label}
+                  Revoke
                 </Button>
-              ))}
+              </PermissionGuard>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Tokens Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>All Refresh Tokens</CardTitle>
-            <CardDescription>A list of all refresh tokens with their status and security information.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              data={tokens}
-              columns={columns}
-              loading={loading}
-              onSearch={handleSearch}
-              pagination={{
-                page: pagination.page,
-                pages: pagination.pages,
-                total: pagination.total,
-                onPageChange: handlePageChange
-              }}
-              searchPlaceholder="Search tokens..."
-              actions={(token: RefreshToken) => (
-                <div className="flex items-center gap-2">
-                  <PermissionGuard module="IDENTITY" screen="refresh_tokens" action="delete">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handleRevoke(token)}
-                      disabled={!token.isActive}
-                    >
-                      Revoke
-                    </Button>
-                  </PermissionGuard>
-                </div>
-              )}
-            />
-          </CardContent>
-        </Card>
+          )}
+        />
       </div>
     </DashboardLayout>
   )

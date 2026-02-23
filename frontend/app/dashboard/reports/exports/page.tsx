@@ -43,21 +43,20 @@ export default function ExportsPage() {
   const [exports, setExports] = useState<Export[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
-  const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
   const [filters, setFilters] = useState<Record<string, any>>({})
-  const [typeFilter, setTypeFilter] = useState("all")
-  const [statusFilter, setStatusFilter] = useState("all")
+  const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
 
   useEffect(() => {
     fetchExports()
-  }, [searchQuery, pagination.page, filters])
+  }, [searchQuery, filters, pagination.page])
 
   const fetchExports = async () => {
     try {
       setLoading(true)
       const response = await apiService.getExports({
         search: searchQuery,
-        ...filters,
+        type: filters.type || undefined,
+        status: filters.status || undefined,
         page: pagination.page,
         limit: 10,
       })
@@ -79,6 +78,11 @@ export default function ExportsPage() {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
+    setPagination((prev) => ({ ...prev, page: 1 }))
+  }
+
+  const handleFiltersChange = (newFilters: Record<string, any>) => {
+    setFilters(newFilters)
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
@@ -369,82 +373,51 @@ export default function ExportsPage() {
           </Card>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Filters</CardTitle>
-            <CardDescription>Filter exports by type and status</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Type</label>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { value: "all", label: "All Types" },
-                    { value: "data", label: "Data" },
-                    { value: "report", label: "Report" },
-                    { value: "analytics", label: "Analytics" },
-                    { value: "compliance", label: "Compliance" },
-                    { value: "audit", label: "Audit" },
-                  ].map((type) => (
-                    <Button
-                      key={type.value}
-                      variant={typeFilter === type.value ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setTypeFilter(type.value)}
-                    >
-                      {type.label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">Status</label>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { value: "all", label: "All Status" },
-                    { value: "pending", label: "Pending" },
-                    { value: "processing", label: "Processing" },
-                    { value: "completed", label: "Completed" },
-                    { value: "failed", label: "Failed" },
-                    { value: "cancelled", label: "Cancelled" },
-                  ].map((status) => (
-                    <Button
-                      key={status.value}
-                      variant={statusFilter === status.value ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setStatusFilter(status.value)}
-                    >
-                      {status.label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Exports Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>All Data Exports</CardTitle>
-            <CardDescription>A list of all data exports with their status and download links.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <UnifiedDataTable
-              data={exports}
-              columns={columns}
-              loading={loading}
-              onSearch={handleSearch}
-              pagination={{
-                page: pagination.page,
-                pages: pagination.pages,
-                total: pagination.total,
-                onPageChange: handlePageChange
-              }}
-              searchPlaceholder="Search exports..."
-              actions={(exportItem: Export) => (
+        <UnifiedDataTable
+          data={exports}
+          columns={columns}
+          loading={loading}
+          searchPlaceholder="Search exports..."
+          searchValue={searchQuery}
+          onSearch={handleSearch}
+          filters={[
+            {
+              key: "type",
+              label: "Type",
+              type: "select" as const,
+              options: [
+                { value: "data", label: "Data" },
+                { value: "report", label: "Report" },
+                { value: "analytics", label: "Analytics" },
+                { value: "compliance", label: "Compliance" },
+                { value: "audit", label: "Audit" },
+              ],
+            },
+            {
+              key: "status",
+              label: "Status",
+              type: "select" as const,
+              options: [
+                { value: "pending", label: "Pending" },
+                { value: "processing", label: "Processing" },
+                { value: "completed", label: "Completed" },
+                { value: "failed", label: "Failed" },
+                { value: "cancelled", label: "Cancelled" },
+              ],
+            },
+          ]}
+          onFiltersChange={handleFiltersChange}
+          pagination={{
+            page: pagination.page,
+            pages: pagination.pages,
+            total: pagination.total,
+            onPageChange: handlePageChange
+          }}
+          onRefresh={fetchExports}
+          onExport={() => console.log("Export list")}
+          emptyMessage="No data exports found."
+          actions={(exportItem: Export) => (
                 <div className="flex items-center gap-2">
                   <PermissionGuard module="REPORTING" screen="exports" action="update">
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(exportItem)}>
@@ -468,11 +441,9 @@ export default function ExportsPage() {
                       Delete
                     </Button>
                   </PermissionGuard>
-                </div>
-              )}
-            />
-          </CardContent>
-        </Card>
+            </div>
+          )}
+        />
       </div>
     </DashboardLayout>
   )

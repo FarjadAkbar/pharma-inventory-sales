@@ -10,12 +10,12 @@ async function bootstrap() {
       transport: Transport.TCP,
       options: { 
         host: '0.0.0.0',
-        port: parseInt(process.env.PORT || '3017'),
+        port: parseInt(process.env.PORT || '3009'),
       },
     },
   );
   app.useGlobalPipes(new ValidationPipe());
   await app.listen();
-  console.log('Sales CRM Service is listening on port 3017');
+  console.log('Sales CRM Service is listening on port 3009');
 }
 bootstrap();

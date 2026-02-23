@@ -10,13 +10,13 @@ async function bootstrap() {
       transport: Transport.TCP,
       options: { 
         host: '0.0.0.0',
-        port: parseInt(process.env.PORT || '3015'),
+        port: parseInt(process.env.PORT || '3007'),
       },
     },
   );
   app.useGlobalPipes(new ValidationPipe());
   await app.listen();
-  console.log('Sales Order Service is listening on port 3015');
+  console.log('Sales Order Service is listening on port ' + process.env.PORT);
 }
 bootstrap();
 

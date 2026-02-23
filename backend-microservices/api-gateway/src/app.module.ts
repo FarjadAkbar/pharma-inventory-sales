@@ -39,6 +39,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'sup3r_s3cr3tk3y_for_auth3ntication',
       signOptions: { expiresIn: '15m' },
+      global: true,
     }),
     ClientsModule.register([
       {

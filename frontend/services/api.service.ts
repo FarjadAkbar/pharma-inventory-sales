@@ -1064,6 +1064,46 @@ class ApiService {
     })
   }
 
+  // Distributors (distribution accounts)
+  async getDistributors(params?: {
+    search?: string
+    status?: string
+    page?: number
+    limit?: number
+  }) {
+    const queryParams = new URLSearchParams()
+    if (params?.search) queryParams.set("search", params.search)
+    if (params?.status) queryParams.set("status", params.status)
+    if (params?.page) queryParams.set("page", String(params.page))
+    if (params?.limit) queryParams.set("limit", String(params.limit))
+    const query = queryParams.toString()
+    return this.request(`/distribution/distributors${query ? `?${query}` : ""}`)
+  }
+
+  async createDistributor(data: any) {
+    return this.request("/distribution/distributors", {
+      method: "POST",
+      body: JSON.stringify(data),
+    })
+  }
+
+  async getDistributor(id: string) {
+    return this.request(`/distribution/distributors/${id}`)
+  }
+
+  async updateDistributor(id: string, data: any) {
+    return this.request(`/distribution/distributors/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteDistributor(id: string) {
+    return this.request(`/distribution/distributors/${id}`, {
+      method: "DELETE",
+    })
+  }
+
   async getColdChainRecords(filters: any = {}) {
     const queryParams = new URLSearchParams()
     queryParams.append("type", "records")

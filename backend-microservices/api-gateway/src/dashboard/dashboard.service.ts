@@ -1,6 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
+import { sendWithFallback } from '../common/utils/microservice-client';
 import {
   DashboardStatsResponseDto,
   DashboardStatDto,
@@ -100,12 +101,16 @@ export class DashboardService {
     const alerts: StockAlertDto[] = [];
 
     try {
-      // Get low stock items from warehouse
-      const lowStockItems = await firstValueFrom(
-        this.warehouseClient.send(WAREHOUSE_PATTERNS.LIST_LOW_STOCK, {})
-      ).catch(() => []);
+      const lowStockItems = await sendWithFallback(
+        this.warehouseClient,
+        WAREHOUSE_PATTERNS.LIST_LOW_STOCK,
+        {},
+        [],
+        5000,
+      );
+      const lowList = Array.isArray(lowStockItems) ? lowStockItems : [];
 
-      for (const item of lowStockItems.slice(0, 10)) {
+      for (const item of lowList.slice(0, 10)) {
         alerts.push({
           name: item.name || item.code,
           type: StockAlertType.LOW_STOCK,
@@ -117,12 +122,16 @@ export class DashboardService {
         });
       }
 
-      // Get expiring drugs
-      const expiringDrugs = await firstValueFrom(
-        this.masterDataClient.send(DRUG_PATTERNS.LIST_EXPIRING, { days: 30 })
-      ).catch(() => []);
+      const expiringDrugs = await sendWithFallback(
+        this.masterDataClient,
+        DRUG_PATTERNS.LIST_EXPIRING,
+        { days: 30 },
+        [],
+        5000,
+      );
+      const drugList = Array.isArray(expiringDrugs) ? expiringDrugs : [];
 
-      for (const drug of expiringDrugs.slice(0, 10)) {
+      for (const drug of drugList.slice(0, 10)) {
         alerts.push({
           name: drug.name,
           type: StockAlertType.EXPIRING,

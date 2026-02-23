@@ -117,7 +117,7 @@ export class QADeviationsService {
     }
     if (updateQADeviationDto.assignedTo !== undefined) {
       deviation.assignedTo = updateQADeviationDto.assignedTo;
-      deviation.assignedAt = updateQADeviationDto.assignedTo ? new Date() : undefined;
+      deviation.assignedAt = updateQADeviationDto.assignedTo ? new Date() : deviation.assignedAt;
     }
     if (updateQADeviationDto.dueDate) {
       deviation.dueDate = new Date(updateQADeviationDto.dueDate);

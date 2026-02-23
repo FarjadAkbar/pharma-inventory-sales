@@ -7,11 +7,7 @@ import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { 
-  Search, 
-  Filter,
+import {
   Eye,
   Download,
   RefreshCw,
@@ -23,7 +19,6 @@ import {
   AlertTriangle,
   CheckCircle,
   XCircle,
-  Clock,
   Globe
 } from "lucide-react"
 import { apiService } from "@/services/api.service"
@@ -67,11 +62,8 @@ export default function AuditTrailPage() {
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
-  const handleFilterChange = (key: keyof AuditFilters, value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value
-    }))
+  const handleFiltersChange = (newFilters: Record<string, any>) => {
+    setFilters(newFilters)
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
@@ -243,16 +235,6 @@ export default function AuditTrailPage() {
             <h1 className="text-3xl font-bold tracking-tight">Audit Trail Explorer</h1>
             <p className="text-muted-foreground">User activity and data modifications tracking</p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={fetchAuditTrails}>
-              <RefreshCw />
-              Refresh
-            </Button>
-            <Button>
-              <Download />
-              Export
-            </Button>
-          </div>
         </div>
 
         {/* Stats Cards */}
@@ -308,117 +290,74 @@ export default function AuditTrailPage() {
           </Card>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Filters
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Search</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search audit trails..."
-                    value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">User</label>
-                <Select value={filters.userId || ""} onValueChange={(value) => handleFilterChange("userId", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Users" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">System Admin</SelectItem>
-                    <SelectItem value="2">Ms. Ayesha Khan</SelectItem>
-                    <SelectItem value="3">Dr. Ahmed Hassan</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Action</label>
-                <Select value={filters.action || ""} onValueChange={(value) => handleFilterChange("action", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Actions" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="CREATE">Create</SelectItem>
-                    <SelectItem value="UPDATE">Update</SelectItem>
-                    <SelectItem value="DELETE">Delete</SelectItem>
-                    <SelectItem value="RESTORE">Restore</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Entity Type</label>
-                <Select value={filters.entityType || ""} onValueChange={(value) => handleFilterChange("entityType", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Entities" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="SalesOrder">Sales Order</SelectItem>
-                    <SelectItem value="Shipment">Shipment</SelectItem>
-                    <SelectItem value="User">User</SelectItem>
-                    <SelectItem value="Drug">Drug</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Date From</label>
-                <Input
-                  type="date"
-                  value={filters.dateFrom || ""}
-                  onChange={(e) => handleFilterChange("dateFrom", e.target.value)}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Audit Trails Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Audit Trail</CardTitle>
-            <CardDescription>Complete audit trail of all user activities and data modifications.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <UnifiedDataTable
-              data={auditTrails}
-              columns={columns}
-              loading={loading}
-              onSearch={handleSearch}
-              pagination={{
-                page: pagination.page,
-                pages: pagination.pages,
-                total: pagination.total,
-                onPageChange: handlePageChange
-              }}
-              searchPlaceholder="Search audit trails..."
-              actions={(trail: AuditTrail) => (
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
-                    <Download className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            />
-          </CardContent>
-        </Card>
+        <UnifiedDataTable
+          data={auditTrails}
+          columns={columns}
+          loading={loading}
+          searchPlaceholder="Search audit trails..."
+          searchValue={searchQuery}
+          onSearch={handleSearch}
+          filters={[
+            {
+              key: "userId",
+              label: "User",
+              type: "select" as const,
+              options: [
+                { value: "1", label: "System Admin" },
+                { value: "2", label: "Ms. Ayesha Khan" },
+                { value: "3", label: "Dr. Ahmed Hassan" },
+              ],
+            },
+            {
+              key: "action",
+              label: "Action",
+              type: "select" as const,
+              options: [
+                { value: "CREATE", label: "Create" },
+                { value: "UPDATE", label: "Update" },
+                { value: "DELETE", label: "Delete" },
+                { value: "RESTORE", label: "Restore" },
+              ],
+            },
+            {
+              key: "entityType",
+              label: "Entity Type",
+              type: "select" as const,
+              options: [
+                { value: "SalesOrder", label: "Sales Order" },
+                { value: "Shipment", label: "Shipment" },
+                { value: "User", label: "User" },
+                { value: "Drug", label: "Drug" },
+              ],
+            },
+            {
+              key: "dateFrom",
+              label: "Date From",
+              type: "date" as const,
+            },
+          ]}
+          onFiltersChange={handleFiltersChange}
+          pagination={{
+            page: pagination.page,
+            pages: pagination.pages,
+            total: pagination.total,
+            onPageChange: handlePageChange
+          }}
+          onRefresh={fetchAuditTrails}
+          onExport={() => console.log("Export audit trails")}
+          emptyMessage="No audit trail entries found."
+          actions={(trail: AuditTrail) => (
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm">
+                <Eye className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+                <Download className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        />
 
         {/* Change Details Modal Placeholder */}
         {auditTrails.length > 0 && (
