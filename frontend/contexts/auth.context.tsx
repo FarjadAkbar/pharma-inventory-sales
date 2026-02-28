@@ -1,152 +1,204 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
-import type { User, LoginCredentials, RegisterData, ChangePasswordData, ForgotPasswordData, Permissions } from "@/types/auth"
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react"
+import { useRouter } from "next/navigation"
+import type { User } from "@/types/auth"
 import { authService } from "@/services/auth.service"
 
+// ────────────────────────────────────────────────────────────────────────────
+//  Context shape
+// ────────────────────────────────────────────────────────────────────────────
+
 interface AuthContextType {
-  user: User | null
-  loading: boolean
-  permissions: Permissions | null
-  login: (credentials: LoginCredentials) => Promise<void>
-  register: (userData: RegisterData) => Promise<void>
-  logout: () => Promise<void>
-  changePassword: (data: ChangePasswordData) => Promise<void>
-  forgotPassword: (data: ForgotPasswordData) => Promise<void>
-  isAuthenticated: boolean
-  hasPermission: (module: string, action: string) => boolean
+  user:        User | null
+  loading:     boolean
+  permissions: Record<string, any> | null
+
+  // ── Site context ──────────────────────────────────────────────────────────
+  /** Site IDs this user is assigned to */
+  userSiteIds:  number[]
+  /**
+   * True when the user's role limits them to their own site(s) only
+   * (Site Manager, Cashier, Pharmacist, Store Supervisor).
+   */
+  isSiteScoped: boolean
+
+  // ── Auth actions ──────────────────────────────────────────────────────────
+  login:          (email: string, password: string) => Promise<void>
+  register:       (data: any) => Promise<void>
+  logout:         () => Promise<void>
+  changePassword: (currentPassword: string, newPassword: string, confirmPassword: string) => Promise<void>
+  forgotPassword: (email: string) => Promise<void>
+  resetPassword:  (token: string, newPassword: string) => Promise<void>
+
+  // ── Permission helpers ────────────────────────────────────────────────────
+  hasPermission:     (module: string, action: string) => boolean
   hasAllPermissions: (module: string, actions: string[]) => boolean
+
+  // ── Site helpers ──────────────────────────────────────────────────────────
+  /**
+   * Returns a query-string fragment to filter API requests by the user's
+   * site(s).  Returns "" for non-site-scoped roles.
+   *
+   * Example:  `/pos?${buildSiteFilter()}`
+   */
+  buildSiteFilter: () => string
+  /**
+   * Returns true when the given siteId is accessible to the current user.
+   * System-wide roles always return true.
+   */
+  canAccessSite: (siteId: number) => boolean
 }
+
+// ────────────────────────────────────────────────────────────────────────────
+//  Context
+// ────────────────────────────────────────────────────────────────────────────
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [permissions, setPermissions] = useState<Permissions | null>(null)
-  const [loading, setLoading] = useState(true)
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter()
 
-  useEffect(() => {
-    initializeAuth()
+  const [user,        setUser]        = useState<User | null>(null)
+  const [loading,     setLoading]     = useState(true)
+  const [permissions, setPermissions] = useState<Record<string, any> | null>(null)
+  const [userSiteIds, setUserSiteIds] = useState<number[]>([])
+  const [isSiteScoped, setIsSiteScoped] = useState(false)
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  const syncSiteContext = useCallback(() => {
+    const ctx = authService.getSiteContext()
+    setUserSiteIds(ctx.siteIds)
+    setIsSiteScoped(ctx.isSiteScoped)
   }, [])
 
-  const initializeAuth = async () => {
-    try {
-      if (authService.isAuthenticated()) {
-        const userData = await authService.getCurrentUser()
-        const userPermissions = authService.getPermissions()
-        setUser(userData)
-        setPermissions(userPermissions)
-      }
-    } catch (error) {
-      console.error("Auth initialization failed:", error)
-      // Clear invalid token and reset state
-      authService.removeToken()
-      setUser(null)
-      setPermissions(null)
-    } finally {
-      setLoading(false)
-    }
-  }
+  // ── Bootstrap ─────────────────────────────────────────────────────────────
 
-  const login = async (credentials: LoginCredentials) => {
-    console.log("Auth context: Starting login process")
-    setLoading(true)
-    try {
-      console.log("Auth context: Calling authService.login")
-      const authResponse = await authService.login(credentials)
-      console.log("Auth context: Login successful, authResponse:", authResponse)
-      
-      console.log("Auth context: Getting current user")
+  useEffect(() => {
+    const init = async () => {
+      console.log("🔐 AuthProvider: initialising")
       try {
-        const userData = await authService.getCurrentUser()
-        console.log("Auth context: User data:", userData)
-        
-        console.log("Auth context: Setting user and permissions")
-        setUser(userData)
-        setPermissions(authResponse.permissions)
-        console.log("Auth context: Login process completed successfully")
-        console.log("Auth context: Current state - user:", !!userData, "permissions:", !!authResponse.permissions)
-      } catch (userError) {
-        console.error("Auth context: getCurrentUser failed:", userError)
-        throw new Error(`Failed to get user data: ${userError.message}`)
+        if (authService.isAuthenticated()) {
+          const currentUser = await authService.getCurrentUser()
+          setUser(currentUser)
+          setPermissions(authService.getPermissions())
+          syncSiteContext()
+        }
+      } catch (error) {
+        console.error("AuthProvider: init error", error)
+        authService.removeToken()
+      } finally {
+        setLoading(false)
       }
-    } catch (error) {
-      console.error("Auth context: Login failed:", error)
-      throw error
-    } finally {
-      setLoading(false)
+    }
+    init()
+  }, [syncSiteContext])
+
+  // ── Actions ───────────────────────────────────────────────────────────────
+
+  const login = async (email: string, password: string) => {
+    const result = await authService.login({ email, password })
+    if (result.success) {
+      const currentUser = await authService.getCurrentUser()
+      setUser(currentUser)
+      setPermissions(authService.getPermissions())
+      syncSiteContext()
+      router.push("/dashboard")
+    } else {
+      throw new Error("Login failed")
     }
   }
 
-  const register = async (userData: RegisterData) => {
-    setLoading(true)
-    try {
-      const authResponse = await authService.register(userData)
-      const user = await authService.getCurrentUser()
-      setUser(user)
-      setPermissions(authResponse.permissions)
-    } catch (error) {
-      throw error
-    } finally {
-      setLoading(false)
+  const register = async (data: any) => {
+    const result = await authService.register(data)
+    if (result.success) {
+      const currentUser = await authService.getCurrentUser()
+      setUser(currentUser)
+      setPermissions(authService.getPermissions())
+      syncSiteContext()
+      router.push("/dashboard")
+    } else {
+      throw new Error("Registration failed")
     }
   }
 
   const logout = async () => {
-    setLoading(true)
-    try {
-      await authService.logout()
-      setUser(null)
-      setPermissions(null)
-    } catch (error) {
-      console.error("Logout failed:", error)
-    } finally {
-      setLoading(false)
-    }
+    await authService.logout()
+    setUser(null)
+    setPermissions(null)
+    setUserSiteIds([])
+    setIsSiteScoped(false)
+    router.push("/login")
   }
 
-  const changePassword = async (data: ChangePasswordData) => {
-    await authService.changePassword(data)
+  const changePassword = async (
+    currentPassword: string,
+    newPassword: string,
+    confirmPassword: string,
+  ) => {
+    await authService.changePassword({ currentPassword, newPassword, confirmPassword })
   }
 
-  const forgotPassword = async (data: ForgotPasswordData) => {
-    await authService.forgotPassword(data)
+  const forgotPassword = async (email: string) => {
+    await authService.forgotPassword({ email })
   }
+
+  const resetPassword = async (token: string, newPassword: string) => {
+    await authService.resetPassword(token, newPassword)
+  }
+
+  // ── Permission helpers ────────────────────────────────────────────────────
 
   const hasPermission = (module: string, action: string): boolean => {
-    console.log('🔐 AuthContext hasPermission Debug:', {
-      module,
-      action,
-      permissions,
-      user
-    })
-    const result = authService.hasPermission(module, action)
-    console.log('🔐 AuthContext hasPermission Result:', result)
-    return result
+    return authService.hasPermission(module, action)
   }
 
   const hasAllPermissions = (module: string, actions: string[]): boolean => {
     return authService.hasAllPermissions(module, actions)
   }
 
-  const value: AuthContextType = {
-    user,
-    loading,
-    permissions,
-    login,
-    register,
-    logout,
-    changePassword,
-    forgotPassword,
-    isAuthenticated: !!user,
-    hasPermission,
-    hasAllPermissions,
+  // ── Site helpers ──────────────────────────────────────────────────────────
+
+  const buildSiteFilter = (): string => authService.buildSiteFilter()
+
+  const canAccessSite = (siteId: number): boolean => {
+    if (!isSiteScoped) return true                  // system-wide role → all sites
+    return userSiteIds.includes(siteId)
   }
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  // ── Provider ──────────────────────────────────────────────────────────────
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        permissions,
+        userSiteIds,
+        isSiteScoped,
+        login,
+        register,
+        logout,
+        changePassword,
+        forgotPassword,
+        resetPassword,
+        hasPermission,
+        hasAllPermissions,
+        buildSiteFilter,
+        canAccessSite,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
-export function useAuth() {
+// ────────────────────────────────────────────────────────────────────────────
+//  Hook
+// ────────────────────────────────────────────────────────────────────────────
+
+export function useAuth(): AuthContextType {
   const context = useContext(AuthContext)
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider")

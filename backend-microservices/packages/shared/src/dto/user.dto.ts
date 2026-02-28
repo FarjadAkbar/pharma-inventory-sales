@@ -54,6 +54,8 @@ export class UserResponseDto {
   role?: {
     id: number;
     name: string;
+    /** Whether this role is restricted to the user's assigned sites */
+    isSiteScoped?: boolean;
     permissions?: Array<{
       id: number;
       name: string;

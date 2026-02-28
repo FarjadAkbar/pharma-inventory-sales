@@ -17,6 +17,13 @@ export class LoginResponseDto {
     name: string;
     email: string;
     role?: string;
+    /** Site IDs this user is assigned to */
+    siteIds?: number[];
+    /**
+     * When true the user's role is site-scoped — they should only see data
+     * that belongs to one of their siteIds.
+     */
+    isSiteScoped?: boolean;
   };
 }
 

@@ -14,6 +14,14 @@ export class Role {
   @Column('simple-array', { nullable: true, default: '' })
   permissionIds: number[] | string;
 
+  /**
+   * When true, users with this role can only access data belonging to their
+   * assigned siteIds. Used for: Site Manager, Cashier, Pharmacist, Store Supervisor.
+   * When false (default), the role has system-wide visibility.
+   */
+  @Column({ default: false })
+  isSiteScoped: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

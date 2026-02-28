@@ -6,6 +6,10 @@ export const USER_PATTERNS = {
   DELETE: { cmd: 'delete_user' },
   FIND_BY_EMAIL: { cmd: 'find_user_by_email' },
   COUNT_ACTIVE: { cmd: 'count_active_users' },
+  /** Find all users assigned to a specific site (for site-scoped manager views) */
+  FIND_BY_SITE: { cmd: 'find_users_by_site' },
+  /** Find all users assigned to any of several sites */
+  FIND_BY_SITE_IDS: { cmd: 'find_users_by_site_ids' },
 };
 
 export const AUTH_PATTERNS = {

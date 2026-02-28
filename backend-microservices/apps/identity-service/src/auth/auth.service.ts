@@ -27,15 +27,35 @@ export class AuthService {
   async login(loginDto: LoginDto): Promise<LoginResponseDto> {
     const user = await this.usersService.findByEmail(loginDto.email);
     if (!user) throw new UnauthorizedException('Invalid credentials');
+
     const isPasswordValid = await verify(loginDto.password, user.password);
     if (!isPasswordValid) throw new UnauthorizedException('Invalid credentials');
-    const payload = { sub: user.id, email: user.email, name: user.name, roleId: user.roleId };
+
+    // Fetch enriched user to get role info (including isSiteScoped)
+    const enrichedUser = await this.usersService.findOne(user.id) as any;
+
+    // Parse siteIds from the user record
+    const siteIds = this.parseSiteIds(user.siteIds);
+    const isSiteScoped = enrichedUser?.role?.isSiteScoped ?? false;
+
+    // Build JWT payload — include site context for server-side filtering
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      name: user.name,
+      roleId: user.roleId,
+      roleName: enrichedUser?.role?.name ?? null,
+      siteIds,          // which sites this user belongs to
+      isSiteScoped,     // whether their role restricts them to those sites
+    };
+
     const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
     const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
     await this.refreshTokenRepository.save({ token: refreshToken, userId: user.id, expiresAt });
-    const userWithRole = await this.usersService.findOne(user.id);
+
     return {
       accessToken,
       refreshToken,
@@ -43,7 +63,9 @@ export class AuthService {
         id: user.id,
         name: user.name,
         email: user.email,
-        role: userWithRole?.role?.name,
+        role: enrichedUser?.role?.name,
+        siteIds,
+        isSiteScoped,
       },
     };
   }
@@ -51,23 +73,39 @@ export class AuthService {
   async refreshToken(refreshTokenDto: RefreshTokenDto): Promise<RefreshTokenResponseDto> {
     try {
       const payload = this.jwtService.verify(refreshTokenDto.refreshToken);
+
       const tokenRecord = await this.refreshTokenRepository.findOne({
         where: { token: refreshTokenDto.refreshToken, userId: payload.sub },
       });
       if (!tokenRecord || tokenRecord.expiresAt < new Date()) {
         throw new UnauthorizedException('Invalid refresh token');
       }
-      const user = await this.usersService.findOne(payload.sub);
+
+      const user = await this.usersService.findOne(payload.sub) as any;
       if (!user) throw new UnauthorizedException('User not found');
-      const u = user as any;
-      const newPayload = { sub: u.id, email: u.email, name: u.name, roleId: u.roleId };
+
+      const siteIds = payload.siteIds ?? [];
+      const isSiteScoped = user.role?.isSiteScoped ?? payload.isSiteScoped ?? false;
+
+      const newPayload = {
+        sub: user.id,
+        email: user.email,
+        name: user.name,
+        roleId: user.roleId,
+        roleName: user.role?.name ?? null,
+        siteIds,
+        isSiteScoped,
+      };
+
       const accessToken = this.jwtService.sign(newPayload, { expiresIn: '15m' });
       const newRefreshToken = this.jwtService.sign(newPayload, { expiresIn: '7d' });
+
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 7);
       tokenRecord.token = newRefreshToken;
       tokenRecord.expiresAt = expiresAt;
       await this.refreshTokenRepository.save(tokenRecord);
+
       return { accessToken, refreshToken: newRefreshToken };
     } catch {
       throw new UnauthorizedException('Invalid refresh token');
@@ -93,5 +131,16 @@ export class AuthService {
     } catch {
       throw new UnauthorizedException('Invalid or expired reset token');
     }
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  private parseSiteIds(siteIds: number[] | string): number[] {
+    if (!siteIds) return [];
+    if (Array.isArray(siteIds)) return siteIds.map(Number).filter(n => !isNaN(n));
+    if (typeof siteIds === 'string' && siteIds.trim()) {
+      return siteIds.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id));
+    }
+    return [];
   }
 }

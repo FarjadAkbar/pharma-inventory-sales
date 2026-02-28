@@ -36,4 +36,22 @@ export class UsersController {
   delete(@Payload() id: number) {
     return this.usersService.delete(id);
   }
+
+  /**
+   * Returns users belonging to a single site.
+   * Used by Site Managers who can only see their own site's employees.
+   */
+  @MessagePattern(USER_PATTERNS.FIND_BY_SITE)
+  findBySite(@Payload() siteId: number) {
+    return this.usersService.findBySiteId(siteId);
+  }
+
+  /**
+   * Returns users belonging to ANY of the given sites.
+   * Useful when a manager oversees multiple sites simultaneously.
+   */
+  @MessagePattern(USER_PATTERNS.FIND_BY_SITE_IDS)
+  findBySiteIds(@Payload() siteIds: number[]) {
+    return this.usersService.findBySiteIds(siteIds);
+  }
 }
