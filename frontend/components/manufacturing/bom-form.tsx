@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Form, FormField, FormInput, FormSelect, FormCheckbox, FormActions } from "@/components/ui/form"
+import { Form, FormField, FormInput, FormTextarea, FormSelect, FormCheckbox, FormActions } from "@/components/ui/form"
 import { useFormState } from "@/lib/api-response"
 import { useFormValidation, commonValidationRules } from "@/lib/form-validation"
 import type { BOM } from "@/types/manufacturing"
@@ -168,10 +168,10 @@ export function BOMForm({
             <FormSelect
               name="drugId"
               label="Drug"
-              value={formState.data.drugId}
-              onChange={(e) => {
-                const drug = drugs.find(d => d.value === e.target.value)
-                formState.updateField('drugId', e.target.value)
+              value={formState.data.drugId != null ? String(formState.data.drugId) : ""}
+              onChange={(value) => {
+                const drug = drugs.find(d => d.value === value)
+                formState.updateField('drugId', value)
                 formState.updateField('drugName', drug?.label.split(' - ')[0] || '')
                 formState.updateField('drugCode', drug?.label.split(' - ')[1] || '')
               }}
@@ -225,7 +225,7 @@ export function BOMForm({
               name="status"
               label="Status"
               value={formState.data.status}
-              onChange={(e) => formState.updateField('status', e.target.value)}
+              onChange={(value) => formState.updateField('status', value)}
               options={[
                 { value: "Draft", label: "Draft" },
                 { value: "Under Review", label: "Under Review" },
@@ -237,13 +237,12 @@ export function BOMForm({
             />
           </div>
 
-          <FormInput
+          <FormTextarea
             name="notes"
             label="Notes"
             value={formState.data.notes}
             onChange={(e) => formState.updateField('notes', e.target.value)}
             placeholder="Additional notes or special instructions"
-            multiline
             rows={3}
           />
 
@@ -276,9 +275,9 @@ export function BOMForm({
                     name={`materialId_${index}`}
                     label="Material"
                     value={item.materialId}
-                    onChange={(e) => {
-                      const material = materials.find(m => m.value === e.target.value)
-                      updateItem(index, 'materialId', e.target.value)
+                    onChange={(value) => {
+                      const material = materials.find(m => m.value === value)
+                      updateItem(index, 'materialId', value)
                       updateItem(index, 'materialName', material?.label.split(' - ')[0] || '')
                       updateItem(index, 'materialCode', material?.label.split(' - ')[1] || '')
                     }}
@@ -301,7 +300,7 @@ export function BOMForm({
                     name={`unit_${index}`}
                     label="Unit of Measure"
                     value={item.unit}
-                    onChange={(e) => updateItem(index, 'unit', e.target.value)}
+                    onChange={(value) => updateItem(index, 'unit', value)}
                     options={units}
                     placeholder="Select unit"
                   />

@@ -38,7 +38,7 @@ export function LoginForm() {
   const onSubmit = async (data: LoginFormData) => {
     setSubmitError("")
     try {
-      await login(data)
+      await login(data.email, data.password)
       router.push("/dashboard")
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Login failed")

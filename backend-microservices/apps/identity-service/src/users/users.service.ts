@@ -99,6 +99,15 @@ export class UsersService {
     return [];
   }
 
+  private parsePermissionIdsFromRole(permissionIds: number[] | string | null | undefined): number[] {
+    if (permissionIds == null) return [];
+    if (Array.isArray(permissionIds)) return permissionIds.map(Number).filter(n => !isNaN(n));
+    if (typeof permissionIds === 'string' && permissionIds.trim()) {
+      return permissionIds.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id));
+    }
+    return [];
+  }
+
   private async enrichUserWithRoleAndSites(user: User): Promise<UserResponseDto> {
     const { password, ...result } = user;
     const siteIds = this.parseSiteIds(user.siteIds);
@@ -108,18 +117,20 @@ export class UsersService {
     if (user.roleId) {
       const roleEntity = await this.rolesRepository.findOne({ where: { id: user.roleId } });
       if (roleEntity) {
-        const permIds =
-          typeof roleEntity.permissionIds === 'string' && roleEntity.permissionIds.trim()
-            ? roleEntity.permissionIds.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id))
+        const permIds = this.parsePermissionIdsFromRole(roleEntity.permissionIds);
+        const permissionIdList = permIds.length > 0
+          ? permIds
+          : roleEntity.name === 'system_admin'
+            ? (await this.permissionsRepository.find({ select: ['id'], order: { id: 'ASC' } })).map((p) => p.id)
             : [];
-        const permissions = permIds.length
-          ? await this.permissionsRepository.find({ where: { id: In(permIds) } })
+        const permissions = permissionIdList.length
+          ? await this.permissionsRepository.find({ where: { id: In(permissionIdList) } })
           : [];
         role = {
           id: roleEntity.id,
           name: roleEntity.name,
-          isSiteScoped: roleEntity.isSiteScoped,   // ← expose site-scoped flag
-          permissions: permissions.map(p => ({ id: p.id, name: p.name })),
+          isSiteScoped: roleEntity.isSiteScoped,
+          permissions: permissions.map((p) => ({ id: p.id, name: p.name })),
         };
       }
     }

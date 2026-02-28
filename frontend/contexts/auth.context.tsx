@@ -12,6 +12,8 @@ import { authService } from "@/services/auth.service"
 interface AuthContextType {
   user:        User | null
   loading:     boolean
+  /** True when the user is logged in (token valid and user loaded). */
+  isAuthenticated: boolean
   permissions: Record<string, any> | null
 
   // ── Site context ──────────────────────────────────────────────────────────
@@ -174,6 +176,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         loading,
+        isAuthenticated: !!user,
         permissions,
         userSiteIds,
         isSiteScoped,

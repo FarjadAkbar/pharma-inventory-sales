@@ -11,7 +11,18 @@ export async function seedIdentity(ds: DataSource) {
 
   const permCount = await permRepo.count();
   if (permCount > 0) {
-    console.log('  Identity: already has data, skip.');
+    console.log('  Identity: already has data, ensuring system_admin role has permissions.');
+    const permissions = await permRepo.find({ order: { id: 'ASC' } });
+    const ids = permissions.slice(0, 9).map((p) => p.id).join(',');
+    const result = await roleRepo.update(
+      { name: 'system_admin' },
+      { permissionIds: ids },
+    );
+    if (result.affected !== undefined && result.affected > 0) {
+      console.log('  Identity: system_admin role permissionIds updated.');
+    } else {
+      console.log('  Identity: system_admin role not found or already up to date.');
+    }
     return;
   }
 

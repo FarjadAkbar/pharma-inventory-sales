@@ -7,7 +7,14 @@ import { SupplierInvoicesController } from './supplier-invoices.controller';
 @Module({
   imports: [
     ClientsModule.register([
-      { name: 'PROCUREMENT_SERVICE', transport: Transport.TCP, options: { host: process.env.PROCUREMENT_SERVICE_HOST, port: parseInt(process.env.PROCUREMENT_SERVICE_PORT) } },
+      {
+        name: 'PROCUREMENT_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: process.env.PROCUREMENT_SERVICE_HOST || 'localhost',
+          port: parseInt(process.env.PROCUREMENT_SERVICE_PORT || '3004'),
+        },
+      },
     ]),
   ],
   controllers: [

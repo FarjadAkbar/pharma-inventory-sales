@@ -1,12 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { RpcConnectionExceptionFilter } from './common/filters/rpc-connection.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
   app.useGlobalPipes(new ValidationPipe());
-  // app.useGlobalFilters(new GlobalHttpExceptionFilter());
+  app.useGlobalFilters(new RpcConnectionExceptionFilter());
   // app.useGlobalInterceptors(new LoggingInterceptor(), new ResponseInterceptor());
   
   // Enable API versioning with /v1 prefix

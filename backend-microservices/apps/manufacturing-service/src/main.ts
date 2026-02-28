@@ -7,7 +7,7 @@ async function bootstrap() {
     transport: Transport.TCP,
     options: {
       host: process.env.MANUFACTURING_SERVICE_HOST,
-      port: parseInt(process.env.MANUFACTURING_SERVICE_PORT || '3013'),
+      port: parseInt(process.env.MANUFACTURING_SERVICE_PORT || '3006'),
     },
   });
 

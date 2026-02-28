@@ -7,6 +7,8 @@ import {
   Batch,
   BatchStep,
   MaterialConsumption,
+  BOM,
+  BOMItem,
 } from '../entities';
 import * as dotenv from 'dotenv';
 
@@ -34,7 +36,9 @@ function getTypeOrmOptions(configService?: ConfigService): DataSourceOptions {
         WorkOrder,
         Batch,
         BatchStep,
-        MaterialConsumption
+        MaterialConsumption,
+        BOM,
+        BOMItem,
     ],
     migrations: isRuntime ? [] : ['src/migrations/*.ts'],
     synchronize: false,

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, type FormEvent } from "react"
 import { Form, FormInput, FormTextarea, FormSelect, FormActions } from "@/components/ui/form"
 import { useFormState } from "@/lib/api-response"
 import { useFormValidation, commonValidationRules } from "@/lib/form-validation"
@@ -78,16 +78,18 @@ export function RawMaterialForm({ initialData, onSubmit, submitLabel = "Save" }:
   const handleSubmit = async (data: typeof initialFormData) => {
     formState.setLoading(true)
     formState.clearErrors()
-    
+
     try {
       const errors = validation.validateForm(data)
       if (validation.hasErrors()) {
         formState.setErrors(errors)
+        formState.setLoading(false)
         return
       }
 
       if (!data.supplierId) {
         formState.setError("Supplier is required")
+        formState.setLoading(false)
         return
       }
 
@@ -111,9 +113,15 @@ export function RawMaterialForm({ initialData, onSubmit, submitLabel = "Save" }:
     }
   }
 
+  // Form passes submit event; we use controlled form state for validation and submit
+  const onFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    await handleSubmit(formState.data)
+  }
+
   return (
     <Form 
-      onSubmit={handleSubmit} 
+      onSubmit={onFormSubmit} 
       loading={formState.isLoading}
       error={formState.error || undefined}
       success={formState.success || undefined}

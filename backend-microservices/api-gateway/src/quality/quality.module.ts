@@ -9,7 +9,14 @@ import { QADeviationsController } from './qa-deviations.controller';
 @Module({
   imports: [
     ClientsModule.register([
-      { name: 'QUALITY_SERVICE', transport: Transport.TCP, options: { host: process.env.QUALITY_SERVICE_HOST, port: parseInt(process.env.QUALITY_SERVICE_PORT) } },
+      {
+        name: 'QUALITY_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: process.env.QUALITY_SERVICE_HOST || 'localhost',
+          port: parseInt(process.env.QUALITY_SERVICE_PORT || '3003'),
+        },
+      },
     ]),
   ],
   controllers: [

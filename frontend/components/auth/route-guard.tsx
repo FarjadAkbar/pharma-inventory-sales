@@ -5,43 +5,32 @@ import type React from "react"
 import { useEffect } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { useAuth } from "@/contexts/auth.context"
+import { authService } from "@/services/auth.service"
 
 interface RouteGuardProps {
   children: React.ReactNode
 }
 
 export function RouteGuard({ children }: RouteGuardProps) {
-  const { isAuthenticated, loading, user } = useAuth()
+  const { isAuthenticated, loading } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
-
-  console.log("RouteGuard: pathname:", pathname, "isAuthenticated:", isAuthenticated, "loading:", loading, "user:", !!user)
+  // Treat as authenticated if context says so OR we have a valid token (avoids redirect race right after login)
+  const authenticated = isAuthenticated || authService.isAuthenticated()
 
   useEffect(() => {
-    console.log("RouteGuard useEffect: pathname:", pathname, "isAuthenticated:", isAuthenticated, "loading:", loading)
-    
-    if (loading) {
-      console.log("RouteGuard: Still loading, waiting...")
-      return
-    }
+    if (loading) return
 
-    // Redirect to login if not authenticated
-    if (!isAuthenticated) {
-      console.log("RouteGuard: Not authenticated, redirecting to login")
+    if (!authenticated) {
       router.push("/auth/login")
       return
     }
 
-    // For now, allow access to dashboard and other routes if authenticated
-    // In the future, you can add more granular permission checks here
-    if (pathname === "/auth/login" && isAuthenticated) {
-      console.log("RouteGuard: Already authenticated, redirecting to dashboard")
+    if (pathname === "/auth/login" && authenticated) {
       router.push("/dashboard")
       return
     }
-
-    console.log("RouteGuard: Authentication check passed, rendering children")
-  }, [isAuthenticated, loading, pathname, router])
+  }, [authenticated, loading, pathname, router])
 
   // Show loading while checking authentication
   if (loading) {
@@ -55,10 +44,7 @@ export function RouteGuard({ children }: RouteGuardProps) {
     )
   }
 
-  // Don't render if not authenticated
-  if (!isAuthenticated) {
-    return null
-  }
+  if (!authenticated) return null
 
   return <>{children}</>
 }

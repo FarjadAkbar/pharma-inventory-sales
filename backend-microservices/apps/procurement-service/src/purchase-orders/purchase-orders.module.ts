@@ -14,24 +14,24 @@ import { PurchaseOrderItem } from '../entities/purchase-order-item.entity';
         name: 'SITE_SERVICE',
         transport: Transport.TCP,
         options: {
-          host: process.env.MASTER_DATA_SERVICE_HOST,
-          port: parseInt(process.env.MASTER_DATA_SERVICE_PORT || '3020'),
+          host: process.env.MASTER_DATA_SERVICE_HOST || 'localhost',
+          port: parseInt(process.env.MASTER_DATA_SERVICE_PORT || '3002', 10) || 3002,
         },
       },
       {
         name: 'RAW_MATERIAL_SERVICE',
         transport: Transport.TCP,
         options: {
-          host: process.env.MASTER_DATA_SERVICE_HOST,
-          port: parseInt(process.env.MASTER_DATA_SERVICE_PORT || '3020'),
+          host: process.env.MASTER_DATA_SERVICE_HOST || 'localhost',
+          port: parseInt(process.env.MASTER_DATA_SERVICE_PORT || '3002', 10) || 3002,
         },
       },
       {
         name: 'SUPPLIER_SERVICE',
         transport: Transport.TCP,
         options: {
-          host: process.env.MASTER_DATA_SERVICE_HOST,
-          port: parseInt(process.env.MASTER_DATA_SERVICE_PORT || '3020'),
+          host: process.env.MASTER_DATA_SERVICE_HOST || 'localhost',
+          port: parseInt(process.env.MASTER_DATA_SERVICE_PORT || '3002', 10) || 3002,
         },
       },
     ]),
