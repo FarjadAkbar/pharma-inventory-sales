@@ -21,6 +21,7 @@ import {
   BarChart3
 } from "lucide-react"
 import { warehouseApi } from "@/services"
+import { CycleCountForm } from "@/components/warehouse/cycle-count-form"
 import type { CycleCount } from "@/types/warehouse"
 import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -298,10 +299,15 @@ export default function CycleCountsPage() {
             <h1 className="text-3xl font-bold">Cycle Counts</h1>
             <p className="text-muted-foreground">Manage inventory cycle counting operations</p>
           </div>
-          <Button onClick={() => router.push("/dashboard/warehouse/cycle-counts/new")}>
-            <Plus  />
-            New Cycle Count
-          </Button>
+          <CycleCountForm
+            trigger={
+              <Button>
+                <Plus />
+                New Cycle Count
+              </Button>
+            }
+            onSuccess={fetchCycleCounts}
+          />
         </div>
 
         {/* Stats Cards */}

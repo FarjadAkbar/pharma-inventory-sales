@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Form, FormInput, FormSelect, FormTextarea, FormActions } from "@/components/ui/form"
 import { useFormState } from "@/lib/api-response"
 import { useFormValidation } from "@/lib/form-validation"
-import { warehouseApi, rawMaterialsApi } from "@/services"
+import { warehouseApi, rawMaterialsApi, manufacturingApi } from "@/services"
 import { MEASUREMENT_UNITS } from "@/lib/constants/units"
 
 interface MaterialIssueFormProps {
@@ -43,6 +43,8 @@ export function MaterialIssueForm({
   const [inventoryItems, setInventoryItems] = useState<Array<{ id: number; itemCode: string; materialName: string; materialCode: string; batchNumber: string; quantity: number; unit: string; locationId?: string }>>([])
   const [rawMaterials, setRawMaterials] = useState<Array<{ id: number; name: string; code: string }>>([])
   const [storageLocations, setStorageLocations] = useState<Array<{ id: number; locationCode: string; name: string }>>([])
+  const [workOrders, setWorkOrders] = useState<Array<{ id: number; workOrderNumber?: string; orderNumber?: string }>>([])
+  const [batches, setBatches] = useState<Array<{ id: number; batchNumber?: string }>>([])
 
   useEffect(() => {
     fetchData()
@@ -50,10 +52,12 @@ export function MaterialIssueForm({
 
   const fetchData = async () => {
     try {
-      const [inventoryResponse, rawMaterialsResponse, locationsResponse] = await Promise.all([
+      const [inventoryResponse, rawMaterialsResponse, locationsResponse, workOrdersResponse, batchesResponse] = await Promise.all([
         warehouseApi.getInventoryItems({ status: "Available" }),
         rawMaterialsApi.getRawMaterials(),
         warehouseApi.getStorageLocations({ status: "Available" }),
+        manufacturingApi.getWorkOrders({ limit: 100 }).catch(() => []),
+        manufacturingApi.getBatches({ limit: 100 }).catch(() => []),
       ])
 
       if (Array.isArray(inventoryResponse)) {
@@ -84,6 +88,10 @@ export function MaterialIssueForm({
           name: loc.name,
         })))
       }
+      const woList = Array.isArray(workOrdersResponse) ? workOrdersResponse : (workOrdersResponse as any)?.data || []
+      setWorkOrders(woList.map((wo: any) => ({ id: wo.id, workOrderNumber: wo.workOrderNumber || wo.orderNumber, orderNumber: wo.orderNumber })))
+      const batchList = Array.isArray(batchesResponse) ? batchesResponse : (batchesResponse as any)?.data || []
+      setBatches(batchList.map((b: any) => ({ id: b.id, batchNumber: b.batchNumber || b.batchNumber })))
     } catch (error) {
       console.error("Failed to fetch data:", error)
     }
@@ -284,28 +292,56 @@ export function MaterialIssueForm({
               placeholder="Select source location"
             />
 
-            <FormInput
+            <FormSelect
               name="workOrderId"
-              label="Work Order ID"
+              label="Work Order"
               value={formState.data.workOrderId}
-              onChange={(e) => formState.updateField('workOrderId', e.target.value)}
-              placeholder="Enter work order ID"
+              onChange={(value) => {
+                formState.updateField('workOrderId', value)
+                if (value) {
+                  formState.updateField('referenceType', 'WorkOrder')
+                  formState.updateField('referenceId', value)
+                } else {
+                  formState.updateField('referenceId', '')
+                }
+              }}
+              options={[
+                { value: "", label: "None (optional)" },
+                ...workOrders.map((wo) => ({
+                  value: String(wo.id),
+                  label: wo.workOrderNumber || wo.orderNumber || `Work Order #${wo.id}`,
+                })),
+              ]}
+              placeholder="Select work order (optional)"
             />
 
-            <FormInput
+            <FormSelect
               name="batchId"
-              label="Batch ID"
+              label="Batch"
               value={formState.data.batchId}
-              onChange={(e) => formState.updateField('batchId', e.target.value)}
-              placeholder="Enter batch ID"
+              onChange={(value) => formState.updateField('batchId', value)}
+              options={[
+                { value: "", label: "None (optional)" },
+                ...batches.map((b) => ({
+                  value: String(b.id),
+                  label: b.batchNumber || `Batch #${b.id}`,
+                })),
+              ]}
+              placeholder="Select batch (optional)"
             />
 
-            <FormInput
+            <FormSelect
               name="referenceType"
               label="Reference Type"
               value={formState.data.referenceType}
-              onChange={(e) => formState.updateField('referenceType', e.target.value)}
-              placeholder="e.g., Production Order"
+              onChange={(value) => formState.updateField('referenceType', value)}
+              options={[
+                { value: "", label: "None" },
+                { value: "WorkOrder", label: "Work Order" },
+                { value: "ProductionOrder", label: "Production Order" },
+                { value: "Other", label: "Other" },
+              ]}
+              placeholder="Optional"
             />
 
             <FormInput
@@ -313,7 +349,7 @@ export function MaterialIssueForm({
               label="Reference ID"
               value={formState.data.referenceId}
               onChange={(e) => formState.updateField('referenceId', e.target.value)}
-              placeholder="Enter reference ID"
+              placeholder="Auto-filled when Work Order selected, or enter manually"
             />
           </div>
 

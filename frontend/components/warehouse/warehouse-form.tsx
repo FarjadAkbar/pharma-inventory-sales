@@ -6,7 +6,7 @@ import { Form, FormInput, FormSelect, FormTextarea, FormActions } from "@/compon
 import { useFormState } from "@/lib/api-response"
 import { useFormValidation } from "@/lib/form-validation"
 import type { Warehouse } from "@/types/warehouse"
-import { sitesApi, type Site } from "@/services"
+import { sitesApi, usersApi, type Site } from "@/services"
 
 interface WarehouseFormProps {
   initialData?: Partial<Warehouse>
@@ -22,10 +22,22 @@ export function WarehouseForm({
   submitLabel = "Save" 
 }: WarehouseFormProps) {
   const [sites, setSites] = useState<Array<{ id: number; name: string }>>([])
+  const [users, setUsers] = useState<Array<{ id: number; name: string }>>([])
 
   useEffect(() => {
     fetchSites()
+    fetchUsers()
   }, [])
+
+  const fetchUsers = async () => {
+    try {
+      const res = await usersApi.getUsers({ limit: 200 })
+      const list = res?.users || []
+      setUsers(list.map((u: any) => ({ id: u.id, name: u.fullname || u.name || u.email || `User ${u.id}` })))
+    } catch (e) {
+      console.error("Failed to fetch users:", e)
+    }
+  }
 
   const fetchSites = async () => {
     try {
@@ -97,7 +109,7 @@ export function WarehouseForm({
         maxTemperature: formState.data.maxTemperature ? parseFloat(formState.data.maxTemperature) : undefined,
         minHumidity: formState.data.minHumidity ? parseFloat(formState.data.minHumidity) : undefined,
         maxHumidity: formState.data.maxHumidity ? parseFloat(formState.data.maxHumidity) : undefined,
-        managerId: formState.data.managerId ? parseInt(formState.data.managerId) : undefined,
+        managerId: formState.data.managerId ? parseInt(formState.data.managerId, 10) : undefined,
         remarks: formState.data.remarks || undefined,
       }
 
@@ -183,13 +195,16 @@ export function WarehouseForm({
               placeholder="Select site (optional)"
             />
 
-            <FormInput
+            <FormSelect
               name="managerId"
-              label="Manager ID"
+              label="Manager"
               value={formState.data.managerId}
-              onChange={(e) => formState.updateField('managerId', e.target.value)}
-              type="number"
-              placeholder="Enter manager ID"
+              onChange={(value) => formState.updateField('managerId', value)}
+              options={[
+                { value: "", label: "None (optional)" },
+                ...users.map((u) => ({ value: String(u.id), label: u.name })),
+              ]}
+              placeholder="Select warehouse manager"
             />
 
             <FormInput

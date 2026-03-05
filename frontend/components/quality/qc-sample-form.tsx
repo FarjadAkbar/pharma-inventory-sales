@@ -9,7 +9,7 @@ import type { QCSample } from "@/types/quality-control"
 import { Button } from "@/components/ui/button"
 import { Plus, Trash2, Package, TestTube } from "lucide-react"
 import { goodsReceiptsApiService, type GoodsReceipt, type GoodsReceiptItem } from "@/services/goods-receipts-api.service"
-import { qualityControlApi } from "@/services"
+import { qualityControlApi, usersApi } from "@/services"
 import { rawMaterialsApiService, type RawMaterial } from "@/services/raw-materials-api.service"
 import { purchaseOrdersApiService, type PurchaseOrder, type PurchaseOrderItem } from "@/services/purchase-orders-api.service"
 import { MEASUREMENT_UNITS } from "@/lib/constants/units"
@@ -32,6 +32,7 @@ export function QCSampleForm({
   const [selectedItem, setSelectedItem] = useState<GoodsReceiptItem | null>(null)
   const [qcTests, setQCTests] = useState<any[]>([])
   const [selectedTests, setSelectedTests] = useState<number[]>([])
+  const [users, setUsers] = useState<Array<{ id: number; name: string; email: string }>>([])
 
   const initialFormData = {
     sourceType: initialData?.sourceType || "GRN",
@@ -47,6 +48,7 @@ export function QCSampleForm({
     priority: initialData?.priority || "Normal",
     dueDate: initialData?.dueDate || "",
     remarks: initialData?.remarks || "",
+    assignedTo: (initialData as any)?.assignedTo?.toString() || "",
   }
 
   const formState = useFormState(initialFormData)
@@ -92,7 +94,18 @@ export function QCSampleForm({
   useEffect(() => {
     fetchGoodsReceipts()
     fetchQCTests()
+    fetchUsers()
   }, [])
+
+  const fetchUsers = async () => {
+    try {
+      const res = await usersApi.getUsers({ limit: 200 })
+      const list = res?.users || []
+      setUsers(list.map((u: any) => ({ id: u.id, name: u.fullname || u.name || u.email || `User ${u.id}`, email: u.email || "" })))
+    } catch (e) {
+      console.error("Failed to fetch users:", e)
+    }
+  }
 
   useEffect(() => {
     if (initialData?.sourceId) {
@@ -229,7 +242,8 @@ export function QCSampleForm({
         return
       }
 
-      const sampleData = {
+      const assignedToNum = formState.data.assignedTo ? parseInt(formState.data.assignedTo, 10) : undefined
+      const sampleData: any = {
         sourceType: formState.data.sourceType === "GRN" ? "GoodsReceipt" : formState.data.sourceType,
         sourceId: parseInt(formState.data.sourceId),
         sourceReference: formState.data.sourceReference,
@@ -243,7 +257,11 @@ export function QCSampleForm({
         priority: formState.data.priority,
         dueDate: formState.data.dueDate || undefined,
         remarks: formState.data.remarks || undefined,
-        requestedBy: 1, // Mock user ID - should come from auth context
+        requestedBy: 1,
+        assignedTo: Number.isNaN(assignedToNum) ? undefined : assignedToNum,
+      }
+      if (selectedTests.length > 0) {
+        sampleData.testIds = selectedTests
       }
 
       await onSubmit(sampleData)
@@ -419,6 +437,18 @@ export function QCSampleForm({
                   onChange={(value) => formState.updateField('priority', value)}
                   options={priorities}
                   placeholder="Select priority"
+                />
+
+                <FormSelect
+                  name="assignedTo"
+                  label="Assign to User"
+                  value={formState.data.assignedTo}
+                  onChange={(value) => formState.updateField('assignedTo', value)}
+                  options={[
+                    { value: "", label: "Unassigned" },
+                    ...users.map((u) => ({ value: String(u.id), label: u.name || u.email })),
+                  ]}
+                  placeholder="Select analyst (optional)"
                 />
 
                 <FormInput

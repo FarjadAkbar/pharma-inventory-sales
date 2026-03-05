@@ -1,40 +1,33 @@
 "use client"
 
-import type React from "react"
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { DataTable } from "@/components/ui/data-table"
+import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { 
-  Plus, 
-  TestTube, 
-  Search, 
-  Filter,
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Plus,
+  TestTube,
   CheckCircle,
   Clock,
   XCircle,
   AlertTriangle,
   Eye,
   Edit,
-  Trash2,
   User,
+  Target,
   Calendar,
   Package,
   Beaker,
   Microscope,
   Activity,
-  Target,
-  FileText
 } from "lucide-react"
+import Link from "next/link"
 import { qualityControlApi } from "@/services"
 import type { QCSample, QCSampleFilters } from "@/types/quality-control"
 import { formatDateISO } from "@/lib/utils"
 import { toast } from "@/lib/toast"
-import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { useRouter } from "next/navigation"
 
 export default function QCSamplesPage() {
@@ -72,11 +65,8 @@ export default function QCSamplesPage() {
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
-  const handleFilterChange = (key: keyof QCSampleFilters, value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value
-    }))
+  const handleFiltersChange = (newFilters: Record<string, any>) => {
+    setFilters(newFilters as QCSampleFilters)
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
@@ -249,6 +239,63 @@ export default function QCSamplesPage() {
     },
   ]
 
+  const filterOptions = [
+    {
+      key: "sourceType",
+      label: "Source Type",
+      type: "select" as const,
+      options: [
+        { value: "GRN", label: "GRN" },
+        { value: "Batch", label: "Batch" },
+        { value: "Production", label: "Production" },
+        { value: "Stability", label: "Stability" },
+      ],
+    },
+    {
+      key: "status",
+      label: "Status",
+      type: "select" as const,
+      options: [
+        { value: "Pending", label: "Pending" },
+        { value: "Assigned", label: "Assigned" },
+        { value: "In Progress", label: "In Progress" },
+        { value: "Completed", label: "Completed" },
+        { value: "Failed", label: "Failed" },
+        { value: "Cancelled", label: "Cancelled" },
+      ],
+    },
+    {
+      key: "priority",
+      label: "Priority",
+      type: "select" as const,
+      options: [
+        { value: "Low", label: "Low" },
+        { value: "Normal", label: "Normal" },
+        { value: "High", label: "High" },
+        { value: "Urgent", label: "Urgent" },
+      ],
+    },
+  ]
+
+  const actions = (sample: QCSample) => (
+    <div className="flex items-center gap-2">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => router.push(`/dashboard/quality/samples/${sample.id}/results`)}
+      >
+        <Eye className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => router.push(`/dashboard/quality/samples/${sample.id}/edit`)}
+      >
+        <Edit className="h-4 w-4" />
+      </Button>
+    </div>
+  )
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -257,13 +304,14 @@ export default function QCSamplesPage() {
             <h1 className="text-3xl font-bold tracking-tight">QC Samples Queue</h1>
             <p className="text-muted-foreground">Manage quality control samples and testing workflow</p>
           </div>
-          <Button onClick={() => router.push("/dashboard/quality/samples/new")}>
-            <Plus  />
-            Add Sample
-          </Button>
+          <Link href="/dashboard/quality/samples/new">
+            <Button>
+              <Plus />
+              Add Sample
+            </Button>
+          </Link>
         </div>
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -274,7 +322,6 @@ export default function QCSamplesPage() {
               <div className="text-2xl font-bold">{stats.total}</div>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Pending</CardTitle>
@@ -284,7 +331,6 @@ export default function QCSamplesPage() {
               <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">In Progress</CardTitle>
@@ -294,7 +340,6 @@ export default function QCSamplesPage() {
               <div className="text-2xl font-bold text-blue-600">{stats.inProgress}</div>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Completed</CardTitle>
@@ -304,7 +349,6 @@ export default function QCSamplesPage() {
               <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Overdue</CardTitle>
@@ -316,146 +360,26 @@ export default function QCSamplesPage() {
           </Card>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Filters & Search
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Search</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by sample #, material, batch..."
-                    value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Source Type</label>
-                <Select value={filters.sourceType || ""} onValueChange={(value) => handleFilterChange("sourceType", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Sources" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="GRN">GRN</SelectItem>
-                    <SelectItem value="Batch">Batch</SelectItem>
-                    <SelectItem value="Production">Production</SelectItem>
-                    <SelectItem value="Stability">Stability</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status</label>
-                <Select value={filters.status || ""} onValueChange={(value) => handleFilterChange("status", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Pending">Pending</SelectItem>
-                    <SelectItem value="Assigned">Assigned</SelectItem>
-                    <SelectItem value="In Progress">In Progress</SelectItem>
-                    <SelectItem value="Completed">Completed</SelectItem>
-                    <SelectItem value="Failed">Failed</SelectItem>
-                    <SelectItem value="Cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Priority</label>
-                <Select value={filters.priority || ""} onValueChange={(value) => handleFilterChange("priority", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Priorities" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Low">Low</SelectItem>
-                    <SelectItem value="Normal">Normal</SelectItem>
-                    <SelectItem value="High">High</SelectItem>
-                    <SelectItem value="Urgent">Urgent</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Analyst</label>
-                <Select value={filters.assignedTo || ""} onValueChange={(value) => handleFilterChange("assignedTo", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Analysts" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="4">Dr. Fatima Khan</SelectItem>
-                    <SelectItem value="5">Ms. Ayesha Ahmed</SelectItem>
-                    <SelectItem value="6">Mr. Hassan Ali</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* QC Samples Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>QC Samples Queue</CardTitle>
-            <CardDescription>A comprehensive queue of quality control samples awaiting testing.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              data={qcSamples}
-              columns={columns}
-              loading={loading}
-              pagination={{
-                page: pagination.page,
-                pages: pagination.pages,
-                total: pagination.total,
-                onPageChange: handlePageChange
-              }}
-              actions={[
-                {
-                  label: "View Results",
-                  icon: <Eye className="h-4 w-4" />,
-                  onClick: (sample: QCSample) => router.push(`/dashboard/quality/samples/${sample.id}/results`),
-                  variant: "ghost" as const
-                },
-                {
-                  label: "Edit",
-                  icon: <Edit className="h-4 w-4" />,
-                  onClick: (sample: QCSample) => router.push(`/dashboard/quality/samples/${sample.id}/edit`),
-                  variant: "ghost" as const
-                },
-                {
-                  label: "Assign Analyst",
-                  icon: <User className="h-4 w-4" />,
-                  onClick: (sample: QCSample) => {
-                    // TODO: Implement assign analyst
-                    console.log("Assign analyst to", sample.id)
-                  },
-                  variant: "ghost" as const,
-                  hidden: (sample: QCSample) => sample.status !== "Pending"
-                },
-                {
-                  label: "Delete",
-                  icon: <Trash2 className="h-4 w-4" />,
-                  onClick: (sample: QCSample) => {
-                    // TODO: Implement delete with confirmation
-                    console.log("Delete sample", sample.id)
-                  },
-                  variant: "ghost" as const
-                }
-              ]}
-            />
-          </CardContent>
-        </Card>
+        <UnifiedDataTable
+          data={qcSamples}
+          columns={columns}
+          loading={loading}
+          searchPlaceholder="Search by sample #, material, batch..."
+          searchValue={searchQuery}
+          onSearch={handleSearch}
+          filters={filterOptions}
+          onFiltersChange={handleFiltersChange}
+          pagination={{
+            page: pagination.page,
+            pages: pagination.pages,
+            total: pagination.total,
+            onPageChange: handlePageChange,
+          }}
+          actions={actions}
+          onRefresh={fetchQCSamples}
+          onExport={() => {}}
+          emptyMessage="No QC samples found. Add a sample to get started."
+        />
       </div>
     </DashboardLayout>
   )

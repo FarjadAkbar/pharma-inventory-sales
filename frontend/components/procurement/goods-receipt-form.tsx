@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Form, FormField, FormInput, FormSelect, FormCheckbox, FormActions, FormTextarea } from "@/components/ui/form"
+import { Form, FormInput, FormSelect, FormActions, FormTextarea } from "@/components/ui/form"
 import { useFormState } from "@/lib/api-response"
-import { useFormValidation, commonValidationRules } from "@/lib/form-validation"
-import { Button } from "@/components/ui/button"
-import { Plus, Trash2, Package } from "lucide-react"
-import { goodsReceiptsApi, purchaseOrdersApi, sitesApi, suppliersApi, type PurchaseOrder } from "@/services"
+import { useFormValidation } from "@/lib/form-validation"
+import { Package } from "lucide-react"
+import { purchaseOrdersApi, type PurchaseOrder } from "@/services"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
@@ -175,43 +174,55 @@ export function GoodsReceiptForm({
       const errors = validation.validateForm(formState.data)
       if (validation.hasErrors()) {
         formState.setErrors(errors)
+        formState.setLoading(false)
         return
       }
 
       if (items.length === 0) {
-        formState.setError("Please add at least one item")
+        formState.setError("Please select a purchase order with line items.")
+        formState.setLoading(false)
         return
       }
 
-      // Validate items
+      const receivedDate = formState.data.receivedDate || new Date().toISOString().split("T")[0]
+      const datePart = receivedDate.replace(/-/g, "")
+
       for (const item of items) {
         if (item.receivedQuantity <= 0) {
-          formState.setError(`Received quantity must be greater than 0 for item ${item.purchaseOrderItemId}`)
+          formState.setError(`Received quantity must be greater than 0 for "${item.materialName || "item"}".`)
+          formState.setLoading(false)
           return
         }
-        if (item.acceptedQuantity + item.rejectedQuantity !== item.receivedQuantity) {
-          formState.setError(`Accepted + Rejected must equal Received quantity for item ${item.purchaseOrderItemId}`)
+        if (item.receivedQuantity > (item.orderedQuantity ?? 0)) {
+          formState.setError(`Received (${item.receivedQuantity}) cannot exceed ordered (${item.orderedQuantity ?? 0}) for "${item.materialName || "item"}".`)
+          formState.setLoading(false)
           return
         }
-        if (item.receivedQuantity > (item.orderedQuantity || 0)) {
-          formState.setError(`Received quantity (${item.receivedQuantity}) cannot exceed ordered quantity (${item.orderedQuantity})`)
+        const accepted = item.receivedQuantity - (item.rejectedQuantity || 0)
+        if (accepted < 0) {
+          formState.setError(`Rejected quantity cannot exceed received for "${item.materialName || "item"}".`)
+          formState.setLoading(false)
           return
         }
       }
 
       await onSubmit({
-        purchaseOrderId: parseInt(formState.data.poId),
+        purchaseOrderId: parseInt(formState.data.poId, 10),
         receivedDate: formState.data.receivedDate,
         remarks: formState.data.remarks || undefined,
-        items: items.map(item => ({
-          purchaseOrderItemId: item.purchaseOrderItemId,
-          receivedQuantity: item.receivedQuantity,
-          acceptedQuantity: item.acceptedQuantity,
-          rejectedQuantity: item.rejectedQuantity,
-          batchNumber: item.batchNumber || undefined,
-          expiryDate: item.expiryDate || undefined,
-        })),
-        status: formState.data.status as 'Draft' | 'Verified' | 'Completed',
+        items: items.map((item, index) => {
+          const accepted = item.receivedQuantity - (item.rejectedQuantity || 0)
+          const autoBatch = item.batchNumber?.trim() || `GR-${datePart}-${String(index + 1).padStart(3, "0")}`
+          return {
+            purchaseOrderItemId: item.purchaseOrderItemId,
+            receivedQuantity: item.receivedQuantity,
+            acceptedQuantity: accepted,
+            rejectedQuantity: item.rejectedQuantity || 0,
+            batchNumber: autoBatch,
+            expiryDate: item.expiryDate || undefined,
+          }
+        }),
+        status: formState.data.status as "Draft" | "Verified" | "Completed",
       })
 
       formState.setSuccess("Goods receipt saved successfully")
@@ -222,24 +233,25 @@ export function GoodsReceiptForm({
     }
   }
 
-  const updateItem = (index: number, field: keyof GoodsReceiptItem, value: any) => {
+  const updateItem = (index: number, field: "receivedQuantity" | "rejectedQuantity", value: number) => {
     const updatedItems = [...items]
-    updatedItems[index] = { ...updatedItems[index], [field]: value }
-    
-    // Auto-calculate accepted quantity if received changes
-    if (field === 'receivedQuantity') {
-      const received = parseFloat(value) || 0
-      const rejected = updatedItems[index].rejectedQuantity || 0
-      updatedItems[index].acceptedQuantity = Math.max(0, received - rejected)
+    const item = { ...updatedItems[index] }
+    const num = typeof value === "number" ? value : parseFloat(String(value)) || 0
+
+    if (field === "receivedQuantity") {
+      const ordered = item.orderedQuantity ?? 0
+      const received = Math.min(Math.max(0, num), ordered)
+      item.receivedQuantity = received
+      const rejected = Math.min(item.rejectedQuantity || 0, received)
+      item.rejectedQuantity = rejected
+      item.acceptedQuantity = received - rejected
+    } else {
+      const received = item.receivedQuantity || 0
+      const rejected = Math.min(Math.max(0, num), received)
+      item.rejectedQuantity = rejected
+      item.acceptedQuantity = received - rejected
     }
-    
-    // Auto-calculate rejected quantity if received changes
-    if (field === 'rejectedQuantity') {
-      const received = updatedItems[index].receivedQuantity || 0
-      const rejected = parseFloat(value) || 0
-      updatedItems[index].acceptedQuantity = Math.max(0, received - rejected)
-    }
-    
+    updatedItems[index] = item
     setItems(updatedItems)
   }
 
@@ -312,73 +324,63 @@ export function GoodsReceiptForm({
               </div>
 
               {items.map((item, index) => (
-                <Card key={index} className="p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h4 className="font-medium">{item.materialName || `Item ${index + 1}`}</h4>
-                      {item.materialCode && (
-                        <p className="text-sm text-muted-foreground">Code: {item.materialCode}</p>
-                      )}
-                      <p className="text-xs text-muted-foreground">
-                        PO Item ID: {item.purchaseOrderItemId}
-                        {item.rawMaterialId ? ` • Material ID: ${item.rawMaterialId}` : ""}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Ordered: {item.orderedQuantity || 0} {item.unit || ""}
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        const updated = items.filter((_, i) => i !== index)
-                        setItems(updated)
-                      }}
-                      variant="destructive"
-                      size="sm"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                <Card key={`${item.purchaseOrderItemId}-${index}`} className="p-4">
+                  <div className="mb-4">
+                    <h4 className="font-medium">{item.materialName || `Item ${index + 1}`}</h4>
+                    {item.materialCode && (
+                      <p className="text-sm text-muted-foreground">Code: {item.materialCode}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      PO Item ID: {item.purchaseOrderItemId}
+                      {item.rawMaterialId ? ` • Material ID: ${item.rawMaterialId}` : ""}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Ordered: {item.orderedQuantity ?? 0} {item.unit || ""}
+                    </p>
                   </div>
 
-                  <div className="grid md:grid-cols-3 gap-4">
+                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="space-y-2">
                       <Label>Received Quantity *</Label>
                       <Input
                         type="number"
-                        min="0"
-                        max={item.orderedQuantity || 0}
+                        min={0}
+                        max={item.orderedQuantity ?? 0}
+                        step={1}
                         value={item.receivedQuantity}
-                        onChange={(e) => updateItem(index, 'receivedQuantity', parseFloat(e.target.value) || 0)}
+                        onChange={(e) => updateItem(index, "receivedQuantity", parseFloat(e.target.value) || 0)}
                         placeholder="0"
                         required
                       />
                       <p className="text-xs text-muted-foreground">
-                        Max: {item.orderedQuantity || 0}
+                        Max: {item.orderedQuantity ?? 0}
                       </p>
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Accepted Quantity *</Label>
+                      <Label>Rejected Quantity</Label>
                       <Input
                         type="number"
-                        min="0"
-                        value={item.acceptedQuantity}
-                        onChange={(e) => updateItem(index, 'acceptedQuantity', parseFloat(e.target.value) || 0)}
+                        min={0}
+                        max={item.receivedQuantity ?? 0}
+                        step={1}
+                        value={item.rejectedQuantity ?? 0}
+                        onChange={(e) => updateItem(index, "rejectedQuantity", parseFloat(e.target.value) || 0)}
                         placeholder="0"
-                        required
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Rejected Quantity *</Label>
+                      <Label>Accepted (auto)</Label>
                       <Input
-                        type="number"
-                        min="0"
-                        value={item.rejectedQuantity}
-                        onChange={(e) => updateItem(index, 'rejectedQuantity', parseFloat(e.target.value) || 0)}
-                        placeholder="0"
-                        required
+                        type="text"
+                        readOnly
+                        value={item.acceptedQuantity}
+                        className="bg-muted"
                       />
+                      <p className="text-xs text-muted-foreground">
+                        Received − Rejected
+                      </p>
                     </div>
 
                     <div className="space-y-2">
@@ -386,17 +388,25 @@ export function GoodsReceiptForm({
                       <Input
                         type="text"
                         value={item.batchNumber || ""}
-                        onChange={(e) => updateItem(index, 'batchNumber', e.target.value)}
-                        placeholder="Enter batch number"
+                        onChange={(e) => {
+                          const next = [...items]
+                          next[index] = { ...next[index], batchNumber: e.target.value }
+                          setItems(next)
+                        }}
+                        placeholder="Auto-generated if empty"
                       />
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-2 md:col-span-2">
                       <Label>Expiry Date</Label>
                       <Input
                         type="date"
-                        value={item.expiryDate ? new Date(item.expiryDate).toISOString().split('T')[0] : ""}
-                        onChange={(e) => updateItem(index, 'expiryDate', e.target.value || undefined)}
+                        value={item.expiryDate ? new Date(item.expiryDate).toISOString().split("T")[0] : ""}
+                        onChange={(e) => {
+                          const next = [...items]
+                          next[index] = { ...next[index], expiryDate: e.target.value || undefined }
+                          setItems(next)
+                        }}
                       />
                     </div>
                   </div>

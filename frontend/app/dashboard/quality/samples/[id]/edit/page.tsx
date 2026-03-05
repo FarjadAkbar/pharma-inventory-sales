@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Form, FormSelect, FormActions, FormTextarea } from "@/components/ui/form"
 import { useFormState } from "@/lib/api-response"
 import { useFormValidation } from "@/lib/form-validation"
-import { qualityControlApi } from "@/services"
+import { qualityControlApi, usersApi } from "@/services"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
@@ -18,6 +18,7 @@ export default function EditQCSamplePage() {
   const params = useParams()
   const [loading, setLoading] = useState(true)
   const [sample, setSample] = useState<QCSample | null>(null)
+  const [users, setUsers] = useState<Array<{ value: string; label: string }>>([])
 
   const initialFormData = {
     status: "",
@@ -40,6 +41,16 @@ export default function EditQCSamplePage() {
     }
   }, [params.id])
 
+  useEffect(() => {
+    usersApi.getUsers({ limit: 200 }).then((res) => {
+      const list = res?.users || []
+      setUsers([
+        { value: "", label: "Unassigned" },
+        ...list.map((u: any) => ({ value: String(u.id), label: u.fullname || u.name || u.email || `User ${u.id}` })),
+      ])
+    }).catch(() => {})
+  }, [])
+
   const fetchQCSample = async (id: string) => {
     try {
       setLoading(true)
@@ -47,7 +58,7 @@ export default function EditQCSamplePage() {
       setSample(response)
       formState.updateField('status', response.status || "")
       formState.updateField('priority', response.priority || "")
-      formState.updateField('assignedTo', response.assignedTo || "")
+      formState.updateField('assignedTo', response.assignedTo != null ? String(response.assignedTo) : "")
       formState.updateField('remarks', response.remarks || "")
     } catch (error) {
       console.error("Failed to fetch QC sample:", error)
@@ -68,10 +79,11 @@ export default function EditQCSamplePage() {
         return
       }
 
+      const assignedToNum = formState.data.assignedTo ? parseInt(formState.data.assignedTo, 10) : undefined
       await qualityControlApi.updateQCSample(params.id as string, {
         status: formState.data.status,
         priority: formState.data.priority || undefined,
-        assignedTo: formState.data.assignedTo || undefined,
+        assignedTo: Number.isNaN(assignedToNum) ? undefined : assignedToNum,
         remarks: formState.data.remarks || undefined,
       })
 
@@ -192,6 +204,15 @@ export default function EditQCSamplePage() {
                     { value: "Urgent", label: "Urgent" },
                   ]}
                   placeholder="Select priority"
+                />
+
+                <FormSelect
+                  name="assignedTo"
+                  label="Assign to User"
+                  value={formState.data.assignedTo}
+                  onChange={(value) => formState.updateField('assignedTo', value)}
+                  options={users}
+                  placeholder="Select analyst"
                 />
 
                 <div className="md:col-span-2">

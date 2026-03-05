@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { 
-  Plus, 
   Thermometer,
   CheckCircle,
   AlertTriangle,
@@ -216,15 +215,9 @@ export default function TemperatureLogsPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Temperature Logs</h1>
-            <p className="text-muted-foreground">Monitor temperature and humidity readings</p>
-          </div>
-          <Button onClick={() => router.push("/dashboard/warehouse/temperature/new")}>
-            <Plus  />
-            Log Temperature
-          </Button>
+        <div>
+          <h1 className="text-3xl font-bold">Temperature Logs</h1>
+          <p className="text-muted-foreground">Monitor temperature and humidity readings</p>
         </div>
 
         {/* Stats Cards */}

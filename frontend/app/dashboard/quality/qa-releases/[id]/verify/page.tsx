@@ -2,7 +2,8 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
+import Link from "next/link"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,40 +14,34 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { 
-  ArrowLeft, 
-  Save, 
+import {
+  ArrowLeft,
+  Save,
   CheckCircle,
   XCircle,
   AlertCircle,
   TestTube,
-  Beaker,
+  Eye,
   Microscope,
   Activity,
   Target,
-  FileText,
-  User,
   Calendar,
   Package,
   Shield,
   CheckSquare,
   AlertTriangle,
   Clock,
-  Pause
+  Pause,
 } from "lucide-react"
-import { apiService } from "@/services/api.service"
+import { qualityAssuranceApi } from "@/services"
 import type { QARelease, QADecision } from "@/types/quality-assurance"
 import { formatDateISO } from "@/lib/utils"
 
-interface VerificationPageProps {
-  params: {
-    id: string
-  }
-}
-
-export default function QAVerificationPage({ params }: VerificationPageProps) {
+export default function QAVerificationPage() {
   const router = useRouter()
+  const params = useParams()
+  const id = params?.id as string
+
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -61,22 +56,23 @@ export default function QAVerificationPage({ params }: VerificationPageProps) {
   const [checklistRemarks, setChecklistRemarks] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    fetchReleaseData()
-  }, [params.id])
+    if (id) fetchReleaseData()
+  }, [id])
 
   const fetchReleaseData = async () => {
+    if (!id) return
     try {
-      const response = await apiService.getQARelease(params.id)
-      if (response.success && response.data) {
-        setRelease(response.data)
-        setDecision(response.data.decision)
-        setDecisionReason(response.data.decisionReason || "")
-        setRemarks(response.data.remarks || "")
-        
-        // Initialize checklist items
+      const response = await qualityAssuranceApi.getQARelease(id)
+      const data = typeof response === "object" && response && "id" in response ? response : (response as any)?.data
+      if (data) {
+        setRelease(data as QARelease)
+        setDecision((data as QARelease).decision || "Pending")
+        setDecisionReason((data as QARelease).decisionReason || "")
+        setRemarks((data as QARelease).remarks || "")
+        const items = (data as QARelease).checklistItems || []
         const initialChecklist: Record<string, boolean> = {}
         const initialRemarks: Record<string, string> = {}
-        response.data.checklistItems.forEach(item => {
+        items.forEach((item: any) => {
           initialChecklist[item.id] = item.checked
           initialRemarks[item.id] = item.remarks || ""
         })
@@ -119,7 +115,8 @@ export default function QAVerificationPage({ params }: VerificationPageProps) {
     }
 
     // Check if all required checklist items are completed
-    const requiredItems = release.checklistItems.filter(item => item.isRequired)
+    const checklist = release.checklistItems || []
+    const requiredItems = checklist.filter((item: any) => item.isRequired)
     const incompleteRequired = requiredItems.filter(item => !checklistItems[item.id])
     
     if (incompleteRequired.length > 0) {
@@ -135,7 +132,7 @@ export default function QAVerificationPage({ params }: VerificationPageProps) {
         decisionReason: decisionReason.trim() || undefined,
         remarks: remarks.trim() || undefined,
         status: decision === "Release" ? "Approved" : decision === "Reject" ? "Rejected" : "On Hold",
-        checklistItems: release.checklistItems.map(item => ({
+        checklistItems: (release.checklistItems || []).map((item: any) => ({
           ...item,
           checked: checklistItems[item.id],
           remarks: checklistRemarks[item.id] || undefined,
@@ -150,7 +147,7 @@ export default function QAVerificationPage({ params }: VerificationPageProps) {
         completedAt: new Date().toISOString()
       }
 
-      await apiService.updateQARelease(updatedRelease)
+      await qualityAssuranceApi.updateQARelease(id, updatedRelease)
 
       setSuccess(true)
       setTimeout(() => {
@@ -229,9 +226,9 @@ export default function QAVerificationPage({ params }: VerificationPageProps) {
                 <p className="text-muted-foreground mb-4">
                   The QA verification has been completed and submitted successfully.
                 </p>
-                <Button onClick={() => router.push("/dashboard/quality/qa-releases")} className="bg-orange-600 hover:bg-orange-700">
-                  Back to Releases
-                </Button>
+                <Link href="/dashboard/quality/qa-releases">
+                  <Button className="bg-orange-600 hover:bg-orange-700">Back to Releases</Button>
+                </Link>
               </div>
             </CardContent>
           </Card>
@@ -248,9 +245,9 @@ export default function QAVerificationPage({ params }: VerificationPageProps) {
             <Shield className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2">Release Not Found</h2>
             <p className="text-muted-foreground mb-4">The requested release could not be found.</p>
-            <Button onClick={() => router.push("/dashboard/quality/qa-releases")} className="bg-orange-600 hover:bg-orange-700">
-              Back to Releases
-            </Button>
+            <Link href="/dashboard/quality/qa-releases">
+              <Button className="bg-orange-600 hover:bg-orange-700">Back to Releases</Button>
+            </Link>
           </div>
         </div>
       </DashboardLayout>
@@ -260,14 +257,18 @@ export default function QAVerificationPage({ params }: VerificationPageProps) {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => router.back()}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">QA Verification</h1>
-            <p className="text-muted-foreground">Verify and approve release {release.releaseNumber}</p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link href="/dashboard/quality/qa-releases">
+              <Button variant="outline" size="sm">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to QA Releases
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">QA Verification</h1>
+              <p className="text-muted-foreground">Verify and approve release {release.releaseNumber}</p>
+            </div>
           </div>
         </div>
 
@@ -331,7 +332,7 @@ export default function QAVerificationPage({ params }: VerificationPageProps) {
               <CardDescription>Review all QC test results and compliance status</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {release.qcResults.map((result) => (
+              {(release.qcResults || []).map((result: any) => (
                 <div key={result.id} className="border rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
@@ -381,7 +382,7 @@ export default function QAVerificationPage({ params }: VerificationPageProps) {
               <CardDescription>Complete all required checklist items for verification</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {release.checklistItems.map((item) => (
+              {(release.checklistItems || []).map((item: any) => (
                 <div key={item.id} className="border rounded-lg p-4">
                   <div className="flex items-start gap-3">
                     <Checkbox

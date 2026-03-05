@@ -26,6 +26,7 @@ import {
   Pause
 } from "lucide-react"
 import { warehouseApi } from "@/services"
+import { PutawayTaskForm } from "@/components/warehouse/putaway-task-form"
 import type { PutawayTask, PutawayFilters } from "@/types/warehouse"
 import { formatDateISO } from "@/lib/utils"
 import { toast } from "sonner"
@@ -259,10 +260,15 @@ export default function PutawayPage() {
             <h1 className="text-3xl font-bold tracking-tight">Putaway Management</h1>
             <p className="text-muted-foreground">Manage putaway tasks with location assignment and temperature compliance</p>
           </div>
-          <Button onClick={() => router.push("/dashboard/warehouse/putaway/new")}>
-            <Plus  />
-            New Putaway Task
-          </Button>
+          <PutawayTaskForm
+            trigger={
+              <Button>
+                <Plus />
+                New Putaway Task
+              </Button>
+            }
+            onSuccess={fetchPutawayTasks}
+          />
         </div>
 
         {/* Stats Cards */}
