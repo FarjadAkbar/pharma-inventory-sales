@@ -9,8 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, Plus, Trash2 } from "lucide-react"
-import { distributionApi } from "@/services/distribution-api.service"
+import { Plus, Trash2 } from "lucide-react"
+import { distributionApi } from "@/services"
 import { apiService } from "@/services/api.service"
 import { toast } from "sonner"
 import type { SalesOrder } from "@/types/distribution"
@@ -112,15 +112,9 @@ export default function NewShipmentPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={() => router.push("/dashboard/sales/shipments")}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Plan Shipment</h1>
-            <p className="text-muted-foreground">Create a new shipment from an approved sales order</p>
-          </div>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Plan Shipment</h1>
+          <p className="text-muted-foreground">Create a new shipment from an approved sales order</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">

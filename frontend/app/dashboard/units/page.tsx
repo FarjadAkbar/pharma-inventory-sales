@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus, Package, Scale, Ruler, Eye, Edit, Trash2, Calculator } from "lucide-react"
-import { apiService } from "@/services/api.service"
+import { masterDataApi } from "@/services"
 import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { PermissionGuard } from "@/components/auth/permission-guard"
@@ -47,18 +47,15 @@ export default function UnitsPage() {
   const fetchUnits = async () => {
     try {
       setLoading(true)
-      const response = await apiService.getUnits({
+      const response = await masterDataApi.getUnits({
         search: searchQuery,
         category: filters.category,
         page: pagination.page,
         limit: 10,
-      })
+      }) as { success?: boolean; data?: { units?: Unit[]; pagination?: { page: number; pages: number; total: number } } }
 
-      if (response.success && response.data) {
-        const unitData = response.data as {
-          units: Unit[]
-          pagination?: { page: number; pages: number; total: number }
-        }
+      if (response?.data) {
+        const unitData = response.data
         const list = unitData.units || []
         setUnits(list)
         setPagination(
@@ -100,7 +97,7 @@ export default function UnitsPage() {
     if (!unitToDelete) return
 
     try {
-      await apiService.deleteUnit(unitToDelete.id)
+      await masterDataApi.deleteUnit(unitToDelete.id)
       toast.success("Unit deleted successfully")
       fetchUnits()
       setDeleteDialogOpen(false)
@@ -112,7 +109,7 @@ export default function UnitsPage() {
 
   const handleToggleStatus = async (unit: Unit) => {
     try {
-      await apiService.updateUnit(unit.id, { isActive: !unit.isActive })
+      await masterDataApi.updateUnit({ id: parseInt(unit.id, 10), ...unit, isActive: !unit.isActive } as any)
       toast.success(unit.isActive ? "Unit deactivated" : "Unit activated")
       fetchUnits()
     } catch (error: any) {
@@ -170,11 +167,14 @@ export default function UnitsPage() {
       key: "category",
       header: "Category",
       sortable: true,
-      render: (unit: Unit) => (
-        <Badge className={getCategoryBadgeColor(unit.category)}>
-          {unit.category.charAt(0).toUpperCase() + unit.category.slice(1)}
-        </Badge>
-      ),
+      render: (unit: Unit) => {
+        const category = unit.category ?? ""
+        return (
+          <Badge className={getCategoryBadgeColor(category)}>
+            {category ? category.charAt(0).toUpperCase() + category.slice(1) : "—"}
+          </Badge>
+        )
+      },
     },
     {
       key: "conversion",
@@ -258,12 +258,12 @@ export default function UnitsPage() {
 
   const actions = (unit: Unit) => (
     <div className="flex items-center gap-2">
-      <PermissionGuard module="MASTER_DATA" screen="units" action="read">
+      <PermissionGuard module="MASTER_DATA" action="read">
         <Button variant="ghost" size="sm" onClick={() => handleEdit(unit)}>
           <Eye className="h-4 w-4" />
         </Button>
       </PermissionGuard>
-      <PermissionGuard module="MASTER_DATA" screen="units" action="update">
+      <PermissionGuard module="MASTER_DATA" action="update">
         <Button
           variant="ghost"
           size="sm"
@@ -296,7 +296,7 @@ export default function UnitsPage() {
               Manage units of measure and conversion factors
             </p>
           </div>
-          <PermissionGuard module="MASTER_DATA" screen="units" action="create">
+          <PermissionGuard module="MASTER_DATA" action="create">
             <Button onClick={() => router.push("/dashboard/units/new")}>
               <Plus />
               Add Unit

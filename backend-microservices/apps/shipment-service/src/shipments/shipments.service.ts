@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, FindOptionsWhere, In } from 'typeorm';
+import { Repository, FindOptionsWhere, In } from 'typeorm';
+import { QueryFailedError } from 'typeorm';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { Shipment } from '../entities/shipment.entity';
@@ -153,49 +154,50 @@ export class ShipmentsService {
     const page = params?.page || 1;
     const limit = params?.limit || 10;
     const skip = (page - 1) * limit;
+    const empty = { data: [], total: 0, page: 1, limit };
 
-    const where: FindOptionsWhere<Shipment> = {};
-    if (params?.salesOrderId) where.salesOrderId = params.salesOrderId;
-    if (params?.accountId) where.accountId = params.accountId;
-    if (params?.siteId) where.siteId = params.siteId;
-    if (params?.status) where.status = params.status;
+    try {
+      const where: FindOptionsWhere<Shipment> = {};
+      if (params?.salesOrderId) where.salesOrderId = params.salesOrderId;
+      if (params?.accountId) where.accountId = params.accountId;
+      if (params?.siteId) where.siteId = params.siteId;
+      if (params?.status) where.status = params.status;
 
-    const [shipments, total] = await this.shipmentsRepository.findAndCount({
-      where,
-      relations: ['items'],
-      skip,
-      take: limit,
-      order: { createdAt: 'DESC' },
-    });
+      if (params?.search) {
+        const searchTerm = `%${params.search}%`;
+        const searchResults = await this.shipmentsRepository
+          .createQueryBuilder('s')
+          .leftJoinAndSelect('s.items', 'items')
+          .where('s.shipmentNumber LIKE :search', { search: searchTerm })
+          .orWhere('s.salesOrderNumber LIKE :search', { search: searchTerm })
+          .orWhere('s.accountName LIKE :search', { search: searchTerm })
+          .orWhere('s.trackingNumber LIKE :search', { search: searchTerm })
+          .skip(skip)
+          .take(limit)
+          .orderBy('s.createdAt', 'DESC')
+          .getManyAndCount();
+        return {
+          data: searchResults[0].map(s => this.toResponseDto(s)),
+          total: searchResults[1],
+          page,
+          limit,
+        };
+      }
 
-    if (params?.search) {
-      const searchTerm = `%${params.search}%`;
-      const searchResults = await this.shipmentsRepository
-        .createQueryBuilder('s')
-        .leftJoinAndSelect('s.items', 'items')
-        .where('s.shipmentNumber LIKE :search', { search: searchTerm })
-        .orWhere('s.salesOrderNumber LIKE :search', { search: searchTerm })
-        .orWhere('s.accountName LIKE :search', { search: searchTerm })
-        .orWhere('s.trackingNumber LIKE :search', { search: searchTerm })
-        .skip(skip)
-        .take(limit)
-        .orderBy('s.createdAt', 'DESC')
-        .getManyAndCount();
-
-      return {
-        data: searchResults[0].map(s => this.toResponseDto(s)),
-        total: searchResults[1],
-        page,
-        limit,
-      };
+      const [shipments, total] = await this.shipmentsRepository.findAndCount({
+        where,
+        relations: ['items'],
+        skip,
+        take: limit,
+        order: { createdAt: 'DESC' },
+      });
+      return { data: shipments.map(s => this.toResponseDto(s)), total, page, limit };
+    } catch (err) {
+      if (err instanceof QueryFailedError && err.message?.includes('does not exist')) {
+        return { ...empty, limit };
+      }
+      throw err;
     }
-
-    return {
-      data: shipments.map(s => this.toResponseDto(s)),
-      total,
-      page,
-      limit,
-    };
   }
 
   async findOne(id: number): Promise<ShipmentResponseDto> {

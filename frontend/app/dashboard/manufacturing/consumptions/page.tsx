@@ -1,75 +1,77 @@
 "use client"
 
-import type React from "react"
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { DataTable } from "@/components/ui/data-table"
+import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Package, Factory, TrendingUp, AlertTriangle } from "lucide-react"
-import { apiService } from "@/services/api.service"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Plus, Package, Factory, TrendingUp, AlertTriangle, Eye, Edit, Trash2 } from "lucide-react"
+import { manufacturingApi } from "@/services"
 import { formatDateISO } from "@/lib/utils"
+import { toast } from "sonner"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { PermissionGuard } from "@/components/auth/permission-guard"
 
 interface BatchConsumption {
   id: string
   batchId: string
   batchNumber: string
-  drugId: string
-  drugName: string
+  drugId?: string
+  drugName?: string
   materialId: string
   materialName: string
   materialCode: string
   consumedQuantity: number
-  unitId: string
+  unitId?: string
   unitName: string
-  bomQuantity: number
-  variance: number
-  variancePercentage: number
+  bomQuantity?: number
+  variance?: number
+  variancePercentage?: number
   consumptionDate: string
-  consumedBy: string
+  consumedBy?: string
   consumedByName: string
-  location: string
+  location?: string
   lotNumber: string
   expiryDate: string
-  status: "consumed" | "returned" | "wasted" | "pending"
+  status: string
   remarks?: string
   createdAt: string
   updatedAt: string
 }
 
 export default function BatchConsumptionsPage() {
+  const router = useRouter()
   const [consumptions, setConsumptions] = useState<BatchConsumption[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
+  const [filters, setFilters] = useState<{ status?: string }>({})
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
-  const [statusFilter, setStatusFilter] = useState("all")
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState<BatchConsumption | null>(null)
 
   useEffect(() => {
     fetchConsumptions()
-  }, [searchQuery, pagination.page, statusFilter])
+  }, [searchQuery, filters, pagination.page])
 
   const fetchConsumptions = async () => {
     try {
       setLoading(true)
-      const response = await apiService.getBatchConsumptions({
-        search: searchQuery,
-        status: statusFilter !== "all" ? statusFilter : undefined,
+      const response = await manufacturingApi.getMaterialConsumptions({
+        status: filters.status,
         page: pagination.page,
         limit: 10,
-      })
+      }) as { success?: boolean; data?: BatchConsumption[] | { consumptions?: BatchConsumption[]; pagination?: { page: number; pages: number; total: number } } }
 
-      if (response.success && response.data) {
-        const consumptionData = response.data as {
-          consumptions: BatchConsumption[]
-          pagination: { page: number; pages: number; total: number }
-        }
-        setConsumptions(consumptionData.consumptions || [])
-        setPagination(consumptionData.pagination || { page: 1, pages: 1, total: 0 })
-      }
+      const raw = response?.data
+      const list = Array.isArray(raw) ? raw : (raw as any)?.consumptions ?? []
+      const pag = (raw as any)?.pagination ?? { page: 1, pages: 1, total: list?.length ?? 0 }
+      setConsumptions(Array.isArray(list) ? list : [])
+      setPagination({ page: pag.page ?? 1, pages: pag.pages ?? 1, total: pag.total ?? 0 })
     } catch (error) {
       console.error("Failed to fetch batch consumptions:", error)
+      toast.error("Failed to load consumptions")
     } finally {
       setLoading(false)
     }
@@ -80,71 +82,81 @@ export default function BatchConsumptionsPage() {
     setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
+  const handleFiltersChange = (newFilters: Record<string, string>) => {
+    setFilters(newFilters as { status?: string })
+    setPagination((prev) => ({ ...prev, page: 1 }))
+  }
+
   const handlePageChange = (page: number) => {
     setPagination((prev) => ({ ...prev, page }))
   }
 
-  const handleEdit = (consumption: BatchConsumption) => {
-    window.location.href = `/dashboard/manufacturing/consumptions/${consumption.id}/edit`
+  const handleView = (c: BatchConsumption) => {
+    router.push(`/dashboard/manufacturing/batches/${c.batchId}`)
   }
 
-  const handleDelete = async (consumption: BatchConsumption) => {
-    if (confirm(`Are you sure you want to delete consumption record for ${consumption.materialName}?`)) {
-      try {
-        await apiService.deleteBatchConsumption(consumption.id)
-        fetchConsumptions()
-      } catch (error) {
-        console.error("Failed to delete batch consumption:", error)
-      }
+  const handleDelete = (c: BatchConsumption) => {
+    setItemToDelete(c)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!itemToDelete) return
+    try {
+      await manufacturingApi.deleteMaterialConsumption(itemToDelete.id)
+      toast.success("Consumption record deleted")
+      fetchConsumptions()
+      setDeleteDialogOpen(false)
+      setItemToDelete(null)
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to delete")
     }
   }
 
   const getStatusBadgeColor = (status: string) => {
-    switch (status) {
-      case "consumed":
-        return "bg-green-100 text-green-800"
-      case "returned":
-        return "bg-blue-100 text-blue-800"
-      case "wasted":
-        return "bg-red-100 text-red-800"
-      case "pending":
-        return "bg-yellow-100 text-yellow-800"
-      default:
-        return "bg-gray-100 text-gray-800"
+    const map: Record<string, string> = {
+      consumed: "bg-green-100 text-green-800",
+      returned: "bg-blue-100 text-blue-800",
+      wasted: "bg-red-100 text-red-800",
+      pending: "bg-yellow-100 text-yellow-800",
     }
+    return map[(status || "").toLowerCase()] ?? "bg-gray-100 text-gray-800"
   }
 
-  const getVarianceColor = (variancePercentage: number) => {
-    if (Math.abs(variancePercentage) <= 5) return "text-green-600"
-    if (Math.abs(variancePercentage) <= 10) return "text-yellow-600"
+  const getVarianceColor = (variancePercentage?: number) => {
+    if (variancePercentage == null) return "text-muted-foreground"
+    const abs = Math.abs(variancePercentage)
+    if (abs <= 5) return "text-green-600"
+    if (abs <= 10) return "text-yellow-600"
     return "text-red-600"
   }
 
-  const calculateStats = () => {
-    const totalConsumptions = consumptions.length
-    const consumedMaterials = consumptions.filter(c => c.status === "consumed").length
-    const wastedMaterials = consumptions.filter(c => c.status === "wasted").length
-    const avgVariance = consumptions.length > 0 
-      ? (consumptions.reduce((sum, c) => sum + Math.abs(c.variancePercentage), 0) / consumptions.length).toFixed(1)
-      : "0.0"
-
-    return { totalConsumptions, consumedMaterials, wastedMaterials, avgVariance }
+  const stats = {
+    total: pagination.total,
+    consumed: consumptions.filter((c) => (c.status || "").toLowerCase() === "consumed").length,
+    wasted: consumptions.filter((c) => (c.status || "").toLowerCase() === "wasted").length,
+    avgVariance:
+      consumptions.length > 0
+        ? (
+            consumptions.reduce((sum, c) => sum + Math.abs(c.variancePercentage ?? 0), 0) /
+            consumptions.length
+          ).toFixed(1)
+        : "0.0",
   }
-
-  const stats = calculateStats()
 
   const columns = [
     {
       key: "batch",
       header: "Batch",
-      render: (consumption: BatchConsumption) => (
+      sortable: true,
+      render: (c: BatchConsumption) => (
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
             <Factory className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <div className="font-medium">{consumption.batchNumber}</div>
-            <div className="text-sm text-muted-foreground">{consumption.drugName}</div>
+            <div className="font-medium">{c.batchNumber}</div>
+            <div className="text-sm text-muted-foreground">{c.drugName ?? c.materialName}</div>
           </div>
         </div>
       ),
@@ -152,36 +164,37 @@ export default function BatchConsumptionsPage() {
     {
       key: "material",
       header: "Material",
-      render: (consumption: BatchConsumption) => (
+      sortable: true,
+      render: (c: BatchConsumption) => (
         <div className="text-sm">
-          <div className="font-medium">{consumption.materialName}</div>
-          <div className="text-muted-foreground">{consumption.materialCode}</div>
+          <div className="font-medium">{c.materialName}</div>
+          <div className="text-muted-foreground">{c.materialCode}</div>
         </div>
       ),
     },
     {
       key: "consumption",
       header: "Consumption",
-      render: (consumption: BatchConsumption) => (
+      sortable: true,
+      render: (c: BatchConsumption) => (
         <div className="space-y-1 text-sm">
-          <div>Consumed: {consumption.consumedQuantity} {consumption.unitName}</div>
-          <div>BOM: {consumption.bomQuantity} {consumption.unitName}</div>
+          <div>Consumed: {c.consumedQuantity} {c.unitName}</div>
+          {c.bomQuantity != null && <div>BOM: {c.bomQuantity} {c.unitName}</div>}
         </div>
       ),
     },
     {
       key: "variance",
       header: "Variance",
-      render: (consumption: BatchConsumption) => (
+      render: (c: BatchConsumption) => (
         <div className="space-y-1">
-          <div className={`text-sm font-medium ${getVarianceColor(consumption.variancePercentage)}`}>
-            {consumption.variance > 0 ? "+" : ""}{consumption.variance} {consumption.unitName}
+          <div className={`text-sm font-medium ${getVarianceColor(c.variancePercentage)}`}>
+            {c.variance != null ? `${c.variance > 0 ? "+" : ""}${c.variance} ${c.unitName}` : "—"}
           </div>
-          <div className={`text-xs ${getVarianceColor(consumption.variancePercentage)}`}>
-            {consumption.variancePercentage > 0 ? "+" : ""}{consumption.variancePercentage.toFixed(1)}%
-          </div>
-          {Math.abs(consumption.variancePercentage) > 10 && (
-            <AlertTriangle className="h-3 w-3 text-red-500" />
+          {c.variancePercentage != null && (
+            <div className={`text-xs ${getVarianceColor(c.variancePercentage)}`}>
+              {c.variancePercentage > 0 ? "+" : ""}{c.variancePercentage.toFixed(1)}%
+            </div>
           )}
         </div>
       ),
@@ -189,158 +202,154 @@ export default function BatchConsumptionsPage() {
     {
       key: "lot",
       header: "Lot Info",
-      render: (consumption: BatchConsumption) => (
+      render: (c: BatchConsumption) => (
         <div className="space-y-1 text-sm">
-          <div>Lot: {consumption.lotNumber}</div>
-          <div>Expiry: {formatDateISO(consumption.expiryDate)}</div>
+          <div>Lot: {c.lotNumber}</div>
+          <div>Expiry: {formatDateISO(c.expiryDate)}</div>
         </div>
       ),
     },
     {
       key: "consumedBy",
       header: "Consumed By",
-      render: (consumption: BatchConsumption) => (
+      sortable: true,
+      render: (c: BatchConsumption) => (
         <div className="text-sm">
-          <div className="font-medium">{consumption.consumedByName}</div>
-          <div className="text-muted-foreground">{formatDateISO(consumption.consumptionDate)}</div>
+          <div className="font-medium">{c.consumedByName}</div>
+          <div className="text-muted-foreground">{formatDateISO(c.consumptionDate)}</div>
         </div>
       ),
     },
     {
       key: "status",
       header: "Status",
-      render: (consumption: BatchConsumption) => (
-        <Badge className={getStatusBadgeColor(consumption.status)}>
-          {consumption.status.charAt(0).toUpperCase() + consumption.status.slice(1)}
+      sortable: true,
+      render: (c: BatchConsumption) => (
+        <Badge className={getStatusBadgeColor(c.status)}>
+          {(c.status || "pending").charAt(0).toUpperCase() + (c.status || "pending").slice(1)}
         </Badge>
       ),
     },
   ]
+
+  const filterOptions = [
+    {
+      key: "status",
+      label: "Status",
+      type: "select" as const,
+      options: [
+        { value: "consumed", label: "Consumed" },
+        { value: "returned", label: "Returned" },
+        { value: "wasted", label: "Wasted" },
+        { value: "pending", label: "Pending" },
+      ],
+    },
+  ]
+
+  const actions = (c: BatchConsumption) => (
+    <div className="flex items-center gap-2">
+      <Button variant="ghost" size="sm" onClick={() => handleView(c)}>
+        <Eye className="h-4 w-4" />
+      </Button>
+      <PermissionGuard module="MANUFACTURING" action="delete">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => handleDelete(c)}
+          className="text-red-600 hover:text-red-700"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </PermissionGuard>
+    </div>
+  )
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Batch Consumptions</h1>
+            <h1 className="text-3xl font-bold">Batch Consumptions</h1>
             <p className="text-muted-foreground">Track material consumption during batch manufacturing</p>
           </div>
-
-          <PermissionGuard module="MANUFACTURING" screen="consumptions" action="create">
-            <Button onClick={() => (window.location.href = "/dashboard/manufacturing/consumptions/new")}>
+          <PermissionGuard module="MANUFACTURING" action="create">
+            <Button onClick={() => router.push("/dashboard/manufacturing/consumptions/new")}>
               <Plus />
               Add Consumption
             </Button>
           </PermissionGuard>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Consumptions</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
+              <Package className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{pagination.total}</div>
+              <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Consumed Materials</CardTitle>
-              <Factory className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Consumed</CardTitle>
+              <Package className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.consumedMaterials}</div>
+              <div className="text-2xl font-bold text-green-600">{stats.consumed}</div>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Wasted Materials</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Wasted</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-red-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">{stats.wastedMaterials}</div>
+              <div className="text-2xl font-bold text-red-600">{stats.wasted}</div>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Avg Variance</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <TrendingUp className="h-4 w-4 text-yellow-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{stats.avgVariance}%</div>
+              <div className="text-2xl font-bold text-yellow-600">{stats.avgVariance}%</div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Status Filter */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Filter by Status</CardTitle>
-            <CardDescription>Select a status to filter consumption records</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { value: "all", label: "All Consumptions" },
-                { value: "consumed", label: "Consumed" },
-                { value: "returned", label: "Returned" },
-                { value: "wasted", label: "Wasted" },
-                { value: "pending", label: "Pending" },
-              ].map((status) => (
-                <Button
-                  key={status.value}
-                  variant={statusFilter === status.value ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setStatusFilter(status.value)}
-                >
-                  {status.label}
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <UnifiedDataTable
+          data={consumptions}
+          columns={columns}
+          loading={loading}
+          searchPlaceholder="Search consumptions..."
+          searchValue={searchQuery}
+          onSearch={handleSearch}
+          filters={filterOptions}
+          onFiltersChange={handleFiltersChange}
+          pagination={{
+            page: pagination.page,
+            pages: pagination.pages,
+            total: pagination.total,
+            onPageChange: handlePageChange,
+          }}
+          actions={actions}
+          onRefresh={fetchConsumptions}
+          onExport={() => console.log("Export consumptions")}
+          emptyMessage="No consumption records found."
+        />
 
-        {/* Consumptions Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>All Batch Consumptions</CardTitle>
-            <CardDescription>A list of all material consumption records with variance analysis.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              data={consumptions}
-              columns={columns}
-              loading={loading}
-              onSearch={handleSearch}
-              pagination={{
-                page: pagination.page,
-                pages: pagination.pages,
-                total: pagination.total,
-                onPageChange: handlePageChange
-              }}
-              searchPlaceholder="Search consumptions..."
-              actions={(consumption: BatchConsumption) => (
-                <div className="flex items-center gap-2">
-                  <PermissionGuard module="MANUFACTURING" screen="consumptions" action="update">
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(consumption)}>
-                      Edit
-                    </Button>
-                  </PermissionGuard>
-                  <PermissionGuard module="MANUFACTURING" screen="consumptions" action="delete">
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(consumption)}>
-                      Delete
-                    </Button>
-                  </PermissionGuard>
-                </div>
-              )}
-            />
-          </CardContent>
-        </Card>
+        <ConfirmDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          title="Delete Consumption Record"
+          description={`Are you sure you want to delete the consumption record for ${itemToDelete?.materialName}?`}
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={handleDeleteConfirm}
+          variant="destructive"
+        />
       </div>
     </DashboardLayout>
   )

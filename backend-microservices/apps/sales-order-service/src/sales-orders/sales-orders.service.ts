@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, FindOptionsWhere } from 'typeorm';
+import { Repository, FindOptionsWhere } from 'typeorm';
+import { QueryFailedError } from 'typeorm';
 import { SalesOrder } from '../entities/sales-order.entity';
 import { SalesOrderItem } from '../entities/sales-order-item.entity';
 import {
@@ -104,49 +105,40 @@ export class SalesOrdersService {
     const limit = params?.limit || 10;
     const skip = (page - 1) * limit;
 
-    const where: FindOptionsWhere<SalesOrder> = {};
-    
-    if (params?.accountId) {
-      where.accountId = params.accountId;
-    }
-    if (params?.siteId) {
-      where.siteId = params.siteId;
-    }
-    if (params?.status) {
-      where.status = params.status;
-    }
-    if (params?.priority) {
-      where.priority = params.priority;
-    }
+    try {
+      const where: FindOptionsWhere<SalesOrder> = {};
+      if (params?.accountId) where.accountId = params.accountId;
+      if (params?.siteId) where.siteId = params.siteId;
+      if (params?.status) where.status = params.status;
+      if (params?.priority) where.priority = params.priority;
 
-    const queryBuilder = this.salesOrdersRepository.createQueryBuilder('so');
-    
-    if (params?.search) {
-      queryBuilder.andWhere(
-        '(so.orderNumber LIKE :search OR so.accountName LIKE :search OR so.accountCode LIKE :search)',
-        { search: `%${params.search}%` }
-      );
+      const queryBuilder = this.salesOrdersRepository.createQueryBuilder('so');
+      if (params?.search) {
+        queryBuilder.andWhere(
+          '(so.orderNumber LIKE :search OR so.accountName LIKE :search OR so.accountCode LIKE :search)',
+          { search: `%${params.search}%` }
+        );
+      }
+      Object.keys(where).forEach(key => {
+        queryBuilder.andWhere(`so.${key} = :${key}`, { [key]: where[key] });
+      });
+      queryBuilder.orderBy('so.createdAt', 'DESC');
+      queryBuilder.skip(skip).take(limit);
+
+      const [salesOrders, total] = await queryBuilder
+        .leftJoinAndSelect('so.items', 'items')
+        .getManyAndCount();
+
+      return {
+        salesOrders: salesOrders.map(order => this.toResponseDto(order)),
+        pagination: { page, pages: Math.ceil(total / limit), total },
+      };
+    } catch (err) {
+      if (err instanceof QueryFailedError && err.message?.includes('does not exist')) {
+        return { salesOrders: [], pagination: { page: 1, pages: 1, total: 0 } };
+      }
+      throw err;
     }
-
-    Object.keys(where).forEach(key => {
-      queryBuilder.andWhere(`so.${key} = :${key}`, { [key]: where[key] });
-    });
-
-    queryBuilder.orderBy('so.createdAt', 'DESC');
-    queryBuilder.skip(skip).take(limit);
-
-    const [salesOrders, total] = await queryBuilder
-      .leftJoinAndSelect('so.items', 'items')
-      .getManyAndCount();
-
-    return {
-      salesOrders: salesOrders.map(order => this.toResponseDto(order)),
-      pagination: {
-        page,
-        pages: Math.ceil(total / limit),
-        total,
-      },
-    };
   }
 
   async findOne(id: number): Promise<SalesOrderResponseDto> {

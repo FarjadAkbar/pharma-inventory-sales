@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { QueryFailedError } from 'typeorm';
 import { ProofOfDelivery } from '../entities/proof-of-delivery.entity';
 import { Shipment } from '../entities/shipment.entity';
 import { ShipmentsService } from '../shipments/shipments.service';
@@ -96,18 +97,24 @@ export class ProofOfDeliveryService {
     salesOrderId?: number;
     status?: string;
   }): Promise<any[]> {
-    const where: any = {};
-    if (params?.shipmentId) where.shipmentId = params.shipmentId;
-    if (params?.salesOrderId) where.salesOrderId = params.salesOrderId;
-    if (params?.status) where.status = params.status;
+    try {
+      const where: any = {};
+      if (params?.shipmentId) where.shipmentId = params.shipmentId;
+      if (params?.salesOrderId) where.salesOrderId = params.salesOrderId;
+      if (params?.status) where.status = params.status;
 
-    const pods = await this.podRepository.find({
-      where,
-      relations: ['shipment'],
-      order: { createdAt: 'DESC' },
-    });
-
-    return pods.map(pod => this.toResponseDto(pod));
+      const pods = await this.podRepository.find({
+        where,
+        relations: ['shipment'],
+        order: { createdAt: 'DESC' },
+      });
+      return pods.map(pod => this.toResponseDto(pod));
+    } catch (err) {
+      if (err instanceof QueryFailedError && err.message?.includes('does not exist')) {
+        return [];
+      }
+      throw err;
+    }
   }
 
   async findOne(id: number): Promise<any> {

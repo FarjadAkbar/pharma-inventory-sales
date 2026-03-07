@@ -25,7 +25,7 @@ import {
   Download,
   XCircle,
 } from "lucide-react"
-import { distributionApi } from "@/services/distribution-api.service"
+import { distributionApi } from "@/services"
 import { toast } from "sonner"
 import type { Shipment, ShipmentItem } from "@/types/distribution"
 import { formatDateISO } from "@/lib/utils"

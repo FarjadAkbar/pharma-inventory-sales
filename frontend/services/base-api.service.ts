@@ -112,10 +112,14 @@ export class BaseApiService {
       const data = contentType.includes("application/json") ? await response.json() : ({} as any)
 
       if (!response.ok) {
-        // Handle NestJS error response format: { message: string | string[], statusCode: number }
-        const errorMessage = Array.isArray(data.message) 
-          ? data.message.join(', ') 
-          : data.message || data.error || "Request failed"
+        const msg = Array.isArray(data.message) ? data.message.join(", ") : data.message || data.error
+        const statusCode = data.statusCode ?? response.status
+        const errorMessage =
+          msg && String(msg).trim()
+            ? String(msg)
+            : statusCode >= 500
+              ? `Server error (${statusCode}). Please try again later.`
+              : `Request failed (${statusCode}).`
         throw new Error(errorMessage)
       }
 
@@ -178,10 +182,14 @@ export class BaseApiService {
       const data = contentType.includes("application/json") ? await response.json() : ({} as any)
 
       if (!response.ok) {
-        // Handle NestJS error response format: { message: string | string[], statusCode: number }
-        const errorMessage = Array.isArray(data.message) 
-          ? data.message.join(', ') 
-          : data.message || data.error || "Request failed"
+        const msg = Array.isArray(data.message) ? data.message.join(", ") : data.message || data.error
+        const statusCode = data.statusCode ?? response.status
+        const errorMessage =
+          msg && String(msg).trim()
+            ? String(msg)
+            : statusCode >= 500
+              ? `Server error (${statusCode}). Please try again later.`
+              : `Request failed (${statusCode}).`
         throw new Error(errorMessage)
       }
 

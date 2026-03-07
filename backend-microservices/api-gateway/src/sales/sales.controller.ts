@@ -125,10 +125,18 @@ export class SalesController {
     if (page) params.page = parseInt(page);
     if (limit) params.limit = parseInt(limit);
 
-    const result = await firstValueFrom(
-      this.shipmentClient.send(SHIPMENT_PATTERNS.LIST, params)
-    );
-    return { success: true, data: result };
+    try {
+      const result = await firstValueFrom(
+        this.shipmentClient.send(SHIPMENT_PATTERNS.LIST, params)
+      );
+      return { success: true, data: result };
+    } catch (err) {
+      // Return empty when backend/DB unavailable (e.g. relation does not exist)
+      return {
+        success: true,
+        data: { data: [], total: 0, page: params?.page || 1, limit: params?.limit || 10 },
+      };
+    }
   }
 
   @Post('shipments')
@@ -227,10 +235,14 @@ export class SalesController {
     if (salesOrderId) params.salesOrderId = parseInt(salesOrderId);
     if (status) params.status = status;
 
-    const result = await firstValueFrom(
-      this.shipmentClient.send(PROOF_OF_DELIVERY_PATTERNS.LIST, params)
-    );
-    return { success: true, data: result };
+    try {
+      const result = await firstValueFrom(
+        this.shipmentClient.send(PROOF_OF_DELIVERY_PATTERNS.LIST, params)
+      );
+      return { success: true, data: result };
+    } catch (err) {
+      return { success: true, data: [] };
+    }
   }
 
   @Post('proof-of-delivery')

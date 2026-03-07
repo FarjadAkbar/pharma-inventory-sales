@@ -129,6 +129,32 @@ export class MasterDataApiService extends BaseApiService {
     return this.request(`/master-data/suppliers?${sp.toString()}`, { method: "DELETE" })
   }
 
+  // Units API
+  async getUnits(_params?: { search?: string; category?: string; page?: number; limit?: number }) {
+    const res = await this.request<unknown>('/master-data/units')
+    const list = (res as any)?.data ?? []
+    const units = Array.isArray(list) ? list : []
+    return {
+      success: true,
+      data: {
+        units,
+        pagination: { page: 1, pages: 1, total: units.length },
+      },
+    }
+  }
+
+  async createUnit(dto: any) {
+    return this.request('/master-data/units', { method: 'POST', body: JSON.stringify(dto) })
+  }
+
+  async updateUnit(data: { id: number; code?: string; name?: string; symbol?: string }) {
+    return this.request('/master-data/units', { method: 'PUT', body: JSON.stringify(data) })
+  }
+
+  async deleteUnit(id: string) {
+    return this.request(`/master-data/units?id=${id}`, { method: 'DELETE' })
+  }
+
   // Cache invalidation for pharmaceutical data
   invalidateDrugs() {
     this.invalidateCache("drugs")

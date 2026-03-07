@@ -31,7 +31,7 @@ import {
   FileText,
   Download
 } from "lucide-react"
-import { distributionApi } from "@/services/distribution-api.service"
+import { distributionApi } from "@/services"
 import Link from "next/link"
 import { toast } from "sonner"
 import type { Shipment, ShipmentFilters } from "@/types/distribution"
@@ -59,9 +59,18 @@ export default function ShipmentsPage() {
       })
 
       if (response.success && response.data) {
-        const data = response.data.data || response.data
-        setShipments(Array.isArray(data) ? data : data.shipments || [])
-        setPagination(data.pagination || { page: 1, pages: 1, total: data.total || 0 })
+        const raw = response.data as any
+        const list = raw?.data ?? raw?.shipments ?? (Array.isArray(raw) ? raw : [])
+        const arr = Array.isArray(list) ? list : []
+        setShipments(arr)
+        const total = raw?.total ?? arr.length
+        const page = raw?.page ?? 1
+        const limit = raw?.limit ?? 10
+        setPagination({
+          page,
+          pages: Math.max(1, Math.ceil(total / limit)),
+          total,
+        })
       }
     } catch (error) {
       console.error("Failed to fetch shipments:", error)
@@ -184,20 +193,12 @@ export default function ShipmentsPage() {
     return <Package className="h-4 w-4" />
   }
 
-  const calculateStats = () => {
-    const total = shipments.length
-    const pending = shipments.filter(shipment => shipment.status === "Pending").length
-    const inProgress = shipments.filter(shipment => shipment.status === "In Progress").length
-    const picked = shipments.filter(shipment => shipment.status === "Picked").length
-    const packed = shipments.filter(shipment => shipment.status === "Packed").length
-    const shipped = shipments.filter(shipment => shipment.status === "Shipped").length
-    const inTransit = shipments.filter(shipment => shipment.status === "In Transit").length
-    const delivered = shipments.filter(shipment => shipment.status === "Delivered").length
-
-    return { total, pending, inProgress, picked, packed, shipped, inTransit, delivered }
+  const stats = {
+    total: pagination.total || shipments.length,
+    shipped: shipments.filter(s => s.status === "Shipped").length,
+    delivered: shipments.filter(s => s.status === "Delivered").length,
+    pending: shipments.filter(s => ["Draft", "Pending", "In Progress", "Picked", "Packed"].includes(s.status)).length,
   }
-
-  const stats = calculateStats()
 
   const columns = [
     {
@@ -414,17 +415,16 @@ export default function ShipmentsPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-8 gap-6">
+        <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Shipments</CardTitle>
-              <Truck className="h-4 w-4 text-muted-foreground" />
+              <Truck className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.total}</div>
+              <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Pending</CardTitle>
@@ -434,37 +434,6 @@ export default function ShipmentsPage() {
               <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">In Progress</CardTitle>
-              <Play className="h-4 w-4 text-orange-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600">{stats.inProgress}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Picked</CardTitle>
-              <CheckCircle className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{stats.picked}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Packed</CardTitle>
-              <Package className="h-4 w-4 text-indigo-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-indigo-600">{stats.packed}</div>
-            </CardContent>
-          </Card>
-
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Shipped</CardTitle>
@@ -474,17 +443,6 @@ export default function ShipmentsPage() {
               <div className="text-2xl font-bold text-purple-600">{stats.shipped}</div>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">In Transit</CardTitle>
-              <Truck className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{stats.inTransit}</div>
-            </CardContent>
-          </Card>
-
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Delivered</CardTitle>

@@ -25,7 +25,7 @@ import {
   DollarSign,
   MapPin
 } from "lucide-react"
-import { apiService } from "@/services/api.service"
+import { distributionApi } from "@/services"
 import { SalesOrderForm } from "@/components/sales/sales-order-form"
 import { toast } from "sonner"
 import type { SalesOrder, SalesOrderFilters } from "@/types/distribution"
@@ -91,7 +91,7 @@ export default function SalesOrdersPage() {
     try {
       // TODO: Get actual user ID from auth context
       const approvedBy = 1; // Placeholder
-      const response = await apiService.approveSalesOrder(order.id, approvedBy)
+      const response = await distributionApi.approveSalesOrder(order.id, approvedBy)
       
       if (response.success) {
         toast.success("Order approved successfully")
@@ -127,7 +127,7 @@ export default function SalesOrdersPage() {
   const handleDelete = async (order: SalesOrder) => {
     if (window.confirm("Are you sure you want to delete this order?")) {
       try {
-        const response = await apiService.deleteSalesOrder(order.id)
+        const response = await distributionApi.deleteSalesOrder(order.id)
         
         if (response.success) {
           toast.success("Order deleted successfully")

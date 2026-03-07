@@ -26,11 +26,13 @@ import {
   Pause,
   AlertCircle
 } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { manufacturingApi } from "@/services"
 import type { Batch, BatchFilters } from "@/types/manufacturing"
 import { formatDateISO } from "@/lib/utils"
 
 export default function BatchesPage() {
+  const router = useRouter()
   const [batches, setBatches] = useState<Batch[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -319,10 +321,10 @@ export default function BatchesPage() {
 
   const actions = (batch: Batch) => (
     <div className="flex items-center gap-2">
-      <Button variant="ghost" size="sm">
+      <Button variant="ghost" size="sm" onClick={() => router.push(`/dashboard/manufacturing/batches/${batch.id}`)}>
         <Eye className="h-4 w-4" />
       </Button>
-      <Button variant="ghost" size="sm">
+      <Button variant="ghost" size="sm" onClick={() => router.push(`/dashboard/manufacturing/batches/${batch.id}`)}>
         <Edit className="h-4 w-4" />
       </Button>
       {batch.status === "Planned" && (
@@ -349,7 +351,7 @@ export default function BatchesPage() {
             <h1 className="text-3xl font-bold tracking-tight">Batch Management</h1>
             <p className="text-muted-foreground">Manage production batches and Electronic Batch Records</p>
           </div>
-          <Button>
+          <Button onClick={() => router.push("/dashboard/manufacturing/batches/new")}>
             <Plus />
             New Batch
           </Button>

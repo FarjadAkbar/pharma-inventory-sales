@@ -4,6 +4,7 @@ import { SitesController } from './sites.controller';
 import { SuppliersController } from './suppliers.controller';
 import { DrugsController } from './drugs.controller';
 import { RawMaterialsController } from './raw-materials.controller';
+import { UnitsController } from './units.controller';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { RawMaterialsController } from './raw-materials.controller';
     SuppliersController,
     DrugsController,
     RawMaterialsController,
+    UnitsController,
   ],
 })
 export class MasterDataModule {}
