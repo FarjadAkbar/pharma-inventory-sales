@@ -93,7 +93,7 @@ export default function ShipmentItemsPage() {
   }
 
   const handleEdit = (item: ShipmentItem) => {
-    window.location.href = `/dashboard/distribution/shipment-items/${item.id}`
+    window.location.href = `/dashboard/sales/shipment-items/${item.id}`
   }
 
   const handleDelete = async (item: ShipmentItem) => {
@@ -293,7 +293,7 @@ export default function ShipmentItemsPage() {
           </div>
 
           <PermissionGuard module="DISTRIBUTION" screen="shipment_items" action="create">
-            <Button onClick={() => (window.location.href = "/dashboard/distribution/shipment-items/new")}>
+            <Button onClick={() => (window.location.href = "/dashboard/sales/shipment-items/new")}>
               <Plus />
               Add Item
             </Button>

@@ -154,52 +154,6 @@ export class WarehouseApiService extends BaseApiService {
     return this.request(`/warehouse/inventory/${id}`)
   }
 
-  // Cycle Counts API
-  async getCycleCounts(params?: {
-    search?: string
-    countType?: string
-    status?: string
-    assignedTo?: string
-    zone?: string
-    dateFrom?: string
-    dateTo?: string
-    page?: number
-    limit?: number
-  }) {
-    const searchParams = new URLSearchParams()
-    if (params?.search) searchParams.set("search", params.search)
-    if (params?.countType) searchParams.set("countType", params.countType)
-    if (params?.status) searchParams.set("status", params.status)
-    if (params?.assignedTo) searchParams.set("assignedTo", params.assignedTo)
-    if (params?.zone) searchParams.set("zone", params.zone)
-    if (params?.dateFrom) searchParams.set("dateFrom", params.dateFrom)
-    if (params?.dateTo) searchParams.set("dateTo", params.dateTo)
-    if (params?.page) searchParams.set("page", params.page.toString())
-    if (params?.limit) searchParams.set("limit", params.limit.toString())
-
-    const query = searchParams.toString()
-    return this.request(`/warehouse/cycle-counts${query ? `?${query}` : ""}`)
-  }
-
-  async createCycleCount(countData: any) {
-    return this.request("/warehouse/cycle-counts", {
-      method: "POST",
-      body: JSON.stringify(countData),
-    })
-  }
-
-  async updateCycleCount(countData: any) {
-    return this.request("/warehouse/cycle-counts", {
-      method: "PUT",
-      body: JSON.stringify(countData),
-    })
-  }
-
-  async deleteCycleCount(id: string) {
-    const sp = new URLSearchParams({ id })
-    return this.request(`/warehouse/cycle-counts?${sp.toString()}`, { method: "DELETE" })
-  }
-
   // Cache invalidation for warehouse data
   invalidateInventoryItems() {
     this.invalidateCache("inventory-items")
@@ -211,10 +165,6 @@ export class WarehouseApiService extends BaseApiService {
 
   invalidateMovementRecords() {
     this.invalidateCache("movement-records")
-  }
-
-  invalidateCycleCounts() {
-    this.invalidateCache("cycle-counts")
   }
 
   // Warehouse API
@@ -289,127 +239,6 @@ export class WarehouseApiService extends BaseApiService {
 
   async deleteStorageLocation(id: string) {
     return this.request(`/warehouse/storage-locations/${id}`, { method: "DELETE" })
-  }
-
-  // Cycle Counts API (update to match backend)
-  async getCycleCount(id: string) {
-    return this.request(`/warehouse/cycle-counts/${id}`)
-  }
-
-  async startCycleCount(id: string, performedBy: number) {
-    return this.request(`/warehouse/cycle-counts/${id}/start`, {
-      method: "POST",
-      body: JSON.stringify({ performedBy }),
-    })
-  }
-
-  async completeCycleCount(id: string) {
-    return this.request(`/warehouse/cycle-counts/${id}/complete`, {
-      method: "POST",
-    })
-  }
-
-  async updateCycleCount(id: string, countData: any) {
-    return this.request(`/warehouse/cycle-counts/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(countData),
-    })
-  }
-
-  // Temperature Logs API
-  async getTemperatureLogs(params?: {
-    warehouseId?: number
-    locationId?: string
-    inventoryItemId?: number
-    putawayItemId?: number
-    logType?: string
-    startDate?: string
-    endDate?: string
-    page?: number
-    limit?: number
-  }) {
-    const searchParams = new URLSearchParams()
-    if (params?.warehouseId) searchParams.set("warehouseId", params.warehouseId.toString())
-    if (params?.locationId) searchParams.set("locationId", params.locationId)
-    if (params?.inventoryItemId) searchParams.set("inventoryItemId", params.inventoryItemId.toString())
-    if (params?.putawayItemId) searchParams.set("putawayItemId", params.putawayItemId.toString())
-    if (params?.logType) searchParams.set("logType", params.logType)
-    if (params?.startDate) searchParams.set("startDate", params.startDate)
-    if (params?.endDate) searchParams.set("endDate", params.endDate)
-    if (params?.page) searchParams.set("page", params.page.toString())
-    if (params?.limit) searchParams.set("limit", params.limit.toString())
-
-    const query = searchParams.toString()
-    return this.request(`/warehouse/temperature-logs${query ? `?${query}` : ""}`)
-  }
-
-  async getTemperatureLog(id: string) {
-    return this.request(`/warehouse/temperature-logs/${id}`)
-  }
-
-  async createTemperatureLog(logData: any) {
-    return this.request("/warehouse/temperature-logs", {
-      method: "POST",
-      body: JSON.stringify(logData),
-    })
-  }
-
-  // Labels & Barcodes API
-  async getLabelBarcodes(params?: {
-    labelType?: string
-    inventoryItemId?: number
-    putawayItemId?: number
-    materialIssueId?: number
-    cycleCountId?: number
-    locationId?: string
-    batchNumber?: string
-    isPrinted?: boolean
-    page?: number
-    limit?: number
-  }) {
-    const searchParams = new URLSearchParams()
-    if (params?.labelType) searchParams.set("labelType", params.labelType)
-    if (params?.inventoryItemId) searchParams.set("inventoryItemId", params.inventoryItemId.toString())
-    if (params?.putawayItemId) searchParams.set("putawayItemId", params.putawayItemId.toString())
-    if (params?.materialIssueId) searchParams.set("materialIssueId", params.materialIssueId.toString())
-    if (params?.cycleCountId) searchParams.set("cycleCountId", params.cycleCountId.toString())
-    if (params?.locationId) searchParams.set("locationId", params.locationId)
-    if (params?.batchNumber) searchParams.set("batchNumber", params.batchNumber)
-    if (params?.isPrinted !== undefined) searchParams.set("isPrinted", params.isPrinted.toString())
-    if (params?.page) searchParams.set("page", params.page.toString())
-    if (params?.limit) searchParams.set("limit", params.limit.toString())
-
-    const query = searchParams.toString()
-    return this.request(`/warehouse/labels-barcodes${query ? `?${query}` : ""}`)
-  }
-
-  async getLabelBarcode(id: string) {
-    return this.request(`/warehouse/labels-barcodes/${id}`)
-  }
-
-  async getLabelBarcodeByBarcode(barcode: string) {
-    return this.request(`/warehouse/labels-barcodes/barcode/${barcode}`)
-  }
-
-  async createLabelBarcode(labelData: any) {
-    return this.request("/warehouse/labels-barcodes", {
-      method: "POST",
-      body: JSON.stringify(labelData),
-    })
-  }
-
-  async updateLabelBarcode(id: string, labelData: any) {
-    return this.request(`/warehouse/labels-barcodes/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(labelData),
-    })
-  }
-
-  async printLabelBarcode(id: string, printData: { printedBy: number; printerName?: string; copies?: number }) {
-    return this.request(`/warehouse/labels-barcodes/${id}/print`, {
-      method: "POST",
-      body: JSON.stringify(printData),
-    })
   }
 
   // Material Issue API

@@ -97,7 +97,7 @@ export default function NewShipmentPage() {
       
       if (response.success) {
         toast.success("Shipment created successfully")
-        router.push(`/dashboard/distribution/shipments/${response.data.id}`)
+        router.push(`/dashboard/sales/shipments/${response.data.id}`)
       } else {
         toast.error("Failed to create shipment")
       }
@@ -113,7 +113,7 @@ export default function NewShipmentPage() {
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={() => router.push("/dashboard/distribution/shipments")}>
+          <Button variant="ghost" size="sm" onClick={() => router.push("/dashboard/sales/shipments")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
@@ -243,7 +243,7 @@ export default function NewShipmentPage() {
               </Card>
 
               <div className="flex justify-end gap-4">
-                <Button type="button" variant="outline" onClick={() => router.push("/dashboard/distribution/shipments")}>
+                <Button type="button" variant="outline" onClick={() => router.push("/dashboard/sales/shipments")}>
                   Cancel
                 </Button>
                 <Button type="submit" disabled={loading}>

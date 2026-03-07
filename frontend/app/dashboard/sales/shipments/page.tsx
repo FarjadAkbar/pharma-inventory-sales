@@ -89,7 +89,7 @@ export default function ShipmentsPage() {
   }
 
   const handleView = (shipment: Shipment) => {
-    window.location.href = `/dashboard/distribution/shipments/${shipment.id}`
+    window.location.href = `/dashboard/sales/shipments/${shipment.id}`
   }
 
   const handleEdit = (shipment: Shipment) => {
@@ -98,11 +98,11 @@ export default function ShipmentsPage() {
   }
 
   const handleProcess = async (shipment: Shipment) => {
-    window.location.href = `/dashboard/distribution/shipments/${shipment.id}`
+    window.location.href = `/dashboard/sales/shipments/${shipment.id}`
   }
 
   const handlePack = async (shipment: Shipment) => {
-    window.location.href = `/dashboard/distribution/shipments/${shipment.id}`
+    window.location.href = `/dashboard/sales/shipments/${shipment.id}`
   }
 
   const handleGenerateDocs = (shipment: Shipment) => {
@@ -405,7 +405,7 @@ export default function ShipmentsPage() {
             <h1 className="text-3xl font-bold tracking-tight">Shipment Management</h1>
             <p className="text-muted-foreground">Manage shipments with FEFO allocation and pick list generation</p>
           </div>
-          <Link href="/dashboard/distribution/shipments/new">
+          <Link href="/dashboard/sales/shipments/new">
             <Button>
               <Plus className="h-4 w-4 mr-2" />
               Plan Shipment

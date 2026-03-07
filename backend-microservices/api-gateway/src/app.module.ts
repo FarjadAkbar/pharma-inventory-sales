@@ -13,8 +13,7 @@ import { QualityModule } from './quality/quality.module';
 import { ProcurementModule } from './procurement/procurement.module';
 import { ManufacturingModule } from './manufacturing/manufacturing.module';
 import { WarehouseController } from './warehouse/warehouse.controller';
-import { DistributionController } from './distribution/distribution.controller';
-import { SalesCrmController } from './sales-crm/sales-crm.controller';
+import { SalesController } from './sales/sales.controller';
 import { HealthController } from './health/health.controller';
 import { DashboardModule } from './dashboard/dashboard.module';
 
@@ -112,14 +111,6 @@ const parseIntSafe = (v: string | undefined, fallback: number): number => {
           port: parseIntSafe(process.env.SHIPMENT_SERVICE_PORT, 3008),
         },
       },
-      {
-        name: 'SALES_CRM_SERVICE',
-        transport: Transport.TCP,
-        options: {
-          host: process.env.SALES_CRM_SERVICE_HOST || 'localhost',
-          port: parseIntSafe(process.env.SALES_CRM_SERVICE_PORT, 3009),
-        },
-      },
     ]),
     IdentityModule,
     MasterDataModule,
@@ -136,8 +127,7 @@ const parseIntSafe = (v: string | undefined, fallback: number): number => {
   ],
   controllers: [
     WarehouseController,
-    DistributionController,
-    SalesCrmController,
+    SalesController,
     HealthController,
   ],
 })

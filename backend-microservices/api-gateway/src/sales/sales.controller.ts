@@ -16,109 +16,16 @@ import {
   PackItemDto,
   ShipOrderDto,
   PROOF_OF_DELIVERY_PATTERNS,
-  ACCOUNT_PATTERNS,
-  CreateAccountDto,
-  UpdateAccountDto,
-  AccountType,
 } from '@repo/shared';
 
-@Controller('distribution')
-export class DistributionController {
+@Controller('sales')
+export class SalesController {
   constructor(
     @Inject('SALES_ORDER_SERVICE')
     private salesOrderClient: ClientProxy,
     @Inject('SHIPMENT_SERVICE')
     private shipmentClient: ClientProxy,
-    @Inject('SALES_CRM_SERVICE')
-    private salesCrmClient: ClientProxy,
   ) {}
-
-  // Distributors (accounts with type=distributor)
-  @Get('distributors')
-  async getDistributors(
-    @Query('search') search?: string,
-    @Query('status') status?: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-  ) {
-    const params: any = { type: AccountType.DISTRIBUTOR };
-    if (search) params.search = search;
-    if (status) params.status = status;
-    if (page) params.page = parseInt(page);
-    if (limit) params.limit = parseInt(limit);
-
-    const result = await firstValueFrom(
-      this.salesCrmClient.send(ACCOUNT_PATTERNS.LIST, params)
-    );
-    const data = result as { accounts?: any[]; pagination?: any };
-    const accounts = data.accounts ?? (Array.isArray(result) ? result : []);
-    const pagination = data.pagination ?? { page: 1, pages: 1, total: accounts.length };
-    const distributors = accounts.map((a: any) => ({
-      id: String(a.id),
-      name: a.accountName ?? a.name,
-      code: a.accountCode ?? a.code,
-      contactPerson: a.billingAddress?.contactPerson ?? a.contactPerson ?? '',
-      email: a.email ?? '',
-      phone: a.phone ?? '',
-      address: a.billingAddress?.street ?? a.address ?? '',
-      city: a.billingAddress?.city ?? a.city ?? '',
-      state: a.billingAddress?.state ?? a.state ?? '',
-      country: a.billingAddress?.country ?? a.country ?? '',
-      postalCode: a.billingAddress?.postalCode ?? a.postalCode ?? '',
-      rating: a.rating ?? 0,
-      performance: a.performance ?? { onTimeDelivery: 0, qualityScore: 0, responseTime: 0 },
-      contractStatus: a.contractStatus ?? 'pending',
-      contractStartDate: a.contractStartDate ?? '',
-      contractEndDate: a.contractEndDate ?? '',
-      isActive: a.status === 'active',
-      createdAt: a.createdAt,
-      updatedAt: a.updatedAt,
-    }));
-    return {
-      success: true,
-      data: { distributors, pagination },
-    };
-  }
-
-  @Post('distributors')
-  async createDistributor(@Body() body: Omit<CreateAccountDto, 'type'> & { type?: AccountType }) {
-    const createDto: CreateAccountDto = {
-      ...body,
-      type: AccountType.DISTRIBUTOR,
-      createdBy: body.createdBy ?? 1,
-    };
-    const result = await firstValueFrom(
-      this.salesCrmClient.send(ACCOUNT_PATTERNS.CREATE, createDto)
-    );
-    return { success: true, data: result };
-  }
-
-  @Get('distributors/:id')
-  async getDistributor(@Param('id', ParseIntPipe) id: number) {
-    const result = await firstValueFrom(
-      this.salesCrmClient.send(ACCOUNT_PATTERNS.GET_BY_ID, id)
-    );
-    return { success: true, data: result };
-  }
-
-  @Put('distributors/:id')
-  async updateDistributor(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateDto: UpdateAccountDto,
-  ) {
-    const result = await firstValueFrom(
-      this.salesCrmClient.send(ACCOUNT_PATTERNS.UPDATE, { id, updateDto })
-    );
-    return { success: true, data: result };
-  }
-
-  @Delete('distributors/:id')
-  async deleteDistributor(@Param('id', ParseIntPipe) id: number) {
-    await firstValueFrom(
-      this.salesCrmClient.send(ACCOUNT_PATTERNS.DELETE, id)
-    );
-    return { success: true, message: 'Distributor deleted successfully' };
-  }
 
   // Sales Orders
   @Get('sales-orders')
@@ -198,7 +105,7 @@ export class DistributionController {
     return { success: true, message: 'Sales order deleted successfully' };
   }
 
-  // Shipments
+  // Shipments (plan, allocate, prepare, ship)
   @Get('shipments')
   async getShipments(
     @Query('search') search?: string,
@@ -361,4 +268,3 @@ export class DistributionController {
     return { success: true, data: result };
   }
 }
-

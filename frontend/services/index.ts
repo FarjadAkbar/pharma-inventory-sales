@@ -17,7 +17,6 @@ import { ProcurementApiService } from "./procurement-api.service"
 import { ProductsApiService } from "./products-api.service"
 import { QualityAssuranceApiService } from "./quality-assurance-api.service"
 import { QualityControlApiService } from "./quality-control-api.service"
-import { ReportingApiService } from "./reporting-api.service"
 import { StoresApiService } from "./stores-api.service"
 import { UsersApiService } from "./users-api.service"
 import { RolesApiService } from "./roles-api.service"
@@ -53,7 +52,6 @@ export const qualityAssuranceApi = new QualityAssuranceApiService()
 export const manufacturingApi = new ManufacturingApiService()
 export const warehouseApi = new WarehouseApiService()
 export const distributionApi = new DistributionApiService()
-export const reportingApi = new ReportingApiService()
 
 // Unified API object for easy access
 export const api = {
@@ -75,5 +73,4 @@ export const api = {
   manufacturing: manufacturingApi,
   warehouse: warehouseApi,
   distribution: distributionApi,
-  reporting: reportingApi,
 }

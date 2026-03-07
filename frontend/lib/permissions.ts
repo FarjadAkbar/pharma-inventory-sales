@@ -445,7 +445,6 @@ export function canAccessRoute(role: Role, route: string): boolean {
     "/dashboard/roles":            ["view_roles"],
     "/dashboard/permissions":      ["view_permissions"],
     "/dashboard/sites":            ["view_sites"],
-    "/dashboard/reports":          ["view_reports"],
   }
   const required = routePermissions[route]
   if (!required) return true

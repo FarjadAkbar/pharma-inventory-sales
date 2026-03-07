@@ -61,12 +61,12 @@ export default function ShipmentDetailPage() {
         setShipment(response.data)
       } else {
         toast.error("Failed to fetch shipment")
-        router.push("/dashboard/distribution/shipments")
+        router.push("/dashboard/sales/shipments")
       }
     } catch (error) {
       console.error("Error fetching shipment:", error)
       toast.error("Failed to fetch shipment")
-      router.push("/dashboard/distribution/shipments")
+      router.push("/dashboard/sales/shipments")
     } finally {
       setLoading(false)
     }
@@ -219,7 +219,7 @@ export default function ShipmentDetailPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={() => router.push("/dashboard/distribution/shipments")}>
+            <Button variant="ghost" size="sm" onClick={() => router.push("/dashboard/sales/shipments")}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Button>

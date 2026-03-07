@@ -15,12 +15,6 @@ import {
   UpdateWarehouseDto,
   CreateStorageLocationDto,
   UpdateStorageLocationDto,
-  CreateCycleCountDto,
-  UpdateCycleCountDto,
-  CreateTemperatureLogDto,
-  CreateLabelBarcodeDto,
-  UpdateLabelBarcodeDto,
-  PrintLabelBarcodeDto,
 } from '@repo/shared';
 
 @Controller()
@@ -206,114 +200,6 @@ export class WarehouseController {
   @MessagePattern(WAREHOUSE_PATTERNS.LOCATION_DELETE)
   deleteStorageLocation(@Payload() id: number) {
     return this.warehouseService.deleteStorageLocation(id);
-  }
-
-  // Cycle Count Patterns
-  @MessagePattern(WAREHOUSE_PATTERNS.CYCLE_COUNT_CREATE)
-  createCycleCount(@Payload() createDto: CreateCycleCountDto) {
-    return this.warehouseService.createCycleCount(createDto);
-  }
-
-  @MessagePattern(WAREHOUSE_PATTERNS.CYCLE_COUNT_LIST)
-  findAllCycleCounts(@Payload() filters?: any) {
-    return this.warehouseService.findAllCycleCounts(filters);
-  }
-
-  @MessagePattern(WAREHOUSE_PATTERNS.CYCLE_COUNT_GET_BY_ID)
-  findCycleCountById(@Payload() id: number) {
-    return this.warehouseService.findCycleCountById(id);
-  }
-
-  @MessagePattern(WAREHOUSE_PATTERNS.CYCLE_COUNT_START)
-  startCycleCount(@Payload() data: { id: number; performedBy: number }) {
-    return this.warehouseService.startCycleCount(data.id, data.performedBy);
-  }
-
-  @MessagePattern(WAREHOUSE_PATTERNS.CYCLE_COUNT_UPDATE)
-  updateCycleCount(@Payload() data: { id: number; updateDto: UpdateCycleCountDto }) {
-    return this.warehouseService.updateCycleCount(data.id, data.updateDto);
-  }
-
-  @MessagePattern(WAREHOUSE_PATTERNS.CYCLE_COUNT_COMPLETE)
-  completeCycleCount(@Payload() id: number) {
-    return this.warehouseService.completeCycleCount(id);
-  }
-
-  // Temperature Log Patterns
-  @MessagePattern(WAREHOUSE_PATTERNS.TEMPERATURE_LOG_CREATE)
-  createTemperatureLog(@Payload() createDto: CreateTemperatureLogDto) {
-    return this.warehouseService.createTemperatureLog(createDto);
-  }
-
-  @MessagePattern(WAREHOUSE_PATTERNS.TEMPERATURE_LOG_LIST)
-  findAllTemperatureLogs(@Payload() filters?: any) {
-    return this.warehouseService.findAllTemperatureLogs(filters);
-  }
-
-  @MessagePattern(WAREHOUSE_PATTERNS.TEMPERATURE_LOG_GET_BY_ID)
-  findTemperatureLogById(@Payload() id: number) {
-    return this.warehouseService.findTemperatureLogById(id);
-  }
-
-  @MessagePattern(WAREHOUSE_PATTERNS.TEMPERATURE_LOG_GET_BY_REFERENCE)
-  findTemperatureLogsByReference(@Payload() data: { logType: string; referenceId: number }) {
-    const filters: any = {};
-    if (data.logType === 'Inventory Item') {
-      filters.inventoryItemId = data.referenceId;
-    } else if (data.logType === 'Putaway') {
-      filters.putawayItemId = data.referenceId;
-    } else if (data.logType === 'Warehouse') {
-      filters.warehouseId = data.referenceId;
-    } else if (data.logType === 'Location') {
-      filters.locationId = data.referenceId.toString();
-    }
-    return this.warehouseService.findAllTemperatureLogs(filters);
-  }
-
-  // Label & Barcode Patterns
-  @MessagePattern(WAREHOUSE_PATTERNS.LABEL_BARCODE_CREATE)
-  createLabelBarcode(@Payload() createDto: CreateLabelBarcodeDto) {
-    return this.warehouseService.createLabelBarcode(createDto);
-  }
-
-  @MessagePattern(WAREHOUSE_PATTERNS.LABEL_BARCODE_LIST)
-  findAllLabelBarcodes(@Payload() filters?: any) {
-    return this.warehouseService.findAllLabelBarcodes(filters);
-  }
-
-  @MessagePattern(WAREHOUSE_PATTERNS.LABEL_BARCODE_GET_BY_ID)
-  findLabelBarcodeById(@Payload() id: number) {
-    return this.warehouseService.findLabelBarcodeById(id);
-  }
-
-  @MessagePattern(WAREHOUSE_PATTERNS.LABEL_BARCODE_GET_BY_BARCODE)
-  findLabelBarcodeByBarcode(@Payload() barcode: string) {
-    return this.warehouseService.findLabelBarcodeByBarcode(barcode);
-  }
-
-  @MessagePattern(WAREHOUSE_PATTERNS.LABEL_BARCODE_GET_BY_REFERENCE)
-  findLabelBarcodesByReference(@Payload() data: { labelType: string; referenceId: number }) {
-    const filters: any = { labelType: data.labelType };
-    if (data.labelType === 'Inventory Item') {
-      filters.inventoryItemId = data.referenceId;
-    } else if (data.labelType === 'Putaway') {
-      filters.putawayItemId = data.referenceId;
-    } else if (data.labelType === 'Material Issue') {
-      filters.materialIssueId = data.referenceId;
-    } else if (data.labelType === 'Cycle Count') {
-      filters.cycleCountId = data.referenceId;
-    }
-    return this.warehouseService.findAllLabelBarcodes(filters);
-  }
-
-  @MessagePattern(WAREHOUSE_PATTERNS.LABEL_BARCODE_UPDATE)
-  updateLabelBarcode(@Payload() data: { id: number; updateDto: UpdateLabelBarcodeDto }) {
-    return this.warehouseService.updateLabelBarcode(data.id, data.updateDto);
-  }
-
-  @MessagePattern(WAREHOUSE_PATTERNS.LABEL_BARCODE_PRINT)
-  printLabelBarcode(@Payload() data: { id: number; printDto: PrintLabelBarcodeDto }) {
-    return this.warehouseService.printLabelBarcode(data.id, data.printDto);
   }
 }
 

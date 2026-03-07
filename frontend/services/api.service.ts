@@ -1004,32 +1004,32 @@ class ApiService {
         queryParams.append(key, String(value))
       }
     })
-    return this.request(`/distribution/sales-orders?${queryParams.toString()}`)
+    return this.request(`/sales/sales-orders?${queryParams.toString()}`)
   }
 
   async createSalesOrder(orderData: any) {
-    return this.request("/distribution/sales-orders", {
+    return this.request("/sales/sales-orders", {
       method: "POST",
       body: JSON.stringify(orderData),
     })
   }
 
   async updateSalesOrder(id: string, orderData: any) {
-    return this.request(`/distribution/sales-orders`, {
+    return this.request(`/sales/sales-orders`, {
       method: "PUT",
       body: JSON.stringify({ id, ...orderData }),
     })
   }
 
   async approveSalesOrder(id: string, approvedBy: number) {
-    return this.request(`/distribution/sales-orders/${id}/approve`, {
+    return this.request(`/sales/sales-orders/${id}/approve`, {
       method: "POST",
       body: JSON.stringify({ approvedBy }),
     })
   }
 
   async deleteSalesOrder(id: string) {
-    return this.request(`/distribution/sales-orders?id=${id}`, {
+    return this.request(`/sales/sales-orders?id=${id}`, {
       method: "DELETE",
     })
   }
@@ -1041,25 +1041,25 @@ class ApiService {
         queryParams.append(key, String(value))
       }
     })
-    return this.request(`/distribution/shipments?${queryParams.toString()}`)
+    return this.request(`/sales/shipments?${queryParams.toString()}`)
   }
 
   async createShipment(shipmentData: any) {
-    return this.request("/distribution/shipments", {
+    return this.request("/sales/shipments", {
       method: "POST",
       body: JSON.stringify(shipmentData),
     })
   }
 
   async updateShipment(id: string, shipmentData: any) {
-    return this.request(`/distribution/shipments`, {
+    return this.request(`/sales/shipments`, {
       method: "PUT",
       body: JSON.stringify({ id, ...shipmentData }),
     })
   }
 
   async deleteShipment(id: string) {
-    return this.request(`/distribution/shipments?id=${id}`, {
+    return this.request(`/sales/shipments?id=${id}`, {
       method: "DELETE",
     })
   }
@@ -1173,25 +1173,25 @@ class ApiService {
         queryParams.append(key, String(value))
       }
     })
-    return this.request(`/distribution/pod?${queryParams.toString()}`)
+    return this.request(`/sales/proof-of-delivery?${queryParams.toString()}`)
   }
 
   async createProofOfDelivery(podData: any) {
-    return this.request("/distribution/pod", {
+    return this.request("/sales/proof-of-delivery", {
       method: "POST",
       body: JSON.stringify(podData),
     })
   }
 
   async updateProofOfDelivery(id: string, podData: any) {
-    return this.request(`/distribution/pod`, {
+    return this.request(`/sales/proof-of-delivery`, {
       method: "PUT",
       body: JSON.stringify({ id, ...podData }),
     })
   }
 
   async deleteProofOfDelivery(id: string) {
-    return this.request(`/distribution/pod?id=${id}`, {
+    return this.request(`/sales/proof-of-delivery?id=${id}`, {
       method: "DELETE",
     })
   }
@@ -1215,157 +1215,6 @@ class ApiService {
 
   invalidateProofOfDeliveries() {
     this.invalidateCache("proof-of-deliveries")
-  }
-
-  // Reporting & Analytics API Methods
-  async getExecutiveDashboard(period?: string) {
-    const queryParams = new URLSearchParams()
-    if (period) queryParams.append("period", period)
-    return this.request(`/reports/executive?${queryParams.toString()}`)
-  }
-
-  async getProcurementDashboard(period?: string) {
-    const queryParams = new URLSearchParams()
-    if (period) queryParams.append("period", period)
-    return this.request(`/reports/procurement?${queryParams.toString()}`)
-  }
-
-  async getProductionDashboard(period?: string) {
-    const queryParams = new URLSearchParams()
-    if (period) queryParams.append("period", period)
-    return this.request(`/reports/production?${queryParams.toString()}`)
-  }
-
-  async getQualityDashboard(period?: string) {
-    const queryParams = new URLSearchParams()
-    if (period) queryParams.append("period", period)
-    return this.request(`/reports/quality?${queryParams.toString()}`)
-  }
-
-  async getWarehouseDashboard(period?: string) {
-    const queryParams = new URLSearchParams()
-    if (period) queryParams.append("period", period)
-    return this.request(`/reports/warehouse?${queryParams.toString()}`)
-  }
-
-  async getSalesDashboard(period?: string) {
-    const queryParams = new URLSearchParams()
-    if (period) queryParams.append("period", period)
-    return this.request(`/reports/sales?${queryParams.toString()}`)
-  }
-
-  async getAuditTrails(filters: any = {}) {
-    const queryParams = new URLSearchParams()
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== "") {
-        queryParams.append(key, String(value))
-      }
-    })
-    return this.request(`/reports/audit?${queryParams.toString()}`)
-  }
-
-  async getReportTemplates() {
-    return this.request("/reports/templates")
-  }
-
-  async createReportTemplate(templateData: any) {
-    return this.request("/reports/templates", {
-      method: "POST",
-      body: JSON.stringify(templateData),
-    })
-  }
-
-  async updateReportTemplate(id: string, templateData: any) {
-    return this.request(`/reports/templates`, {
-      method: "PUT",
-      body: JSON.stringify({ id, ...templateData }),
-    })
-  }
-
-  async deleteReportTemplate(id: string) {
-    return this.request(`/reports/templates?id=${id}`, {
-      method: "DELETE",
-    })
-  }
-
-  async generateReport(templateId: string, parameters: any) {
-    return this.request("/reports/generate", {
-      method: "POST",
-      body: JSON.stringify({ templateId, parameters }),
-    })
-  }
-
-  async getGeneratedReports(filters: any = {}) {
-    const queryParams = new URLSearchParams()
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== "") {
-        queryParams.append(key, String(value))
-      }
-    })
-    return this.request(`/reports/generated?${queryParams.toString()}`)
-  }
-
-  async downloadReport(reportId: string) {
-    return this.request(`/reports/download/${reportId}`)
-  }
-
-  async getAnalyticsQueries() {
-    return this.request("/reports/analytics/queries")
-  }
-
-  async createAnalyticsQuery(queryData: any) {
-    return this.request("/reports/analytics/queries", {
-      method: "POST",
-      body: JSON.stringify(queryData),
-    })
-  }
-
-  async executeAnalyticsQuery(queryId: string, parameters: any) {
-    return this.request("/reports/analytics/execute", {
-      method: "POST",
-      body: JSON.stringify({ queryId, parameters }),
-    })
-  }
-
-  // Cache invalidation for reporting data
-  invalidateExecutiveDashboard() {
-    this.invalidateCache("executive-dashboard")
-  }
-
-  invalidateProcurementDashboard() {
-    this.invalidateCache("procurement-dashboard")
-  }
-
-  invalidateProductionDashboard() {
-    this.invalidateCache("production-dashboard")
-  }
-
-  invalidateQualityDashboard() {
-    this.invalidateCache("quality-dashboard")
-  }
-
-  invalidateWarehouseDashboard() {
-    this.invalidateCache("warehouse-dashboard")
-  }
-
-  invalidateSalesDashboard() {
-    this.invalidateCache("sales-dashboard")
-  }
-
-  invalidateAuditTrails() {
-    this.invalidateCache("audit-trails")
-  }
-
-  invalidateReportTemplates() {
-    this.invalidateCache("report-templates")
-  }
-
-  invalidateGeneratedReports() {
-    this.invalidateCache("generated-reports")
-  }
-
-  invalidateAnalyticsQueries() {
-    this.invalidateCache("analytics-queries")
   }
 }
 

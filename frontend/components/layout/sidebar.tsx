@@ -26,17 +26,10 @@ import {
   ChevronDown,
   ChevronRight,
   ChevronLeft,
-  User,
   Key,
   Eye,
-  Settings,
   ClipboardCheck,
-  Thermometer,
-  Barcode,
   FileCheck,
-  GraduationCap,
-  Download,
-  Calendar,
   AlertTriangle,
   Workflow,
   Zap,
@@ -80,8 +73,6 @@ export function Sidebar() {
         { title: "Users", href: "/dashboard/users", icon: Users },
         { title: "Roles", href: "/dashboard/roles", icon: Key },
         { title: "Permissions", href: "/dashboard/permissions", icon: Shield },
-        { title: "Refresh Tokens", href: "/dashboard/refresh-tokens", icon: Key },
-        { title: "Audit Logs", href: "/dashboard/reports/audit", icon: Eye },
       ]
     },
     {
@@ -93,8 +84,6 @@ export function Sidebar() {
         { title: "Suppliers", href: "/dashboard/suppliers", icon: Building2 },
         { title: "Distributors", href: "/dashboard/distributors", icon: Building2 },
         { title: "Sites", href: "/dashboard/sites", icon: Building2 },
-        { title: "Storage Locations", href: "/dashboard/storage-locations", icon: Store },
-        { title: "Equipment", href: "/dashboard/equipment", icon: Settings },
         { title: "Units of Measure", href: "/dashboard/units", icon: Package },
       ]
     },
@@ -139,61 +128,18 @@ export function Sidebar() {
         { title: "Putaway Tasks", href: "/dashboard/warehouse/putaway", icon: Package },
         { title: "Material Issues", href: "/dashboard/warehouse/material-issues", icon: ShoppingCart },
         { title: "Stock Movements", href: "/dashboard/warehouse/movements", icon: Store },
-        { title: "Cycle Counts", href: "/dashboard/warehouse/cycle-counts", icon: Store },
-        { title: "Temperature Logs", href: "/dashboard/warehouse/temperature", icon: Thermometer },
-        { title: "Labels & Barcodes", href: "/dashboard/warehouse/labels", icon: Barcode },
       ]
     },
     {
-      title: "Distribution",
-      icon: Truck,
-      items: [
-        { title: "Sales Orders", href: "/dashboard/sales/orders", icon: TrendingUp },
-        { title: "Shipments", href: "/dashboard/distribution/shipments", icon: Truck },
-        { title: "Shipment Items", href: "/dashboard/distribution/shipment-items", icon: Package },
-        { title: "Cold Chain Sensors", href: "/dashboard/distribution/cold-chain", icon: Thermometer },
-        { title: "Proof of Delivery", href: "/dashboard/distribution/pod", icon: ClipboardCheck },
-      ]
-    },
-    {
-      title: "Sales / CRM",
+      title: "Sales",
       icon: TrendingUp,
       items: [
-        { title: "Accounts", href: "/dashboard/sales/accounts", icon: Building2 },
-        { title: "Activities", href: "/dashboard/sales/activities", icon: Calendar },
-        { title: "Contracts", href: "/dashboard/sales/contracts", icon: FileText },
-        { title: "Point of Sale", href: "/dashboard/sales/pos", icon: TrendingUp },
+        { title: "Sales Orders", href: "/dashboard/sales/orders", icon: ShoppingCart },
+        { title: "Shipments", href: "/dashboard/sales/shipments", icon: Truck },
+        { title: "Shipment Items", href: "/dashboard/sales/shipment-items", icon: Package },
+        { title: "Proof of Delivery", href: "/dashboard/sales/pod", icon: ClipboardCheck },
       ]
     },
-    {
-      title: "Regulatory & Documents",
-      icon: FileText,
-      items: [
-        { title: "Documents", href: "/dashboard/regulatory/documents", icon: FileText },
-        { title: "Document Approvals", href: "/dashboard/regulatory/approvals", icon: FileCheck },
-        { title: "Training Records", href: "/dashboard/regulatory/training", icon: GraduationCap },
-      ]
-    },
-    {
-      title: "Integration & Workflows",
-      icon: Workflow,
-      items: [
-        { title: "Integration Dashboard", href: "/dashboard/integration", icon: Zap },
-        { title: "Workflow Manager", href: "/dashboard/integration/workflows", icon: Workflow },
-        { title: "Compliance Metrics", href: "/dashboard/integration/metrics", icon: Shield },
-        { title: "Analytics", href: "/dashboard/integration/analytics", icon: BarChart3 },
-      ]
-    },
-    {
-      title: "Reporting & Analytics",
-      icon: BarChart3,
-      items: [
-        { title: "Dashboards", href: "/dashboard/reports/executive", icon: BarChart3 },
-        { title: "Exports", href: "/dashboard/reports/exports", icon: Download },
-        { title: "Scheduled Reports", href: "/dashboard/reports/scheduled", icon: Calendar },
-        { title: "Recall Coverage", href: "/dashboard/reports/recall", icon: AlertTriangle },
-      ]
-    }
   ]
 
   return (

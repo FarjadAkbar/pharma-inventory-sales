@@ -88,9 +88,23 @@ export function MaterialIssueForm({
           name: loc.name,
         })))
       }
-      const woList = Array.isArray(workOrdersResponse) ? workOrdersResponse : (workOrdersResponse as any)?.data || []
+
+      const toArray = (v: unknown): any[] => {
+        if (Array.isArray(v)) return v
+        if (v && typeof v === "object" && "data" in v) {
+          const d = (v as { data: unknown }).data
+          if (Array.isArray(d)) return d
+          if (d && typeof d === "object" && Array.isArray((d as any).workOrders)) return (d as any).workOrders
+          if (d && typeof d === "object" && Array.isArray((d as any).items)) return (d as any).items
+        }
+        if (v && typeof v === "object" && Array.isArray((v as any).workOrders)) return (v as any).workOrders
+        if (v && typeof v === "object" && Array.isArray((v as any).items)) return (v as any).items
+        return []
+      }
+
+      const woList = toArray(workOrdersResponse)
       setWorkOrders(woList.map((wo: any) => ({ id: wo.id, workOrderNumber: wo.workOrderNumber || wo.orderNumber, orderNumber: wo.orderNumber })))
-      const batchList = Array.isArray(batchesResponse) ? batchesResponse : (batchesResponse as any)?.data || []
+      const batchList = toArray(batchesResponse)
       setBatches(batchList.map((b: any) => ({ id: b.id, batchNumber: b.batchNumber || b.batchNumber })))
     } catch (error) {
       console.error("Failed to fetch data:", error)
@@ -295,18 +309,19 @@ export function MaterialIssueForm({
             <FormSelect
               name="workOrderId"
               label="Work Order"
-              value={formState.data.workOrderId}
+              value={formState.data.workOrderId || "__none__"}
               onChange={(value) => {
-                formState.updateField('workOrderId', value)
-                if (value) {
-                  formState.updateField('referenceType', 'WorkOrder')
-                  formState.updateField('referenceId', value)
+                const v = value === "__none__" ? "" : value
+                formState.updateField("workOrderId", v)
+                if (v) {
+                  formState.updateField("referenceType", "WorkOrder")
+                  formState.updateField("referenceId", v)
                 } else {
-                  formState.updateField('referenceId', '')
+                  formState.updateField("referenceId", "")
                 }
               }}
               options={[
-                { value: "", label: "None (optional)" },
+                { value: "__none__", label: "None (optional)" },
                 ...workOrders.map((wo) => ({
                   value: String(wo.id),
                   label: wo.workOrderNumber || wo.orderNumber || `Work Order #${wo.id}`,
@@ -318,10 +333,10 @@ export function MaterialIssueForm({
             <FormSelect
               name="batchId"
               label="Batch"
-              value={formState.data.batchId}
-              onChange={(value) => formState.updateField('batchId', value)}
+              value={formState.data.batchId || "__none__"}
+              onChange={(value) => formState.updateField("batchId", value === "__none__" ? "" : value)}
               options={[
-                { value: "", label: "None (optional)" },
+                { value: "__none__", label: "None (optional)" },
                 ...batches.map((b) => ({
                   value: String(b.id),
                   label: b.batchNumber || `Batch #${b.id}`,
@@ -333,10 +348,10 @@ export function MaterialIssueForm({
             <FormSelect
               name="referenceType"
               label="Reference Type"
-              value={formState.data.referenceType}
-              onChange={(value) => formState.updateField('referenceType', value)}
+              value={formState.data.referenceType || "__none__"}
+              onChange={(value) => formState.updateField("referenceType", value === "__none__" ? "" : value)}
               options={[
-                { value: "", label: "None" },
+                { value: "__none__", label: "None" },
                 { value: "WorkOrder", label: "Work Order" },
                 { value: "ProductionOrder", label: "Production Order" },
                 { value: "Other", label: "Other" },

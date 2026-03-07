@@ -12,9 +12,7 @@ const protectedRoutes = [
   "/procurement",
   "/quality",
   "/manufacturing",
-  "/warehouse",
-  "/distribution",
-  "/reports"
+  "/warehouse"
 ]
 
 const publicRoutes = [
