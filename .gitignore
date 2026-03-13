@@ -3,6 +3,10 @@ node_modules
 **/node_modules
 dist
 
+# environment files
+.env
+**/.env
+
 # Logs
 logs
 *.log
