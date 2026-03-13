@@ -43,7 +43,7 @@ const parseIntSafe = (v: string | undefined, fallback: number): number => {
     HttpModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'sup3r_s3cr3tk3y_for_auth3ntication',
-      signOptions: { expiresIn: '15m' },
+      signOptions: { expiresIn: '1d' },
       global: true,
     }),
     ClientsModule.register([

@@ -75,21 +75,38 @@ export function BOMForm({
         formState.setErrors(errors)
         return
       }
-
       if (items.length === 0) {
         formState.setError("Please add at least one material item")
         return
       }
 
+      // Map frontend BOM data to backend CreateBOMDto shape
+      const mappedItems = items.map((item, index) => ({
+        materialId: Number(item.materialId),
+        materialName: item.materialName,
+        materialCode: item.materialCode,
+        quantityPerBatch: Number(item.quantityPerBatch),
+        unit: item.unit,
+        tolerance: item.tolerance != null ? Number(item.tolerance) : undefined,
+        isCritical: !!item.isCritical,
+        sequence: index + 1,
+        remarks: item.remarks || undefined
+      }))
+
       await onSubmit({
-        ...formState.data,
-        items,
+        drugId: Number(formState.data.drugId),
+        drugName: formState.data.drugName,
+        drugCode: formState.data.drugCode,
+        batchSize: Number(formState.data.batchSize),
+        yield: formState.data.yield !== "" ? Number(formState.data.yield) : undefined,
+        effectiveDate: formState.data.effectiveDate,
+        expiryDate: formState.data.expiryDate,
+        status: formState.data.status,
+        items: mappedItems,
+        remarks: formState.data.notes || undefined,
         bomNumber: initialData?.bomNumber || `BOM-${Date.now()}`,
-        createdById: "1", // Mock user ID
-        createdByName: "Current User", // Mock user name
-        createdAt: initialData?.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      } as BOM)
+        createdBy: 1 // TODO: replace with actual logged-in user ID
+      } as any)
 
       formState.setSuccess("BOM saved successfully")
     } catch (error: any) {
