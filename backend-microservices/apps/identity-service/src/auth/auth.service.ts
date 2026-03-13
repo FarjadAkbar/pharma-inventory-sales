@@ -49,7 +49,7 @@ export class AuthService {
       isSiteScoped,     // whether their role restricts them to those sites
     };
 
-    const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
+    const accessToken = this.jwtService.sign(payload, { expiresIn: '1d' });
     const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
 
     const expiresAt = new Date();
@@ -97,7 +97,7 @@ export class AuthService {
         isSiteScoped,
       };
 
-      const accessToken = this.jwtService.sign(newPayload, { expiresIn: '15m' });
+      const accessToken = this.jwtService.sign(newPayload, { expiresIn: '1d' });
       const newRefreshToken = this.jwtService.sign(newPayload, { expiresIn: '7d' });
 
       const expiresAt = new Date();
