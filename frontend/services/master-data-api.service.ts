@@ -67,26 +67,27 @@ export class MasterDataApiService extends BaseApiService {
     if (params?.limit) searchParams.set("limit", params.limit.toString())
 
     const query = searchParams.toString()
-    return this.request(`/master-data/raw-materials${query ? `?${query}` : ""}`)
+    // Gateway route is /v1/raw-materials, not /v1/master-data/raw-materials
+    return this.request(`/raw-materials${query ? `?${query}` : ""}`)
   }
 
   async createRawMaterial(materialData: any) {
-    return this.request("/master-data/raw-materials", {
+    return this.request("/raw-materials", {
       method: "POST",
       body: JSON.stringify(materialData),
     })
   }
 
   async updateRawMaterial(materialData: any) {
-    return this.request("/master-data/raw-materials", {
+    // Expect materialData to include an id field
+    return this.request(`/raw-materials/${materialData.id}`, {
       method: "PUT",
       body: JSON.stringify(materialData),
     })
   }
 
   async deleteRawMaterial(id: string) {
-    const sp = new URLSearchParams({ id })
-    return this.request(`/master-data/raw-materials?${sp.toString()}`, { method: "DELETE" })
+    return this.request(`/raw-materials/${id}`, { method: "DELETE" })
   }
 
   // Suppliers API

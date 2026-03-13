@@ -14,7 +14,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Plus } from "lucide-react"
-import { rawMaterialsApi, type RawMaterial } from "@/services"
+import { masterDataApi } from "@/services"
+import type { RawMaterialResponseDto as RawMaterial } from "@repo/shared"
 import { PermissionGuard } from "@/components/auth/permission-guard"
 import { formatDateISO } from "@/lib/utils"
 import { RawMaterialForm } from "@/components/raw-materials/raw-material-form"
@@ -36,14 +37,19 @@ export default function RawMaterialsPage() {
   const fetchRawMaterials = async () => {
     try {
       setLoading(true)
-      const response = await rawMaterialsApi.getRawMaterials({
+      const res = await masterDataApi.getRawMaterials({
         search: searchQuery,
         page: pagination.page,
         limit: 10,
       })
-      
-      setRawMaterials(response)
-      setPagination({ page: pagination.page, pages: 1, total: response.length })
+      const list = (res as any)?.data?.rawMaterials ?? (res as any)?.data ?? []
+      const materials = Array.isArray(list) ? (list as RawMaterial[]) : []
+      setRawMaterials(materials)
+      setPagination({
+        page: pagination.page,
+        pages: 1,
+        total: materials.length,
+      })
     } catch (error) {
       console.error("Failed to fetch raw materials:", error)
     } finally {
@@ -87,13 +93,12 @@ export default function RawMaterialsPage() {
   }) => {
     try {
       if (editingRawMaterial) {
-        await rawMaterialsApi.updateRawMaterial(editingRawMaterial.id.toString(), data)
+        await masterDataApi.updateRawMaterial({ id: editingRawMaterial.id, ...data })
       } else {
-        await rawMaterialsApi.createRawMaterial(data)
+        await masterDataApi.createRawMaterial(data)
       }
       handleCloseModal()
       fetchRawMaterials()
-      rawMaterialsApi.invalidateRawMaterials()
     } catch (error) {
       console.error("Failed to save raw material:", error)
       throw error
@@ -109,11 +114,10 @@ export default function RawMaterialsPage() {
     if (!rawMaterialToDelete) return
     
     try {
-      await rawMaterialsApi.deleteRawMaterial(rawMaterialToDelete.id.toString())
+      await masterDataApi.deleteRawMaterial(rawMaterialToDelete.id.toString())
       fetchRawMaterials()
       setDeleteDialogOpen(false)
       setRawMaterialToDelete(null)
-      rawMaterialsApi.invalidateRawMaterials()
     } catch (error) {
       console.error("Failed to delete raw material:", error)
     }

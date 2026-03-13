@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Form, FormInput, FormSelect, FormTextarea, FormActions } from "@/components/ui/form"
 import { useFormState } from "@/lib/api-response"
 import { useFormValidation } from "@/lib/form-validation"
-import { warehouseApi, rawMaterialsApi, manufacturingApi } from "@/services"
+import { warehouseApi, masterDataApi, manufacturingApi } from "@/services"
 import { MEASUREMENT_UNITS } from "@/lib/constants/units"
 
 interface MaterialIssueFormProps {
@@ -54,7 +54,7 @@ export function MaterialIssueForm({
     try {
       const [inventoryResponse, rawMaterialsResponse, locationsResponse, workOrdersResponse, batchesResponse] = await Promise.all([
         warehouseApi.getInventoryItems({ status: "Available" }),
-        rawMaterialsApi.getRawMaterials(),
+        masterDataApi.getRawMaterials().catch(() => ({ data: [] })),
         warehouseApi.getStorageLocations({ status: "Available" }),
         manufacturingApi.getWorkOrders({ limit: 100 }).catch(() => []),
         manufacturingApi.getBatches({ limit: 100 }).catch(() => []),
@@ -73,8 +73,9 @@ export function MaterialIssueForm({
         })))
       }
 
-      if (Array.isArray(rawMaterialsResponse)) {
-        setRawMaterials(rawMaterialsResponse.map((rm: any) => ({
+      const rmList = (rawMaterialsResponse as any)?.data?.rawMaterials ?? (rawMaterialsResponse as any)?.data ?? []
+      if (Array.isArray(rmList)) {
+        setRawMaterials(rmList.map((rm: any) => ({
           id: rm.id,
           name: rm.name,
           code: rm.code,

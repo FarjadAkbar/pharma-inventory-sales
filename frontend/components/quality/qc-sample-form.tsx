@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Plus, Trash2, Package, TestTube } from "lucide-react"
 import { goodsReceiptsApiService, type GoodsReceipt, type GoodsReceiptItem } from "@/services/goods-receipts-api.service"
 import { qualityControlApi, usersApi } from "@/services"
-import { rawMaterialsApiService, type RawMaterial } from "@/services/raw-materials-api.service"
+import type { RawMaterialResponseDto as RawMaterial } from "@repo/shared"
 import { purchaseOrdersApiService, type PurchaseOrder, type PurchaseOrderItem } from "@/services/purchase-orders-api.service"
 import { MEASUREMENT_UNITS } from "@/lib/constants/units"
 
@@ -193,25 +193,7 @@ export function QCSampleForm({
       formState.updateField('materialId', materialId.toString())
       
       // Fetch material details to auto-populate name and code
-      try {
-        const response = await rawMaterialsApiService.getRawMaterial(materialId.toString())
-        // Handle both ApiResponse format and direct material format
-        let material: RawMaterial | null = null
-        if (response && typeof response === 'object') {
-          if ('data' in response && response.data) {
-            material = response.data as unknown as RawMaterial
-          } else if ('id' in response) {
-            material = response as unknown as RawMaterial
-          }
-        }
-        if (material && material.id) {
-          formState.updateField('materialName', material.name || "")
-          formState.updateField('materialCode', material.code || "")
-        }
-      } catch (error) {
-        console.error("Failed to fetch material details:", error)
-        // Material ID is set, but name/code will need manual entry
-      }
+      // We no longer resolve material details here; ID is enough for backend
     } else {
       // If rawMaterialId is not available, clear materialId and show error
       formState.updateField('materialId', "")

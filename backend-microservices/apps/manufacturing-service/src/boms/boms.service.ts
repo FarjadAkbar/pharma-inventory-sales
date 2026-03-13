@@ -69,9 +69,10 @@ export class BOMsService {
     });
 
     const savedBOM = await this.bomsRepository.save(bom);
-
+    console.log(savedBOM, "savedBOM")
     // Create BOM items
     if (createDto.items && createDto.items.length > 0) {
+      console.log(createDto.items, "createDto.items")
       const bomItems = createDto.items.map((item, index) =>
         this.bomItemsRepository.create({
           bomId: savedBOM.id,
@@ -166,28 +167,32 @@ export class BOMsService {
   async update(id: number, updateDto: UpdateBOMDto): Promise<BOMResponseDto> {
     const bom = await this.bomsRepository.findOne({
       where: { id },
-      relations: ['items'],
     });
     if (!bom) {
       throw new NotFoundException(`BOM with ID ${id} not found`);
     }
 
-    if (bom.status === BOMStatus.APPROVED || bom.status === BOMStatus.ACTIVE) {
+    if (bom.status === BOMStatus.ACTIVE) {
       throw new BadRequestException(`Cannot update BOM. Current status: ${bom.status}`);
     }
 
     // Update BOM fields
+    const { items, ...bomFields } = updateDto;
+
     Object.assign(bom, {
-      ...updateDto,
-      effectiveDate: updateDto.effectiveDate ? new Date(updateDto.effectiveDate) : bom.effectiveDate,
-      expiryDate: updateDto.expiryDate ? new Date(updateDto.expiryDate) : bom.expiryDate,
+      ...bomFields,
+      effectiveDate: updateDto.effectiveDate
+        ? new Date(updateDto.effectiveDate)
+        : bom.effectiveDate,
+      expiryDate: updateDto.expiryDate
+        ? new Date(updateDto.expiryDate)
+        : bom.expiryDate,
     });
 
     // Update items if provided
     if (updateDto.items) {
       // Delete existing items
       await this.bomItemsRepository.delete({ bomId: id });
-
       // Create new items
       const bomItems = updateDto.items.map((item, index) =>
         this.bomItemsRepository.create({

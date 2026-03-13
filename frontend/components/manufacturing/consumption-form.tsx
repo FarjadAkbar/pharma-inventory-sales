@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Form, FormInput, FormSelect, FormActions } from "@/components/ui/form"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { manufacturingApi, rawMaterialsApi, warehouseApi } from "@/services"
+import { manufacturingApi, masterDataApi, warehouseApi } from "@/services"
 
 interface ConsumptionFormProps {
   initialData?: any
@@ -41,7 +41,7 @@ export function ConsumptionForm({
     // Fetch batches, materials, and locations
     Promise.all([
       manufacturingApi.getBatches().catch(() => ({ data: { batches: [] } })),
-      rawMaterialsApi.getRawMaterials().catch(() => []),
+      masterDataApi.getRawMaterials().catch(() => ({ data: [] })),
       warehouseApi.getStorageLocations().catch(() => ({ data: [] })),
     ]).then(([batchesRes, materialsRes, locationsRes]) => {
       if (batchesRes?.data?.batches) {
@@ -49,8 +49,9 @@ export function ConsumptionForm({
       } else if (Array.isArray(batchesRes)) {
         setBatches(batchesRes)
       }
-      if (Array.isArray(materialsRes)) {
-        setMaterials(materialsRes)
+      const rmList = (materialsRes as any)?.data?.rawMaterials ?? (materialsRes as any)?.data ?? []
+      if (Array.isArray(rmList)) {
+        setMaterials(rmList)
       }
       if (locationsRes?.data) {
         setLocations(Array.isArray(locationsRes.data) ? locationsRes.data : [])

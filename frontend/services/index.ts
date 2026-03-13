@@ -7,7 +7,6 @@ export { BaseApiService } from "./base-api.service"
 // Individual API Services
 import { SitesApiService, type Site } from "./sites-api.service"
 import { SuppliersApiService, type Supplier } from "./suppliers-api.service"
-import { RawMaterialsApiService, type RawMaterial } from "./raw-materials-api.service"
 import { PurchaseOrdersApiService, type PurchaseOrder } from "./purchase-orders-api.service"
 import { GoodsReceiptsApiService, type GoodsReceipt } from "./goods-receipts-api.service"
 import { DistributionApiService } from "./distribution-api.service"
@@ -33,8 +32,6 @@ export const sitesApi = new SitesApiService()
 export type { Site } from "./sites-api.service"
 export const suppliersApi = new SuppliersApiService()
 export type { Supplier } from "./suppliers-api.service"
-export const rawMaterialsApi = new RawMaterialsApiService()
-export type { RawMaterial } from "./raw-materials-api.service"
 export const purchaseOrdersApi = new PurchaseOrdersApiService()
 export type { PurchaseOrder } from "./purchase-orders-api.service"
 export const goodsReceiptsApi = new GoodsReceiptsApiService()
@@ -57,7 +54,6 @@ export const distributionApi = new DistributionApiService()
 export const api = {
   sites: sitesApi,
   suppliers: suppliersApi,
-  rawMaterials: rawMaterialsApi,
   purchaseOrders: purchaseOrdersApi,
   goodsReceipts: goodsReceiptsApi,
   users: usersApi,

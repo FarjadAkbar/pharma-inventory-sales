@@ -25,7 +25,18 @@ export default function EditBOMPage() {
       setLoading(true)
       const response = await manufacturingApi.getBOMs({ search: id, limit: 1 })
       if (response.success && response.data?.boms?.length > 0) {
-        setBOM(response.data.boms[0])
+        const apiBom = response.data.boms[0] as any
+        const normalized: BOM = {
+          ...apiBom,
+          id: apiBom.id != null ? String(apiBom.id) : undefined,
+          drugId: apiBom.drugId != null ? String(apiBom.drugId) : "",
+          items: (apiBom.items || []).map((item: any) => ({
+            ...item,
+            id: item.id != null ? String(item.id) : undefined,
+            materialId: item.materialId != null ? String(item.materialId) : "",
+          })),
+        }
+        setBOM(normalized)
       } else {
         throw new Error("BOM not found")
       }
@@ -37,10 +48,10 @@ export default function EditBOMPage() {
     }
   }
 
-  const handleSubmit = async (data: BOM) => {
+  const handleSubmit = async (data: any) => {
     setIsSubmitting(true)
     try {
-      const response = await manufacturingApi.updateBOM({ ...data, id: params.id })
+      const response = await manufacturingApi.updateBOM(params.id as string, data)
       if (response.success) {
         router.push("/dashboard/manufacturing/boms")
       } else {

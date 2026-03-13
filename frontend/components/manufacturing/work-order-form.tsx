@@ -55,9 +55,10 @@ export function WorkOrderForm({
       masterDataApi.getDrugs().catch(() => ({ data: [] })),
       sitesApi.getSites().catch(() => ({ data: [] })),
     ]).then(([drugsRes, sitesRes]) => {
-      // Handle different response formats
+      // Handle different response formats for drugs
       if (drugsRes?.data) {
-        setDrugs(Array.isArray(drugsRes.data) ? drugsRes.data : [])
+        const drugsList = (drugsRes.data as any).drugs ?? drugsRes.data
+        setDrugs(Array.isArray(drugsList) ? drugsList : [])
       } else if (Array.isArray(drugsRes)) {
         setDrugs(drugsRes)
       }

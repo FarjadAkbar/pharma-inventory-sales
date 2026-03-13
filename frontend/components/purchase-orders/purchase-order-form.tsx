@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Form, FormInput, FormSelect, FormActions, FormField } from "@/components/ui/form"
 import { useFormState } from "@/lib/api-response"
 import { useFormValidation, commonValidationRules } from "@/lib/form-validation"
-import { purchaseOrdersApi, suppliersApi, sitesApi, rawMaterialsApi, type PurchaseOrder } from "@/services"
+import { purchaseOrdersApi, suppliersApi, sitesApi, masterDataApi, type PurchaseOrder } from "@/services"
 import { Button } from "@/components/ui/button"
 import { X, Plus } from "lucide-react"
 
@@ -42,19 +42,22 @@ export function PurchaseOrderForm({ initialData, onSubmit, submitLabel = "Save" 
         setLoadingSites(true)
         setLoadingRawMaterials(true)
 
-        const [suppliersData, sitesData, rawMaterialsData] = await Promise.all([
+        const [suppliersData, sitesData, rawMaterialsRes] = await Promise.all([
           suppliersApi.getSuppliers(),
           sitesApi.getSites(),
-          rawMaterialsApi.getRawMaterials(),
+          masterDataApi.getRawMaterials().catch(() => ({ data: [] })),
         ])
 
         setSuppliers(suppliersData.map((s: { id: number; name: string }) => ({ id: s.id, name: s.name })))
         setSites(sitesData.map((s: { id: number; name: string }) => ({ id: s.id, name: s.name })))
-        setRawMaterials(rawMaterialsData.map((rm: { id: number; name: string; code: string }) => ({ 
-          id: rm.id, 
-          name: rm.name,
-          code: rm.code 
-        })))
+        const rmList = (rawMaterialsRes as any)?.data?.rawMaterials ?? (rawMaterialsRes as any)?.data ?? []
+        if (Array.isArray(rmList)) {
+          setRawMaterials(rmList.map((rm: any) => ({
+            id: rm.id,
+            name: rm.name,
+            code: rm.code,
+          })))
+        }
 
         // Set initial items if editing
         if (initialData?.items && initialData.items.length > 0) {

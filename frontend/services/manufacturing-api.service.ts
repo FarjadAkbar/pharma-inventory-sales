@@ -37,8 +37,8 @@ export class ManufacturingApiService extends BaseApiService {
     })
   }
 
-  async updateBOM(bomData: any) {
-    return this.request("/manufacturing/boms", {
+  async updateBOM(id: string | number, bomData: any) {
+    return this.request(`/manufacturing/boms/${id}`, {
       method: "PUT",
       body: JSON.stringify(bomData),
     })

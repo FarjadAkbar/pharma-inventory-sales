@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Form, FormField, FormInput, FormTextarea, FormSelect, FormCheckbox, FormActions } from "@/components/ui/form"
 import { useFormState } from "@/lib/api-response"
@@ -8,6 +8,7 @@ import { useFormValidation, commonValidationRules } from "@/lib/form-validation"
 import type { BOM } from "@/types/manufacturing"
 import { Button } from "@/components/ui/button"
 import { Plus, Trash2, Package, AlertCircle } from "lucide-react"
+import { masterDataApi } from "@/services"
 
 interface BOMItem {
   materialId: string
@@ -63,6 +64,60 @@ export function BOMForm({
   })
 
   const [items, setItems] = useState<BOMItem[]>(initialFormData.items)
+  const [drugs, setDrugs] = useState<{ value: string; label: string }[]>([])
+  const [materials, setMaterials] = useState<{ value: string; label: string }[]>([])
+  const [units, setUnits] = useState<{ value: string; label: string }[]>([])
+
+  useEffect(() => {
+    async function loadOptions() {
+      try {
+        const [drugsRes, materialsRes, unitsRes] = await Promise.all([
+          masterDataApi.getDrugs({ limit: 100 }).catch(() => null),
+          masterDataApi.getRawMaterials({ limit: 100 }).catch(() => ({ data: [] })),
+          masterDataApi.getUnits().catch(() => null),
+        ])
+        if (drugsRes?.data) {
+          const drugsList = (drugsRes.data as any).drugs ?? drugsRes.data
+          if (Array.isArray(drugsList)) {
+            setDrugs(
+              drugsList.map((d: any) => ({
+                value: String(d.id),
+                label: `${d.name} - ${d.code}`,
+              })),
+            )
+          }
+        }
+
+        // API may return array directly or { data: { rawMaterials: [...] } } or { data: [...] }
+        const materialsList = Array.isArray(materialsRes)
+          ? materialsRes
+          : (materialsRes as any)?.data?.rawMaterials ?? (materialsRes as any)?.data ?? []
+        console.log(materialsList, "materialsList")
+        if (Array.isArray(materialsList)) {
+          console.log(materialsList, "materialsList2")
+          setMaterials(
+            materialsList.map((m: any) => ({
+              value: String(m.id),
+              label: `${m.name} - ${m.code}`,
+            })),
+          )
+        }
+        console.log(materials, "materials")
+        if (unitsRes?.data?.units && Array.isArray(unitsRes.data.units)) {
+          setUnits(
+            unitsRes.data.units.map((u: any) => ({
+              value: u.symbol ?? u.code ?? u.name,
+              label: u.name ?? u.code ?? u.symbol,
+            })),
+          )
+        }
+      } catch {
+        // Silently ignore; form will still work but without dynamic options
+      }
+    }
+
+    loadOptions()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -140,34 +195,19 @@ export function BOMForm({
     setItems(updatedItems)
   }
 
-  // Mock data for dropdowns
-  const drugs = [
-    { value: "1", label: "Paracetamol Tablets - PAR-001" },
-    { value: "2", label: "Ibuprofen Tablets - IBU-002" },
-    { value: "3", label: "Aspirin Tablets - ASP-003" },
-    { value: "4", label: "Amoxicillin Capsules - AMX-004" },
-    { value: "5", label: "Cough Syrup - CS-005" }
-  ]
-
-  const materials = [
-    { value: "1", label: "Paracetamol - PAR-001" },
-    { value: "2", label: "Ibuprofen - IBU-002" },
-    { value: "3", label: "Aspirin - ASP-003" },
-    { value: "4", label: "Lactose - LAC-004" },
-    { value: "5", label: "Magnesium Stearate - MS-005" },
-    { value: "6", label: "Microcrystalline Cellulose - MCC-006" },
-    { value: "7", label: "Starch - ST-007" },
-    { value: "8", label: "Talc - TAL-008" }
-  ]
-
-  const units = [
-    { value: "kg", label: "Kilogram (kg)" },
-    { value: "g", label: "Gram (g)" },
-    { value: "mg", label: "Milligram (mg)" },
-    { value: "L", label: "Liter (L)" },
-    { value: "ml", label: "Milliliter (ml)" },
-    { value: "pcs", label: "Pieces" }
-  ]
+  const updateItemMaterial = (index: number, value: string) => {
+    const material = materials.find(m => m.value === value)
+    setItems(prev => {
+      const next = [...prev]
+      next[index] = {
+        ...next[index],
+        materialId: value,
+        materialName: material?.label.split(' - ')[0] ?? '',
+        materialCode: material?.label.split(' - ')[1] ?? '',
+      }
+      return next
+    })
+  }
 
   return (
     <Card>
@@ -266,7 +306,7 @@ export function BOMForm({
           {/* Items Section */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Material Requirements</h3>
+              <h3 className="text-lg font-semibold">Material... Requirements</h3>
               <Button type="button" onClick={addItem} variant="outline" size="sm">
                 <Plus  />
                 Add Material
@@ -291,13 +331,8 @@ export function BOMForm({
                   <FormSelect
                     name={`materialId_${index}`}
                     label="Material"
-                    value={item.materialId}
-                    onChange={(value) => {
-                      const material = materials.find(m => m.value === value)
-                      updateItem(index, 'materialId', value)
-                      updateItem(index, 'materialName', material?.label.split(' - ')[0] || '')
-                      updateItem(index, 'materialCode', material?.label.split(' - ')[1] || '')
-                    }}
+                    value={item.materialId ?? ""}
+                    onChange={(value) => updateItemMaterial(index, value)}
                     options={materials}
                     placeholder="Select material"
                   />

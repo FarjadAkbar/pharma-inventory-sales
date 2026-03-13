@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Form, FormInput, FormSelect, FormActions } from "@/components/ui/form"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { rawMaterialsApi, warehouseApi, manufacturingApi } from "@/services"
+import { masterDataApi, warehouseApi, manufacturingApi } from "@/services"
 import { toast } from "sonner"
 
 interface MaterialConsumptionFormProps {
@@ -36,14 +36,13 @@ export function MaterialConsumptionForm({ batchId, onSuccess }: MaterialConsumpt
   const fetchData = async () => {
     try {
       const [materialsRes, inventoryRes] = await Promise.all([
-        rawMaterialsApi.getRawMaterials().catch(() => ({ data: [] })),
+        masterDataApi.getRawMaterials().catch(() => ({ data: [] })),
         warehouseApi.getInventoryItems({ status: "Available" }).catch(() => ({ data: [] })),
       ])
       // Handle different response formats
-      if (materialsRes?.data) {
-        setRawMaterials(Array.isArray(materialsRes.data) ? materialsRes.data : [])
-      } else if (Array.isArray(materialsRes)) {
-        setRawMaterials(materialsRes)
+      const rmList = (materialsRes as any)?.data?.rawMaterials ?? (materialsRes as any)?.data ?? []
+      if (Array.isArray(rmList)) {
+        setRawMaterials(rmList)
       }
       if (inventoryRes?.data) {
         setInventoryItems(Array.isArray(inventoryRes.data) ? inventoryRes.data : [])

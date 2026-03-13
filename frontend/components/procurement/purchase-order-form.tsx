@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Trash2, Calculator, FileText, ShoppingCart, User, Building2, Calendar, AlertCircle, Loader2 } from "lucide-react"
-import { purchaseOrdersApi, sitesApi, rawMaterialsApi, suppliersApi } from "@/services"
+import { purchaseOrdersApi, sitesApi, masterDataApi, suppliersApi } from "@/services"
 import { toast } from "@/lib/toast"
 
 interface Site {
@@ -107,13 +107,16 @@ export function PurchaseOrderForm({ purchaseOrderId, onSuccess, onCancel }: Purc
 
   const fetchRawMaterials = async () => {
     try {
-      const materialsData = await rawMaterialsApi.getRawMaterials()
-      setRawMaterials(materialsData.map((material: any) => ({
-        id: material.id,
-        name: material.name,
-        code: material.code,
-        unit: material.unit,
-      })))
+      const res = await masterDataApi.getRawMaterials().catch(() => ({ data: [] }))
+      const list = (res as any)?.data?.rawMaterials ?? (res as any)?.data ?? []
+      if (Array.isArray(list)) {
+        setRawMaterials(list.map((material: any) => ({
+          id: material.id,
+          name: material.name,
+          code: material.code,
+          unit: material.unit,
+        })))
+      }
     } catch (error) {
       console.error("Failed to fetch raw materials:", error)
     }
