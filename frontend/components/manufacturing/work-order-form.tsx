@@ -26,6 +26,7 @@ export function WorkOrderForm({
   const [drugs, setDrugs] = useState<any[]>([])
   const [sites, setSites] = useState<any[]>([])
   const [boms, setBoms] = useState<any[]>([])
+  const [units, setUnits] = useState<{ value: string; label: string }[]>([])
   const [loadingBoms, setLoadingBoms] = useState(false)
   const [formData, setFormData] = useState({
     drugId: initialData?.drugId?.toString() || "",
@@ -50,11 +51,12 @@ export function WorkOrderForm({
   })
 
   useEffect(() => {
-    // Fetch drugs and sites
+    // Fetch drugs, sites, and units
     Promise.all([
       masterDataApi.getDrugs().catch(() => ({ data: [] })),
       sitesApi.getSites().catch(() => ({ data: [] })),
-    ]).then(([drugsRes, sitesRes]) => {
+      masterDataApi.getUnits().catch(() => null),
+    ]).then(([drugsRes, sitesRes, unitsRes]) => {
       // Handle different response formats for drugs
       if (drugsRes?.data) {
         const drugsList = (drugsRes.data as any).drugs ?? drugsRes.data
@@ -66,6 +68,15 @@ export function WorkOrderForm({
         setSites(Array.isArray(sitesRes.data) ? sitesRes.data : [])
       } else if (Array.isArray(sitesRes)) {
         setSites(sitesRes)
+      }
+
+      if (unitsRes?.data?.units && Array.isArray(unitsRes.data.units)) {
+        setUnits(
+          unitsRes.data.units.map((u: any) => ({
+            value: u.symbol ?? u.code ?? u.name,
+            label: u.name ?? u.code ?? u.symbol,
+          })),
+        )
       }
     })
   }, [])
@@ -213,11 +224,13 @@ export function WorkOrderForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="unit">Unit *</Label>
-          <FormInput
-            id="unit"
-            value={formData.unit}
-            onChange={(e) => setFormData(prev => ({ ...prev, unit: e.target.value }))}
+          <FormSelect
+            name="unit"
+            label="Unit *"
+            value={formData.unit || undefined}
+            onChange={(value) => setFormData(prev => ({ ...prev, unit: value }))}
+            options={units}
+            placeholder="Select Unit"
             required
           />
         </div>
