@@ -79,6 +79,7 @@ export class ShipmentsService {
   }
 
   async create(createDto: CreateShipmentDto): Promise<ShipmentResponseDto> {
+    console.log(createDto, "........");
     // Verify sales order exists and is approved
     const rawSalesOrder = await firstValueFrom(
       this.salesOrderClient.send(SALES_ORDER_PATTERNS.GET_BY_ID, createDto.salesOrderId)
