@@ -126,7 +126,7 @@ export default function ViewBOMPage() {
           <div className="flex items-center gap-4">
             <Link href="/dashboard/manufacturing/boms">
               <Button variant="outline" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
+                <ArrowLeft className="h-4 w-4" />
                 Back to BOMs
               </Button>
             </Link>
@@ -138,18 +138,18 @@ export default function ViewBOMPage() {
           <div className="flex items-center gap-2">
             {bom.status === "Draft" && (
               <Button onClick={handleApproveBOM} className="bg-blue-600 hover:bg-blue-700">
-                <FileCheck className="h-4 w-4 mr-2" />
+                <FileCheck className="h-4 w-4" />
                 Approve
               </Button>
             )}
             <Link href={`/dashboard/manufacturing/boms/${bom.id}/edit`}>
               <Button variant="outline">
-                <Edit className="h-4 w-4 mr-2" />
+                <Edit className="h-4 w-4" />
                 Edit
               </Button>
             </Link>
             <Button variant="destructive" onClick={handleDeleteBOM}>
-              <Trash2 className="h-4 w-4 mr-2" />
+              <Trash2 className="h-4 w-4" />
               Delete
             </Button>
           </div>

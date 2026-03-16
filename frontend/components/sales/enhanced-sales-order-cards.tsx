@@ -223,13 +223,13 @@ export function EnhancedSalesOrderCards({
                   <DropdownMenuSeparator />
                   {onView && (
                     <DropdownMenuItem onClick={() => onView(order)}>
-                      <Eye className="h-4 w-4 mr-2" />
+                      <Eye className="h-4 w-4" />
                       View Details
                     </DropdownMenuItem>
                   )}
                   {onEdit && (
                     <DropdownMenuItem onClick={() => onEdit(order)}>
-                      <Edit className="h-4 w-4 mr-2" />
+                      <Edit className="h-4 w-4" />
                       Edit Order
                     </DropdownMenuItem>
                   )}
@@ -239,7 +239,7 @@ export function EnhancedSalesOrderCards({
                       onClick={() => onDelete(order)}
                       className="text-red-600"
                     >
-                      <Trash2 className="h-4 w-4 mr-2" />
+                      <Trash2 className="h-4 w-4" />
                       Delete Order
                     </DropdownMenuItem>
                   )}
@@ -317,13 +317,13 @@ export function EnhancedSalesOrderCards({
             <div className="flex gap-2 pt-2">
               {onView && (
                 <Button variant="outline" size="sm" onClick={() => onView(order)} className="flex-1">
-                  <Eye className="h-4 w-4 mr-2" />
+                  <Eye className="h-4 w-4" />
                   View
                 </Button>
               )}
               {onEdit && (
                 <Button variant="outline" size="sm" onClick={() => onEdit(order)} className="flex-1">
-                  <Edit className="h-4 w-4 mr-2" />
+                  <Edit className="h-4 w-4" />
                   Edit
                 </Button>
               )}
@@ -405,7 +405,7 @@ export function EnhancedSalesOrderCards({
                           onClick={() => onDelete(order)}
                           className="text-red-600"
                         >
-                          <Trash2 className="h-4 w-4 mr-2" />
+                          <Trash2 className="h-4 w-4" />
                           Delete Order
                         </DropdownMenuItem>
                       )}
@@ -473,7 +473,7 @@ export function EnhancedSalesOrderCards({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
+                <Filter className="h-4 w-4" />
                 Sort
                 {sortOrder === 'asc' ? <SortAsc className="h-4 w-4 ml-2" /> : <SortDesc className="h-4 w-4 ml-2" />}
               </Button>

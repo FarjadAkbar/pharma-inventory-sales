@@ -14,6 +14,10 @@ export class DistributionApiService extends BaseApiService {
     return this.request(`/sales/sales-orders?${queryParams.toString()}`)
   }
 
+  async getSalesOrder(id: string) {
+    return this.request(`/sales/sales-orders/${id}`)
+  }
+
   async createSalesOrder(orderData: any) {
     return this.request("/sales/sales-orders", {
       method: "POST",

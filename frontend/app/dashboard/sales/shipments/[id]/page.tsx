@@ -220,7 +220,7 @@ export default function ShipmentDetailPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" onClick={() => router.push("/dashboard/sales/shipments")}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className="h-4 w-4" />
               Back
             </Button>
             <div>
@@ -460,7 +460,7 @@ function AllocateStockDialog({ item, onAllocate, disabled }: { item: ShipmentIte
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" disabled={disabled} className="w-full justify-start">
-          <Package className="h-4 w-4 mr-2" />
+          <Package className="h-4 w-4" />
           {item.drugName} - Allocate Stock
         </Button>
       </DialogTrigger>
@@ -511,7 +511,7 @@ function PickItemDialog({ item, onPick, disabled }: { item: ShipmentItem; onPick
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" disabled={disabled} className="w-full justify-start">
-          <ShoppingCart className="h-4 w-4 mr-2" />
+          <ShoppingCart className="h-4 w-4" />
           {item.drugName} - Pick ({item.pickedQuantity}/{item.quantity})
         </Button>
       </DialogTrigger>
@@ -557,7 +557,7 @@ function PackItemDialog({ item, onPack, disabled }: { item: ShipmentItem; onPack
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" disabled={disabled} className="w-full justify-start">
-          <Box className="h-4 w-4 mr-2" />
+          <Box className="h-4 w-4" />
           {item.drugName} - Pack ({item.packedQuantity}/{item.pickedQuantity})
         </Button>
       </DialogTrigger>
@@ -605,7 +605,7 @@ function ShipOrderDialog({ onShip }: { onShip: (trackingNumber: string, carrier:
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
-          <Truck className="h-4 w-4 mr-2" />
+          <Truck className="h-4 w-4" />
           Ship Order
         </Button>
       </DialogTrigger>

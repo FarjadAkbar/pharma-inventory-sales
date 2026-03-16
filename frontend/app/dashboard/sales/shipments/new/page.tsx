@@ -11,7 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { Plus, Trash2 } from "lucide-react"
 import { distributionApi } from "@/services"
-import { apiService } from "@/services/api.service"
 import { toast } from "sonner"
 import type { SalesOrder } from "@/types/distribution"
 
@@ -35,10 +34,11 @@ export default function NewShipmentPage() {
 
   const fetchApprovedSalesOrders = async () => {
     try {
-      const response = await apiService.getSalesOrders({ status: "Approved" })
+      const response = await distributionApi.getSalesOrders({ status: "Approved" })
       if (response.success && response.data) {
-        const data = response.data.data || response.data
-        setSalesOrders(Array.isArray(data) ? data : data.salesOrders || [])
+        const raw = response.data as any
+        const list = raw.data ?? raw.salesOrders ?? (Array.isArray(raw) ? raw : [])
+        setSalesOrders(Array.isArray(list) ? list : [])
       }
     } catch (error) {
       console.error("Error fetching sales orders:", error)
@@ -47,7 +47,7 @@ export default function NewShipmentPage() {
   }
 
   const handleSalesOrderSelect = (orderId: string) => {
-    const order = salesOrders.find(o => o.id === orderId)
+    const order = salesOrders.find(o => o.id.toString() === orderId)
     setSelectedSalesOrder(order || null)
     if (order) {
       setFormData(prev => ({
@@ -127,13 +127,13 @@ export default function NewShipmentPage() {
               <div className="space-y-4">
                 <div>
                   <Label>Sales Order *</Label>
-                  <Select value={selectedSalesOrder?.id || ""} onValueChange={handleSalesOrderSelect}>
+                  <Select value={selectedSalesOrder?.id?.toString() || ""} onValueChange={handleSalesOrderSelect}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a sales order" />
                     </SelectTrigger>
                     <SelectContent>
                       {salesOrders.map((order) => (
-                        <SelectItem key={order.id} value={order.id}>
+                        <SelectItem key={order.id} value={order.id.toString()}>
                           {order.orderNumber} - {order.accountName} ({order.items.length} items)
                         </SelectItem>
                       ))}

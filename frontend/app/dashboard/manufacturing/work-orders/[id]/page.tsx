@@ -118,11 +118,11 @@ export default function WorkOrderDetailPage() {
             {getStatusBadge(workOrder.status)}
             {getPriorityBadge(workOrder.priority)}
             <Button variant="outline" onClick={() => router.push(`/dashboard/manufacturing/work-orders/${workOrder.id}/edit`)}>
-              <Edit className="h-4 w-4 mr-2" />
+              <Edit className="h-4 w-4" />
               Edit
             </Button>
             <Button onClick={() => router.push(`/dashboard/manufacturing/batches/new?workOrderId=${workOrder.id}`)}>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4" />
               Create Batch
             </Button>
           </div>

@@ -225,7 +225,7 @@ export function UnifiedDataTable({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="sm" className="relative">
-            <Filter className="h-4 w-4 mr-2" />
+            <Filter className="h-4 w-4" />
             Filters
             {getActiveFiltersCount() > 0 && (
               <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
@@ -311,7 +311,7 @@ export function UnifiedDataTable({
               onClick={clearAllFilters}
               className="w-full"
             >
-              <X className="h-4 w-4 mr-2" />
+              <X className="h-4 w-4" />
               Clear All Filters
             </Button>
           </div>
@@ -335,7 +335,7 @@ export function UnifiedDataTable({
             size="sm"
             onClick={() => action.action(Array.from(selectedItems).map(i => filteredData[parseInt(i)]))}
           >
-            {action.icon && <action.icon className="h-4 w-4 mr-2" />}
+            {action.icon && <action.icon className="h-4 w-4" />}
             {action.label}
           </Button>
         ))}
@@ -446,7 +446,7 @@ export function UnifiedDataTable({
             )}
             {showExport && onExport && (
               <Button variant="outline" size="sm" onClick={onExport}>
-                <Download className="h-4 w-4 mr-2" />
+                <Download className="h-4 w-4" />
                 Export
               </Button>
             )}

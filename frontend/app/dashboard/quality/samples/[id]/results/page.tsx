@@ -232,7 +232,7 @@ export default function SampleResultsPage({ params }: ResultsPageProps) {
       <div className="space-y-6">
         <div className="flex items-center gap-4">
           <Button variant="ghost" onClick={() => router.back()}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="h-4 w-4" />
             Back
           </Button>
           <div>
@@ -390,7 +390,7 @@ export default function SampleResultsPage({ params }: ResultsPageProps) {
                 </>
               ) : (
                 <>
-                  <Save className="h-4 w-4 mr-2" />
+                  <Save className="h-4 w-4" />
                   Save Results
                 </>
               )}

@@ -630,7 +630,7 @@ export function SecurityAudit() {
                       </Badge>
                       {report.fileUrl && (
                         <Button variant="outline" size="sm">
-                          <Download className="h-4 w-4 mr-2" />
+                          <Download className="h-4 w-4" />
                           Download
                         </Button>
                       )}
