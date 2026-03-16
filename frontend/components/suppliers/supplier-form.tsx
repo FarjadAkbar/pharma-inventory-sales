@@ -100,12 +100,12 @@ export function SupplierForm({ initialData, onSubmit, submitLabel = "Save" }: Su
       }
 
       await onSubmit({
-        name: "test",
-        contactPerson: "+92887775",
-        email: "testom@gmail.com",
-        phone: "+92887775",
-        address: "karac",
-        rating: parseFloat(data.rating) || 0,
+        name: formState.data.name,
+        contactPerson: formState.data.contactPerson,
+        email: formState.data.email,
+        phone: formState.data.phone,
+        address: formState.data.address,
+        rating: parseFloat(formState.data.rating) || 0,
         status: data.status as 'Active' | 'Inactive',
         siteIds: selectedSiteIds.length > 0 ? selectedSiteIds.map(id => parseInt(id, 10)) : undefined,
       })

@@ -45,9 +45,10 @@ export default function EditQCSamplePage() {
     usersApi.getUsers({ limit: 200 }).then((res) => {
       const list = res?.users || []
       setUsers([
-        { value: "", label: "Unassigned" },
+        { value: "unassigned", label: "Unassigned" },
         ...list.map((u: any) => ({ value: String(u.id), label: u.fullname || u.name || u.email || `User ${u.id}` })),
       ])
+      console.log("update user list", users)
     }).catch(() => {})
   }, [])
 
@@ -192,7 +193,7 @@ export default function EditQCSamplePage() {
                   placeholder="Select status"
                 />
 
-                <FormSelect
+                 <FormSelect
                   name="priority"
                   label="Priority"
                   value={formState.data.priority}
@@ -205,7 +206,6 @@ export default function EditQCSamplePage() {
                   ]}
                   placeholder="Select priority"
                 />
-
                 <FormSelect
                   name="assignedTo"
                   label="Assign to User"
