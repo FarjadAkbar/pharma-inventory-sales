@@ -1,0 +1,16 @@
+export enum ErrorCode {
+  VALIDATION_FAILED = 'VALIDATION_FAILED',
+  NOT_FOUND = 'NOT_FOUND',
+  STOCK_INSUFFICIENT = 'STOCK_INSUFFICIENT',
+  BATCH_NOT_RELEASED = 'BATCH_NOT_RELEASED',
+  BUSINESS_RULE_VIOLATION = 'BUSINESS_RULE_VIOLATION',
+  SERVICE_UNAVAILABLE = 'SERVICE_UNAVAILABLE',
+  INTERNAL_ERROR = 'INTERNAL_ERROR',
+}
+
+export type ServiceErrorPayload = {
+  code: ErrorCode | string;
+  message: string;
+  details?: unknown;
+};
+

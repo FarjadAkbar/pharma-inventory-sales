@@ -37,10 +37,11 @@ export class SitesService {
     return this.toResponseDto(updated);
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: number): Promise<{ success: boolean }> {
     const site = await this.sitesRepository.findOne({ where: { id } });
     if (!site) throw new NotFoundException('Site not found');
     await this.sitesRepository.remove(site);
+    return { success: true };
   }
 
   private toResponseDto(site: Site): SiteResponseDto {

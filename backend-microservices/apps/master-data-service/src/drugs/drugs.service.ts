@@ -9,10 +9,15 @@ export class DrugsService {
   constructor(@InjectRepository(Drug) private drugsRepository: Repository<Drug>) {}
 
   async create(createDto: CreateDrugDto): Promise<DrugResponseDto> {
+    const createdBy = createDto.createdBy;
+    if (createdBy == null || !Number.isFinite(Number(createdBy)) || Number(createdBy) < 1) {
+      throw new BadRequestException('createdBy (actor user id) is required');
+    }
     const existing = await this.drugsRepository.findOne({ where: { code: createDto.code } });
     if (existing) throw new BadRequestException('Drug with this code already exists');
     const drug = this.drugsRepository.create({
       ...createDto,
+      createdBy: Number(createdBy),
       expiryDate: createDto.expiryDate ? new Date(createDto.expiryDate) : undefined,
     });
     const saved = await this.drugsRepository.save(drug);
@@ -50,10 +55,11 @@ export class DrugsService {
     return this.toResponseDto(updated);
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: number): Promise<{ success: boolean }> {
     const drug = await this.drugsRepository.findOne({ where: { id } });
     if (!drug) throw new NotFoundException('Drug not found');
     await this.drugsRepository.remove(drug);
+    return { success: true };
   }
 
   private toResponseDto(drug: Drug): DrugResponseDto {

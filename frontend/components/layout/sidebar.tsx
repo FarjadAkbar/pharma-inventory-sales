@@ -136,8 +136,8 @@ export function Sidebar() {
       items: [
         { title: "Sales Orders", href: "/dashboard/sales/orders", icon: ShoppingCart },
         { title: "Shipments", href: "/dashboard/sales/shipments", icon: Truck },
-        { title: "Shipment Items", href: "/dashboard/sales/shipment-items", icon: Package },
         { title: "Proof of Delivery", href: "/dashboard/sales/pod", icon: ClipboardCheck },
+        { title: "Audit Trail", href: "/dashboard/audit", icon: Eye },
       ]
     },
   ]

@@ -250,12 +250,13 @@ export class GoodsReceiptsService {
     return this.toResponseDto(updated, updated.items);
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: number): Promise<{ success: boolean }> {
     const goodsReceipt = await this.goodsReceiptsRepository.findOne({ where: { id } });
     if (!goodsReceipt) {
       throw new NotFoundException('Goods receipt not found');
     }
     await this.goodsReceiptsRepository.remove(goodsReceipt);
+    return { success: true };
   }
 
   private async toResponseDto(goodsReceipt: GoodsReceipt, items?: GoodsReceiptItem[]): Promise<GoodsReceiptResponseDto> {

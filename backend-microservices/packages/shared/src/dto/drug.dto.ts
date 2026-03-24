@@ -89,8 +89,10 @@ export class CreateDrugDto {
   @IsOptional()
   storageConditions?: string;
 
+  /** Set by API gateway from JWT when omitted */
   @IsNumber()
-  createdBy: number;
+  @IsOptional()
+  createdBy?: number;
 }
 
 export class UpdateDrugDto {

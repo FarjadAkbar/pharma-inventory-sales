@@ -4,6 +4,7 @@ import { Repository, FindOptionsWhere } from 'typeorm';
 import { QueryFailedError } from 'typeorm';
 import { SalesOrder } from '../entities/sales-order.entity';
 import { SalesOrderItem } from '../entities/sales-order-item.entity';
+import { AuditLog, AuditService, StatusHistory } from '@repo/shared';
 import {
   CreateSalesOrderDto,
   UpdateSalesOrderDto,
@@ -21,6 +22,11 @@ export class SalesOrdersService {
     private salesOrdersRepository: Repository<SalesOrder>,
     @InjectRepository(SalesOrderItem)
     private salesOrderItemsRepository: Repository<SalesOrderItem>,
+    @InjectRepository(AuditLog)
+    private salesOrderAuditLogsRepository: Repository<AuditLog>,
+    @InjectRepository(StatusHistory)
+    private salesOrderStatusHistoryRepository: Repository<StatusHistory>,
+    private auditService: AuditService,
   ) {}
 
   async generateOrderNumber(): Promise<string> {
@@ -43,6 +49,8 @@ export class SalesOrdersService {
   }
 
   async create(createDto: CreateSalesOrderDto): Promise<SalesOrderResponseDto> {
+    const payload = createDto as any;
+    this.auditService.setContext(payload.createdBy, payload.createdByName, payload.correlationId, 'sales-order-service');
     const orderNumber = await this.generateOrderNumber();
 
     // Create sales order
@@ -65,6 +73,7 @@ export class SalesOrdersService {
     });
 
     const savedOrder = await this.salesOrdersRepository.save(salesOrder);
+    await this.recordStatusTransition(savedOrder.id, null, SalesOrderStatus.DRAFT, createDto.createdBy, 'Sales order created');
 
     // Create order items
     if (createDto.items && createDto.items.length > 0) {
@@ -159,7 +168,15 @@ export class SalesOrdersService {
     if (!salesOrder) {
       throw new NotFoundException(`Sales order with ID ${id} not found`);
     }
+    const payload = updateDto as any;
+    this.auditService.setContext(
+      Number(payload.updatedBy ?? salesOrder.createdBy),
+      payload.updatedByName,
+      payload.correlationId,
+      'sales-order-service',
+    );
 
+    const previousStatus = salesOrder.status;
     // Prevent status changes that violate workflow
     if (updateDto.status) {
       const validTransitions = this.getValidStatusTransitions(salesOrder.status);
@@ -208,6 +225,15 @@ export class SalesOrdersService {
     }
 
     const updated = await this.salesOrdersRepository.save(salesOrder);
+    if (updateDto.status && updateDto.status !== previousStatus) {
+      await this.recordStatusTransition(
+        updated.id,
+        previousStatus,
+        updateDto.status,
+        updated.createdBy,
+        'Status changed via update',
+      );
+    }
     return this.findOne(updated.id);
   }
 
@@ -219,16 +245,25 @@ export class SalesOrdersService {
     if (!salesOrder) {
       throw new NotFoundException(`Sales order with ID ${id} not found`);
     }
+    this.auditService.setContext(approvedBy, undefined, undefined, 'sales-order-service');
 
     if (salesOrder.status !== SalesOrderStatus.DRAFT && salesOrder.status !== SalesOrderStatus.PENDING_APPROVAL) {
       throw new BadRequestException(`Cannot approve sales order. Current status: ${salesOrder.status}`);
     }
 
+    const previousStatus = salesOrder.status;
     salesOrder.status = SalesOrderStatus.APPROVED;
     salesOrder.approvedBy = approvedBy;
     salesOrder.approvedAt = new Date();
 
     const updated = await this.salesOrdersRepository.save(salesOrder);
+    await this.recordStatusTransition(
+      updated.id,
+      previousStatus,
+      SalesOrderStatus.APPROVED,
+      approvedBy,
+      'Approved',
+    );
     return this.toResponseDto(updated);
   }
 
@@ -240,17 +275,20 @@ export class SalesOrdersService {
     if (!salesOrder) {
       throw new NotFoundException(`Sales order with ID ${id} not found`);
     }
+    this.auditService.setContext(salesOrder.createdBy, undefined, undefined, 'sales-order-service');
 
     if (salesOrder.status === SalesOrderStatus.SHIPPED || salesOrder.status === SalesOrderStatus.DELIVERED) {
       throw new BadRequestException(`Cannot cancel sales order. Current status: ${salesOrder.status}`);
     }
 
+    const previousStatus = salesOrder.status;
     salesOrder.status = SalesOrderStatus.CANCELLED;
     const updated = await this.salesOrdersRepository.save(salesOrder);
+    await this.recordStatusTransition(updated.id, previousStatus, SalesOrderStatus.CANCELLED, updated.createdBy, 'Cancelled');
     return this.toResponseDto(updated);
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: number): Promise<{ success: boolean }> {
     const salesOrder = await this.salesOrdersRepository.findOne({ where: { id } });
     if (!salesOrder) {
       throw new NotFoundException(`Sales order with ID ${id} not found`);
@@ -259,8 +297,61 @@ export class SalesOrdersService {
     if (salesOrder.status !== SalesOrderStatus.DRAFT && salesOrder.status !== SalesOrderStatus.CANCELLED) {
       throw new BadRequestException(`Cannot delete sales order. Current status: ${salesOrder.status}`);
     }
+    this.auditService.setContext(salesOrder.createdBy, undefined, undefined, 'sales-order-service');
 
     await this.salesOrdersRepository.remove(salesOrder);
+    return { success: true };
+  }
+
+  async getHistory(id: number) {
+    const salesOrder = await this.salesOrdersRepository.findOne({ where: { id } });
+    if (!salesOrder) {
+      throw new NotFoundException(`Sales order with ID ${id} not found`);
+    }
+    const [audit, statusHistory] = await Promise.all([
+      this.salesOrderAuditLogsRepository.find({
+        where: { entityType: 'sales_order', entityId: id },
+        order: { createdAt: 'DESC' },
+      }),
+      this.salesOrderStatusHistoryRepository.find({
+        where: { entityType: 'sales_order', entityId: id },
+        order: { changedAt: 'DESC' },
+      }),
+    ]);
+    return { audit, statusHistory };
+  }
+
+  async getEntityHistory(entityType: string, entityId: number) {
+    const [audit, statusHistory] = await Promise.all([
+      this.salesOrderAuditLogsRepository.find({
+        where: { entityType, entityId },
+        order: { createdAt: 'DESC' },
+      }),
+      this.salesOrderStatusHistoryRepository.find({
+        where: { entityType, entityId },
+        order: { changedAt: 'DESC' },
+      }),
+    ]);
+    return { audit, statusHistory };
+  }
+
+  private async recordStatusTransition(
+    salesOrderId: number,
+    fromStatus: SalesOrderStatus | null,
+    toStatus: SalesOrderStatus,
+    changedBy?: number,
+    reason?: string,
+  ) {
+    await this.salesOrderStatusHistoryRepository.save(
+      this.salesOrderStatusHistoryRepository.create({
+        entityType: 'sales_order',
+        entityId: salesOrderId,
+        fromStatus,
+        toStatus,
+        changedBy,
+        reason,
+      }),
+    );
   }
 
   private getValidStatusTransitions(currentStatus: SalesOrderStatus): SalesOrderStatus[] {

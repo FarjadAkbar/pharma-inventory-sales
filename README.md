@@ -50,8 +50,13 @@ This project addresses these by providing:
 | **Manufacturing Service** | Work orders, batches, batch steps, material consumption, **BOMs** (Bill of Materials), **EBR** (Electronic Batch Records); TypeORM entities and migrations for `boms` and `bom_items`; BOMs service and controller. |
 | **Quality Service** | QC tests, QC samples, QC results, QA releases, QA deviations; TCP microservice on configurable port (e.g. 3003). |
 | **Shared Package** | DTOs, enums, and message patterns (`@repo/shared`) used by gateway and services. |
+| **Sales Order Service** | Sales orders and lines; status workflow; canonical source for distribution lines. |
+| **Shipment Service** | Shipments and shipment items; **creates from approved sales order**: server snapshots customer, site, address, and line quantities from sales-order-service (UI sends logistics only); validates any echoed IDs/lines against the SO. |
+| **Gateway – sales / audit actors** | JWT `sub` / `id` injected on mutations: shipment `createdBy`, SO approve `approvedBy`, allocate/pick/pack/ship and POD complete (when body omits actor). |
 
 Gateway manufacturing routes are split into **separate controllers** (like identity): work-orders, batches, material-consumption, boms, ebr, each with its own file under `api-gateway/src/manufacturing/`.
+
+**Distribution UX:** Primary path is **Shipments** → open one shipment for allocate → pick → pack → ship. **Line items (all shipments)** is an aggregate view. **Batches:** prefer `/dashboard/manufacturing/batches/new?workOrderId=…` from a work order.
 
 ### Database & Migrations
 
@@ -71,6 +76,7 @@ Gateway manufacturing routes are split into **separate controllers** (like ident
 
 ### DevOps / Runbooks
 
+- **Bootstrap guide:** See **[backend-microservices/docs/BOOTSTRAP.md](./backend-microservices/docs/BOOTSTRAP.md)** for each service’s DB, **per-service migrations**, seeding, `GET /health` (gateway), distribution workflow summary, and **`pnpm contract:sales`** (static response-shape checks).
 - **Ports (typical):** Identity 3001, Master Data 3002, Quality 3003, Procurement 3004, Warehouse 3005, Manufacturing 3006, Sales Order 3007, Shipment 3008, Sales CRM 3009, API Gateway 8000, Frontend 3000.
 - **Env:** Each app has `.env` (or example) for `DATABASE_*`, `*_SERVICE_HOST`, `*_SERVICE_PORT`, `JWT_SECRET`, etc. Gateway and feature modules use safe defaults (e.g. `localhost` and the ports above) when env vars are missing.
 
@@ -90,7 +96,9 @@ Gateway manufacturing routes are split into **separate controllers** (like ident
 ```
 pharma-sales-inventory/
 ├── backend-microservices/
-│   ├── api-gateway/          # NestJS gateway, JWT, proxies to services
+│   ├── docs/
+│   │   └── BOOTSTRAP.md    # Migrations, health, seeding, sales/shipment workflow
+│   ├── api-gateway/        # NestJS gateway, JWT, proxies to services
 │   ├── apps/
 │   │   ├── identity-service/
 │   │   ├── master-data-service/
@@ -112,11 +120,13 @@ pharma-sales-inventory/
 
 ## How to Run (Quick Start)
 
-1. **Database:** PostgreSQL (local or Supabase). Create DB if needed; run migrations per service (e.g. identity, manufacturing).
-2. **Backend:** From `backend-microservices`: `pnpm install`, then `pnpm dev` (or run gateway and each app separately). Set `.env` for each app (DB and service ports).
-3. **Seed (optional):** From `backend-microservices`: `pnpm seed` to seed identity (permissions, roles, users).
-4. **Frontend:** From `frontend`: `pnpm install`, `pnpm dev`. Open http://localhost:3000, log in (e.g. `admin@pharma.local` / `Admin@123` if seeded).
-5. **Gateway:** Ensure API gateway is running (e.g. http://localhost:8000) so the frontend can call `/v1/*`.
+1. **Database:** PostgreSQL (local or Supabase). Create databases as needed—**each microservice that uses its own DB needs migrations on that DB** (see [BOOTSTRAP.md](./backend-microservices/docs/BOOTSTRAP.md)). If you see errors like `relation "shipments" does not exist`, run **shipment-service** migrations against the correct database.
+2. **Backend:** From `backend-microservices`: `pnpm install`, then `pnpm dev` (or run gateway and each app separately). Copy `.env.example` → `.env` per app where applicable.
+3. **Migrations:** Run `migration:run` (or your project’s equivalent) **per app** that owns a schema—not only identity/manufacturing.
+4. **Seed (optional):** From `backend-microservices`: `pnpm seed` (after shared build + migrations). Treat as dev bootstrap unless seeder scripts are idempotent.
+5. **Contract check (optional):** From `backend-microservices`: `pnpm contract:sales` to validate documented gateway sales response shapes.
+6. **Frontend:** From `frontend`: `pnpm install`, `pnpm dev`. Open http://localhost:3000, log in (e.g. `admin@pharma.local` / `Admin@123` if seeded).
+7. **Gateway:** API at **http://localhost:8000/v1** (see `NEXT_PUBLIC_API_GATEWAY_URL` in the frontend). Health: `GET http://localhost:8000/v1/health` (checks selected TCP services; may require auth if not marked public).
 
 ---
 
@@ -125,9 +135,9 @@ pharma-sales-inventory/
 **This project is still in progress.** Not all screens or APIs are fully implemented or production-hardened. Priorities ahead may include:
 
 - Finishing remaining CRUD and workflows per module.
-- Strengthening validation, error handling, and tests.
+- Strengthening validation, error handling, and automated tests (including deeper gateway ↔ service contract tests).
 - Production deployment (e.g. Docker, env-based config).
 - More dashboard widgets and role-specific KPIs.
-- Document and audit trails for compliance.
+- **Compliance-grade audit:** persistent audit tables / status history and optional **optimistic locking (`version`)** on critical entities (gateway currently attaches user id on many mutations; full trails are not yet universal).
 
 The dashboard screenshot above reflects the current UI and structure; features and data will evolve as development continues.

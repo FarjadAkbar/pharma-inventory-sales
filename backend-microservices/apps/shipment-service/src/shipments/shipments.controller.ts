@@ -30,6 +30,16 @@ export class ShipmentsController {
     return this.shipmentsService.findOne(id);
   }
 
+  @MessagePattern(SHIPMENT_PATTERNS.HISTORY)
+  getHistory(@Payload() id: number) {
+    return this.shipmentsService.getHistory(id);
+  }
+
+  @MessagePattern(SHIPMENT_PATTERNS.ENTITY_HISTORY)
+  getEntityHistory(@Payload() data: { entityType: string; entityId: number }) {
+    return this.shipmentsService.getEntityHistory(data.entityType, data.entityId);
+  }
+
   @MessagePattern(SHIPMENT_PATTERNS.UPDATE)
   update(@Payload() data: { id: number; updateDto: UpdateShipmentDto }) {
     return this.shipmentsService.update(data.id, data.updateDto);

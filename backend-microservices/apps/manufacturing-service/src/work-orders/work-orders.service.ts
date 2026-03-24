@@ -137,12 +137,13 @@ export class WorkOrdersService {
     return this.toResponseDto(updated);
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: number): Promise<{ success: boolean }> {
     const workOrder = await this.workOrdersRepository.findOne({ where: { id } });
     if (!workOrder) {
       throw new NotFoundException(`Work order with ID ${id} not found`);
     }
     await this.workOrdersRepository.remove(workOrder);
+    return { success: true };
   }
 
   private toResponseDto(workOrder: WorkOrder): WorkOrderResponseDto {

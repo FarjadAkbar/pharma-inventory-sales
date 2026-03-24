@@ -20,13 +20,9 @@ export class JwtAuthGuard implements CanActivate {
     const controller = context.getClass();
     
     // Check if route is marked as public
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-      handler,
-      controller,
-    ]);
-    
-    console.log(`[JWT Guard] ${request.method} ${request.url} - Public: ${isPublic}`);
-    
+    const isPublic =
+      this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [handler, controller]) ?? false;
+
     if (isPublic) {
       return true;
     }

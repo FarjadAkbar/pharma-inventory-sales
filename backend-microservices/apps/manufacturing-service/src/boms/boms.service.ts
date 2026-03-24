@@ -268,7 +268,7 @@ export class BOMsService {
     return this.toResponseDto(updated);
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: number): Promise<{ success: boolean }> {
     const bom = await this.bomsRepository.findOne({ where: { id } });
     if (!bom) {
       throw new NotFoundException(`BOM with ID ${id} not found`);
@@ -279,6 +279,7 @@ export class BOMsService {
     }
 
     await this.bomsRepository.remove(bom);
+    return { success: true };
   }
 
   private toResponseDto(bom: BOM): BOMResponseDto {

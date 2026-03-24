@@ -80,7 +80,6 @@ export default function ShipmentDetailPage() {
         shipmentItemId: parseInt(itemId),
         inventoryId: parseInt(inventoryId),
         quantity,
-        allocatedBy: 1, // TODO: Get from auth context
       })
 
       if (response.success) {
@@ -103,7 +102,6 @@ export default function ShipmentDetailPage() {
       const response = await distributionApi.pickItem({
         shipmentItemId: parseInt(itemId),
         pickedQuantity,
-        pickedBy: 1, // TODO: Get from auth context
       })
 
       if (response.success) {
@@ -126,7 +124,6 @@ export default function ShipmentDetailPage() {
       const response = await distributionApi.packItem({
         shipmentItemId: parseInt(itemId),
         packedQuantity,
-        packedBy: 1, // TODO: Get from auth context
       })
 
       if (response.success) {
@@ -150,7 +147,6 @@ export default function ShipmentDetailPage() {
         trackingNumber,
         carrier,
         serviceType,
-        shippedBy: 1, // TODO: Get from auth context
       })
 
       if (response.success) {
@@ -219,17 +215,15 @@ export default function ShipmentDetailPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={() => router.push("/dashboard/sales/shipments")}>
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">{shipment.shipmentNumber}</h1>
-              <p className="text-muted-foreground">Sales Order: {shipment.salesOrderNumber}</p>
-            </div>
+            <h1 className="text-3xl font-bold tracking-tight">{shipment.shipmentNumber}</h1>
+            <p className="text-muted-foreground">Sales Order: {shipment.salesOrderNumber}</p>
           </div>
           <div className="flex items-center gap-2">
             {getStatusBadge(shipment.status)}
+            <Button variant="outline" size="sm" onClick={() => router.push(`/dashboard/sales/shipments/${shipmentId}/history`)}>
+              <Clock className="h-4 w-4 mr-1" />
+              View history
+            </Button>
             {allItemsPacked && shipment.status !== "Shipped" && shipment.status !== "Delivered" && (
               <ShipOrderDialog onShip={handleShipOrder} />
             )}

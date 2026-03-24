@@ -2,6 +2,8 @@ import { Controller, Get, Post, Put, Delete, Body, Param, Query, Inject, ParseIn
 import { ClientProxy } from '@nestjs/microservices';
 import { DRUG_PATTERNS, CreateDrugDto, UpdateDrugDto } from '@repo/shared';
 import { firstValueFrom } from 'rxjs';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { resolveActorId } from '../common/utils/actor.util';
 
 @Controller('master-data')
 export class DrugsController {
@@ -25,9 +27,14 @@ export class DrugsController {
   }
 
   @Post('drugs')
-  async createDrug(@Body() createDto: CreateDrugDto) {
+  async createDrug(
+    @Body() createDto: CreateDrugDto,
+    @CurrentUser() user: { sub?: number; id?: number },
+  ) {
+    const actorId = resolveActorId(user);
+    const payload = { ...createDto, createdBy: createDto.createdBy ?? actorId };
     const result = await firstValueFrom(
-      this.masterDataClient.send(DRUG_PATTERNS.CREATE, createDto),
+      this.masterDataClient.send(DRUG_PATTERNS.CREATE, payload),
     );
     return { success: true, data: result };
   }

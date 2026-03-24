@@ -86,7 +86,7 @@ export default function BOMsPage() {
         }
       } catch (error) {
         console.error("Failed to delete BOM:", error)
-        alert("Failed to delete BOM")
+        alert(error instanceof Error ? error.message : "Failed to delete BOM")
       }
     }
   }
@@ -295,7 +295,13 @@ export default function BOMsPage() {
         variant="ghost"
         size="sm"
         onClick={() => handleDeleteBOM(bom)}
-        className="text-red-600 hover:text-red-700"
+        disabled={bom.status === "Active"}
+        title={
+          bom.status === "Active"
+            ? "Cannot delete the active BOM; mark it obsolete first"
+            : "Delete BOM"
+        }
+        className="text-red-600 hover:text-red-700 disabled:opacity-40"
       >
         <Trash2 className="h-4 w-4" />
       </Button>

@@ -405,6 +405,13 @@ export default function ShipmentsPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Shipment Management</h1>
             <p className="text-muted-foreground">Manage shipments with FEFO allocation and pick list generation</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Primary path: open a shipment to allocate → pick → pack → ship.{" "}
+              <Link href="/dashboard/sales/shipment-items" className="underline font-medium text-foreground/80">
+                Line items across all shipments
+              </Link>{" "}
+              is an aggregate warehouse view.
+            </p>
           </div>
           <Link href="/dashboard/sales/shipments/new">
             <Button>

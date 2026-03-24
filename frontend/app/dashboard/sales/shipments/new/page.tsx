@@ -9,10 +9,32 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { Plus, Trash2 } from "lucide-react"
 import { distributionApi } from "@/services"
 import { toast } from "sonner"
 import type { SalesOrder } from "@/types/distribution"
+
+/** Align with shipments list filters where possible */
+const CARRIER_OPTIONS = [
+  "Express Logistics",
+  "Fast Track",
+  "Reliable Transport",
+  "DHL",
+  "FedEx",
+  "UPS",
+  "National Courier",
+  "Other (specify in remarks)",
+] as const
+
+const SERVICE_TYPE_OPTIONS = [
+  "Standard",
+  "Express",
+  "Overnight",
+  "Same day",
+  "Ground",
+  "Economy",
+  "Temperature controlled / Cold chain",
+  "Freight / LTL",
+] as const
 
 export default function NewShipmentPage() {
   const router = useRouter()
@@ -22,8 +44,8 @@ export default function NewShipmentPage() {
   const [formData, setFormData] = useState({
     shipmentDate: "",
     expectedDeliveryDate: "",
-    carrier: "",
-    serviceType: "",
+    carrier: CARRIER_OPTIONS[0],
+    serviceType: SERVICE_TYPE_OPTIONS[0],
     priority: "Normal",
     remarks: "",
   })
@@ -68,36 +90,28 @@ export default function NewShipmentPage() {
 
     try {
       setLoading(true)
+      // Server loads approved SO from sales-order-service and snapshots lines, customer, site, address.
       const shipmentData = {
-        salesOrderId: parseInt(selectedSalesOrder.id),
-        salesOrderNumber: selectedSalesOrder.orderNumber,
-        accountId: parseInt(selectedSalesOrder.accountId),
-        accountName: selectedSalesOrder.accountName,
-        siteId: parseInt(selectedSalesOrder.siteId),
-        siteName: selectedSalesOrder.siteName,
+        salesOrderId: parseInt(String(selectedSalesOrder.id), 10),
         shipmentDate: formData.shipmentDate,
         expectedDeliveryDate: formData.expectedDeliveryDate,
         carrier: formData.carrier,
         serviceType: formData.serviceType,
         priority: formData.priority,
-        shippingAddress: selectedSalesOrder.shippingAddress,
-        items: selectedSalesOrder.items.map(item => ({
-          drugId: parseInt(item.drugId),
-          drugName: item.drugName,
-          drugCode: item.drugCode,
-          batchNumber: item.preferredBatchNumber || "",
-          quantity: item.quantity,
-          unit: item.unit,
-        })),
-        remarks: formData.remarks,
-        createdBy: 1, // TODO: Get from auth context
+        remarks: formData.remarks || undefined,
       }
 
       const response = await distributionApi.createShipment(shipmentData)
       
       if (response.success) {
         toast.success("Shipment created successfully")
-        router.push(`/dashboard/sales/shipments/${response.data.id}`)
+        const created = response.data as { id?: number } | undefined
+        const id = created?.id ?? (response.data as any)?.data?.id
+        if (id != null) {
+          router.push(`/dashboard/sales/shipments/${id}`)
+        } else {
+          router.push("/dashboard/sales/shipments")
+        }
       } else {
         toast.error("Failed to create shipment")
       }
@@ -114,7 +128,9 @@ export default function NewShipmentPage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Plan Shipment</h1>
-          <p className="text-muted-foreground">Create a new shipment from an approved sales order</p>
+          <p className="text-muted-foreground">
+            Customer, site, address, and line quantities are taken from the sales order on the server—only logistics fields are sent from the UI.
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -190,21 +206,39 @@ export default function NewShipmentPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label>Carrier *</Label>
-                      <Input
+                      <Select
                         value={formData.carrier}
-                        onChange={(e) => setFormData(prev => ({ ...prev, carrier: e.target.value }))}
-                        placeholder="Enter carrier name"
-                        required
-                      />
+                        onValueChange={(value) => setFormData((prev) => ({ ...prev, carrier: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select carrier" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CARRIER_OPTIONS.map((c) => (
+                            <SelectItem key={c} value={c}>
+                              {c}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
-                      <Label>Service Type *</Label>
-                      <Input
+                      <Label>Service type *</Label>
+                      <Select
                         value={formData.serviceType}
-                        onChange={(e) => setFormData(prev => ({ ...prev, serviceType: e.target.value }))}
-                        placeholder="Enter service type"
-                        required
-                      />
+                        onValueChange={(value) => setFormData((prev) => ({ ...prev, serviceType: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select service type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {SERVICE_TYPE_OPTIONS.map((s) => (
+                            <SelectItem key={s} value={s}>
+                              {s}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 

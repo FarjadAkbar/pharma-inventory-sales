@@ -36,6 +36,16 @@ export class SalesOrdersController {
     return this.salesOrdersService.findOne(id);
   }
 
+  @MessagePattern(SALES_ORDER_PATTERNS.HISTORY)
+  getHistory(@Payload() id: number) {
+    return this.salesOrdersService.getHistory(id);
+  }
+
+  @MessagePattern(SALES_ORDER_PATTERNS.ENTITY_HISTORY)
+  getEntityHistory(@Payload() data: { entityType: string; entityId: number }) {
+    return this.salesOrdersService.getEntityHistory(data.entityType, data.entityId);
+  }
+
   @MessagePattern(SALES_ORDER_PATTERNS.UPDATE)
   update(@Payload() data: { id: number; updateDto: UpdateSalesOrderDto }) {
     return this.salesOrdersService.update(data.id, data.updateDto);

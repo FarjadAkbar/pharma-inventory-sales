@@ -16,6 +16,7 @@ import { WarehouseController } from './warehouse/warehouse.controller';
 import { SalesController } from './sales/sales.controller';
 import { HealthController } from './health/health.controller';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { AuditController } from './audit/audit.controller';
 
 const parseIntSafe = (v: string | undefined, fallback: number): number => {
   if (v === undefined || v === '') return fallback;
@@ -128,6 +129,7 @@ const parseIntSafe = (v: string | undefined, fallback: number): number => {
   controllers: [
     WarehouseController,
     SalesController,
+    AuditController,
     HealthController,
   ],
 })

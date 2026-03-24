@@ -9,7 +9,14 @@ async function bootstrap() {
     transport: Transport.TCP,
     options: { host: '0.0.0.0', port },
   });
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+      transformOptions: { enableImplicitConversion: true },
+    }),
+  );
   await app.listen();
   console.log('Master Data Service is listening on port ' + process.env.PORT);
 }

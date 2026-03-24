@@ -1,6 +1,8 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, Inject, ParseIntPipe } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { resolveActorId } from '../common/utils/actor.util';
 import {
   CreateSalesOrderDto,
   UpdateSalesOrderDto,
@@ -69,6 +71,14 @@ export class SalesController {
     return { success: true, data: result };
   }
 
+  @Get('sales-orders/:id/history')
+  async getSalesOrderHistory(@Param('id', ParseIntPipe) id: number) {
+    const result = await firstValueFrom(
+      this.salesOrderClient.send(SALES_ORDER_PATTERNS.HISTORY, id),
+    );
+    return { success: true, data: result };
+  }
+
   @Put('sales-orders')
   async updateSalesOrder(@Body() body: { id: number; [key: string]: any }) {
     const { id, ...updateDto } = body;
@@ -81,10 +91,12 @@ export class SalesController {
   @Post('sales-orders/:id/approve')
   async approveSalesOrder(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: { approvedBy: number },
+    @Body() body: { approvedBy?: number },
+    @CurrentUser() user: { sub?: number; id?: number },
   ) {
+    const approvedBy = body?.approvedBy ?? resolveActorId(user);
     const result = await firstValueFrom(
-      this.salesOrderClient.send(SALES_ORDER_PATTERNS.APPROVE, { id, approvedBy: body.approvedBy })
+      this.salesOrderClient.send(SALES_ORDER_PATTERNS.APPROVE, { id, approvedBy }),
     );
     return { success: true, data: result };
   }
@@ -140,10 +152,13 @@ export class SalesController {
   }
 
   @Post('shipments')
-  async createShipment(@Body() createDto: CreateShipmentDto) {
-    const result = await firstValueFrom(
-      this.shipmentClient.send(SHIPMENT_PATTERNS.CREATE, createDto)
-    );
+  async createShipment(
+    @Body() createDto: CreateShipmentDto,
+    @CurrentUser() user: { sub?: number; id?: number },
+  ) {
+    const actorId = resolveActorId(user);
+    const payload = { ...createDto, createdBy: createDto.createdBy ?? actorId };
+    const result = await firstValueFrom(this.shipmentClient.send(SHIPMENT_PATTERNS.CREATE, payload));
     return { success: true, data: result };
   }
 
@@ -151,6 +166,14 @@ export class SalesController {
   async getShipment(@Param('id', ParseIntPipe) id: number) {
     const result = await firstValueFrom(
       this.shipmentClient.send(SHIPMENT_PATTERNS.GET_BY_ID, id)
+    );
+    return { success: true, data: result };
+  }
+
+  @Get('shipments/:id/history')
+  async getShipmentHistory(@Param('id', ParseIntPipe) id: number) {
+    const result = await firstValueFrom(
+      this.shipmentClient.send(SHIPMENT_PATTERNS.HISTORY, id),
     );
     return { success: true, data: result };
   }
@@ -173,25 +196,37 @@ export class SalesController {
   }
 
   @Post('shipments/allocate-stock')
-  async allocateStock(@Body() allocateDto: AllocateStockDto) {
+  async allocateStock(
+    @Body() allocateDto: AllocateStockDto,
+    @CurrentUser() user: { sub?: number; id?: number },
+  ) {
+    const actorId = resolveActorId(user);
     const result = await firstValueFrom(
-      this.shipmentClient.send(SHIPMENT_PATTERNS.ALLOCATE_STOCK, allocateDto)
+      this.shipmentClient.send(SHIPMENT_PATTERNS.ALLOCATE_STOCK, { ...allocateDto, allocatedBy: actorId }),
     );
     return { success: true, data: result };
   }
 
   @Post('shipments/pick-item')
-  async pickItem(@Body() pickDto: PickItemDto) {
+  async pickItem(
+    @Body() pickDto: PickItemDto,
+    @CurrentUser() user: { sub?: number; id?: number },
+  ) {
+    const actorId = resolveActorId(user);
     const result = await firstValueFrom(
-      this.shipmentClient.send(SHIPMENT_PATTERNS.PICK_ITEM, pickDto)
+      this.shipmentClient.send(SHIPMENT_PATTERNS.PICK_ITEM, { ...pickDto, pickedBy: actorId }),
     );
     return { success: true, data: result };
   }
 
   @Post('shipments/pack-item')
-  async packItem(@Body() packDto: PackItemDto) {
+  async packItem(
+    @Body() packDto: PackItemDto,
+    @CurrentUser() user: { sub?: number; id?: number },
+  ) {
+    const actorId = resolveActorId(user);
     const result = await firstValueFrom(
-      this.shipmentClient.send(SHIPMENT_PATTERNS.PACK_ITEM, packDto)
+      this.shipmentClient.send(SHIPMENT_PATTERNS.PACK_ITEM, { ...packDto, packedBy: actorId }),
     );
     return { success: true, data: result };
   }
@@ -200,9 +235,14 @@ export class SalesController {
   async shipOrder(
     @Param('id', ParseIntPipe) id: number,
     @Body() shipDto: ShipOrderDto,
+    @CurrentUser() user: { sub?: number; id?: number },
   ) {
+    const actorId = resolveActorId(user);
     const result = await firstValueFrom(
-      this.shipmentClient.send(SHIPMENT_PATTERNS.SHIP_ORDER, { id, shipDto })
+      this.shipmentClient.send(SHIPMENT_PATTERNS.SHIP_ORDER, {
+        id,
+        shipDto: { ...shipDto, shippedBy: actorId },
+      }),
     );
     return { success: true, data: result };
   }
@@ -272,10 +312,12 @@ export class SalesController {
   @Post('proof-of-delivery/:id/complete')
   async completePOD(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: { completedBy: number },
+    @Body() body: { completedBy?: number },
+    @CurrentUser() user: { sub?: number; id?: number },
   ) {
+    const completedBy = body?.completedBy ?? resolveActorId(user);
     const result = await firstValueFrom(
-      this.shipmentClient.send(PROOF_OF_DELIVERY_PATTERNS.COMPLETE, { id, completedBy: body.completedBy })
+      this.shipmentClient.send(PROOF_OF_DELIVERY_PATTERNS.COMPLETE, { id, completedBy }),
     );
     return { success: true, data: result };
   }
