@@ -225,8 +225,8 @@ export default function SalesOrdersPage() {
       sortable: true,
       render: (order: SalesOrder) => (
         <div>
-          <div className="font-medium">{order.accountName}</div>
-          <div className="text-sm text-muted-foreground">{order.accountCode}</div>
+          <div className="font-medium">{order?.accountName}</div>
+          <div className="text-sm text-muted-foreground">{order?.accountCode}</div>
         </div>
       ),
     },
