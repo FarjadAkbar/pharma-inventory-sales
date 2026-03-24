@@ -384,7 +384,7 @@ export default function ShipmentsPage() {
       <Button variant="ghost" size="sm" onClick={() => handleEdit(shipment)}>
         <Edit className="h-4 w-4" />
       </Button>
-      {(shipment.status === "Draft" || shipment.status === "Pending" || shipment.status === "Allocated" || shipment.status === "Picked" || shipment.status === "Packed") && (
+      {(shipment.status === "Draft" || shipment.status === "Pending" || shipment.status === "Picked" || shipment.status === "Packed") && (
         <Button variant="ghost" size="sm" onClick={() => handleView(shipment)}>
           <Play className="h-4 w-4" />
         </Button>
@@ -408,7 +408,7 @@ export default function ShipmentsPage() {
           </div>
           <Link href="/dashboard/sales/shipments/new">
             <Button>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4" />
               Plan Shipment
             </Button>
           </Link>

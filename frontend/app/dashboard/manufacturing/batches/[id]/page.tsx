@@ -177,7 +177,7 @@ export default function BatchDetailPage() {
             {getStatusBadge(batch.status)}
             {canStart && (
               <Button onClick={handleStartBatch}>
-                <Play className="h-4 w-4 mr-2" />
+                <Play className="h-4 w-4" />
                 Start Batch
               </Button>
             )}
@@ -280,7 +280,7 @@ export default function BatchDetailPage() {
                         onClick={() => handleCompleteBatch(false)}
                         className="flex-1"
                       >
-                        <CheckCircle className="h-4 w-4 mr-2" />
+                        <CheckCircle className="h-4 w-4" />
                         Complete (No Fault)
                       </Button>
                       <Button
@@ -291,7 +291,7 @@ export default function BatchDetailPage() {
                         }}
                         className="flex-1"
                       >
-                        <AlertTriangle className="h-4 w-4 mr-2" />
+                        <AlertTriangle className="h-4 w-4" />
                         Complete (With Fault)
                       </Button>
                     </div>
@@ -309,7 +309,7 @@ export default function BatchDetailPage() {
                   <Dialog open={materialDialogOpen} onOpenChange={setMaterialDialogOpen}>
                     <DialogTrigger asChild>
                       <Button>
-                        <Plus className="h-4 w-4 mr-2" />
+                        <Plus className="h-4 w-4" />
                         Consume Material
                       </Button>
                     </DialogTrigger>
@@ -363,7 +363,7 @@ export default function BatchDetailPage() {
                   <Dialog open={stepDialogOpen} onOpenChange={setStepDialogOpen}>
                     <DialogTrigger asChild>
                       <Button>
-                        <Plus className="h-4 w-4 mr-2" />
+                        <Plus className="h-4 w-4" />
                         Execute Step
                       </Button>
                     </DialogTrigger>
@@ -436,7 +436,7 @@ export default function BatchDetailPage() {
                   <Dialog open={finishedGoodsDialogOpen} onOpenChange={setFinishedGoodsDialogOpen}>
                     <DialogTrigger asChild>
                       <Button>
-                        <Package className="h-4 w-4 mr-2" />
+                        <Package className="h-4 w-4" />
                         Receive Finished Goods
                       </Button>
                     </DialogTrigger>

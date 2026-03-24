@@ -122,7 +122,7 @@ export default function NewQCResultPage() {
           <div className="flex items-center gap-4">
             <Link href="/dashboard/quality/qc-results">
               <Button variant="outline" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
+                <ArrowLeft className="h-4 w-4" />
                 Back
               </Button>
             </Link>

@@ -110,7 +110,7 @@ export default function PurchaseOrderViewPage() {
             onClick={() => router.push("/dashboard/procurement/purchase-orders")}
             className="mt-4"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="h-4 w-4" />
             Back to Purchase Orders
           </Button>
         </div>
@@ -127,7 +127,7 @@ export default function PurchaseOrderViewPage() {
               variant="outline" 
               onClick={() => router.push("/dashboard/procurement/purchase-orders")}
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className="h-4 w-4" />
               Back
             </Button>
             <div>
@@ -140,7 +140,7 @@ export default function PurchaseOrderViewPage() {
               <Button
                 onClick={() => router.push(`/dashboard/procurement/purchase-orders/${purchaseOrder.id}/edit`)}
               >
-                <Edit className="h-4 w-4 mr-2" />
+                <Edit className="h-4 w-4" />
                 Edit
               </Button>
             </PermissionGuard>
@@ -150,7 +150,7 @@ export default function PurchaseOrderViewPage() {
                 onClick={handleDelete}
                 className="text-red-600 hover:text-red-700"
               >
-                <Trash2 className="h-4 w-4 mr-2" />
+                <Trash2 className="h-4 w-4" />
                 Delete
               </Button>
             </PermissionGuard>

@@ -155,7 +155,6 @@ export class SalesOrdersService {
   async update(id: number, updateDto: UpdateSalesOrderDto): Promise<SalesOrderResponseDto> {
     const salesOrder = await this.salesOrdersRepository.findOne({
       where: { id },
-      relations: ['items'],
     });
     if (!salesOrder) {
       throw new NotFoundException(`Sales order with ID ${id} not found`);
@@ -172,8 +171,10 @@ export class SalesOrdersService {
     }
 
     // Update sales order fields
+    const { items, ...orderFields } = updateDto;
+
     Object.assign(salesOrder, {
-      ...updateDto,
+      ...orderFields,  // ← safe, no items
       requestedShipDate: updateDto.requestedShipDate ? new Date(updateDto.requestedShipDate) : salesOrder.requestedShipDate,
       actualShipDate: updateDto.actualShipDate ? new Date(updateDto.actualShipDate) : salesOrder.actualShipDate,
       deliveryDate: updateDto.deliveryDate ? new Date(updateDto.deliveryDate) : salesOrder.deliveryDate,

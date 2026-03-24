@@ -261,7 +261,7 @@ export default function QAVerificationPage() {
           <div className="flex items-center gap-4">
             <Link href="/dashboard/quality/qa-releases">
               <Button variant="outline" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
+                <ArrowLeft className="h-4 w-4" />
                 Back to QA Releases
               </Button>
             </Link>
@@ -505,7 +505,7 @@ export default function QAVerificationPage() {
                 </>
               ) : (
                 <>
-                  <Save className="h-4 w-4 mr-2" />
+                  <Save className="h-4 w-4" />
                   Submit Verification
                 </>
               )}

@@ -133,19 +133,19 @@ export default function MaterialIssueDetailPage() {
           <div className="flex items-center gap-2">
             {issue.status === "Pending" && (
               <Button onClick={handleApprove} className="bg-blue-600 hover:bg-blue-700">
-                <CheckSquare className="h-4 w-4 mr-2" />
+                <CheckSquare className="h-4 w-4" />
                 Approve
               </Button>
             )}
             {issue.status === "Approved" && (
               <Button onClick={handlePick} className="bg-purple-600 hover:bg-purple-700">
-                <ShoppingCart className="h-4 w-4 mr-2" />
+                <ShoppingCart className="h-4 w-4" />
                 Pick
               </Button>
             )}
             {issue.status === "Picked" && (
               <Button onClick={handleIssue} className="bg-green-600 hover:bg-green-700">
-                <ArrowRight className="h-4 w-4 mr-2" />
+                <ArrowRight className="h-4 w-4" />
                 Issue
               </Button>
             )}

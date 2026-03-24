@@ -90,7 +90,7 @@ export default function ViewGoodsReceiptPage() {
           <div className="flex items-center gap-4">
             <Link href="/dashboard/procurement/goods-receipts">
               <Button variant="outline" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
+                <ArrowLeft className="h-4 w-4" />
                 Back to Goods Receipts
               </Button>
             </Link>
@@ -103,14 +103,14 @@ export default function ViewGoodsReceiptPage() {
             <PermissionGuard module="PROCUREMENT" screen="goods-receipts" action="update">
               <Link href={`/dashboard/procurement/goods-receipts/${goodsReceipt.id}/edit`}>
                 <Button variant="outline">
-                  <Edit className="h-4 w-4 mr-2" />
+                  <Edit className="h-4 w-4" />
                   Edit
                 </Button>
               </Link>
             </PermissionGuard>
             <PermissionGuard module="PROCUREMENT" screen="goods-receipts" action="delete">
               <Button variant="destructive" onClick={handleDeleteGoodsReceipt}>
-                <Trash2 className="h-4 w-4 mr-2" />
+                <Trash2 className="h-4 w-4" />
                 Delete
               </Button>
             </PermissionGuard>

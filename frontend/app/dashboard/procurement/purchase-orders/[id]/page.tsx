@@ -120,7 +120,7 @@ export default function ViewPurchaseOrderPage() {
           <div className="flex items-center gap-4">
             <Link href="/dashboard/procurement/purchase-orders">
               <Button variant="outline" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
+                <ArrowLeft className="h-4 w-4" />
                 Back to Purchase Orders
               </Button>
             </Link>
@@ -132,18 +132,18 @@ export default function ViewPurchaseOrderPage() {
           <div className="flex items-center gap-2">
             {purchaseOrder.status === "Pending Approval" && (
               <Button onClick={handleApprove} className="bg-green-600 hover:bg-green-700">
-                <CheckCircle className="h-4 w-4 mr-2" />
+                <CheckCircle className="h-4 w-4" />
                 Approve
               </Button>
             )}
             <Link href={`/dashboard/procurement/purchase-orders/${purchaseOrder.id}/edit`}>
               <Button variant="outline">
-                <Edit className="h-4 w-4 mr-2" />
+                <Edit className="h-4 w-4" />
                 Edit
               </Button>
             </Link>
             <Button variant="destructive" onClick={handleDeletePurchaseOrder}>
-              <Trash2 className="h-4 w-4 mr-2" />
+              <Trash2 className="h-4 w-4" />
               Delete
             </Button>
           </div>

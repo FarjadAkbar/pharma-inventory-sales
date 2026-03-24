@@ -125,7 +125,7 @@ export default function ViewQCTestPage() {
           <div className="flex items-center gap-4">
             <Link href="/dashboard/quality/qc-tests">
               <Button variant="outline" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
+                <ArrowLeft className="h-4 w-4" />
                 Back to QC Tests
               </Button>
             </Link>
@@ -137,12 +137,12 @@ export default function ViewQCTestPage() {
           <div className="flex items-center gap-2">
             <Link href={`/dashboard/quality/qc-tests/${qcTest.id}/edit`}>
               <Button variant="outline">
-                <Edit className="h-4 w-4 mr-2" />
+                <Edit className="h-4 w-4" />
                 Edit
               </Button>
             </Link>
             <Button variant="destructive" onClick={handleDeleteQCTest}>
-              <Trash2 className="h-4 w-4 mr-2" />
+              <Trash2 className="h-4 w-4" />
               Delete
             </Button>
           </div>

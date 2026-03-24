@@ -100,7 +100,7 @@ export default function ViewDrugPage() {
           <div className="flex items-center gap-4">
             <Link href="/dashboard/drugs">
               <Button variant="outline" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
+                <ArrowLeft className="h-4 w-4" />
                 Back to Drugs
               </Button>
             </Link>
@@ -112,12 +112,12 @@ export default function ViewDrugPage() {
           <div className="flex items-center gap-2">
             <Link href={`/dashboard/drugs/${drug.id}/edit`}>
               <Button variant="outline">
-                <Edit className="h-4 w-4 mr-2" />
+                <Edit className="h-4 w-4" />
                 Edit
               </Button>
             </Link>
             <Button variant="destructive" onClick={handleDeleteDrug}>
-              <Trash2 className="h-4 w-4 mr-2" />
+              <Trash2 className="h-4 w-4" />
               Delete
             </Button>
           </div>

@@ -482,11 +482,11 @@ export default function PermissionManagementPage() {
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={() => setSelectedRole(null)}>
-              <X className="h-4 w-4 mr-2" />
+              <X className="h-4 w-4" />
               Close
             </Button>
             <Button onClick={handleSavePermissions}>
-              <Save className="h-4 w-4 mr-2" />
+              <Save className="h-4 w-4" />
               Save Changes
             </Button>
           </div>

@@ -22,6 +22,7 @@ import {
   SALES_ORDER_PATTERNS,
   WAREHOUSE_PATTERNS,
   InventoryStatus,
+  SalesOrderStatus,
 } from '@repo/shared';
 
 @Injectable()
@@ -78,16 +79,19 @@ export class ShipmentsService {
   }
 
   async create(createDto: CreateShipmentDto): Promise<ShipmentResponseDto> {
+    console.log(createDto, "........");
     // Verify sales order exists and is approved
-    const salesOrder = await firstValueFrom(
+    const rawSalesOrder = await firstValueFrom(
       this.salesOrderClient.send(SALES_ORDER_PATTERNS.GET_BY_ID, createDto.salesOrderId)
     );
+
+    const salesOrder: any = (rawSalesOrder as any)?.data ?? rawSalesOrder;
 
     if (!salesOrder) {
       throw new NotFoundException(`Sales order with ID ${createDto.salesOrderId} not found`);
     }
 
-    if (salesOrder.status !== 'Approved') {
+    if (salesOrder.status !== SalesOrderStatus.APPROVED) {
       throw new BadRequestException(`Sales order must be approved to create shipment. Current status: ${salesOrder.status}`);
     }
 

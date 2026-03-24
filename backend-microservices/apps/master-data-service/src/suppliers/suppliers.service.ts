@@ -37,10 +37,11 @@ export class SuppliersService {
     return this.toResponseDto(updated);
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: number): Promise<{ success: boolean }> {
     const supplier = await this.suppliersRepository.findOne({ where: { id } });
     if (!supplier) throw new NotFoundException('Supplier not found');
     await this.suppliersRepository.remove(supplier);
+    return { success: true };
   }
 
   private async toResponseDto(supplier: Supplier): Promise<SupplierResponseDto> {

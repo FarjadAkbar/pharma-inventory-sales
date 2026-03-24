@@ -21,7 +21,6 @@ import {
   Signature,
 } from "lucide-react"
 import { distributionApi } from "@/services"
-import { ProofOfDeliveryForm } from "@/components/sales/proof-of-delivery-form"
 import { toast } from "sonner"
 import type { ProofOfDelivery, PODFilters } from "@/types/distribution"
 import { formatDateISO } from "@/lib/utils"
@@ -289,7 +288,10 @@ export default function PODPage() {
               Manage delivery confirmations with signature and documentation
             </p>
           </div>
-          <ProofOfDeliveryForm onSuccess={fetchPODs} />
+          <Button onClick={() => router.push("/dashboard/sales/pod/new")}>
+            <FileText className="h-4 w-4" />
+            New POD
+          </Button>
         </div>
 
         {/* Stats Cards */}

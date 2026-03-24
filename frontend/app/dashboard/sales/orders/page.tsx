@@ -26,12 +26,13 @@ import {
   MapPin
 } from "lucide-react"
 import { distributionApi } from "@/services"
-import { SalesOrderForm } from "@/components/sales/sales-order-form"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import type { SalesOrder, SalesOrderFilters } from "@/types/distribution"
 import { formatDateISO } from "@/lib/utils"
 
 export default function SalesOrdersPage() {
+  const router = useRouter()
   const [salesOrders, setSalesOrders] = useState<SalesOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -45,7 +46,7 @@ export default function SalesOrdersPage() {
   const fetchSalesOrders = async () => {
     try {
       setLoading(true)
-      const response = await apiService.getSalesOrders({
+      const response = await distributionApi.getSalesOrders({
         search: searchQuery,
         ...filters,
         page: pagination.page,
@@ -53,8 +54,12 @@ export default function SalesOrdersPage() {
       })
 
       if (response.success && response.data) {
-        setSalesOrders(response.data.salesOrders || [])
-        setPagination(response.data.pagination || { page: 1, pages: 1, total: 0 })
+        const raw = response.data as any
+        const list = raw?.data ?? raw?.salesOrders ?? (Array.isArray(raw) ? raw : [])
+        const arr = Array.isArray(list) ? list : []
+        setSalesOrders(arr)
+        const pag = raw.pagination || { page: 1, pages: 1, total: arr.length }
+        setPagination({ page: pag.page, pages: pag.pages, total: pag.total ?? arr.length })
       }
     } catch (error) {
       console.error("Failed to fetch sales orders:", error)
@@ -78,13 +83,11 @@ export default function SalesOrdersPage() {
   }
 
   const handleView = (order: SalesOrder) => {
-    console.log("View order:", order)
-    // TODO: Implement view order functionality
+    router.push(`/dashboard/sales/orders/${order.id}`)
   }
 
   const handleEdit = (order: SalesOrder) => {
-    console.log("Edit order:", order)
-    // TODO: Implement edit order functionality
+    router.push(`/dashboard/sales/orders/${order.id}/edit`)
   }
 
   const handleApprove = async (order: SalesOrder) => {
@@ -107,7 +110,7 @@ export default function SalesOrdersPage() {
 
   const handleProcess = async (order: SalesOrder) => {
     try {
-      const response = await apiService.updateSalesOrder(order.id, {
+      const response = await distributionApi.updateSalesOrder(order.id, {
         ...order,
         status: "In Progress"
       })
@@ -428,7 +431,10 @@ export default function SalesOrdersPage() {
             <h1 className="text-3xl font-bold tracking-tight">Sales Orders</h1>
             <p className="text-muted-foreground">Manage sales orders and customer relationships</p>
           </div>
-          <SalesOrderForm onSuccess={fetchSalesOrders} />
+          <Button onClick={() => router.push("/dashboard/sales/orders/new")}>
+            <ShoppingCart className="h-4 w-4" />
+            New Sales Order
+          </Button>
         </div>
 
         {/* Stats Cards */}
