@@ -89,8 +89,10 @@ export function SalesOrderForm({ onSuccess, trigger }: SalesOrderFormProps) {
         deliveryInstructions: formData.specialInstructions || ""
       }
       
+      // BillingAddressDto must NOT include `deliveryInstructions`
+      const { deliveryInstructions: _deliveryInstructions, ...billingBase } = defaultShippingAddress
       const defaultBillingAddress = {
-        ...defaultShippingAddress,
+        ...billingBase,
         taxId: "TAX-123456"
       }
       
