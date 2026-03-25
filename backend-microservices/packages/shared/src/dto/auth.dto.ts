@@ -16,7 +16,14 @@ export class LoginResponseDto {
     id: number;
     name: string;
     email: string;
-    role?: string;
+    role?:
+      | string
+      | {
+          id: number;
+          name: string;
+          isSiteScoped?: boolean;
+          permissions: Array<{ id: number; name: string }>;
+        };
     /** Site IDs this user is assigned to */
     siteIds?: number[];
     /**

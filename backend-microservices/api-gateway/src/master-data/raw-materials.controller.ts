@@ -16,6 +16,7 @@ import {
   UpdateRawMaterialDto,
 } from '@repo/shared';
 import { firstValueFrom } from 'rxjs';
+import { RequirePermissions } from '../common/decorators/require-permissions.decorator';
 
 @Controller('raw-materials')
 export class RawMaterialsController {
@@ -24,6 +25,7 @@ export class RawMaterialsController {
   ) {}
 
   @Post()
+  @RequirePermissions({ resource: 'raw_materials', action: 'create' })
   async create(@Body() createRawMaterialDto: CreateRawMaterialDto) {
     return await firstValueFrom(
       this.masterDataClient.send(RAW_MATERIAL_PATTERNS.CREATE, createRawMaterialDto),
@@ -31,6 +33,7 @@ export class RawMaterialsController {
   }
 
   @Get()
+  @RequirePermissions({ resource: 'raw_materials', action: 'read' })
   async findAll(@Query('supplierId') supplierId?: string) {
     if (supplierId) {
       return await firstValueFrom(
@@ -43,6 +46,7 @@ export class RawMaterialsController {
   }
 
   @Get(':id')
+  @RequirePermissions({ resource: 'raw_materials', action: 'read' })
   async findOne(@Param('id') id: string) {
     return await firstValueFrom(
       this.masterDataClient.send(RAW_MATERIAL_PATTERNS.GET_BY_ID, +id),
@@ -50,6 +54,7 @@ export class RawMaterialsController {
   }
 
   @Put(':id')
+  @RequirePermissions({ resource: 'raw_materials', action: 'update' })
   async update(
     @Param('id') id: string,
     @Body() updateRawMaterialDto: UpdateRawMaterialDto,
@@ -63,6 +68,7 @@ export class RawMaterialsController {
   }
 
   @Delete(':id')
+  @RequirePermissions({ resource: 'raw_materials', action: 'delete' })
   async delete(@Param('id') id: string) {
     return await firstValueFrom(
       this.masterDataClient.send(RAW_MATERIAL_PATTERNS.DELETE, +id),

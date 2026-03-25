@@ -10,6 +10,7 @@ import type {
   Permissions,
 } from "@/types/auth"
 import { decodeToken, extractUserFromToken, isTokenValid } from "@/lib/jwt"
+import { checkPermission } from "@/lib/rbac"
 import { apiService } from "./api.service"
 import { BASE_URL } from "@/config"
 
@@ -17,6 +18,7 @@ class AuthService {
   private tokenKey        = "pharma_inventory_sales_token"
   private refreshTokenKey = "pharma_inventory_sales_refresh_token"
   private permissionsKey  = "pharma_inventory_sales_permissions"
+  private permissionNamesKey = "pharma_inventory_sales_permission_names"
   private siteContextKey  = "pharma_inventory_sales_site_context"   // { siteIds, isSiteScoped }
 
   // ── Token management ──────────────────────────────────────────────────────
@@ -38,6 +40,7 @@ class AuthService {
       localStorage.removeItem(this.tokenKey)
       localStorage.removeItem(this.refreshTokenKey)
       localStorage.removeItem(this.permissionsKey)
+      localStorage.removeItem(this.permissionNamesKey)
       localStorage.removeItem(this.siteContextKey)
       document.cookie = `${this.tokenKey}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
     }
@@ -65,6 +68,50 @@ class AuthService {
     if (typeof window === "undefined") return null
     const raw = localStorage.getItem(this.permissionsKey)
     return raw ? JSON.parse(raw) : null
+  }
+
+  setPermissionNames(names: string[]): void {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(this.permissionNamesKey, JSON.stringify(names))
+    }
+  }
+
+  getPermissionNames(): string[] {
+    if (typeof window === "undefined") return []
+    const raw = localStorage.getItem(this.permissionNamesKey)
+    if (!raw) return []
+    try {
+      const v = JSON.parse(raw) as unknown
+      return Array.isArray(v) ? (v as string[]) : []
+    } catch {
+      return []
+    }
+  }
+
+  /** Hydrate client permission cache from JWT `permissionNames` or after login. */
+  hydratePermissionNamesFromJwt(): void {
+    const payload = this.getUserFromToken()
+    const names = payload?.permissionNames
+    if (Array.isArray(names) && names.length) {
+      this.syncPermissionsFromRole(names.map((name) => ({ name: String(name) })))
+    }
+  }
+
+  private syncPermissionsFromRole(
+    permArray: Array<{ name: string }> | undefined,
+  ): void {
+    const names = permArray?.map((p) => p.name) ?? []
+    this.setPermissionNames(names)
+
+    const permissions: Permissions = {}
+    permArray?.forEach((p) => {
+      const [resource, action] = p.name.split(".")
+      if (!resource || !action) return
+      if (!permissions[resource]) permissions[resource] = {}
+      if (!permissions[resource][resource]) permissions[resource][resource] = []
+      ;(permissions[resource][resource] as string[]).push(action)
+    })
+    this.setPermissions(permissions)
   }
 
   // ── Site context (siteIds + isSiteScoped) ─────────────────────────────────
@@ -134,19 +181,20 @@ class AuthService {
         const isSiteScoped: boolean  = data.user?.isSiteScoped ?? false
         this.setSiteContext(siteIds, isSiteScoped)
 
-        // Build permissions object from role permissions array
-        const permissions: Permissions = {}
-        if (data.user?.role?.permissions) {
-          // Convert permission array to a flat lookup if provided by backend
-          const permArray: { id: number; name: string }[] = data.user.role.permissions
-          permArray.forEach(p => {
-            const [resource, action] = p.name.split(".")
-            if (!permissions[resource]) permissions[resource] = {}
-            if (!permissions[resource][resource]) permissions[resource][resource] = []
-            ;(permissions[resource][resource] as string[]).push(action)
-          })
+        const roleObj =
+          data.user?.role && typeof data.user.role === "object"
+            ? data.user.role
+            : null
+        if (roleObj?.permissions) {
+          this.syncPermissionsFromRole(roleObj.permissions)
+        } else {
+          this.hydratePermissionNamesFromJwt()
+          if (!this.getPermissionNames().length) {
+            this.syncPermissionsFromRole(undefined)
+          }
         }
-        this.setPermissions(permissions)
+
+        const permissions = this.getPermissions() ?? {}
 
         return {
           success: true,
@@ -247,6 +295,10 @@ class AuthService {
             )
           }
 
+          if (userData.role?.permissions) {
+            this.syncPermissionsFromRole(userData.role.permissions)
+          }
+
           return transformed
         } else if (response.status === 401) {
           this.removeToken()
@@ -335,29 +387,14 @@ class AuthService {
     return token ? extractUserFromToken(token) : null
   }
 
-  hasPermission(module: string, action: string): boolean {
-    const permissions = this.getPermissions()
-    if (!permissions) return false
-
-    // Empty object → admin / no restrictions
-    if (Object.keys(permissions).length === 0) return true
-
-    const modulePermissions = permissions[module]
-    if (!modulePermissions) return false
-
-    if (Array.isArray(modulePermissions)) {
-      return modulePermissions.includes(action) || modulePermissions.includes("*")
-    }
-
-    const actions = Object.values(modulePermissions).flat()
-    return actions.includes(action) || actions.includes("*")
+  hasPermission(moduleOrResource: string, action: string): boolean {
+    const names = this.getPermissionNames()
+    if (!names.length) return false
+    return checkPermission(names, moduleOrResource, action)
   }
 
-  hasAllPermissions(module: string, actions: string[]): boolean {
-    const permissions = this.getPermissions()
-    if (!permissions) return false
-    if (Object.keys(permissions).length === 0) return true
-    return actions.every(action => this.hasPermission(module, action))
+  hasAllPermissions(moduleOrResource: string, actions: string[]): boolean {
+    return actions.every((action) => this.hasPermission(moduleOrResource, action))
   }
 
   /**

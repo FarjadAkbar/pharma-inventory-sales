@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { DataTable } from "@/components/ui/data-table"
 import { Button } from "@/components/ui/button"
@@ -19,8 +19,10 @@ import type { RawMaterialResponseDto as RawMaterial } from "@repo/shared"
 import { PermissionGuard } from "@/components/auth/permission-guard"
 import { formatDateISO } from "@/lib/utils"
 import { RawMaterialForm } from "@/components/raw-materials/raw-material-form"
+import { useAuth } from "@/contexts/auth.context"
 
 export default function RawMaterialsPage() {
+  const { hasPermission, permissions } = useAuth()
   const [rawMaterials, setRawMaterials] = useState<RawMaterial[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -209,8 +211,42 @@ export default function RawMaterialsPage() {
     },
   ]
 
+  const tableActions = useMemo(() => {
+    const actions: Array<{
+      label: string
+      onClick: (rm: RawMaterial) => void
+      variant: "outline" | "destructive"
+    }> = []
+    if (hasPermission("raw_materials", "update")) {
+      actions.push({
+        label: "Edit",
+        onClick: (rm: RawMaterial) => handleEdit(rm),
+        variant: "outline",
+      })
+    }
+    if (hasPermission("raw_materials", "delete")) {
+      actions.push({
+        label: "Delete",
+        onClick: (rm: RawMaterial) => handleDelete(rm),
+        variant: "destructive",
+      })
+    }
+    return actions
+  }, [permissions, hasPermission])
+
   return (
     <DashboardLayout>
+      <PermissionGuard
+        module="raw_materials"
+        action="read"
+        fallback={
+          <div className="rounded-lg border border-border bg-muted/30 p-8 text-center text-muted-foreground">
+            You do not have permission to view raw materials. Ask an administrator to assign{" "}
+            <span className="font-mono text-foreground">raw_materials.read</span> (or a master data / procurement role
+            that includes it).
+          </div>
+        }
+      >
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -218,7 +254,7 @@ export default function RawMaterialsPage() {
             <p className="text-muted-foreground">Manage pharmaceutical raw materials and excipients</p>
           </div>
 
-          <PermissionGuard module="MASTER_DATA" action="create">
+          <PermissionGuard module="raw_materials" action="create">
             <Button onClick={handleAdd}>
               <Plus />
               Add Raw Material
@@ -245,18 +281,7 @@ export default function RawMaterialsPage() {
                 onPageChange: handlePageChange
               }}
               searchPlaceholder="Search raw materials..."
-              actions={[
-                {
-                  label: "Edit",
-                  onClick: (rm: RawMaterial) => handleEdit(rm),
-                  variant: "outline" as const,
-                },
-                {
-                  label: "Delete",
-                  onClick: (rm: RawMaterial) => handleDelete(rm),
-                  variant: "destructive" as const,
-                },
-              ]}
+              actions={tableActions}
             />
           </CardContent>
         </Card>
@@ -277,7 +302,6 @@ export default function RawMaterialsPage() {
             />
           </DialogContent>
         </Dialog>
-      </div>
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -301,6 +325,8 @@ export default function RawMaterialsPage() {
             </div>
           </DialogContent>
         </Dialog>
+      </div>
+      </PermissionGuard>
     </DashboardLayout>
   )
 }

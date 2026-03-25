@@ -37,10 +37,12 @@ import {
   MapPin
 } from "lucide-react"
 
+/** `target`: RBAC resource (raw_materials) or MODULE key (PROCUREMENT). See `lib/rbac.ts`. */
 interface NavItem {
   title: string
   href: string
   icon: React.ComponentType<{ className?: string }>
+  perm?: { target: string; action: string }
 }
 
 interface NavGroup {
@@ -53,9 +55,12 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const [openGroups, setOpenGroups] = useState<string[]>([])
   const pathname = usePathname()
-  const { user } = useAuth()
+  const { user, hasPermission } = useAuth()
 
   if (!user) return null
+
+  const canSee = (item: NavItem) =>
+    !item.perm || hasPermission(item.perm.target, item.perm.action)
 
   const toggleGroup = (groupTitle: string) => {
     setOpenGroups(prev => 
@@ -70,77 +75,84 @@ export function Sidebar() {
       title: "Identity & Authentication",
       icon: Shield,
       items: [
-        { title: "Users", href: "/dashboard/users", icon: Users },
-        { title: "Roles", href: "/dashboard/roles", icon: Key },
-        { title: "Permissions", href: "/dashboard/permissions", icon: Shield },
+        { title: "Users", href: "/dashboard/users", icon: Users, perm: { target: "users", action: "read" } },
+        { title: "Roles", href: "/dashboard/roles", icon: Key, perm: { target: "roles", action: "read" } },
+        { title: "Permissions", href: "/dashboard/permissions", icon: Shield, perm: { target: "permissions", action: "read" } },
       ]
     },
     {
       title: "Master Data",
       icon: Package,
       items: [
-        { title: "Drugs", href: "/dashboard/drugs", icon: Package },
-        { title: "Raw Materials", href: "/dashboard/raw-materials", icon: Package },
-        { title: "Suppliers", href: "/dashboard/suppliers", icon: Building2 },
-        { title: "Distributors", href: "/dashboard/distributors", icon: Building2 },
-        { title: "Sites", href: "/dashboard/sites", icon: Building2 },
-        { title: "Units of Measure", href: "/dashboard/units", icon: Package },
+        { title: "Drugs", href: "/dashboard/drugs", icon: Package, perm: { target: "drugs", action: "read" } },
+        { title: "Raw Materials", href: "/dashboard/raw-materials", icon: Package, perm: { target: "raw_materials", action: "read" } },
+        { title: "Suppliers", href: "/dashboard/suppliers", icon: Building2, perm: { target: "suppliers", action: "read" } },
+        { title: "Distributors", href: "/dashboard/distributors", icon: Building2, perm: { target: "accounts", action: "read" } },
+        { title: "Sites", href: "/dashboard/sites", icon: Building2, perm: { target: "sites", action: "read" } },
+        { title: "Units of Measure", href: "/dashboard/units", icon: Package, perm: { target: "units", action: "read" } },
       ]
     },
     {
       title: "Procurement",
       icon: ShoppingCart,
       items: [
-        { title: "Purchase Orders", href: "/dashboard/procurement/purchase-orders", icon: ShoppingCart },
-        { title: "Goods Receipts", href: "/dashboard/procurement/goods-receipts", icon: ClipboardCheck },
-        { title: "Certificate of Analysis", href: "/dashboard/procurement/coa", icon: FileCheck },
+        { title: "Purchase Orders", href: "/dashboard/procurement/purchase-orders", icon: ShoppingCart, perm: { target: "PROCUREMENT", action: "read" } },
+        { title: "Goods Receipts", href: "/dashboard/procurement/goods-receipts", icon: ClipboardCheck, perm: { target: "PROCUREMENT", action: "read" } },
+        { title: "Certificate of Analysis", href: "/dashboard/procurement/coa", icon: FileCheck, perm: { target: "PROCUREMENT", action: "read" } },
       ]
     },
     {
       title: "Manufacturing",
       icon: Factory,
       items: [
-        { title: "Bill of Materials", href: "/dashboard/manufacturing/boms", icon: Factory },
-        { title: "Work Orders", href: "/dashboard/manufacturing/work-orders", icon: Factory },
-        { title: "Batches", href: "/dashboard/manufacturing/batches", icon: Factory },
-        { title: "Batch Consumptions", href: "/dashboard/manufacturing/consumptions", icon: Package },
-        { title: "Electronic Batch Records", href: "/dashboard/manufacturing/ebr", icon: FileText },
+        { title: "Bill of Materials", href: "/dashboard/manufacturing/boms", icon: Factory, perm: { target: "MANUFACTURING", action: "read" } },
+        { title: "Work Orders", href: "/dashboard/manufacturing/work-orders", icon: Factory, perm: { target: "MANUFACTURING", action: "read" } },
+        { title: "Batches", href: "/dashboard/manufacturing/batches", icon: Factory, perm: { target: "MANUFACTURING", action: "read" } },
+        { title: "Batch Consumptions", href: "/dashboard/manufacturing/consumptions", icon: Package, perm: { target: "MANUFACTURING", action: "read" } },
+        { title: "Electronic Batch Records", href: "/dashboard/manufacturing/ebr", icon: FileText, perm: { target: "MANUFACTURING", action: "read" } },
       ]
     },
     {
       title: "Quality (QC/QA)",
       icon: TestTube,
       items: [
-        { title: "QC Test Methods", href: "/dashboard/quality/qc-tests", icon: TestTube },
-        { title: "QC Sample Requests", href: "/dashboard/quality/samples", icon: Beaker },
-        { title: "QC Test Results", href: "/dashboard/quality/qc-results", icon: FileCheck },
-        { title: "QA Releases", href: "/dashboard/quality/qa-releases", icon: Shield },
-        { title: "Deviations / CAPA", href: "/dashboard/quality/deviations", icon: AlertTriangle },
+        { title: "QC Test Methods", href: "/dashboard/quality/qc-tests", icon: TestTube, perm: { target: "QUALITY", action: "read" } },
+        { title: "QC Sample Requests", href: "/dashboard/quality/samples", icon: Beaker, perm: { target: "QUALITY", action: "read" } },
+        { title: "QC Test Results", href: "/dashboard/quality/qc-results", icon: FileCheck, perm: { target: "QUALITY", action: "read" } },
+        { title: "QA Releases", href: "/dashboard/quality/qa-releases", icon: Shield, perm: { target: "QUALITY", action: "read" } },
+        { title: "Deviations / CAPA", href: "/dashboard/quality/deviations", icon: AlertTriangle, perm: { target: "QUALITY", action: "read" } },
       ]
     },
     {
       title: "Warehouse",
       icon: Store,
       items: [
-        { title: "Warehouses", href: "/dashboard/warehouse/warehouses", icon: Building2 },
-        { title: "Storage Locations", href: "/dashboard/warehouse/locations", icon: MapPin },
-        { title: "Inventory Lots", href: "/dashboard/warehouse/inventory", icon: Store },
-        { title: "Putaway Tasks", href: "/dashboard/warehouse/putaway", icon: Package },
-        { title: "Material Issues", href: "/dashboard/warehouse/material-issues", icon: ShoppingCart },
-        { title: "Stock Movements", href: "/dashboard/warehouse/movements", icon: Store },
+        { title: "Warehouses", href: "/dashboard/warehouse/warehouses", icon: Building2, perm: { target: "WAREHOUSE", action: "read" } },
+        { title: "Storage Locations", href: "/dashboard/warehouse/locations", icon: MapPin, perm: { target: "WAREHOUSE", action: "read" } },
+        { title: "Inventory Lots", href: "/dashboard/warehouse/inventory", icon: Store, perm: { target: "WAREHOUSE", action: "read" } },
+        { title: "Putaway Tasks", href: "/dashboard/warehouse/putaway", icon: Package, perm: { target: "WAREHOUSE", action: "read" } },
+        { title: "Material Issues", href: "/dashboard/warehouse/material-issues", icon: ShoppingCart, perm: { target: "WAREHOUSE", action: "read" } },
+        { title: "Stock Movements", href: "/dashboard/warehouse/movements", icon: Store, perm: { target: "WAREHOUSE", action: "read" } },
       ]
     },
     {
       title: "Sales",
       icon: TrendingUp,
       items: [
-        { title: "Sales Orders", href: "/dashboard/sales/orders", icon: ShoppingCart },
-        { title: "Shipments", href: "/dashboard/sales/shipments", icon: Truck },
-        { title: "Proof of Delivery", href: "/dashboard/sales/pod", icon: ClipboardCheck },
-        { title: "Audit Trail", href: "/dashboard/audit", icon: Eye },
+        { title: "Sales Orders", href: "/dashboard/sales/orders", icon: ShoppingCart, perm: { target: "sales_orders", action: "read" } },
+        { title: "Shipments", href: "/dashboard/sales/shipments", icon: Truck, perm: { target: "shipments", action: "read" } },
+        { title: "Proof of Delivery", href: "/dashboard/sales/pod", icon: ClipboardCheck, perm: { target: "pod", action: "read" } },
+        { title: "Audit Trail", href: "/dashboard/audit", icon: Eye, perm: { target: "reports", action: "read" } },
       ]
     },
   ]
+
+  const visibleGroups = navigationGroups
+    .map((g) => ({
+      ...g,
+      items: g.items.filter(canSee),
+    }))
+    .filter((g) => g.items.length > 0)
 
   return (
     <div
@@ -190,7 +202,7 @@ export function Sidebar() {
           </Link>
 
           {/* Navigation Groups */}
-          {navigationGroups.map((group) => {
+          {visibleGroups.map((group) => {
             const GroupIcon = group.icon
             const isGroupOpen = openGroups.includes(group.title)
 
@@ -255,7 +267,10 @@ export function Sidebar() {
       {!collapsed && user && (
         <div className="p-4 border-t border-sidebar-border">
           <div className="text-xs text-sidebar-foreground/60 uppercase tracking-wide">
-            Role: {user.role}
+            Role:{" "}
+            {typeof user.role === "object" && user.role !== null
+              ? user.role.name
+              : user.role}
           </div>
         </div>
       )}

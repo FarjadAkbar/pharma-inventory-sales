@@ -17,6 +17,8 @@ export interface JwtPayload {
    */
   isSiteScoped?: boolean
   permission?: any[]
+  /** Mirrors identity-service JWT (resource.action permission names) */
+  permissionNames?: string[]
   iat?: number
   exp?: number
 }

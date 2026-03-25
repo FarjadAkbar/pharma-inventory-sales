@@ -84,6 +84,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (authService.isAuthenticated()) {
           const currentUser = await authService.getCurrentUser()
           setUser(currentUser)
+          if (!authService.getPermissionNames().length) {
+            authService.hydratePermissionNamesFromJwt()
+          }
           setPermissions(authService.getPermissions())
           syncSiteContext()
         }

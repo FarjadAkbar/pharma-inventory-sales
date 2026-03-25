@@ -29,15 +29,8 @@ interface ActionButtonProps {
 
 // Basic permission guard - renders children only if user has the specified permission
 export function PermissionGuard({ module, action, children, fallback = null }: PermissionGuardProps) {
-  const { hasPermission, permissions } = useAuth()
-  
-  console.log('🔐 PermissionGuard Debug:', {
-    module,
-    action,
-    permissions,
-    hasPermission: hasPermission(module, action)
-  })
-  
+  const { hasPermission } = useAuth()
+
   if (hasPermission(module, action)) {
     return <>{children}</>
   }
@@ -99,22 +92,9 @@ export function MultiModulePermissionGuard({
   fallback?: ReactNode
 }) {
   const { hasPermission } = useAuth()
-  
-  console.log('🔐 MultiModulePermissionGuard Debug:', {
-    modules,
-    action,
-    hasPermission: hasPermission
-  })
-  
-  // Check if user has permission in any of the specified modules
-  const hasAnyPermission = modules.some(module => {
-    const result = hasPermission(module, action)
-    console.log(`🔐 Checking ${module}.${action}:`, result)
-    return result
-  })
-  
-  console.log('🔐 MultiModulePermissionGuard Result:', hasAnyPermission)
-  
+
+  const hasAnyPermission = modules.some((module) => hasPermission(module, action))
+
   if (hasAnyPermission) {
     return <>{children}</>
   }
