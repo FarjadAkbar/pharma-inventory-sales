@@ -22,6 +22,10 @@ export class RpcConnectionExceptionFilter implements ExceptionFilter {
     switch (code) {
       case ErrorCode.VALIDATION_FAILED:
         return HttpStatus.BAD_REQUEST;
+      case ErrorCode.UNAUTHORIZED:
+        return HttpStatus.UNAUTHORIZED;
+      case ErrorCode.FORBIDDEN:
+        return HttpStatus.FORBIDDEN;
       case ErrorCode.NOT_FOUND:
         return HttpStatus.NOT_FOUND;
       case ErrorCode.STOCK_INSUFFICIENT:
@@ -50,6 +54,33 @@ export class RpcConnectionExceptionFilter implements ExceptionFilter {
         details,
       },
     });
+  }
+
+  private errorCodeForHttpStatus(status: number): string {
+    switch (status) {
+      case HttpStatus.BAD_REQUEST:
+        return ErrorCode.VALIDATION_FAILED;
+      case HttpStatus.UNAUTHORIZED:
+        return ErrorCode.UNAUTHORIZED;
+      case HttpStatus.FORBIDDEN:
+        return ErrorCode.FORBIDDEN;
+      case HttpStatus.NOT_FOUND:
+        return ErrorCode.NOT_FOUND;
+      case HttpStatus.UNPROCESSABLE_ENTITY:
+        return ErrorCode.BUSINESS_RULE_VIOLATION;
+      case HttpStatus.SERVICE_UNAVAILABLE:
+        return ErrorCode.SERVICE_UNAVAILABLE;
+      default:
+        return ErrorCode.INTERNAL_ERROR;
+    }
+  }
+
+  private coerceHttpStatus(raw: unknown): number | undefined {
+    const n = typeof raw === 'string' ? parseInt(raw, 10) : raw;
+    if (typeof n === 'number' && !Number.isNaN(n) && n >= 400 && n <= 599) {
+      return n;
+    }
+    return undefined;
   }
 
   catch(exception: any, host: ArgumentsHost): void {
@@ -94,35 +125,68 @@ export class RpcConnectionExceptionFilter implements ExceptionFilter {
       return String(m);
     };
 
-    const rpcHttpStatusRaw = exception?.status ?? exception?.statusCode ?? exception?.response?.statusCode;
-    const rpcHttpStatus =
-      typeof rpcHttpStatusRaw === 'number' && rpcHttpStatusRaw >= 400 && rpcHttpStatusRaw <= 599
-        ? rpcHttpStatusRaw
+    const nestedRpc = exception?.message;
+    const nestedStatusFromMessage =
+      typeof nestedRpc === 'object' && nestedRpc !== null
+        ? (nestedRpc as { statusCode?: unknown }).statusCode
         : undefined;
+
+    const rpcHttpStatus =
+      this.coerceHttpStatus(exception?.status) ??
+      this.coerceHttpStatus(exception?.statusCode) ??
+      this.coerceHttpStatus(exception?.response?.statusCode) ??
+      this.coerceHttpStatus(nestedStatusFromMessage);
+
     if (rpcHttpStatus != null) {
       const msg = normalizeMessage(
-        exception?.response?.message ?? exception?.message ?? exception?.response ?? exception?.error,
+        (typeof nestedRpc === 'object' && nestedRpc !== null && 'message' in nestedRpc
+          ? (nestedRpc as { message?: unknown }).message
+          : undefined) ??
+          exception?.response?.message ??
+          exception?.message ??
+          exception?.response ??
+          exception?.error,
       );
-      this.sendError(response, rpcHttpStatus, ErrorCode.INTERNAL_ERROR, msg);
+      this.sendError(
+        response,
+        rpcHttpStatus,
+        this.errorCodeForHttpStatus(rpcHttpStatus),
+        msg,
+      );
       return;
     }
 
     if (exception instanceof HttpException) {
       const status = exception.getStatus();
       const body = exception.getResponse();
-      const rawMsg = typeof body === 'object' ? (body as any)?.message : body;
-      this.sendError(response, status, ErrorCode.INTERNAL_ERROR, normalizeMessage(rawMsg));
+      let rawMsg: unknown = body;
+      if (typeof body === 'object' && body !== null && 'message' in body) {
+        rawMsg = (body as { message: unknown }).message;
+      }
+      this.sendError(
+        response,
+        status,
+        this.errorCodeForHttpStatus(status),
+        normalizeMessage(rawMsg),
+      );
       return;
     }
 
-    const status = exception?.status ?? exception?.statusCode ?? HttpStatus.INTERNAL_SERVER_ERROR;
-    const code = Number.isInteger(status) ? status : HttpStatus.INTERNAL_SERVER_ERROR;
+    const status = this.coerceHttpStatus(exception?.status ?? exception?.statusCode);
+    const httpStatus = status ?? HttpStatus.INTERNAL_SERVER_ERROR;
+    const nestedMsg =
+      typeof nestedRpc === 'object' && nestedRpc !== null && 'message' in nestedRpc
+        ? (nestedRpc as { message: unknown }).message
+        : undefined;
     this.sendError(
       response,
-      code,
-      ErrorCode.INTERNAL_ERROR,
+      httpStatus,
+      this.errorCodeForHttpStatus(httpStatus),
       normalizeMessage(
-        exception?.response?.message ?? exception?.message ?? 'Internal server error',
+        nestedMsg ??
+          exception?.response?.message ??
+          (typeof exception?.message === 'string' ? exception.message : undefined) ??
+          'Internal server error',
       ),
       exception?.response?.details,
     );

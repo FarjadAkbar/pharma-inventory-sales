@@ -7,6 +7,13 @@ import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { 
   ShoppingCart, 
   CheckCircle,
@@ -38,6 +45,8 @@ export default function SalesOrdersPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [filters, setFilters] = useState<SalesOrderFilters>({})
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [orderToDelete, setOrderToDelete] = useState<SalesOrder | null>(null)
 
   useEffect(() => {
     fetchSalesOrders()
@@ -125,22 +134,34 @@ export default function SalesOrdersPage() {
     }
   }
 
-  const handleDelete = async (order: SalesOrder) => {
-    if (window.confirm("Are you sure you want to delete this order?")) {
-      try {
-        const response = await distributionApi.deleteSalesOrder(order.id)
-        
-        if (response.success) {
-          toast.success("Order deleted successfully")
-          fetchSalesOrders()
-        } else {
-          toast.error("Failed to delete order")
-        }
-      } catch (error) {
-        console.error("Error deleting order:", error)
+  const handleDelete = (order: SalesOrder) => {
+    setOrderToDelete(order)
+    setDeleteDialogOpen(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!orderToDelete) return
+    try {
+      const response = await distributionApi.deleteSalesOrder(orderToDelete.id)
+      if (response.success) {
+        toast.success("Order deleted successfully")
+        fetchSalesOrders()
+      } else {
         toast.error("Failed to delete order")
       }
+    } catch (error) {
+      console.error("Error deleting order:", error)
+      const message = error instanceof Error ? error.message : "Failed to delete order"
+      toast.error(message)
+    } finally {
+      setDeleteDialogOpen(false)
+      setOrderToDelete(null)
     }
+  }
+
+  const cancelDelete = () => {
+    setDeleteDialogOpen(false)
+    setOrderToDelete(null)
   }
 
   const getStatusBadge = (status: string) => {
@@ -386,14 +407,6 @@ export default function SalesOrdersPage() {
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => router.push(`/dashboard/sales/orders/${order.id}/history`)}
-        title="View history"
-      >
-        <Clock className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
         onClick={() => handleEdit(order)}
       >
         <Edit className="h-4 w-4" />
@@ -508,6 +521,35 @@ export default function SalesOrdersPage() {
           emptyMessage="No sales orders found. Create your first sales order to get started."
         />
       </div>
+
+      <Dialog
+        open={deleteDialogOpen}
+        onOpenChange={(open) => {
+          setDeleteDialogOpen(open)
+          if (!open) setOrderToDelete(null)
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete sales order</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete order{" "}
+              <span className="font-mono font-medium text-foreground">
+                {orderToDelete?.orderNumber ?? `#${orderToDelete?.id}`}
+              </span>
+              ? Only draft or cancelled orders can be removed. This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={cancelDelete}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={() => void confirmDelete()}>
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   )
 }
