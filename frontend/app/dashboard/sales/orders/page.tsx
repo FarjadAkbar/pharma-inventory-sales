@@ -92,9 +92,7 @@ export default function SalesOrdersPage() {
 
   const handleApprove = async (order: SalesOrder) => {
     try {
-      // TODO: Get actual user ID from auth context
-      const approvedBy = 1; // Placeholder
-      const response = await distributionApi.approveSalesOrder(order.id, approvedBy)
+      const response = await distributionApi.approveSalesOrder(order.id)
       
       if (response.success) {
         toast.success("Order approved successfully")
@@ -384,6 +382,14 @@ export default function SalesOrdersPage() {
         onClick={() => handleView(order)}
       >
         <Eye className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => router.push(`/dashboard/sales/orders/${order.id}/history`)}
+        title="View history"
+      >
+        <Clock className="h-4 w-4" />
       </Button>
       <Button
         variant="ghost"

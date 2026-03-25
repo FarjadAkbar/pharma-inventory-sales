@@ -14,7 +14,14 @@ async function bootstrap() {
       },
     },
   );
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+      transformOptions: { enableImplicitConversion: true },
+    }),
+  );
   await app.listen();
   console.log(`Procurement Service is listening on port ${process.env.PORT}`);
 }

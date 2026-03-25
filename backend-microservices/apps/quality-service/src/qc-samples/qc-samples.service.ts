@@ -190,12 +190,13 @@ export class QCSamplesService {
     return this.toResponseDto(updated);
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: number): Promise<{ success: boolean }> {
     const sample = await this.qcSamplesRepository.findOne({ where: { id } });
     if (!sample) {
       throw new NotFoundException('QC sample not found');
     }
     await this.qcSamplesRepository.remove(sample);
+    return { success: true };
   }
 
   private async toResponseDto(sample: QCSample): Promise<QCSampleResponseDto> {

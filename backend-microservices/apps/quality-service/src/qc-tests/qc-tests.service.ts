@@ -116,10 +116,11 @@ export class QCTestsService {
     }
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: number): Promise<{ success: boolean }> {
     const test = await this.qcTestsRepository.findOne({ where: { id } });
     if (!test) throw new NotFoundException('QC test not found');
     await this.qcTestsRepository.remove(test);
+    return { success: true };
   }
 
   private toResponseDto(test: QCTest): QCTestResponseDto {

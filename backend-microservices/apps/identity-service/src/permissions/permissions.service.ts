@@ -40,9 +40,11 @@ export class PermissionsService {
     return this.toResponseDto(saved);
   }
 
-  async delete(id: number): Promise<void> {
-    const result = await this.permissionsRepository.delete(id);
-    if (result.affected === 0) throw new NotFoundException('Permission not found');
+  async delete(id: number): Promise<{ success: boolean }> {
+    const permission = await this.permissionsRepository.findOne({ where: { id } });
+    if (!permission) throw new NotFoundException('Permission not found');
+    await this.permissionsRepository.remove(permission);
+    return { success: true };
   }
 
   private toResponseDto(permission: Permission): PermissionResponseDto {

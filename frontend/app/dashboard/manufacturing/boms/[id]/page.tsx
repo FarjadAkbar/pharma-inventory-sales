@@ -52,7 +52,7 @@ export default function ViewBOMPage() {
         }
       } catch (error) {
         console.error("Failed to delete BOM:", error)
-        alert("Failed to delete BOM")
+        alert(error instanceof Error ? error.message : "Failed to delete BOM")
       }
     }
   }
@@ -148,7 +148,16 @@ export default function ViewBOMPage() {
                 Edit
               </Button>
             </Link>
-            <Button variant="destructive" onClick={handleDeleteBOM}>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteBOM}
+              disabled={bom.status === "Active"}
+              title={
+                bom.status === "Active"
+                  ? "Deactivate this BOM (mark obsolete) before delete is allowed"
+                  : undefined
+              }
+            >
               <Trash2 className="h-4 w-4" />
               Delete
             </Button>

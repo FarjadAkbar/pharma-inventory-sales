@@ -3,10 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere, In } from 'typeorm';
 import { QueryFailedError } from 'typeorm';
 import { ClientProxy } from '@nestjs/microservices';
+import { RpcException } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { Shipment } from '../entities/shipment.entity';
 import { ShipmentItem } from '../entities/shipment-item.entity';
 import { ProofOfDelivery } from '../entities/proof-of-delivery.entity';
+import { AuditLog, AuditService, StatusHistory } from '@repo/shared';
 import {
   CreateShipmentDto,
   UpdateShipmentDto,
@@ -23,6 +25,7 @@ import {
   WAREHOUSE_PATTERNS,
   InventoryStatus,
   SalesOrderStatus,
+  ErrorCode,
 } from '@repo/shared';
 
 @Injectable()
@@ -34,6 +37,11 @@ export class ShipmentsService {
     private shipmentItemsRepository: Repository<ShipmentItem>,
     @InjectRepository(ProofOfDelivery)
     private podRepository: Repository<ProofOfDelivery>,
+    @InjectRepository(AuditLog)
+    private auditLogsRepository: Repository<AuditLog>,
+    @InjectRepository(StatusHistory)
+    private statusHistoryRepository: Repository<StatusHistory>,
+    private auditService: AuditService,
     @Inject('SALES_ORDER_SERVICE')
     private salesOrderClient: ClientProxy,
     @Inject('WAREHOUSE_SERVICE')
@@ -78,11 +86,59 @@ export class ShipmentsService {
     return `${prefix}${sequence.toString().padStart(6, '0')}`;
   }
 
+  /** Canonical lines from approved sales order for tamper checks & default shipment lines. */
+  private snapshotLinesFromSalesOrder(salesOrder: any): { drugId: number; quantity: number }[] {
+    const items = salesOrder?.items ?? [];
+    return items.map((i: any) => ({ drugId: Number(i.drugId), quantity: Number(i.quantity) }));
+  }
+
+  private sortLineTuples(lines: { drugId: number; quantity: number }[]): string {
+    const sorted = [...lines].sort((a, b) => a.drugId - b.drugId || a.quantity - b.quantity);
+    return JSON.stringify(sorted);
+  }
+
+  private assertClientPayloadMatchesSalesOrder(createDto: CreateShipmentDto, salesOrder: any): void {
+    if (createDto.salesOrderNumber != null && createDto.salesOrderNumber !== salesOrder.orderNumber) {
+      throw new BadRequestException('salesOrderNumber does not match the sales order record');
+    }
+    if (createDto.accountId != null && Number(createDto.accountId) !== Number(salesOrder.accountId)) {
+      throw new BadRequestException('accountId does not match the sales order');
+    }
+    if (createDto.siteId != null && Number(createDto.siteId) !== Number(salesOrder.siteId)) {
+      throw new BadRequestException('siteId does not match the sales order');
+    }
+    if (createDto.items?.length) {
+      const fromSo = this.snapshotLinesFromSalesOrder(salesOrder);
+      const fromClient = createDto.items.map(i => ({ drugId: Number(i.drugId), quantity: Number(i.quantity) }));
+      if (this.sortLineTuples(fromSo) !== this.sortLineTuples(fromClient)) {
+        throw new BadRequestException(
+          'Shipment line quantities must match the approved sales order lines (drugId + quantity)',
+        );
+      }
+    }
+  }
+
+  private shippingAddressFromSalesOrder(salesOrder: any) {
+    const a = salesOrder.shippingAddress ?? {};
+    return {
+      street: a.street ?? '',
+      city: a.city ?? '',
+      state: a.state ?? '',
+      postalCode: a.postalCode ?? '',
+      country: a.country ?? '',
+      contactPerson: a.contactPerson ?? '',
+      phone: a.phone ?? '',
+      email: a.email ?? '',
+      deliveryInstructions: a.deliveryInstructions,
+      coordinates: a.coordinates,
+    };
+  }
+
   async create(createDto: CreateShipmentDto): Promise<ShipmentResponseDto> {
-    console.log(createDto, "........");
-    // Verify sales order exists and is approved
+    const payload = createDto as any;
+    this.auditService.setContext(payload.createdBy, payload.createdByName, payload.correlationId, 'shipment-service');
     const rawSalesOrder = await firstValueFrom(
-      this.salesOrderClient.send(SALES_ORDER_PATTERNS.GET_BY_ID, createDto.salesOrderId)
+      this.salesOrderClient.send(SALES_ORDER_PATTERNS.GET_BY_ID, createDto.salesOrderId),
     );
 
     const salesOrder: any = (rawSalesOrder as any)?.data ?? rawSalesOrder;
@@ -92,56 +148,70 @@ export class ShipmentsService {
     }
 
     if (salesOrder.status !== SalesOrderStatus.APPROVED) {
-      throw new BadRequestException(`Sales order must be approved to create shipment. Current status: ${salesOrder.status}`);
+      throw new BadRequestException(
+        `Sales order must be approved to create shipment. Current status: ${salesOrder.status}`,
+      );
+    }
+
+    this.assertClientPayloadMatchesSalesOrder(createDto, salesOrder);
+
+    const soItems = salesOrder.items ?? [];
+    if (!Array.isArray(soItems) || soItems.length === 0) {
+      throw new BadRequestException('Sales order has no lines; cannot create shipment');
     }
 
     const shipmentNumber = await this.generateShipmentNumber();
 
-    // Create shipment
+    const priority =
+      createDto.priority ?? salesOrder.priority ?? DistributionPriority.NORMAL;
+
+    const createdBy = createDto.createdBy;
+    if (createdBy == null || !Number.isFinite(Number(createdBy)) || Number(createdBy) < 1) {
+      throw new BadRequestException('createdBy (actor user id) is required');
+    }
+
     const shipment = this.shipmentsRepository.create({
       shipmentNumber,
       salesOrderId: createDto.salesOrderId,
-      salesOrderNumber: createDto.salesOrderNumber,
-      accountId: createDto.accountId,
-      accountName: createDto.accountName,
-      siteId: createDto.siteId,
-      siteName: createDto.siteName,
+      salesOrderNumber: salesOrder.orderNumber,
+      accountId: salesOrder.accountId,
+      accountName: salesOrder.accountName,
+      siteId: salesOrder.siteId,
+      siteName: salesOrder.siteName,
       status: ShipmentStatus.DRAFT,
-      priority: createDto.priority || DistributionPriority.NORMAL,
+      priority,
       shipmentDate: new Date(createDto.shipmentDate),
       expectedDeliveryDate: new Date(createDto.expectedDeliveryDate),
       carrier: createDto.carrier,
       serviceType: createDto.serviceType,
-      shippingAddress: createDto.shippingAddress,
+      shippingAddress: this.shippingAddressFromSalesOrder(salesOrder),
       packagingInstructions: createDto.packagingInstructions,
       specialHandling: createDto.specialHandling,
       temperatureRequirements: createDto.temperatureRequirements,
-      createdBy: createDto.createdBy,
+      createdBy: Number(createdBy),
       remarks: createDto.remarks,
     });
 
     const savedShipment = await this.shipmentsRepository.save(shipment);
+    await this.recordStatusTransition('shipment', savedShipment.id, null, ShipmentStatus.DRAFT, Number(createdBy), 'Shipment created');
 
-    // Create shipment items
-    if (createDto.items && createDto.items.length > 0) {
-      const shipmentItems = createDto.items.map(item =>
-        this.shipmentItemsRepository.create({
-          shipmentId: savedShipment.id,
-          drugId: item.drugId,
-          drugName: item.drugName,
-          drugCode: item.drugCode,
-          batchNumber: item.batchNumber,
-          quantity: item.quantity,
-          unit: item.unit,
-          location: item.location,
-          pickedQuantity: 0,
-          packedQuantity: 0,
-          status: ShipmentItemStatus.PENDING,
-          remarks: item.remarks,
-        })
-      );
-      await this.shipmentItemsRepository.save(shipmentItems);
-    }
+    const shipmentItems = soItems.map((line: any) =>
+      this.shipmentItemsRepository.create({
+        shipmentId: savedShipment.id,
+        drugId: line.drugId,
+        drugName: line.drugName,
+        drugCode: line.drugCode,
+        batchNumber: line.preferredBatchNumber ?? '',
+        quantity: line.quantity,
+        unit: line.unit,
+        location: undefined,
+        pickedQuantity: 0,
+        packedQuantity: 0,
+        status: ShipmentItemStatus.PENDING,
+        remarks: line.remarks,
+      }),
+    );
+    await this.shipmentItemsRepository.save(shipmentItems);
 
     return this.findOne(savedShipment.id);
   }
@@ -226,6 +296,13 @@ export class ShipmentsService {
     if (!shipment) {
       throw new NotFoundException(`Shipment with ID ${id} not found`);
     }
+    const payload = updateDto as any;
+    this.auditService.setContext(
+      Number(payload.updatedBy ?? shipment.createdBy),
+      payload.updatedByName,
+      payload.correlationId,
+      'shipment-service',
+    );
 
     if (shipment.status === ShipmentStatus.SHIPPED || shipment.status === ShipmentStatus.DELIVERED) {
       throw new BadRequestException(`Cannot update shipment. Current status: ${shipment.status}`);
@@ -237,14 +314,19 @@ export class ShipmentsService {
     if (updateDto.trackingNumber) shipment.trackingNumber = updateDto.trackingNumber;
     if (updateDto.carrier) shipment.carrier = updateDto.carrier;
     if (updateDto.serviceType) shipment.serviceType = updateDto.serviceType;
+    const previousStatus = shipment.status;
     if (updateDto.status) shipment.status = updateDto.status;
     if (updateDto.remarks !== undefined) shipment.remarks = updateDto.remarks;
 
     const updated = await this.shipmentsRepository.save(shipment);
+    if (updateDto.status && updateDto.status !== previousStatus) {
+      await this.recordStatusTransition('shipment', updated.id, previousStatus, updateDto.status, shipment.createdBy, 'Status changed via update');
+    }
     return this.toResponseDto(updated);
   }
 
   async allocateStock(allocateDto: AllocateStockDto): Promise<ShipmentItemResponseDto> {
+    this.auditService.setContext(Number(allocateDto.allocatedBy), undefined, (allocateDto as any).correlationId, 'shipment-service');
     const shipmentItem = await this.shipmentItemsRepository.findOne({
       where: { id: allocateDto.shipmentItemId },
       relations: ['shipment'],
@@ -272,7 +354,26 @@ export class ShipmentsService {
     }
 
     if (inventory.quantity < allocateDto.quantity) {
-      throw new BadRequestException(`Insufficient inventory. Available: ${inventory.quantity}, Requested: ${allocateDto.quantity}`);
+      throw new RpcException({
+        code: ErrorCode.STOCK_INSUFFICIENT,
+        message: `Insufficient inventory. Available: ${inventory.quantity}, Requested: ${allocateDto.quantity}`,
+        details: {
+          available: inventory.quantity,
+          requested: allocateDto.quantity,
+          inventoryId: allocateDto.inventoryId,
+        },
+      });
+    }
+
+    if (!inventory.qaReleaseId) {
+      throw new RpcException({
+        code: ErrorCode.BATCH_NOT_RELEASED,
+        message: 'Cannot allocate inventory that is not QA released',
+        details: {
+          inventoryId: allocateDto.inventoryId,
+          qaReleaseId: inventory.qaReleaseId ?? null,
+        },
+      });
     }
 
     // Reserve inventory (update status to RESERVED)
@@ -287,9 +388,18 @@ export class ShipmentsService {
 
     // Update shipment item
     shipmentItem.location = inventory.locationId || inventory.location?.id?.toString();
+    const previousItemStatus = shipmentItem.status;
     shipmentItem.status = ShipmentItemStatus.ALLOCATED;
 
     const updated = await this.shipmentItemsRepository.save(shipmentItem);
+    await this.recordStatusTransition(
+      'shipment_item',
+      updated.id,
+      previousItemStatus,
+      ShipmentItemStatus.ALLOCATED,
+      allocateDto.allocatedBy,
+      'Allocated from inventory',
+    );
 
     // Update shipment status if all items are allocated
     await this.updateShipmentStatusIfNeeded(shipmentItem.shipmentId);
@@ -298,6 +408,7 @@ export class ShipmentsService {
   }
 
   async pickItem(pickDto: PickItemDto): Promise<ShipmentItemResponseDto> {
+    this.auditService.setContext(Number(pickDto.pickedBy), undefined, (pickDto as any).correlationId, 'shipment-service');
     const shipmentItem = await this.shipmentItemsRepository.findOne({
       where: { id: pickDto.shipmentItemId },
       relations: ['shipment'],
@@ -315,6 +426,10 @@ export class ShipmentsService {
       throw new BadRequestException(`Picked quantity cannot exceed ordered quantity`);
     }
 
+    if (pickDto.pickedBy == null) {
+      throw new BadRequestException('pickedBy (actor user id) is required');
+    }
+    const previousItemStatus = shipmentItem.status;
     shipmentItem.pickedQuantity = pickDto.pickedQuantity;
     shipmentItem.pickedBy = pickDto.pickedBy;
     shipmentItem.pickedAt = new Date();
@@ -324,6 +439,16 @@ export class ShipmentsService {
     }
 
     const updated = await this.shipmentItemsRepository.save(shipmentItem);
+    if (updated.status !== previousItemStatus) {
+      await this.recordStatusTransition(
+        'shipment_item',
+        updated.id,
+        previousItemStatus,
+        updated.status,
+        pickDto.pickedBy,
+        'Picked item',
+      );
+    }
 
     // Update shipment status if all items are picked
     await this.updateShipmentStatusIfNeeded(shipmentItem.shipmentId);
@@ -332,6 +457,7 @@ export class ShipmentsService {
   }
 
   async packItem(packDto: PackItemDto): Promise<ShipmentItemResponseDto> {
+    this.auditService.setContext(Number(packDto.packedBy), undefined, (packDto as any).correlationId, 'shipment-service');
     const shipmentItem = await this.shipmentItemsRepository.findOne({
       where: { id: packDto.shipmentItemId },
       relations: ['shipment'],
@@ -349,6 +475,10 @@ export class ShipmentsService {
       throw new BadRequestException(`Packed quantity cannot exceed picked quantity`);
     }
 
+    if (packDto.packedBy == null) {
+      throw new BadRequestException('packedBy (actor user id) is required');
+    }
+    const previousItemStatus = shipmentItem.status;
     shipmentItem.packedQuantity = packDto.packedQuantity;
     shipmentItem.packedBy = packDto.packedBy;
     shipmentItem.packedAt = new Date();
@@ -358,6 +488,16 @@ export class ShipmentsService {
     }
 
     const updated = await this.shipmentItemsRepository.save(shipmentItem);
+    if (updated.status !== previousItemStatus) {
+      await this.recordStatusTransition(
+        'shipment_item',
+        updated.id,
+        previousItemStatus,
+        updated.status,
+        packDto.packedBy,
+        'Packed item',
+      );
+    }
 
     // Update shipment status if all items are packed
     await this.updateShipmentStatusIfNeeded(shipmentItem.shipmentId);
@@ -366,6 +506,7 @@ export class ShipmentsService {
   }
 
   async shipOrder(id: number, shipDto: ShipOrderDto): Promise<ShipmentResponseDto> {
+    this.auditService.setContext(Number(shipDto.shippedBy), undefined, (shipDto as any).correlationId, 'shipment-service');
     const shipment = await this.shipmentsRepository.findOne({
       where: { id },
       relations: ['items'],
@@ -381,6 +522,7 @@ export class ShipmentsService {
       throw new BadRequestException('All items must be packed before shipping');
     }
 
+    const previousStatus = shipment.status;
     shipment.status = ShipmentStatus.SHIPPED;
     if (shipDto.trackingNumber) shipment.trackingNumber = shipDto.trackingNumber;
     if (shipDto.carrier) shipment.carrier = shipDto.carrier;
@@ -389,11 +531,25 @@ export class ShipmentsService {
 
     // Update all items to SHIPPED
     shipment.items.forEach(item => {
+      const old = item.status;
       item.status = ShipmentItemStatus.SHIPPED;
     });
 
     await this.shipmentItemsRepository.save(shipment.items);
+    await Promise.all(
+      shipment.items.map(item =>
+        this.recordStatusTransition(
+          'shipment_item',
+          item.id,
+          ShipmentItemStatus.PACKED,
+          ShipmentItemStatus.SHIPPED,
+          shipDto.shippedBy,
+          'Shipment shipped',
+        ),
+      ),
+    );
     const updated = await this.shipmentsRepository.save(shipment);
+    await this.recordStatusTransition('shipment', updated.id, previousStatus, ShipmentStatus.SHIPPED, shipDto.shippedBy, 'Shipment shipped');
 
     // Update sales order status to SHIPPED
     await firstValueFrom(
@@ -415,18 +571,21 @@ export class ShipmentsService {
     if (!shipment) {
       throw new NotFoundException(`Shipment with ID ${id} not found`);
     }
+    this.auditService.setContext(shipment.createdBy, undefined, undefined, 'shipment-service');
 
     if (shipment.status === ShipmentStatus.SHIPPED || shipment.status === ShipmentStatus.DELIVERED) {
       throw new BadRequestException(`Cannot cancel shipment. Current status: ${shipment.status}`);
     }
 
+    const previousStatus = shipment.status;
     shipment.status = ShipmentStatus.CANCELLED;
     const updated = await this.shipmentsRepository.save(shipment);
+    await this.recordStatusTransition('shipment', updated.id, previousStatus, ShipmentStatus.CANCELLED, shipment.createdBy, 'Shipment cancelled');
 
     return this.toResponseDto(updated);
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: number): Promise<{ success: boolean }> {
     const shipment = await this.shipmentsRepository.findOne({
       where: { id },
       relations: ['items'],
@@ -435,12 +594,86 @@ export class ShipmentsService {
     if (!shipment) {
       throw new NotFoundException(`Shipment with ID ${id} not found`);
     }
+    this.auditService.setContext(shipment.createdBy, undefined, undefined, 'shipment-service');
 
     if (shipment.status === ShipmentStatus.SHIPPED || shipment.status === ShipmentStatus.DELIVERED) {
       throw new BadRequestException(`Cannot delete shipment. Current status: ${shipment.status}`);
     }
 
     await this.shipmentsRepository.remove(shipment);
+    return { success: true };
+  }
+
+  async getHistory(id: number) {
+    const shipment = await this.shipmentsRepository.findOne({ where: { id } });
+    if (!shipment) {
+      throw new NotFoundException(`Shipment with ID ${id} not found`);
+    }
+    const itemIds = (await this.shipmentItemsRepository.find({ where: { shipmentId: id }, select: ['id'] })).map(i => i.id);
+    const [audit, shipmentStatusHistory, itemStatusHistory] = await Promise.all([
+      this.auditLogsRepository
+        .createQueryBuilder('a')
+        .where('(a.entityType = :shipmentType AND a.entityId = :shipmentId)', {
+          shipmentType: 'shipment',
+          shipmentId: id,
+        })
+        .orWhere(
+          itemIds.length
+            ? '(a.entityType = :itemType AND a.entityId IN (:...itemIds))'
+            : '(1 = 0)',
+          { itemType: 'shipment_item', itemIds: itemIds.length ? itemIds : [-1] },
+        )
+        .orderBy('a.createdAt', 'DESC')
+        .getMany(),
+      this.statusHistoryRepository.find({
+        where: { entityType: 'shipment', entityId: id },
+        order: { changedAt: 'DESC' },
+      }),
+      this.statusHistoryRepository
+        .createQueryBuilder('h')
+        .where('h.entityType = :entityType', { entityType: 'shipment_item' })
+        .andWhere(
+          'h.entityId IN (:...itemIds)',
+          { itemIds: itemIds.length ? itemIds : [-1] },
+        )
+        .orderBy('h.changedAt', 'DESC')
+        .getMany(),
+    ]);
+    return { audit, shipmentStatusHistory, itemStatusHistory };
+  }
+
+  async getEntityHistory(entityType: string, entityId: number) {
+    const [audit, statusHistory] = await Promise.all([
+      this.auditLogsRepository.find({
+        where: { entityType, entityId },
+        order: { createdAt: 'DESC' },
+      }),
+      this.statusHistoryRepository.find({
+        where: { entityType, entityId },
+        order: { changedAt: 'DESC' },
+      }),
+    ]);
+    return { audit, statusHistory };
+  }
+
+  private async recordStatusTransition(
+    entityType: 'shipment' | 'shipment_item',
+    entityId: number,
+    fromStatus: string | null,
+    toStatus: string,
+    changedBy?: number,
+    reason?: string,
+  ) {
+    await this.statusHistoryRepository.save(
+      this.statusHistoryRepository.create({
+        entityType,
+        entityId,
+        fromStatus,
+        toStatus,
+        changedBy,
+        reason,
+      }),
+    );
   }
 
   async getBySalesOrder(salesOrderId: number): Promise<ShipmentResponseDto[]> {

@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { TypeOrmOptionsFactory, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { Shipment, ShipmentItem, ProofOfDelivery } from '../entities';
+import { AuditLog, StatusHistory } from '@repo/shared';
 import * as dotenv from 'dotenv';
 
 // Load env vars for CLI usage
@@ -25,7 +26,7 @@ function getTypeOrmOptions(configService?: ConfigService): DataSourceOptions {
     username,
     password,
     database,
-    entities: [Shipment, ShipmentItem, ProofOfDelivery],
+    entities: [Shipment, ShipmentItem, ProofOfDelivery, AuditLog, StatusHistory],
     migrations: isRuntime ? [] : ['src/migrations/*.ts'],
     synchronize: false,
     logging: configService?.get<string>('NODE_ENV') === 'development' || process.env.NODE_ENV === 'development',

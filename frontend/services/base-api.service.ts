@@ -5,6 +5,23 @@ import type { ApiResponse } from "@/types/auth"
 import { BASE_URL } from "@/config"
 import { isTokenValid, decodeToken } from "@/lib/jwt"
 
+function errorMessageFromApiErrorBody(data: Record<string, unknown>, httpStatus: number): string {
+  const statusCode = (data.statusCode as number | undefined) ?? httpStatus
+  const fromNestedError =
+    data.error != null && typeof data.error === "object" && "message" in data.error
+      ? (data.error as { message?: unknown }).message
+      : undefined
+  const raw =
+    data.message ??
+    fromNestedError ??
+    (typeof data.error === "string" ? data.error : undefined)
+  const msg = Array.isArray(raw) ? raw.join(", ") : raw
+  if (msg != null && String(msg).trim()) return String(msg)
+  return statusCode >= 500
+    ? `Server error (${statusCode}). Please try again later.`
+    : `Request failed (${statusCode}).`
+}
+
 export class BaseApiService {
   protected baseUrl = BASE_URL
   private isRefreshing = false
@@ -182,15 +199,7 @@ export class BaseApiService {
       const data = contentType.includes("application/json") ? await response.json() : ({} as any)
 
       if (!response.ok) {
-        const msg = Array.isArray(data.message) ? data.message.join(", ") : data.message || data.error
-        const statusCode = data.statusCode ?? response.status
-        const errorMessage =
-          msg && String(msg).trim()
-            ? String(msg)
-            : statusCode >= 500
-              ? `Server error (${statusCode}). Please try again later.`
-              : `Request failed (${statusCode}).`
-        throw new Error(errorMessage)
+        throw new Error(errorMessageFromApiErrorBody(data, response.status))
       }
 
       return data

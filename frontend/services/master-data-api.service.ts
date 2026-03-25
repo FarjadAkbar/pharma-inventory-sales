@@ -28,17 +28,72 @@ export class MasterDataApiService extends BaseApiService {
     return this.request(`/master-data/drugs${query ? `?${query}` : ""}`)
   }
 
-  async createDrug(drugData: any) {
+  async createDrug(drugData: Record<string, unknown>) {
+    const body: Record<string, unknown> = {
+      code: drugData.code,
+      name: drugData.name,
+      dosageForm: drugData.dosageForm,
+      route: drugData.route,
+    }
+    const opt = (
+      key:
+        | "formula"
+        | "strength"
+        | "description"
+        | "approvalStatus"
+        | "therapeuticClass"
+        | "manufacturer"
+        | "registrationNumber"
+        | "expiryDate"
+        | "storageConditions",
+    ) => {
+      const v = drugData[key]
+      if (v !== undefined && v !== null && v !== "") body[key] = v
+    }
+    opt("formula")
+    opt("strength")
+    opt("description")
+    opt("approvalStatus")
+    opt("therapeuticClass")
+    opt("manufacturer")
+    opt("registrationNumber")
+    opt("expiryDate")
+    opt("storageConditions")
     return this.request("/master-data/drugs", {
       method: "POST",
-      body: JSON.stringify(drugData),
+      body: JSON.stringify(body),
     })
   }
 
-  async updateDrug(drugData: any) {
+  async updateDrug(drugData: Record<string, unknown> & { id: string | number }) {
+    const rawId = drugData.id
+    const id = typeof rawId === "string" ? parseInt(rawId, 10) : Number(rawId)
+    if (!Number.isFinite(id)) {
+      throw new Error("Invalid drug id")
+    }
+    const { id: _omit, ...rest } = drugData
+    const body: Record<string, unknown> = { id }
+    for (const key of [
+      "code",
+      "name",
+      "formula",
+      "strength",
+      "dosageForm",
+      "route",
+      "description",
+      "approvalStatus",
+      "therapeuticClass",
+      "manufacturer",
+      "registrationNumber",
+      "expiryDate",
+      "storageConditions",
+    ] as const) {
+      const v = rest[key]
+      if (v !== undefined) body[key] = v
+    }
     return this.request("/master-data/drugs", {
       method: "PUT",
-      body: JSON.stringify(drugData),
+      body: JSON.stringify(body),
     })
   }
 

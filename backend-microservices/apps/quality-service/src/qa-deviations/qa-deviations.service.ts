@@ -170,12 +170,13 @@ export class QADeviationsService {
     return this.toResponseDto(updated);
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: number): Promise<{ success: boolean }> {
     const deviation = await this.qaDeviationsRepository.findOne({ where: { id } });
     if (!deviation) {
       throw new NotFoundException('QA deviation not found');
     }
     await this.qaDeviationsRepository.remove(deviation);
+    return { success: true };
   }
 
   private async toResponseDto(deviation: QADeviation): Promise<QADeviationResponseDto> {

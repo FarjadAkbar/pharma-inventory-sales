@@ -58,13 +58,13 @@ export default function NewSalesOrderPage() {
       masterDataApi.getDrugs().catch(() => ({ data: [] })),
       sitesApi.getSites().catch(() => ({ data: [] })),
     ]).then(([drugsRes, sitesRes]) => {
-      if (drugsRes?.data) {
-        setDrugs(Array.isArray(drugsRes.data) ? drugsRes.data : []);
+      if (drugsRes?.data?.drugs) {
+        setDrugs(drugsRes?.data?.drugs);
       } else if (Array.isArray(drugsRes)) {
         setDrugs(drugsRes);
       }
-      if (sitesRes?.data) {
-        setSites(Array.isArray(sitesRes.data) ? sitesRes.data : []);
+      if (sitesRes?.data?.sites) {
+        setSites(sitesRes.data);
       } else if (Array.isArray(sitesRes)) {
         setSites(sitesRes);
       }
@@ -232,8 +232,8 @@ export default function NewSalesOrderPage() {
                       setFormData((prev) => ({
                         ...prev,
                         accountId: value,
-                        accountName: customer?.name || "", 
-                        accountCode: customer?.code || "", 
+                        accountName: customer?.name || "",
+                        accountCode: customer?.code || "",
                       }));
                     }}
                   >

@@ -18,6 +18,10 @@ export class DistributionApiService extends BaseApiService {
     return this.request(`/sales/sales-orders/${id}`)
   }
 
+  async getSalesOrderHistory(id: string) {
+    return this.request(`/sales/sales-orders/${id}/history`)
+  }
+
   async createSalesOrder(orderData: any) {
     return this.request("/sales/sales-orders", {
       method: "POST",
@@ -32,10 +36,11 @@ export class DistributionApiService extends BaseApiService {
     })
   }
 
-  async approveSalesOrder(id: string, approvedBy: number) {
+  /** approvedBy optional — API gateway sets it from JWT when omitted */
+  async approveSalesOrder(id: string, approvedBy?: number) {
     return this.request(`/sales/sales-orders/${id}/approve`, {
       method: "POST",
-      body: JSON.stringify({ approvedBy }),
+      body: JSON.stringify(approvedBy != null ? { approvedBy } : {}),
     })
   }
 
@@ -64,6 +69,14 @@ export class DistributionApiService extends BaseApiService {
 
   async getShipment(id: string) {
     return this.request(`/sales/shipments/${id}`)
+  }
+
+  async getShipmentHistory(id: string) {
+    return this.request(`/sales/shipments/${id}/history`)
+  }
+
+  async getEntityAuditHistory(entityType: string, entityId: string | number) {
+    return this.request(`/audit/${encodeURIComponent(entityType)}/${entityId}`)
   }
 
   async getShipmentsBySalesOrder(salesOrderId: string) {

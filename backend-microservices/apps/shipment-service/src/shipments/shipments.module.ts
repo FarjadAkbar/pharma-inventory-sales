@@ -4,10 +4,11 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ShipmentsController } from './shipments.controller';
 import { ShipmentsService } from './shipments.service';
 import { Shipment, ShipmentItem, ProofOfDelivery } from '../entities';
+import { AuditLog, AuditService, AuditSubscriber, StatusHistory } from '@repo/shared';
 
 @Module({
   imports: [
-  TypeOrmModule.forFeature([Shipment, ShipmentItem, ProofOfDelivery]),
+  TypeOrmModule.forFeature([Shipment, ShipmentItem, ProofOfDelivery, AuditLog, StatusHistory]),
     ClientsModule.register([
       {
         name: 'SALES_ORDER_SERVICE',
@@ -28,7 +29,7 @@ import { Shipment, ShipmentItem, ProofOfDelivery } from '../entities';
     ]),
   ],
   controllers: [ShipmentsController],
-  providers: [ShipmentsService],
+  providers: [ShipmentsService, AuditService, AuditSubscriber],
   exports: [ShipmentsService],
 })
 export class ShipmentsModule {}

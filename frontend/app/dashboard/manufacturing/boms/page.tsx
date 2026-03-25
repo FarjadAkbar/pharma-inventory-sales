@@ -7,6 +7,13 @@ import { UnifiedDataTable } from "@/components/ui/unified-data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { 
   Plus, 
   FileText, 
@@ -35,6 +42,9 @@ export default function BOMsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [filters, setFilters] = useState<BOMFilters>({})
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [bomToDelete, setBomToDelete] = useState<BOM | null>(null)
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false)
 
   useEffect(() => {
     fetchBOMs()
@@ -75,19 +85,33 @@ export default function BOMsPage() {
     setPagination((prev) => ({ ...prev, page }))
   }
 
-  const handleDeleteBOM = async (bom: BOM) => {
-    if (confirm(`Are you sure you want to delete BOM ${bom.bomNumber}?`)) {
-      try {
-        const response = await manufacturingApi.deleteBOM(bom.id)
-        if (response.success) {
-          fetchBOMs() // Refresh the list
-        } else {
-          alert("Failed to delete BOM")
-        }
-      } catch (error) {
-        console.error("Failed to delete BOM:", error)
+  const handleOpenDeleteDialog = (bom: BOM) => {
+    if (bom.status === "Active") return
+    setBomToDelete(bom)
+    setDeleteDialogOpen(true)
+  }
+
+  const cancelDelete = () => {
+    setDeleteDialogOpen(false)
+    setBomToDelete(null)
+  }
+
+  const confirmDelete = async () => {
+    if (!bomToDelete) return
+    setDeleteSubmitting(true)
+    try {
+      const response = await manufacturingApi.deleteBOM(bomToDelete.id)
+      if (response.success) {
+        cancelDelete()
+        fetchBOMs()
+      } else {
         alert("Failed to delete BOM")
       }
+    } catch (error) {
+      console.error("Failed to delete BOM:", error)
+      alert(error instanceof Error ? error.message : "Failed to delete BOM")
+    } finally {
+      setDeleteSubmitting(false)
     }
   }
 
@@ -294,8 +318,14 @@ export default function BOMsPage() {
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => handleDeleteBOM(bom)}
-        className="text-red-600 hover:text-red-700"
+        onClick={() => handleOpenDeleteDialog(bom)}
+        disabled={bom.status === "Active"}
+        title={
+          bom.status === "Active"
+            ? "Cannot delete the active BOM; mark it obsolete first"
+            : "Delete BOM"
+        }
+        className="text-red-600 hover:text-red-700 disabled:opacity-40"
       >
         <Trash2 className="h-4 w-4" />
       </Button>
@@ -383,6 +413,39 @@ export default function BOMsPage() {
           emptyMessage="No BOMs found. Create your first BOM to get started."
         />
       </div>
+
+      <Dialog
+        open={deleteDialogOpen}
+        onOpenChange={(open) => {
+          setDeleteDialogOpen(open)
+          if (!open) setBomToDelete(null)
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete BOM</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete BOM{" "}
+              <span className="font-mono font-medium text-foreground">{bomToDelete?.bomNumber}</span>
+              {bomToDelete?.drugName ? (
+                <>
+                  {" "}
+                  for <span className="font-medium text-foreground">{bomToDelete.drugName}</span>
+                </>
+              ) : null}
+              ? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={cancelDelete} disabled={deleteSubmitting}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete} disabled={deleteSubmitting}>
+              {deleteSubmitting ? "Deleting…" : "Delete"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   )
 }

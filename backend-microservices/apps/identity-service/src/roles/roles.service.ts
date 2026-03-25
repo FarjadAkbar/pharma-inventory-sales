@@ -45,9 +45,11 @@ export class RolesService {
     return this.enrichRoleWithPermissions(saved);
   }
 
-  async delete(id: number): Promise<void> {
-    const result = await this.rolesRepository.delete(id);
-    if (result.affected === 0) throw new NotFoundException('Role not found');
+  async delete(id: number): Promise<{ success: boolean }> {
+    const role = await this.rolesRepository.findOne({ where: { id } });
+    if (!role) throw new NotFoundException('Role not found');
+    await this.rolesRepository.remove(role);
+    return { success: true };
   }
 
   async addPermission(dto: AddPermissionToRoleDto): Promise<RoleResponseDto> {

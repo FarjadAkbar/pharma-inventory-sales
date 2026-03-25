@@ -48,10 +48,11 @@ export class RawMaterialsService {
     return this.toResponseDto(updated);
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: number): Promise<{ success: boolean }> {
     const rm = await this.rawMaterialsRepository.findOne({ where: { id } });
     if (!rm) throw new NotFoundException('Raw material not found');
     await this.rawMaterialsRepository.remove(rm);
+    return { success: true };
   }
 
   private async toResponseDto(rm: RawMaterial): Promise<RawMaterialResponseDto> {

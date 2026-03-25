@@ -27,6 +27,7 @@ import {
   AlertCircle
 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { manufacturingApi } from "@/services"
 import type { Batch, BatchFilters } from "@/types/manufacturing"
 import { formatDateISO } from "@/lib/utils"
@@ -350,6 +351,13 @@ export default function BatchesPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Batch Management</h1>
             <p className="text-muted-foreground">Manage production batches and Electronic Batch Records</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Recommended: create batches from a{" "}
+              <Link href="/dashboard/manufacturing/work-orders" className="underline font-medium text-foreground/80">
+                work order
+              </Link>{" "}
+              (opens <code className="text-xs bg-muted px-1 rounded">batches/new?workOrderId=…</code>).
+            </p>
           </div>
           <Button onClick={() => router.push("/dashboard/manufacturing/batches/new")}>
             <Plus />

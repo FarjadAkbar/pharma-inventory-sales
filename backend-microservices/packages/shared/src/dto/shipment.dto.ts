@@ -138,24 +138,31 @@ export class ShipmentItemDto {
 }
 
 // Create Shipment DTO
+/** Logistics-only create: server loads approved sales order and snapshots customer, site, address, and lines.
+ * Optional header/items/address are validated against the SO when provided (tamper detection). */
 export class CreateShipmentDto {
   @IsNumber()
   salesOrderId: number;
 
   @IsString()
-  salesOrderNumber: string;
+  @IsOptional()
+  salesOrderNumber?: string;
 
   @IsNumber()
-  accountId: number;
+  @IsOptional()
+  accountId?: number;
 
   @IsString()
-  accountName: string;
+  @IsOptional()
+  accountName?: string;
 
   @IsNumber()
-  siteId: number;
+  @IsOptional()
+  siteId?: number;
 
   @IsString()
-  siteName: string;
+  @IsOptional()
+  siteName?: string;
 
   @IsDateString()
   shipmentDate: string;
@@ -180,11 +187,13 @@ export class CreateShipmentDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ShipmentItemDto)
-  items: ShipmentItemDto[];
+  @IsOptional()
+  items?: ShipmentItemDto[];
 
   @ValidateNested()
   @Type(() => ShippingAddressDto)
-  shippingAddress: ShippingAddressDto;
+  @IsOptional()
+  shippingAddress?: ShippingAddressDto;
 
   @IsArray()
   @ValidateNested({ each: true })
@@ -208,7 +217,8 @@ export class CreateShipmentDto {
   remarks?: string;
 
   @IsNumber()
-  createdBy: number;
+  @IsOptional()
+  createdBy?: number;
 }
 
 // Update Shipment DTO
@@ -262,7 +272,8 @@ export class AllocateStockDto {
   quantity: number;
 
   @IsNumber()
-  allocatedBy: number;
+  @IsOptional()
+  allocatedBy?: number;
 }
 
 // Pick Item DTO
@@ -275,7 +286,8 @@ export class PickItemDto {
   pickedQuantity: number;
 
   @IsNumber()
-  pickedBy: number;
+  @IsOptional()
+  pickedBy?: number;
 }
 
 // Pack Item DTO
@@ -288,7 +300,8 @@ export class PackItemDto {
   packedQuantity: number;
 
   @IsNumber()
-  packedBy: number;
+  @IsOptional()
+  packedBy?: number;
 }
 
 // Ship Order DTO
@@ -308,7 +321,8 @@ export class ShipOrderDto {
   shipmentDate?: string;
 
   @IsNumber()
-  shippedBy: number;
+  @IsOptional()
+  shippedBy?: number;
 }
 
 // Shipment Response DTO

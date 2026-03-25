@@ -150,7 +150,7 @@ export class POSService {
     return this.toResponseDto(updated);
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: number): Promise<{ success: boolean }> {
     const transaction = await this.posRepository.findOne({ where: { id } });
 
     if (!transaction) {
@@ -158,6 +158,7 @@ export class POSService {
     }
 
     await this.posRepository.remove(transaction);
+    return { success: true };
   }
 
   async voidTransaction(id: number, voidedBy: number): Promise<POSTransactionResponseDto> {

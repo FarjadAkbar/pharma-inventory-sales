@@ -179,7 +179,7 @@ export class QCResultsService {
     });
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: number): Promise<{ success: boolean }> {
     const result = await this.qcResultsRepository.findOne({ where: { id } });
     if (!result) {
       throw new NotFoundException('QC result not found');
@@ -188,6 +188,7 @@ export class QCResultsService {
       throw new BadRequestException('Cannot delete result that has been submitted to QA');
     }
     await this.qcResultsRepository.remove(result);
+    return { success: true };
   }
 
   private async toResponseDto(result: QCResult, test?: any): Promise<QCResultResponseDto> {

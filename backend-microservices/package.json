@@ -15,7 +15,8 @@
     "migration:generate": "pnpm --filter identity-service migration:generate",
     "migration:run": "pnpm --filter identity-service migration:run",
     "docker:up": "docker-compose up -d",
-    "docker:down": "docker-compose down"
+    "docker:down": "docker-compose down",
+    "contract:sales": "node scripts/contract/gateway-sales-contract.mjs"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
