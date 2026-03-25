@@ -125,6 +125,7 @@ export default function NewSalesOrderPage() {
         billingAddress: defaultBillingAddress,
         createdBy: 1,
       });
+      
 
       if (response.success) {
         console.log("Sales order created:", response.data);

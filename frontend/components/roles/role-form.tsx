@@ -89,8 +89,8 @@ export function RoleForm({ initialData, onSubmit, submitLabel = "Save" }: RoleFo
   })
 
   const handleSubmit = async (data: any) => {
-    formState.setLoading(true)
-    formState.clearErrors()
+    formState.data.setLoading(true)
+    formState.data.clearErrors()
     
     try {
       // Validate form

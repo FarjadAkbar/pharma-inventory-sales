@@ -104,7 +104,7 @@ export function PermissionForm({ initialData, onSubmit, submitLabel = "Save" }: 
           name="name"
           label="Permission Name"
           value={formState.data.name}
-          onChange={(e) => formState.updateField('name', e.target.value)}
+          onChange={(value) => formState.updateField('name', value)}
           error={formState.errors.name}
           required
           placeholder="e.g., view_users, create_products"
@@ -114,7 +114,7 @@ export function PermissionForm({ initialData, onSubmit, submitLabel = "Save" }: 
           name="description"
           label="Description"
           value={formState.data.description || ""}
-          onChange={(e) => formState.updateField('description', e.target.value)}
+          onChange={(value) => formState.updateField('description', value)}
           error={formState.errors.description}
           placeholder="Brief description of the permission"
         />
@@ -124,7 +124,8 @@ export function PermissionForm({ initialData, onSubmit, submitLabel = "Save" }: 
             name="resource"
             label="Resource"
             value={formState.data.resource || ""}
-            onChange={(e) => formState.updateField('resource', e.target.value)}
+
+            onChange={(value) => formState.updateField('resource', value)}
             error={formState.errors.resource}
             options={RESOURCE_OPTIONS}
             placeholder="Select resource"
@@ -134,7 +135,7 @@ export function PermissionForm({ initialData, onSubmit, submitLabel = "Save" }: 
             name="action"
             label="Action"
             value={formState.data.action || ""}
-            onChange={(e) => formState.updateField('action', e.target.value)}
+            onChange={(value) => formState.updateField('action', value)}
             error={formState.errors.action}
             options={ACTION_OPTIONS}
             placeholder="Select action"
