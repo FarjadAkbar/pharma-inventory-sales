@@ -83,7 +83,8 @@ interface UnifiedDataTableProps {
   showSettings?: boolean
 }
 
-export function UnifiedDataTable({
+export function 
+UnifiedDataTable({
   data,
   columns,
   loading = false,

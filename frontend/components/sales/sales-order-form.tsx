@@ -96,7 +96,7 @@ export function SalesOrderForm({ onSuccess, trigger }: SalesOrderFormProps) {
       
       const response = await apiService.createSalesOrder({
         accountId: parseInt(formData.accountId),
-        accountName: formData.accountName || "Customer Account",
+        accountName: formData.accountName,
         accountCode: formData.accountCode || `ACC-${formData.accountId}`,
         siteId: parseInt(formData.siteId),
         siteName: selectedSite?.name || formData.siteName || "Site",

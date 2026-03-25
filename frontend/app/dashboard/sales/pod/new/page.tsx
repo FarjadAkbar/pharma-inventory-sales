@@ -175,7 +175,8 @@ export default function NewPODPage() {
                   <label className="block text-sm font-medium mb-1">Customer *</label>
                   <Select
                     value={formData.accountId}
-                    onValueChange={(value) => setFormData((p) => ({ ...p, accountId: value }))}
+                    onValueChange={(value) =>
+                      setFormData((p) => ({ ...p, accountId: value }))}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder={loadingOptions ? "Loading customers..." : "Select customer"} />

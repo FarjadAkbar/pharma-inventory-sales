@@ -120,8 +120,10 @@ export function WorkOrderForm({
       if (drugId) {
         setLoadingBoms(true)
         try {
-          const response = await manufacturingApi.getBOMs({ drugId, status: 'Active' })
+          const response = await manufacturingApi.getBOMs({ drugId})
+          console.log("BOM API Response:", response)
           const bomsData = response.data?.boms || response.data || []
+          console.log("Fetched BOMs:", bomsData)
           setBoms(bomsData)
         } catch (error) {
           console.error("Failed to fetch BOMs:", error)

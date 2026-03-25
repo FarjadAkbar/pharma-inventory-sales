@@ -1,33 +1,45 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { ShoppingCart } from "lucide-react"
-import { masterDataApi, sitesApi, distributionApi } from "@/services"
-import { toast } from "sonner"
-import { UNIT_OPTIONS } from "@/lib/constants"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { ShoppingCart } from "lucide-react";
+import { masterDataApi, sitesApi, distributionApi } from "@/services";
+import { toast } from "sonner";
+import { UNIT_OPTIONS } from "@/lib/constants";
 
 interface OrderItem {
-  drugId: string
-  drugName: string
-  quantity: number
-  unit: string
-  price: number
-  totalPrice: number
+  drugId: string;
+  drugName: string;
+  quantity: number;
+  unit: string;
+  price: number;
+  totalPrice: number;
 }
 
 export default function NewSalesOrderPage() {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [drugs, setDrugs] = useState<any[]>([])
-  const [sites, setSites] = useState<any[]>([])
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [drugs, setDrugs] = useState<any[]>([]);
+  const [sites, setSites] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     accountId: "",
     accountName: "",
@@ -38,34 +50,36 @@ export default function NewSalesOrderPage() {
     priority: "Normal",
     specialInstructions: "",
     currency: "PKR",
-  })
-  const [items, setItems] = useState<OrderItem[]>([])
+  });
+  const [items, setItems] = useState<OrderItem[]>([]);
 
   useEffect(() => {
     Promise.all([
       masterDataApi.getDrugs().catch(() => ({ data: [] })),
       sitesApi.getSites().catch(() => ({ data: [] })),
     ]).then(([drugsRes, sitesRes]) => {
-      if (drugsRes?.data) {
-        setDrugs(Array.isArray(drugsRes.data) ? drugsRes.data : [])
+      if (drugsRes?.data?.drugs) {
+        setDrugs(drugsRes?.data?.drugs);
       } else if (Array.isArray(drugsRes)) {
-        setDrugs(drugsRes)
+        setDrugs(drugsRes);
       }
-      if (sitesRes?.data) {
-        setSites(Array.isArray(sitesRes.data) ? sitesRes.data : [])
+      if (sitesRes?.data?.sites) {
+        setSites(sitesRes.data);
       } else if (Array.isArray(sitesRes)) {
-        setSites(sitesRes)
+        setSites(sitesRes);
       }
-    })
-  }, [])
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
 
     try {
-      const totalAmount = items.reduce((sum, item) => sum + item.totalPrice, 0)
-      const selectedSite = sites.find((s) => s.id.toString() === formData.siteId)
+      const totalAmount = items.reduce((sum, item) => sum + item.totalPrice, 0);
+      const selectedSite = sites.find(
+        (s) => s.id.toString() === formData.siteId,
+      );
 
       const defaultShippingAddress = {
         street: "123 Main Street",
@@ -77,12 +91,12 @@ export default function NewSalesOrderPage() {
         phone: "+92-300-1234567",
         email: "contact@example.com",
         deliveryInstructions: formData.specialInstructions || "",
-      }
+      };
 
       const defaultBillingAddress = {
         ...defaultShippingAddress,
         taxId: "TAX-123456",
-      }
+      };
 
       const response = await distributionApi.createSalesOrder({
         accountId: parseInt(formData.accountId),
@@ -96,7 +110,7 @@ export default function NewSalesOrderPage() {
         currency: formData.currency,
         specialInstructions: formData.specialInstructions || undefined,
         items: items.map((item) => {
-          const drug = drugs.find((d) => d.id.toString() === item.drugId)
+          const drug = drugs.find((d) => d.id.toString() === item.drugId);
           return {
             drugId: parseInt(item.drugId),
             drugName: drug?.name || item.drugName || "Drug",
@@ -105,61 +119,77 @@ export default function NewSalesOrderPage() {
             unit: item.unit,
             unitPrice: item.price,
             totalPrice: item.totalPrice,
-          }
+          };
         }),
         shippingAddress: defaultShippingAddress,
         billingAddress: defaultBillingAddress,
         createdBy: 1,
-      })
+      });
+      
 
       if (response.success) {
-        toast.success("Sales order created successfully")
-        router.push("/dashboard/sales/orders")
+        console.log("Sales order created:", response.data);
+        toast.success("Sales order created successfully");
+        router.push("/dashboard/sales/orders");
       } else {
-        toast.error("Failed to create sales order")
+        toast.error("Failed to create sales order");
       }
     } catch (error) {
-      console.error("Error creating sales order:", error)
-      toast.error("An error occurred while creating the sales order")
+      console.error("Error creating sales order:", error);
+      toast.error("An error occurred while creating the sales order");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const addItem = () => {
     setItems((prev) => [
       ...prev,
-      { drugId: "", drugName: "", quantity: 0, unit: "", price: 0, totalPrice: 0 },
-    ])
-  }
+      {
+        drugId: "",
+        drugName: "",
+        quantity: 0,
+        unit: "",
+        price: 0,
+        totalPrice: 0,
+      },
+    ]);
+  };
 
-  const updateItem = (index: number, field: keyof OrderItem, value: string | number) => {
+  const updateItem = (
+    index: number,
+    field: keyof OrderItem,
+    value: string | number,
+  ) => {
     setItems((prev) =>
       prev.map((item, i) => {
         if (i === index) {
-          const updated: OrderItem = { ...item, [field]: value } as any
+          const updated: OrderItem = { ...item, [field]: value } as any;
           if (field === "quantity" || field === "price") {
-            updated.totalPrice = updated.quantity * updated.price
+            updated.totalPrice = updated.quantity * updated.price;
           }
-          return updated
+          return updated;
         }
-        return item
+        return item;
       }),
-    )
-  }
+    );
+  };
 
   const removeItem = (index: number) => {
-    setItems((prev) => prev.filter((_, i) => i !== index))
-  }
+    setItems((prev) => prev.filter((_, i) => i !== index));
+  };
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">New Sales Order</h1>
+            <h1 className="text-3xl font-bold tracking-tight">
+              New Sales Order
+            </h1>
             <p className="text-muted-foreground">
-              Create a new sales order with customer information and product details.
+              Create a new sales order with customer information and product
+              details.
             </p>
           </div>
         </div>
@@ -170,7 +200,9 @@ export default function NewSalesOrderPage() {
               <ShoppingCart className="h-5 w-5" />
               Sales Order Details
             </CardTitle>
-            <CardDescription>Enter customer, shipping, and order details.</CardDescription>
+            <CardDescription>
+              Enter customer, shipping, and order details.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -180,21 +212,45 @@ export default function NewSalesOrderPage() {
                   <Select
                     value={formData.accountId}
                     onValueChange={(value) => {
+                      const customers: Record<
+                        string,
+                        { name: string; code: string }
+                      > = {
+                        "1": {
+                          name: "Ziauddin Hospital - Clifton",
+                          code: "ACC-001",
+                        },
+                        "2": {
+                          name: "Aga Khan University Hospital",
+                          code: "ACC-002",
+                        },
+                        "3": {
+                          name: "Liaquat National Hospital",
+                          code: "ACC-003",
+                        },
+                      };
+                      const customer = customers[value];
                       setFormData((prev) => ({
                         ...prev,
                         accountId: value,
-                        accountName: prev.accountName,
-                        accountCode: prev.accountCode,
-                      }))
+                        accountName: customer?.name || "",
+                        accountCode: customer?.code || "",
+                      }));
                     }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select customer" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">Ziauddin Hospital - Clifton</SelectItem>
-                      <SelectItem value="2">Aga Khan University Hospital</SelectItem>
-                      <SelectItem value="3">Liaquat National Hospital</SelectItem>
+                      <SelectItem value="1">
+                        Ziauddin Hospital - Clifton
+                      </SelectItem>
+                      <SelectItem value="2">
+                        Aga Khan University Hospital
+                      </SelectItem>
+                      <SelectItem value="3">
+                        Liaquat National Hospital
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -204,12 +260,12 @@ export default function NewSalesOrderPage() {
                   <Select
                     value={formData.siteId}
                     onValueChange={(value) => {
-                      const site = sites.find((s) => s.id.toString() === value)
+                      const site = sites.find((s) => s.id.toString() === value);
                       setFormData((prev) => ({
                         ...prev,
                         siteId: value,
                         siteName: site?.name || "",
-                      }))
+                      }));
                     }}
                   >
                     <SelectTrigger>
@@ -231,7 +287,10 @@ export default function NewSalesOrderPage() {
                     type="date"
                     value={formData.requestedShipDate}
                     onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, requestedShipDate: e.target.value }))
+                      setFormData((prev) => ({
+                        ...prev,
+                        requestedShipDate: e.target.value,
+                      }))
                     }
                     required
                   />
@@ -263,7 +322,10 @@ export default function NewSalesOrderPage() {
                   <Input
                     value={formData.currency}
                     onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, currency: e.target.value }))
+                      setFormData((prev) => ({
+                        ...prev,
+                        currency: e.target.value,
+                      }))
                     }
                   />
                 </div>
@@ -273,7 +335,10 @@ export default function NewSalesOrderPage() {
                   <Textarea
                     value={formData.specialInstructions}
                     onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, specialInstructions: e.target.value }))
+                      setFormData((prev) => ({
+                        ...prev,
+                        specialInstructions: e.target.value,
+                      }))
                     }
                     rows={3}
                   />
@@ -306,14 +371,19 @@ export default function NewSalesOrderPage() {
                         <Label>Product</Label>
                         <Select
                           value={item.drugId}
-                          onValueChange={(value) => updateItem(index, "drugId", value)}
+                          onValueChange={(value) =>
+                            updateItem(index, "drugId", value)
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select product" />
                           </SelectTrigger>
                           <SelectContent>
                             {drugs.map((drug: any) => (
-                              <SelectItem key={drug.id} value={drug.id.toString()}>
+                              <SelectItem
+                                key={drug.id}
+                                value={drug.id.toString()}
+                              >
                                 {drug.name} ({drug.code})
                               </SelectItem>
                             ))}
@@ -327,7 +397,11 @@ export default function NewSalesOrderPage() {
                           min={0}
                           value={item.quantity}
                           onChange={(e) =>
-                            updateItem(index, "quantity", parseFloat(e.target.value) || 0)
+                            updateItem(
+                              index,
+                              "quantity",
+                              parseFloat(e.target.value) || 0,
+                            )
                           }
                         />
                       </div>
@@ -335,7 +409,9 @@ export default function NewSalesOrderPage() {
                         <Label>Unit</Label>
                         <Select
                           value={item.unit}
-                          onValueChange={(value) => updateItem(index, "unit", value)}
+                          onValueChange={(value) =>
+                            updateItem(index, "unit", value)
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select unit" />
@@ -356,7 +432,11 @@ export default function NewSalesOrderPage() {
                           min={0}
                           value={item.price}
                           onChange={(e) =>
-                            updateItem(index, "price", parseFloat(e.target.value) || 0)
+                            updateItem(
+                              index,
+                              "price",
+                              parseFloat(e.target.value) || 0,
+                            )
                           }
                         />
                       </div>
@@ -382,6 +462,5 @@ export default function NewSalesOrderPage() {
         </Card>
       </div>
     </DashboardLayout>
-  )
+  );
 }
-
