@@ -88,13 +88,16 @@ export function RoleForm({ initialData, onSubmit, submitLabel = "Save" }: RoleFo
     }
   })
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (_eventOrData?: any) => {
+    // `Form` calls the submit handler with the submit event first.
+    // We must submit from controlled state, not from the event.
+    const data = formState.data
     formState.setLoading(true)
     formState.clearErrors()
     
     try {
       // Validate form
-      const errors = validation.validateForm(data)
+      const errors = validation.validateForm(data as Record<string, unknown>)
       if (validation.hasErrors()) {
         formState.setErrors(errors)
         return
