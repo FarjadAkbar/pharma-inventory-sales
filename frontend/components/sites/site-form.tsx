@@ -83,11 +83,11 @@ export function SiteForm({ initialData, onSubmit, submitLabel = "Save" }: SiteFo
       }
 
       await onSubmit({
-        name: data.name,
-        address: data.address || undefined,
-        city: data.city || undefined,
-        country: data.country || undefined,
-        type: data.type ? data.type as 'hospital' | 'clinic' | 'pharmacy' | 'warehouse' | 'manufacturing' : undefined,
+        name: formState.data.name,
+        address: formState.data.address || undefined,
+        city: formState.data.city || undefined,
+        country: formState.data.country || undefined,
+        type:   formState.data.type ? formState.data.type as 'hospital' | 'clinic' | 'pharmacy' | 'warehouse' | 'manufacturing' : undefined,
         isActive: formState.data.isActive,
       })
       

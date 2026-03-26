@@ -253,6 +253,7 @@ export default function SitesPage() {
             </DialogHeader>
             <SiteForm
               initialData={editingSite || undefined}
+
               onSubmit={handleSubmit}
               submitLabel={editingSite ? "Save Changes" : "Create Site"}
             />

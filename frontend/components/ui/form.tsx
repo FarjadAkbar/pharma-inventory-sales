@@ -298,7 +298,7 @@ export function Form({
         }
       }
 
-      try {
+      try { 
         await onSubmit(data)
       } catch (submitErr) {
         console.error('Form submission error:', submitErr)
