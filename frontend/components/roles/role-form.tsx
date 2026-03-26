@@ -173,7 +173,7 @@ export function RoleForm({ initialData, onSubmit, submitLabel = "Save" }: RoleFo
                     }}
                   >
                     <MultiSelectTrigger className="w-full">
-                      <MultiSelectValue placeholder="Select permissions..." />
+                      <MultiSelectValue className="flex flex-wrap gap-1 w-full" placeholder="Select permissions..." />
                     </MultiSelectTrigger>
                     <MultiSelectContent>
                       {Object.entries(groupedPermissions).map(([resource, perms]) => (
