@@ -41,17 +41,19 @@ export class AuthService {
     const siteIds = this.parseSiteIds(user.siteIds);
     const isSiteScoped = enrichedUser?.role?.isSiteScoped ?? false;
 
-    // Build JWT payload — include site context for server-side filtering
+    const permissionNames: string[] =
+      enrichedUser?.role?.permissions?.map((p: { name: string }) => p.name) ?? [];
+
     const payload = {
       sub: user.id,
       email: user.email,
       name: user.name,
       roleId: user.roleId,
       roleName: enrichedUser?.role?.name ?? null,
-      siteIds, // which sites this user belongs to
-      isSiteScoped, // whether their role restricts them to those sites
+      siteIds,
+      isSiteScoped,
+      permissionNames,
     };
-console.log(this.configService.get("JWT_SECRET"), "jwt secret in auth service")
     const accessToken = this.jwtService.sign(payload, {
       expiresIn: "1d",
       secret: this.configService.get("JWT_SECRET"),
@@ -76,7 +78,14 @@ console.log(this.configService.get("JWT_SECRET"), "jwt secret in auth service")
         id: user.id,
         name: user.name,
         email: user.email,
-        role: enrichedUser?.role?.name,
+        role: enrichedUser?.role
+          ? {
+              id: enrichedUser.role.id,
+              name: enrichedUser.role.name,
+              isSiteScoped: enrichedUser.role.isSiteScoped,
+              permissions: enrichedUser.role.permissions ?? [],
+            }
+          : undefined,
         siteIds,
         isSiteScoped,
       },
@@ -105,6 +114,9 @@ console.log(this.configService.get("JWT_SECRET"), "jwt secret in auth service")
       const isSiteScoped =
         user.role?.isSiteScoped ?? payload.isSiteScoped ?? false;
 
+      const permissionNames: string[] =
+        user.role?.permissions?.map((p: { name: string }) => p.name) ?? [];
+
       const newPayload = {
         sub: user.id,
         email: user.email,
@@ -113,6 +125,7 @@ console.log(this.configService.get("JWT_SECRET"), "jwt secret in auth service")
         roleName: user.role?.name ?? null,
         siteIds,
         isSiteScoped,
+        permissionNames,
       };
 
       const accessToken = this.jwtService.sign(newPayload, {

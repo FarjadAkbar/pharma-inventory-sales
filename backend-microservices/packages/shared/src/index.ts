@@ -34,6 +34,7 @@ export * from './audit/status-history.entity';
 export * from './audit/audit.subscriber';
 export * from './audit/audit.service';
 export * from './errors/error-codes';
+export * from './rbac';
 export * from './audit/audit-log.entity';
 export * from './audit/status-history.entity';
 export * from './audit/audit.subscriber';

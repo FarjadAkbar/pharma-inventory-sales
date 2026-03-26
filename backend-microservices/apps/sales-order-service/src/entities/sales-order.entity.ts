@@ -98,7 +98,7 @@ export class SalesOrder {
   @Column({ type: 'text', nullable: true })
   remarks?: string;
 
-  @OneToMany(() => SalesOrderItem, item => item.salesOrder, { cascade: true })
+  @OneToMany(() => SalesOrderItem, item => item.salesOrder)
   items: SalesOrderItem[];
 
   @CreateDateColumn()

@@ -7,6 +7,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { JwtModule } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { PermissionsGuard } from './common/guards/permissions.guard';
 import { IdentityModule } from './identity/identity.module';
 import { MasterDataModule } from './master-data/master-data.module';
 import { QualityModule } from './quality/quality.module';
@@ -124,6 +125,10 @@ const parseIntSafe = (v: string | undefined, fallback: number): number => {
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: PermissionsGuard,
     },
   ],
   controllers: [

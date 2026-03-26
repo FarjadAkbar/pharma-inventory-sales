@@ -18,6 +18,43 @@ import {
 } from '@repo/shared';
 import { Public } from '../common/decorators/public.decorator';
 
+/** TCP/RPC errors from Nest microservices often nest `UnauthorizedException` in `error.message`. */
+function parseIdentityRpcError(error: unknown): { status?: number; message: string } {
+  const e = error as Record<string, unknown> & {
+    error?: { statusCode?: unknown; message?: unknown };
+    response?: { statusCode?: unknown; message?: unknown };
+  };
+  if (!e) return { message: 'Login failed' };
+
+  const msgField = e.message;
+  const nested =
+    msgField && typeof msgField === 'object' && msgField !== null
+      ? (msgField as { statusCode?: unknown; message?: unknown; error?: unknown })
+      : undefined;
+
+  const statusRaw =
+    e.status ??
+    e.statusCode ??
+    nested?.statusCode ??
+    e.error?.statusCode ??
+    e.response?.statusCode;
+
+  let status: number | undefined;
+  if (typeof statusRaw === 'number' && statusRaw >= 400 && statusRaw <= 599) status = statusRaw;
+  else if (typeof statusRaw === 'string') {
+    const n = parseInt(statusRaw, 10);
+    if (!Number.isNaN(n) && n >= 400 && n <= 599) status = n;
+  }
+
+  let message = 'Login failed';
+  if (typeof msgField === 'string') message = msgField;
+  else if (nested && typeof nested.message === 'string') message = nested.message;
+  else if (typeof e.response?.message === 'string') message = e.response.message;
+  else if (e.error?.message != null) message = String(e.error.message);
+
+  return { status, message };
+}
+
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -31,28 +68,16 @@ export class AuthController {
       return await firstValueFrom(
         this.identityClient.send(AUTH_PATTERNS.LOGIN, loginDto).pipe(
           catchError((error) => {
-            let errorMessage = 'Login failed';
-            const errorStatus =
-              error?.status ||
-              error?.statusCode ||
-              error?.error?.statusCode ||
-              error?.error?.status ||
-              error?.response?.statusCode ||
-              error?.response?.status;
             if (typeof error === 'string') {
-              errorMessage = error;
-            } else if (error?.message) {
-              errorMessage = error.message;
-            } else if (error?.error?.message) {
-              errorMessage = error.error.message;
-            } else if (error?.response?.message) {
-              errorMessage = error.response.message;
+              return throwError(() => new BadRequestException(error));
             }
+            const { status: errorStatus, message: errorMessage } = parseIdentityRpcError(error);
+            const name = (error as { name?: string })?.name;
             if (
               errorStatus === 401 ||
               errorMessage.includes('Invalid credentials') ||
               errorMessage.includes('Unauthorized') ||
-              error?.name === 'UnauthorizedException'
+              name === 'UnauthorizedException'
             ) {
               return throwError(
                 () => new UnauthorizedException(errorMessage || 'Invalid credentials'),
@@ -66,24 +91,16 @@ export class AuthController {
       if (error instanceof UnauthorizedException || error instanceof BadRequestException) {
         throw error;
       }
-      let errorMessage = 'Login failed';
-      const errorStatus =
-        error?.status ||
-        error?.statusCode ||
-        error?.error?.statusCode ||
-        error?.error?.status;
       if (typeof error === 'string') {
-        errorMessage = error;
-      } else if (error?.message) {
-        errorMessage = error.message;
-      } else if (error?.error?.message) {
-        errorMessage = error.error.message;
+        throw new BadRequestException(error);
       }
+      const { status: errorStatus, message: errorMessage } = parseIdentityRpcError(error);
+      const name = (error as { name?: string })?.name;
       if (
         errorStatus === 401 ||
         errorMessage.includes('Invalid credentials') ||
         errorMessage.includes('Unauthorized') ||
-        error?.name === 'UnauthorizedException'
+        name === 'UnauthorizedException'
       ) {
         throw new UnauthorizedException(errorMessage || 'Invalid credentials');
       }
