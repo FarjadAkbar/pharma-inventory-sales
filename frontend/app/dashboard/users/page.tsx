@@ -174,7 +174,7 @@ export default function UsersPage() {
             <p className="text-muted-foreground">Manage system users and their permissions</p>
           </div>
 
-          <PermissionGuard module="USER_MANAGEMENT" action="create">
+          <PermissionGuard module="users" action="create">
             <Button onClick={handleAdd}>
               <Plus />
               Add User
