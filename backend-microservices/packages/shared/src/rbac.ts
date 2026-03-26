@@ -52,8 +52,13 @@ export function normalizeRbacAction(action: string): string {
   return a;
 }
 
+function normalizeResource(resource: string): string {
+  // Accept UI-style names like "raw-materials" and normalize to permission format.
+  return resource.toLowerCase().replace(/-/g, '_').trim();
+}
+
 function nameGrants(names: Set<string>, resource: string, action: string): boolean {
-  const r = resource.toLowerCase();
+  const r = normalizeResource(resource);
   const a = normalizeRbacAction(action);
   if (names.has(`${r}.${a}`)) return true;
   if (names.has(`${r}.manage`)) return true;
@@ -69,7 +74,7 @@ function moduleAllows(names: Set<string>, moduleKey: string, action: string): bo
 }
 
 function resourceAllows(names: Set<string>, resource: string, action: string): boolean {
-  const r = resource.toLowerCase();
+  const r = normalizeResource(resource);
   if (nameGrants(names, r, action)) return true;
   for (const cfg of Object.values(RBAC_MODULES)) {
     if (!cfg.resources.includes(r)) continue;
