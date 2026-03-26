@@ -139,10 +139,10 @@ export function UserForm({ initialData, onSubmit, submitLabel = "Save" }: UserFo
       }
 
       await onSubmit({
-        name: data.name,
-        email: data.email,
-        password: data.password || undefined,
-        roleId: data.roleId ? Number(data.roleId) : undefined,
+        name: formState.data.name,
+        email: formState.data.email,
+        password: formState.data.password || undefined,
+        roleId: formState.data.roleId ? Number(formState.data.roleId) : undefined,
         siteIds: formState.data.siteIds || [],
       })
       

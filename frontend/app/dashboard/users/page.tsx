@@ -90,6 +90,7 @@ export default function UsersPage() {
         await usersApi.updateUser(editingUser.id.toString(), data)
       } else {
         await usersApi.createUser(data)
+        console.log(data, "data submitted for new user")
       }
       handleCloseModal()
       fetchUsers()
