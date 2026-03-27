@@ -13,6 +13,7 @@ import { ShoppingCart } from "lucide-react"
 import { masterDataApi, sitesApi, distributionApi } from "@/services"
 import { toast } from "sonner"
 import { UNIT_OPTIONS } from "@/lib/constants"
+import { formatMoneyAmount, normalizeCurrencyCode } from "@/lib/utils"
 
 interface OrderItem {
   drugId: string
@@ -301,7 +302,16 @@ export default function EditSalesOrderPage() {
 
                 <div className="space-y-2">
                   <Label>Currency</Label>
-                  <Input value={formData.currency} onChange={(e) => setFormData((p) => ({ ...p, currency: e.target.value }))} />
+                  <Input
+                    value={formData.currency}
+                    onChange={(e) =>
+                      setFormData((p) => ({
+                        ...p,
+                        currency: e.target.value.trim().toUpperCase().slice(0, 8),
+                      }))
+                    }
+                    placeholder="PKR"
+                  />
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
@@ -376,9 +386,20 @@ export default function EditSalesOrderPage() {
                         />
                       </div>
                     </div>
+                    <p className="text-sm text-muted-foreground mt-3 tabular-nums">
+                      Line total: {formatMoneyAmount(item.totalPrice, formData.currency)}
+                    </p>
                   </Card>
                 ))}
               </div>
+
+              {items.length > 0 && (
+                <div className="flex justify-end border-t pt-4">
+                  <p className="text-lg font-semibold tabular-nums">
+                    Order total: {formatMoneyAmount(computedTotalAmount, formData.currency)}
+                  </p>
+                </div>
+              )}
 
               <div className="flex justify-end gap-4">
                 <Button type="button" variant="outline" onClick={() => router.push("/dashboard/sales/orders")}>

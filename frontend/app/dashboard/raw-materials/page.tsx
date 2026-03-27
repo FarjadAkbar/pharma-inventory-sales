@@ -18,6 +18,7 @@ import { masterDataApi } from "@/services"
 import type { RawMaterialResponseDto as RawMaterial } from "@repo/shared"
 import { PermissionGuard } from "@/components/auth/permission-guard"
 import { formatDateISO } from "@/lib/utils"
+import { unwrapListResponse } from "@/lib/unwrap-api-list"
 import { RawMaterialForm } from "@/components/raw-materials/raw-material-form"
 import { useAuth } from "@/contexts/auth.context"
 
@@ -44,8 +45,7 @@ export default function RawMaterialsPage() {
         page: pagination.page,
         limit: 10,
       })
-      const list = (res as any)?.data?.rawMaterials ?? (res as any)?.data ?? []
-      const materials = Array.isArray(list) ? (list as RawMaterial[]) : []
+      const materials = unwrapListResponse<RawMaterial>(res)
       setRawMaterials(materials)
       setPagination({
         page: pagination.page,

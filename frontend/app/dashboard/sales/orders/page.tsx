@@ -29,14 +29,13 @@ import {
   AlertCircle,
   Play,
   RotateCcw,
-  DollarSign,
   MapPin
 } from "lucide-react"
 import { distributionApi } from "@/services"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import type { SalesOrder, SalesOrderFilters } from "@/types/distribution"
-import { formatDateISO } from "@/lib/utils"
+import { formatDateISO, formatMoneyAmount } from "@/lib/utils"
 
 export default function SalesOrdersPage() {
   const router = useRouter()
@@ -267,11 +266,8 @@ export default function SalesOrdersPage() {
       header: "Amount",
       sortable: true,
       render: (order: SalesOrder) => (
-        <div className="text-sm">
-          <div className="font-medium flex items-center gap-1">
-            <DollarSign className="h-3 w-3" />
-            {order.totalAmount.toLocaleString()} {order.currency}
-          </div>
+        <div className="text-sm font-medium tabular-nums">
+          {formatMoneyAmount(order.totalAmount, order.currency)}
         </div>
       ),
     },

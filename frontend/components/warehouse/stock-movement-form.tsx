@@ -1,17 +1,36 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Form, FormInput, FormSelect, FormTextarea, FormActions } from "@/components/ui/form"
-import { useFormState } from "@/lib/api-response"
-import { useFormValidation } from "@/lib/form-validation"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form-hook"
 import { warehouseApi, masterDataApi } from "@/services"
+import { unwrapListResponse } from "@/lib/unwrap-api-list"
 import { MEASUREMENT_UNITS } from "@/lib/constants/units"
 
 interface StockMovementFormProps {
   initialData?: Partial<StockMovement>
   fromItemId?: number
-  onSubmit: (data: any) => Promise<void>
+  onSubmit: (data: Record<string, unknown>) => Promise<void>
   onCancel: () => void
   submitLabel?: string
 }
@@ -35,199 +54,176 @@ interface StockMovement {
   performedAt?: string
 }
 
-export function StockMovementForm({ 
-  initialData,
-  fromItemId,
-  onSubmit, 
-  onCancel, 
-  submitLabel = "Save" 
-}: StockMovementFormProps) {
-  const [inventoryItems, setInventoryItems] = useState<Array<{ id: number; itemCode: string; materialName: string; materialCode: string; batchNumber: string; quantity: number; unit: string; locationId?: string }>>([])
-  const [rawMaterials, setRawMaterials] = useState<Array<{ id: number; name: string; code: string }>>([])
-  const [storageLocations, setStorageLocations] = useState<Array<{ id: number; locationCode: string; name: string }>>([])
-  const [selectedMaterial, setSelectedMaterial] = useState<{ id: number; name: string; code: string } | null>(null)
-
-  useEffect(() => {
-    fetchData()
-    if (fromItemId) {
-      fetchInventoryItem(fromItemId)
+const stockMovementSchema = z
+  .object({
+    movementType: z.string().min(1, "Please select a movement type"),
+    materialSelection: z.string().min(1, "Please select a material"),
+    materialName: z.string(),
+    materialCode: z.string(),
+    batchNumber: z.string().optional(),
+    quantity: z.coerce.number().positive("Enter a valid quantity"),
+    unit: z.string().min(1, "Please select a unit"),
+    fromLocationId: z.string().optional(),
+    toLocationId: z.string().optional(),
+    referenceId: z.string().optional(),
+    referenceType: z.string().optional(),
+    remarks: z.string().optional(),
+    performedBy: z.coerce.number().min(1),
+  })
+  .superRefine((data, ctx) => {
+    const t = data.movementType
+    if (t === "Transfer" && !data.fromLocationId && !data.toLocationId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Transfer movements require from and/or to location",
+        path: ["fromLocationId"],
+      })
     }
-  }, [fromItemId])
-
-  const fetchData = async () => {
-    try {
-      const [inventoryResponse, rawMaterialsResponse, locationsResponse] = await Promise.all([
-        warehouseApi.getInventoryItems({ status: "Available" }),
-        masterDataApi.getRawMaterials().catch(() => ({ data: [] })),
-        warehouseApi.getStorageLocations({ status: "Available" }),
-      ])
-
-      if (Array.isArray(inventoryResponse)) {
-        setInventoryItems(inventoryResponse.map((item: any) => ({
-          id: item.id,
-          itemCode: item.itemCode,
-          materialName: item.materialName,
-          materialCode: item.materialCode,
-          batchNumber: item.batchNumber,
-          quantity: item.quantity,
-          unit: item.unit,
-          locationId: item.locationId,
-        })))
-      }
-
-      const rmList = (rawMaterialsResponse as any)?.data?.rawMaterials ?? (rawMaterialsResponse as any)?.data ?? []
-      if (Array.isArray(rmList)) {
-        setRawMaterials(rmList.map((rm: any) => ({
-          id: rm.id,
-          name: rm.name,
-          code: rm.code,
-        })))
-      }
-
-      if (Array.isArray(locationsResponse)) {
-        setStorageLocations(locationsResponse.map((loc: any) => ({
-          id: loc.id,
-          locationCode: loc.locationCode,
-          name: loc.name,
-        })))
-      }
-    } catch (error) {
-      console.error("Failed to fetch data:", error)
+    if (t === "Receipt" && !data.toLocationId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Receipt movements require a destination location",
+        path: ["toLocationId"],
+      })
     }
-  }
-
-  const fetchInventoryItem = async (itemId: number) => {
-    try {
-      const item = await warehouseApi.getInventoryItem(itemId.toString())
-      if (item) {
-        formState.updateField('materialId', item.materialId.toString())
-        formState.updateField('materialName', item.materialName)
-        formState.updateField('materialCode', item.materialCode)
-        formState.updateField('batchNumber', item.batchNumber)
-        formState.updateField('quantity', item.quantity.toString())
-        formState.updateField('unit', item.unit)
-        formState.updateField('fromLocationId', item.locationId || '')
-      }
-    } catch (error) {
-      console.error("Failed to fetch inventory item:", error)
+    if (t === "Consumption" && !data.fromLocationId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Consumption movements require a source location",
+        path: ["fromLocationId"],
+      })
     }
-  }
-
-  const initialFormData = {
-    movementType: initialData?.movementType || "Transfer",
-    materialId: initialData?.materialId?.toString() || "",
-    materialName: initialData?.materialName || "",
-    materialCode: initialData?.materialCode || "",
-    batchNumber: initialData?.batchNumber || "",
-    quantity: initialData?.quantity?.toString() || "",
-    unit: initialData?.unit || "",
-    fromLocationId: initialData?.fromLocationId || "",
-    toLocationId: initialData?.toLocationId || "",
-    referenceId: initialData?.referenceId || "",
-    referenceType: initialData?.referenceType || "",
-    remarks: initialData?.remarks || "",
-    performedBy: initialData?.performedBy?.toString() || "1", // TODO: Get from auth context
-  }
-
-  const formState = useFormState(initialFormData)
-  const validation = useFormValidation({
-    movementType: {
-      required: true,
-      message: "Please select a movement type"
-    },
-    materialId: {
-      required: true,
-      message: "Please select a material"
-    },
-    quantity: {
-      required: true,
-      message: "Please enter quantity"
-    },
-    unit: {
-      required: true,
-      message: "Please select a unit"
-    },
   })
 
-  const handleMaterialSelect = (value: string) => {
-    if (value.startsWith('inv-')) {
-      // Inventory item selected
-      const itemId = parseInt(value.replace('inv-', ''))
-      const item = inventoryItems.find(i => i.id === itemId)
-      if (item) {
-        formState.updateField('materialId', item.id.toString())
-        formState.updateField('materialName', item.materialName)
-        formState.updateField('materialCode', item.materialCode)
-        formState.updateField('batchNumber', item.batchNumber)
-        formState.updateField('quantity', item.quantity.toString())
-        formState.updateField('unit', item.unit)
-        formState.updateField('fromLocationId', item.locationId || '')
-        setSelectedMaterial({ id: item.id, name: item.materialName, code: item.materialCode })
-      }
-    } else {
-      // Raw material selected
-      const materialId = parseInt(value)
-      const material = rawMaterials.find(m => m.id === materialId)
-      if (material) {
-        formState.updateField('materialId', material.id.toString())
-        formState.updateField('materialName', material.name)
-        formState.updateField('materialCode', material.code)
-        setSelectedMaterial({ id: material.id, name: material.name, code: material.code })
+type StockMovementFormValues = z.infer<typeof stockMovementSchema>
+
+export function StockMovementForm({
+  initialData,
+  fromItemId,
+  onSubmit,
+  onCancel,
+  submitLabel = "Save",
+}: StockMovementFormProps) {
+  const [inventoryItems, setInventoryItems] = useState<
+    Array<{
+      id: number
+      itemCode: string
+      materialName: string
+      materialCode: string
+      batchNumber: string
+      quantity: number
+      unit: string
+      locationId?: string
+    }>
+  >([])
+  const [rawMaterials, setRawMaterials] = useState<
+    Array<{ id: number; name: string; code: string }>
+  >([])
+  const [storageLocations, setStorageLocations] = useState<
+    Array<{ id: number; locationCode: string; name: string }>
+  >([])
+
+  const form = useForm<StockMovementFormValues>({
+    resolver: zodResolver(stockMovementSchema),
+    defaultValues: {
+      movementType: initialData?.movementType || "Transfer",
+      materialSelection: "",
+      materialName: initialData?.materialName || "",
+      materialCode: initialData?.materialCode || "",
+      batchNumber: initialData?.batchNumber || "",
+      quantity: initialData?.quantity ?? 0,
+      unit: initialData?.unit || "",
+      fromLocationId: initialData?.fromLocationId || "",
+      toLocationId: initialData?.toLocationId || "",
+      referenceId: initialData?.referenceId || "",
+      referenceType: initialData?.referenceType || "",
+      remarks: initialData?.remarks || "",
+      performedBy: initialData?.performedBy ?? 1,
+    },
+    mode: "onSubmit",
+  })
+
+  const movementType = form.watch("movementType")
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [inventoryResponse, rawMaterialsResponse, locationsResponse] = await Promise.all([
+          warehouseApi.getInventoryItems({ status: "Available" }),
+          masterDataApi.getRawMaterials().catch(() => []),
+          warehouseApi.getStorageLocations({ status: "Available" }),
+        ])
+        if (Array.isArray(inventoryResponse)) {
+          setInventoryItems(
+            inventoryResponse.map((item: Record<string, unknown>) => ({
+              id: item.id as number,
+              itemCode: String(item.itemCode ?? ""),
+              materialName: String(item.materialName ?? ""),
+              materialCode: String(item.materialCode ?? ""),
+              batchNumber: String(item.batchNumber ?? ""),
+              quantity: Number(item.quantity) || 0,
+              unit: String(item.unit ?? ""),
+              locationId: item.locationId != null ? String(item.locationId) : undefined,
+            })),
+          )
+        }
+        const rmList = unwrapListResponse<Record<string, unknown>>(rawMaterialsResponse)
+        setRawMaterials(
+          rmList.map((rm) => ({
+            id: Number(rm.id),
+            name: String(rm.name ?? ""),
+            code: String(rm.code ?? ""),
+          })),
+        )
+        if (Array.isArray(locationsResponse)) {
+          setStorageLocations(
+            locationsResponse.map((loc: Record<string, unknown>) => ({
+              id: loc.id as number,
+              locationCode: String(loc.locationCode ?? ""),
+              name: String(loc.name ?? ""),
+            })),
+          )
+        }
+      } catch (e) {
+        console.error("Failed to fetch data:", e)
       }
     }
-  }
+    load()
+  }, [])
 
-  const handleSubmit = async () => {
-    formState.setLoading(true)
-    formState.clearErrors()
-
-    try {
-      const errors = validation.validateForm(formState.data)
-      if (validation.hasErrors()) {
-        formState.setErrors(errors)
-        return
+  useEffect(() => {
+    if (!fromItemId) return
+    const run = async () => {
+      try {
+        const item = await warehouseApi.getInventoryItem(fromItemId.toString())
+        if (item) {
+          form.setValue("materialSelection", `inv-${item.id}`)
+          form.setValue("materialName", item.materialName)
+          form.setValue("materialCode", item.materialCode)
+          form.setValue("batchNumber", item.batchNumber)
+          form.setValue("quantity", item.quantity)
+          form.setValue("unit", item.unit)
+          form.setValue("fromLocationId", item.locationId || "")
+        }
+      } catch (e) {
+        console.error(e)
       }
-
-      // Validate movement type specific requirements
-      if (formState.data.movementType === "Transfer" && !formState.data.fromLocationId && !formState.data.toLocationId) {
-        formState.setError("Transfer movements require both from and to locations")
-        return
-      }
-
-      if (formState.data.movementType === "Receipt" && !formState.data.toLocationId) {
-        formState.setError("Receipt movements require a destination location")
-        return
-      }
-
-      if (formState.data.movementType === "Consumption" && !formState.data.fromLocationId) {
-        formState.setError("Consumption movements require a source location")
-        return
-      }
-
-      const movementData: any = {
-        movementType: formState.data.movementType,
-        materialId: parseInt(formState.data.materialId),
-        materialName: formState.data.materialName || undefined,
-        materialCode: formState.data.materialCode || undefined,
-        batchNumber: formState.data.batchNumber || undefined,
-        quantity: parseFloat(formState.data.quantity),
-        unit: formState.data.unit,
-        fromLocationId: formState.data.fromLocationId || undefined,
-        toLocationId: formState.data.toLocationId || undefined,
-        referenceId: formState.data.referenceId || undefined,
-        referenceType: formState.data.referenceType || undefined,
-        remarks: formState.data.remarks || undefined,
-        performedBy: parseInt(formState.data.performedBy),
-      }
-
-      await onSubmit(movementData)
-      formState.setSuccess("Stock movement saved successfully")
-    } catch (error: any) {
-      formState.setError(error.message || "Failed to save stock movement")
-    } finally {
-      formState.setLoading(false)
     }
-  }
+    run()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fromItemId])
+
+  useEffect(() => {
+    const mid = initialData?.materialId
+    if (mid == null || fromItemId) return
+    const inv = inventoryItems.find((i) => i.id === mid)
+    if (inv) {
+      form.setValue("materialSelection", `inv-${inv.id}`)
+    } else if (rawMaterials.some((m) => m.id === mid)) {
+      form.setValue("materialSelection", String(mid))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialData?.materialId, inventoryItems, rawMaterials, fromItemId])
 
   const movementTypeOptions = [
     { value: "Receipt", label: "Receipt" },
@@ -240,23 +236,80 @@ export function StockMovementForm({
   ]
 
   const materialOptions = [
-    ...inventoryItems.map(item => ({
+    ...inventoryItems.map((item) => ({
       value: `inv-${item.id}`,
-      label: `${item.itemCode} - ${item.materialName} (Batch: ${item.batchNumber}, Qty: ${item.quantity} ${item.unit})`
+      label: `${item.itemCode} - ${item.materialName} (Batch: ${item.batchNumber}, Qty: ${item.quantity} ${item.unit})`,
     })),
-    ...rawMaterials.map(rm => ({
-      value: rm.id.toString(),
-      label: `${rm.code} - ${rm.name}`
-    }))
+    ...rawMaterials.map((rm) => ({
+      value: String(rm.id),
+      label: `${rm.code} - ${rm.name}`,
+    })),
   ]
 
-  const locationOptions = storageLocations.map(loc => ({
+  const locationOptions = storageLocations.map((loc) => ({
     value: loc.locationCode,
-    label: `${loc.locationCode} - ${loc.name}`
+    label: `${loc.locationCode} - ${loc.name}`,
   }))
 
-  const requiresFromLocation = ["Transfer", "Consumption", "Shipment", "Issue", "Return"].includes(formState.data.movementType)
-  const requiresToLocation = ["Receipt", "Transfer", "Return"].includes(formState.data.movementType)
+  const requiresFromLocation = ["Transfer", "Consumption", "Shipment", "Issue", "Return"].includes(
+    movementType,
+  )
+  const requiresToLocation = ["Receipt", "Transfer", "Return"].includes(movementType)
+
+  const applyMaterialSelection = (value: string) => {
+    form.setValue("materialSelection", value)
+    if (value.startsWith("inv-")) {
+      const itemId = parseInt(value.replace("inv-", ""), 10)
+      const item = inventoryItems.find((i) => i.id === itemId)
+      if (item) {
+        form.setValue("materialName", item.materialName)
+        form.setValue("materialCode", item.materialCode)
+        form.setValue("batchNumber", item.batchNumber)
+        form.setValue("quantity", item.quantity)
+        form.setValue("unit", item.unit)
+        form.setValue("fromLocationId", item.locationId || "")
+      }
+    } else {
+      const materialId = parseInt(value, 10)
+      const material = rawMaterials.find((m) => m.id === materialId)
+      if (material) {
+        form.setValue("materialName", material.name)
+        form.setValue("materialCode", material.code)
+      }
+    }
+  }
+
+  const handleFormSubmit = form.handleSubmit(async (values) => {
+    try {
+      let materialId = 0
+      if (values.materialSelection.startsWith("inv-")) {
+        materialId = parseInt(values.materialSelection.replace("inv-", ""), 10)
+      } else {
+        materialId = parseInt(values.materialSelection, 10)
+      }
+
+      const movementData: Record<string, unknown> = {
+        movementType: values.movementType,
+        materialId,
+        materialName: values.materialName || undefined,
+        materialCode: values.materialCode || undefined,
+        batchNumber: values.batchNumber || undefined,
+        quantity: values.quantity,
+        unit: values.unit,
+        fromLocationId: values.fromLocationId || undefined,
+        toLocationId: values.toLocationId || undefined,
+        referenceId: values.referenceId || undefined,
+        referenceType: values.referenceType || undefined,
+        remarks: values.remarks || undefined,
+        performedBy: values.performedBy,
+      }
+
+      await onSubmit(movementData)
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "Failed to save stock movement"
+      form.setError("root", { message: msg })
+    }
+  })
 
   return (
     <Card>
@@ -264,142 +317,261 @@ export function StockMovementForm({
         <CardTitle>Stock Movement Details</CardTitle>
       </CardHeader>
       <CardContent>
-        <Form
-          onSubmit={handleSubmit}
-          loading={formState.isLoading}
-          error={formState.error || undefined}
-          success={formState.success || undefined}
-        >
-          <div className="grid md:grid-cols-2 gap-4">
-            <FormSelect
-              name="movementType"
-              label="Movement Type *"
-              value={formState.data.movementType}
-              onChange={(value) => formState.updateField('movementType', value)}
-              error={formState.errors.movementType}
-              required
-              options={movementTypeOptions}
-              placeholder="Select movement type"
-            />
-
-            <FormSelect
-              name="material"
-              label="Material *"
-              value={formState.data.materialId ? (inventoryItems.find(i => i.id.toString() === formState.data.materialId) ? `inv-${formState.data.materialId}` : formState.data.materialId) : ""}
-              onChange={handleMaterialSelect}
-              error={formState.errors.materialId}
-              required
-              options={materialOptions}
-              placeholder="Select material or inventory item"
-            />
-
-            <FormInput
-              name="materialName"
-              label="Material Name"
-              value={formState.data.materialName}
-              onChange={(e) => formState.updateField('materialName', e.target.value)}
-              disabled
-              placeholder="Auto-filled from selection"
-            />
-
-            <FormInput
-              name="materialCode"
-              label="Material Code"
-              value={formState.data.materialCode}
-              onChange={(e) => formState.updateField('materialCode', e.target.value)}
-              disabled
-              placeholder="Auto-filled from selection"
-            />
-
-            <FormInput
-              name="batchNumber"
-              label="Batch Number"
-              value={formState.data.batchNumber}
-              onChange={(e) => formState.updateField('batchNumber', e.target.value)}
-              placeholder="Enter batch number"
-            />
-
-            <FormInput
-              name="quantity"
-              label="Quantity *"
-              value={formState.data.quantity}
-              onChange={(e) => formState.updateField('quantity', e.target.value)}
-              error={formState.errors.quantity}
-              required
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="Enter quantity"
-            />
-
-            <FormSelect
-              name="unit"
-              label="Unit *"
-              value={formState.data.unit}
-              onChange={(value) => formState.updateField('unit', value)}
-              error={formState.errors.unit}
-              required
-              options={MEASUREMENT_UNITS}
-              placeholder="Select unit"
-            />
-
-            {requiresFromLocation && (
-              <FormSelect
-                name="fromLocationId"
-                label="From Location"
-                value={formState.data.fromLocationId}
-                onChange={(value) => formState.updateField('fromLocationId', value)}
-                options={locationOptions}
-                placeholder="Select source location"
-              />
+        <Form {...form}>
+          <form onSubmit={handleFormSubmit} className="space-y-4">
+            {form.formState.errors.root && (
+              <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
             )}
 
-            {requiresToLocation && (
-              <FormSelect
-                name="toLocationId"
-                label="To Location"
-                value={formState.data.toLocationId}
-                onChange={(value) => formState.updateField('toLocationId', value)}
-                options={locationOptions}
-                placeholder="Select destination location"
+            <div className="grid md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="movementType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Movement Type *</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select movement type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {movementTypeOptions.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>
+                            {o.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            )}
 
-            <FormInput
-              name="referenceType"
-              label="Reference Type"
-              value={formState.data.referenceType}
-              onChange={(e) => formState.updateField('referenceType', e.target.value)}
-              placeholder="e.g., Purchase Order, Work Order"
+              <FormField
+                control={form.control}
+                name="materialSelection"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Material *</FormLabel>
+                    <Select
+                      value={field.value || undefined}
+                      onValueChange={(v) => {
+                        field.onChange(v)
+                        applyMaterialSelection(v)
+                      }}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select material or inventory item" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {materialOptions.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>
+                            {o.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="materialName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Material Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} disabled placeholder="Auto-filled" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="materialCode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Material Code</FormLabel>
+                    <FormControl>
+                      <Input {...field} disabled placeholder="Auto-filled" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="batchNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Batch Number</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Enter batch number" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="quantity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Quantity *</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min={0}
+                        value={field.value === undefined || field.value === null ? "" : field.value}
+                        onChange={(e) =>
+                          field.onChange(e.target.value === "" ? 0 : parseFloat(e.target.value))
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="unit"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Unit *</FormLabel>
+                    <Select value={field.value || undefined} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select unit" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {MEASUREMENT_UNITS.map((u) => (
+                          <SelectItem key={u.value} value={u.value}>
+                            {u.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {requiresFromLocation && (
+                <FormField
+                  control={form.control}
+                  name="fromLocationId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>From Location</FormLabel>
+                      <Select value={field.value || undefined} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select source location" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {locationOptions.map((o) => (
+                            <SelectItem key={o.value} value={o.value}>
+                              {o.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              {requiresToLocation && (
+                <FormField
+                  control={form.control}
+                  name="toLocationId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>To Location</FormLabel>
+                      <Select value={field.value || undefined} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select destination location" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {locationOptions.map((o) => (
+                            <SelectItem key={o.value} value={o.value}>
+                              {o.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              <FormField
+                control={form.control}
+                name="referenceType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Reference Type</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="e.g., Purchase Order" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="referenceId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Reference ID</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Reference ID" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="remarks"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Remarks</FormLabel>
+                  <FormControl>
+                    <Textarea rows={3} {...field} placeholder="Additional notes" />
+                  </FormControl>
+                </FormItem>
+              )}
             />
 
-            <FormInput
-              name="referenceId"
-              label="Reference ID"
-              value={formState.data.referenceId}
-              onChange={(e) => formState.updateField('referenceId', e.target.value)}
-              placeholder="Enter reference ID"
-            />
-          </div>
-
-          <FormTextarea
-            name="remarks"
-            label="Remarks"
-            value={formState.data.remarks}
-            onChange={(e) => formState.updateField('remarks', e.target.value)}
-            placeholder="Additional notes or comments"
-            rows={3}
-          />
-
-          <FormActions
-            onSubmit={handleSubmit}
-            onCancel={onCancel}
-            submitLabel={submitLabel}
-            loading={formState.isLoading}
-          />
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={onCancel}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {submitLabel}
+              </Button>
+            </div>
+          </form>
         </Form>
       </CardContent>
     </Card>
   )
 }
-

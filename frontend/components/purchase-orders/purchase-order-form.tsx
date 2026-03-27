@@ -5,6 +5,7 @@ import { Form, FormInput, FormSelect, FormActions, FormField } from "@/component
 import { useFormState } from "@/lib/api-response"
 import { useFormValidation, commonValidationRules } from "@/lib/form-validation"
 import { purchaseOrdersApi, suppliersApi, sitesApi, masterDataApi, type PurchaseOrder } from "@/services"
+import { unwrapListResponse } from "@/lib/unwrap-api-list"
 import { Button } from "@/components/ui/button"
 import { X, Plus } from "lucide-react"
 
@@ -50,14 +51,14 @@ export function PurchaseOrderForm({ initialData, onSubmit, submitLabel = "Save" 
 
         setSuppliers(suppliersData.map((s: { id: number; name: string }) => ({ id: s.id, name: s.name })))
         setSites(sitesData.map((s: { id: number; name: string }) => ({ id: s.id, name: s.name })))
-        const rmList = (rawMaterialsRes as any)?.data?.rawMaterials ?? (rawMaterialsRes as any)?.data ?? []
-        if (Array.isArray(rmList)) {
-          setRawMaterials(rmList.map((rm: any) => ({
-            id: rm.id,
-            name: rm.name,
-            code: rm.code,
-          })))
-        }
+        const rmList = unwrapListResponse<Record<string, unknown>>(rawMaterialsRes)
+        setRawMaterials(
+          rmList.map((rm) => ({
+            id: Number(rm.id),
+            name: String(rm.name ?? ""),
+            code: String(rm.code ?? ""),
+          })),
+        )
 
         // Set initial items if editing
         if (initialData?.items && initialData.items.length > 0) {

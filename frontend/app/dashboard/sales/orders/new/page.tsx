@@ -25,6 +25,16 @@ import { ShoppingCart } from "lucide-react";
 import { masterDataApi, sitesApi, distributionApi } from "@/services";
 import { toast } from "sonner";
 import { UNIT_OPTIONS } from "@/lib/constants";
+import { formatMoneyAmount } from "@/lib/utils";
+
+const CURRENCY_OPTIONS = [
+  { value: "PKR", label: "PKR — Pakistani Rupee" },
+  { value: "USD", label: "USD — US Dollar" },
+  { value: "EUR", label: "EUR — Euro" },
+  { value: "GBP", label: "GBP — British Pound" },
+  { value: "SAR", label: "SAR — Saudi Riyal" },
+  { value: "AED", label: "AED — UAE Dirham" },
+] as const;
 
 interface OrderItem {
   drugId: string;
@@ -321,15 +331,23 @@ export default function NewSalesOrderPage() {
 
                 <div className="space-y-2">
                   <Label>Currency</Label>
-                  <Input
+                  <Select
                     value={formData.currency}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        currency: e.target.value,
-                      }))
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({ ...prev, currency: value }))
                     }
-                  />
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select currency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CURRENCY_OPTIONS.map((c) => (
+                        <SelectItem key={c.value} value={c.value}>
+                          {c.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
@@ -443,9 +461,25 @@ export default function NewSalesOrderPage() {
                         />
                       </div>
                     </div>
+                    <p className="text-sm text-muted-foreground mt-3 tabular-nums">
+                      Line total:{" "}
+                      {formatMoneyAmount(item.totalPrice, formData.currency)}
+                    </p>
                   </Card>
                 ))}
               </div>
+
+              {items.length > 0 && (
+                <div className="flex justify-end border-t pt-4">
+                  <p className="text-lg font-semibold tabular-nums">
+                    Order total:{" "}
+                    {formatMoneyAmount(
+                      items.reduce((s, i) => s + i.totalPrice, 0),
+                      formData.currency,
+                    )}
+                  </p>
+                </div>
+              )}
 
               <div className="flex justify-end gap-4">
                 <Button

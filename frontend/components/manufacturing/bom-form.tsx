@@ -1,25 +1,59 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useForm, useFieldArray } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Form, FormField, FormInput, FormTextarea, FormSelect, FormCheckbox, FormActions } from "@/components/ui/form"
-import { useFormState } from "@/lib/api-response"
-import { useFormValidation, commonValidationRules } from "@/lib/form-validation"
-import type { BOM } from "@/types/manufacturing"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form-hook"
+import type { BOM } from "@/types/manufacturing"
 import { Plus, Trash2, Package, AlertCircle } from "lucide-react"
 import { masterDataApi } from "@/services"
+import { unwrapListResponse } from "@/lib/unwrap-api-list"
+import { Checkbox } from "@/components/ui/checkbox"
 
-interface BOMItem {
-  materialId: string
-  materialName: string
-  materialCode: string
-  quantityPerBatch: number
-  unit: string
-  tolerance: number
-  isCritical: boolean
-  remarks?: string
-}
+const bomLineSchema = z.object({
+  materialId: z.string().min(1, "Select material"),
+  materialName: z.string(),
+  materialCode: z.string(),
+  quantityPerBatch: z.coerce.number().positive("Quantity must be positive"),
+  unit: z.string().min(1, "Select unit"),
+  tolerance: z.coerce.number().nonnegative(),
+  isCritical: z.boolean(),
+  remarks: z.string().optional(),
+})
+
+const bomFormSchema = z.object({
+  drugId: z.string().min(1, "Please select a drug"),
+  drugName: z.string(),
+  drugCode: z.string(),
+  version: z.coerce.number(),
+  status: z.string(),
+  batchSize: z.string().min(1, "Please enter batch size"),
+  yield: z.string().min(1, "Please enter yield percentage"),
+  effectiveDate: z.string(),
+  notes: z.string().optional(),
+  items: z.array(bomLineSchema).min(1, "Please add at least one material item"),
+})
+
+type BOMFormValues = z.infer<typeof bomFormSchema>
 
 interface BOMFormProps {
   initialData?: Partial<BOM>
@@ -28,115 +62,97 @@ interface BOMFormProps {
   submitLabel?: string
 }
 
-export function BOMForm({ 
-  initialData, 
-  onSubmit, 
-  onCancel, 
-  submitLabel = "Save" 
+export function BOMForm({
+  initialData,
+  onSubmit,
+  onCancel,
+  submitLabel = "Save",
 }: BOMFormProps) {
-  const initialFormData = {
-    drugId: initialData?.drugId || "",
-    drugName: initialData?.drugName || "",
-    drugCode: initialData?.drugCode || "",
-    version: initialData?.version || 1,
-    status: initialData?.status || "Draft",
-    batchSize: initialData?.batchSize || "",
-    yield: initialData?.yield || "",
-    effectiveDate: initialData?.effectiveDate || new Date().toISOString().split('T')[0],
-    notes: initialData?.notes || "",
-    items: initialData?.items || []
-  }
-
-  const formState = useFormState(initialFormData)
-  const validation = useFormValidation({
-    drugId: {
-      required: true,
-      message: "Please select a drug"
-    },
-    batchSize: {
-      required: true,
-      message: "Please enter batch size"
-    },
-    yield: {
-      required: true,
-      message: "Please enter yield percentage"
-    }
-  })
-
-  const [items, setItems] = useState<BOMItem[]>(initialFormData.items)
   const [drugs, setDrugs] = useState<{ value: string; label: string }[]>([])
   const [materials, setMaterials] = useState<{ value: string; label: string }[]>([])
   const [units, setUnits] = useState<{ value: string; label: string }[]>([])
+
+  const defaultValues: BOMFormValues = {
+    drugId: initialData?.drugId != null ? String(initialData.drugId) : "",
+    drugName: initialData?.drugName || "",
+    drugCode: initialData?.drugCode || "",
+    version: initialData?.version ?? 1,
+    status: initialData?.status || "Draft",
+    batchSize: initialData?.batchSize != null ? String(initialData.batchSize) : "",
+    yield: initialData?.yield != null ? String(initialData.yield) : "",
+    effectiveDate:
+      initialData?.effectiveDate || new Date().toISOString().split("T")[0],
+    notes: initialData?.notes || "",
+    items:
+      initialData?.items?.map((it: any) => ({
+        materialId: String(it.materialId ?? ""),
+        materialName: it.materialName || "",
+        materialCode: it.materialCode || "",
+        quantityPerBatch: Number(it.quantityPerBatch) || 0,
+        unit: it.unit || "",
+        tolerance: it.tolerance != null ? Number(it.tolerance) : 5,
+        isCritical: !!it.isCritical,
+        remarks: it.remarks || "",
+      })) ?? [],
+  }
+
+  const form = useForm<BOMFormValues>({
+    resolver: zodResolver(bomFormSchema),
+    defaultValues,
+    mode: "onSubmit",
+  })
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "items",
+  })
+
+  const itemsWatch = form.watch("items")
 
   useEffect(() => {
     async function loadOptions() {
       try {
         const [drugsRes, materialsRes, unitsRes] = await Promise.all([
           masterDataApi.getDrugs({ limit: 100 }).catch(() => null),
-          masterDataApi.getRawMaterials({ limit: 100 }).catch(() => ({ data: [] })),
+          masterDataApi.getRawMaterials({ limit: 100 }).catch(() => []),
           masterDataApi.getUnits().catch(() => null),
         ])
         if (drugsRes?.data) {
-          const drugsList = (drugsRes.data as any).drugs ?? drugsRes.data
+          const drugsList = (drugsRes.data as { drugs?: unknown }).drugs ?? drugsRes.data
           if (Array.isArray(drugsList)) {
             setDrugs(
-              drugsList.map((d: any) => ({
+              drugsList.map((d: { id: number; name: string; code: string }) => ({
                 value: String(d.id),
                 label: `${d.name} - ${d.code}`,
               })),
             )
           }
         }
-
-        // API may return array directly or { data: { rawMaterials: [...] } } or { data: [...] }
-        const materialsList = Array.isArray(materialsRes)
-          ? materialsRes
-          : (materialsRes as any)?.data?.rawMaterials ?? (materialsRes as any)?.data ?? []
-        console.log(materialsList, "materialsList")
-        if (Array.isArray(materialsList)) {
-          console.log(materialsList, "materialsList2")
-          setMaterials(
-            materialsList.map((m: any) => ({
-              value: String(m.id),
-              label: `${m.name} - ${m.code}`,
-            })),
-          )
-        }
-        console.log(materials, "materials")
+        const materialsList = unwrapListResponse(materialsRes)
+        setMaterials(
+          materialsList.map((m: { id: number; name: string; code: string }) => ({
+            value: String(m.id),
+            label: `${m.name} - ${m.code}`,
+          })),
+        )
         if (unitsRes?.data?.units && Array.isArray(unitsRes.data.units)) {
           setUnits(
-            unitsRes.data.units.map((u: any) => ({
-              value: u.symbol ?? u.code ?? u.name,
-              label: u.name ?? u.code ?? u.symbol,
+            unitsRes.data.units.map((u: { symbol?: string; code?: string; name?: string }) => ({
+              value: u.symbol ?? u.code ?? u.name ?? "",
+              label: u.name ?? u.code ?? u.symbol ?? "",
             })),
           )
         }
       } catch {
-        // Silently ignore; form will still work but without dynamic options
+        // options optional
       }
     }
-
     loadOptions()
   }, [])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    formState.setLoading(true)
-    formState.clearErrors()
-
+  const handleFormSubmit = form.handleSubmit(async (values) => {
     try {
-      const errors = validation.validateForm(formState.data)
-      if (validation.hasErrors()) {
-        formState.setErrors(errors)
-        return
-      }
-      if (items.length === 0) {
-        formState.setError("Please add at least one material item")
-        return
-      }
-
-      // Map frontend BOM data to backend CreateBOMDto shape
-      const mappedItems = items.map((item, index) => ({
+      const mappedItems = values.items.map((item, index) => ({
         materialId: Number(item.materialId),
         materialName: item.materialName,
         materialCode: item.materialCode,
@@ -145,34 +161,31 @@ export function BOMForm({
         tolerance: item.tolerance != null ? Number(item.tolerance) : undefined,
         isCritical: !!item.isCritical,
         sequence: index + 1,
-        remarks: item.remarks || undefined
+        remarks: item.remarks || undefined,
       }))
 
       await onSubmit({
-        drugId: Number(formState.data.drugId),
-        drugName: formState.data.drugName,
-        drugCode: formState.data.drugCode,
-        batchSize: Number(formState.data.batchSize),
-        yield: formState.data.yield !== "" ? Number(formState.data.yield) : undefined,
-        effectiveDate: formState.data.effectiveDate,
-        expiryDate: formState.data.expiryDate,
-        status: formState.data.status,
+        drugId: Number(values.drugId),
+        drugName: values.drugName,
+        drugCode: values.drugCode,
+        batchSize: Number(values.batchSize),
+        yield: values.yield !== "" ? Number(values.yield) : undefined,
+        effectiveDate: values.effectiveDate,
+        expiryDate: initialData?.expiryDate,
+        status: values.status,
         items: mappedItems,
-        remarks: formState.data.notes || undefined,
+        remarks: values.notes || undefined,
         bomNumber: initialData?.bomNumber || `BOM-${Date.now()}`,
-        createdBy: 1 // TODO: replace with actual logged-in user ID
-      } as any)
-
-      formState.setSuccess("BOM saved successfully")
-    } catch (error: any) {
-      formState.setError(error.message || "Failed to save BOM")
-    } finally {
-      formState.setLoading(false)
+        createdBy: 1,
+      } as unknown as BOM)
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "Failed to save BOM"
+      form.setError("root", { message: msg })
     }
-  }
+  })
 
   const addItem = () => {
-    const newItem: BOMItem = {
+    append({
       materialId: "",
       materialName: "",
       materialCode: "",
@@ -180,33 +193,16 @@ export function BOMForm({
       unit: "",
       tolerance: 5,
       isCritical: false,
-      remarks: ""
-    }
-    setItems([...items, newItem])
-  }
-
-  const removeItem = (index: number) => {
-    setItems(items.filter((_, i) => i !== index))
-  }
-
-  const updateItem = (index: number, field: keyof BOMItem, value: any) => {
-    const updatedItems = [...items]
-    updatedItems[index] = { ...updatedItems[index], [field]: value }
-    setItems(updatedItems)
-  }
-
-  const updateItemMaterial = (index: number, value: string) => {
-    const material = materials.find(m => m.value === value)
-    setItems(prev => {
-      const next = [...prev]
-      next[index] = {
-        ...next[index],
-        materialId: value,
-        materialName: material?.label.split(' - ')[0] ?? '',
-        materialCode: material?.label.split(' - ')[1] ?? '',
-      }
-      return next
+      remarks: "",
     })
+  }
+
+  const applyMaterial = (index: number, value: string) => {
+    const material = materials.find((m) => m.value === value)
+    const parts = material?.label.split(" - ") ?? []
+    form.setValue(`items.${index}.materialId`, value)
+    form.setValue(`items.${index}.materialName`, parts[0] ?? "")
+    form.setValue(`items.${index}.materialCode`, parts[1] ?? "")
   }
 
   return (
@@ -215,206 +211,346 @@ export function BOMForm({
         <CardTitle>Bill of Materials Details</CardTitle>
       </CardHeader>
       <CardContent>
-        <Form
-          onSubmit={handleSubmit}
-          loading={formState.isLoading}
-          error={formState.error}
-          success={formState.success}
-        >
-          <div className="grid md:grid-cols-2 gap-4">
-            <FormSelect
-              name="drugId"
-              label="Drug"
-              value={formState.data.drugId != null ? String(formState.data.drugId) : ""}
-              onChange={(value) => {
-                const drug = drugs.find(d => d.value === value)
-                formState.updateField('drugId', value)
-                formState.updateField('drugName', drug?.label.split(' - ')[0] || '')
-                formState.updateField('drugCode', drug?.label.split(' - ')[1] || '')
-              }}
-              error={formState.errors.drugId}
-              required
-              options={drugs}
-              placeholder="Select a drug"
-            />
+        <Form {...form}>
+          <form onSubmit={handleFormSubmit} className="space-y-6">
+            {form.formState.errors.root && (
+              <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
+            )}
 
-            <FormInput
-              name="version"
-              label="Version"
-              type="number"
-              value={formState.data.version}
-              onChange={(e) => formState.updateField('version', parseInt(e.target.value) || 1)}
-              placeholder="1"
-              disabled
-            />
+            <div className="grid md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="drugId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Drug *</FormLabel>
+                    <Select
+                      value={field.value || undefined}
+                      onValueChange={(v) => {
+                        field.onChange(v)
+                        const drug = drugs.find((d) => d.value === v)
+                        const parts = drug?.label.split(" - ") ?? []
+                        form.setValue("drugName", parts[0] || "")
+                        form.setValue("drugCode", parts[1] || "")
+                      }}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a drug" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {drugs.map((d) => (
+                          <SelectItem key={d.value} value={d.value}>
+                            {d.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormInput
-              name="batchSize"
-              label="Batch Size"
-              value={formState.data.batchSize}
-              onChange={(e) => formState.updateField('batchSize', e.target.value)}
-              error={formState.errors.batchSize}
-              required
-              placeholder="e.g., 1000 tablets"
-            />
+              <FormField
+                control={form.control}
+                name="version"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Version</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        disabled
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 1)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormInput
-              name="yield"
-              label="Yield (%)"
-              type="number"
-              value={formState.data.yield}
-              onChange={(e) => formState.updateField('yield', e.target.value)}
-              error={formState.errors.yield}
-              required
-              placeholder="95"
-            />
+              <FormField
+                control={form.control}
+                name="batchSize"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Batch Size *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., 1000 tablets" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormInput
-              name="effectiveDate"
-              label="Effective Date"
-              type="date"
-              value={formState.data.effectiveDate}
-              onChange={(e) => formState.updateField('effectiveDate', e.target.value)}
-              placeholder="Select effective date"
-            />
+              <FormField
+                control={form.control}
+                name="yield"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Yield (%) *</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="95" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormSelect
-              name="status"
-              label="Status"
-              value={formState.data.status}
-              onChange={(value) => formState.updateField('status', value)}
-              options={[
-                { value: "Draft", label: "Draft" },
-                { value: "Under Review", label: "Under Review" },
-                { value: "Approved", label: "Approved" },
-                { value: "Active", label: "Active" },
-                { value: "Obsolete", label: "Obsolete" }
-              ]}
-              placeholder="Select status"
-            />
-          </div>
+              <FormField
+                control={form.control}
+                name="effectiveDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Effective Date</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <FormTextarea
-            name="notes"
-            label="Notes"
-            value={formState.data.notes}
-            onChange={(e) => formState.updateField('notes', e.target.value)}
-            placeholder="Additional notes or special instructions"
-            rows={3}
-          />
-
-          {/* Items Section */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Material... Requirements</h3>
-              <Button type="button" onClick={addItem} variant="outline" size="sm">
-                <Plus  />
-                Add Material
-              </Button>
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {[
+                          "Draft",
+                          "Under Review",
+                          "Approved",
+                          "Active",
+                          "Obsolete",
+                        ].map((s) => (
+                          <SelectItem key={s} value={s}>
+                            {s}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
-            {items.map((item, index) => (
-              <Card key={index} className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="font-medium">Material {index + 1}</h4>
-                  <Button
-                    type="button"
-                    onClick={() => removeItem(index)}
-                    variant="destructive"
-                    size="sm"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes</FormLabel>
+                  <FormControl>
+                    <Textarea rows={3} placeholder="Additional notes" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                <div className="grid md:grid-cols-2 gap-4">
-                  <FormSelect
-                    name={`materialId_${index}`}
-                    label="Material"
-                    value={item.materialId ?? ""}
-                    onChange={(value) => updateItemMaterial(index, value)}
-                    options={materials}
-                    placeholder="Select material"
-                  />
-
-                  <FormInput
-                    name={`quantityPerBatch_${index}`}
-                    label="Quantity per Batch"
-                    type="number"
-                    step="0.001"
-                    value={item.quantityPerBatch}
-                    onChange={(e) => updateItem(index, 'quantityPerBatch', parseFloat(e.target.value) || 0)}
-                    placeholder="0.000"
-                    required
-                  />
-
-                  <FormSelect
-                    name={`unit_${index}`}
-                    label="Unit of Measure"
-                    value={item.unit}
-                    onChange={(value) => updateItem(index, 'unit', value)}
-                    options={units}
-                    placeholder="Select unit"
-                  />
-
-                  <FormInput
-                    name={`tolerance_${index}`}
-                    label="Tolerance (%)"
-                    type="number"
-                    step="0.1"
-                    value={item.tolerance}
-                    onChange={(e) => updateItem(index, 'tolerance', parseFloat(e.target.value) || 0)}
-                    placeholder="5.0"
-                  />
-
-                  <FormCheckbox
-                    name={`isCritical_${index}`}
-                    label="Critical Material"
-                    checked={item.isCritical}
-                    onChange={(e) => updateItem(index, 'isCritical', e.target.checked)}
-                  />
-
-                  <FormInput
-                    name={`remarks_${index}`}
-                    label="Remarks"
-                    value={item.remarks || ''}
-                    onChange={(e) => updateItem(index, 'remarks', e.target.value)}
-                    placeholder="Special handling instructions"
-                  />
-                </div>
-              </Card>
-            ))}
-
-            {items.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No materials added yet. Click "Add Material" to get started.</p>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Material requirements</h3>
+                <Button type="button" onClick={addItem} variant="outline" size="sm">
+                  <Plus className="h-4 w-4" />
+                  Add Material
+                </Button>
               </div>
-            )}
 
-            {items.length > 0 && (
-              <Card className="p-4 bg-blue-50">
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-semibold">Total Materials:</span>
-                  <div className="flex items-center gap-4">
-                    <span className="text-lg">
-                      {items.length} materials
-                    </span>
-                    <span className="text-sm text-red-600 flex items-center gap-1">
-                      <AlertCircle className="h-4 w-4" />
-                      {items.filter(item => item.isCritical).length} critical
-                    </span>
+              {fields.map((row, index) => (
+                <Card key={row.id} className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-medium">Material {index + 1}</h4>
+                    <Button
+                      type="button"
+                      onClick={() => remove(index)}
+                      variant="destructive"
+                      size="sm"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
-                </div>
-              </Card>
-            )}
-          </div>
 
-          <FormActions
-            loading={formState.isLoading}
-            submitLabel={submitLabel}
-            onCancel={onCancel}
-          />
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name={`items.${index}.materialId`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Material</FormLabel>
+                          <Select
+                            value={field.value || undefined}
+                            onValueChange={(v) => {
+                              field.onChange(v)
+                              applyMaterial(index, v)
+                            }}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select material" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {materials.map((m) => (
+                                <SelectItem key={m.value} value={m.value}>
+                                  {m.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name={`items.${index}.quantityPerBatch`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Quantity per Batch</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.001"
+                              placeholder="0.000"
+                              value={field.value === undefined || field.value === null ? "" : field.value}
+                              onChange={(e) =>
+                                field.onChange(
+                                  e.target.value === "" ? 0 : parseFloat(e.target.value),
+                                )
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name={`items.${index}.unit`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Unit of Measure</FormLabel>
+                          <Select value={field.value || undefined} onValueChange={field.onChange}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select unit" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {units.map((u) => (
+                                <SelectItem key={u.value} value={u.value}>
+                                  {u.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name={`items.${index}.tolerance`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Tolerance (%)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.1"
+                              value={field.value === undefined || field.value === null ? "" : field.value}
+                              onChange={(e) =>
+                                field.onChange(
+                                  e.target.value === "" ? 0 : parseFloat(e.target.value),
+                                )
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name={`items.${index}.isCritical`}
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={(c) => field.onChange(c === true)}
+                            />
+                          </FormControl>
+                          <FormLabel className="!mt-0">Critical Material</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name={`items.${index}.remarks`}
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                          <FormLabel>Remarks</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Special handling" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </Card>
+              ))}
+
+              {fields.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No materials added yet. Click &quot;Add Material&quot; to get started.</p>
+                </div>
+              )}
+
+              {itemsWatch && itemsWatch.length > 0 && (
+                <Card className="p-4 bg-blue-50">
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg font-semibold">Total Materials:</span>
+                    <div className="flex items-center gap-4">
+                      <span className="text-lg">{itemsWatch.length} materials</span>
+                      <span className="text-sm text-red-600 flex items-center gap-1">
+                        <AlertCircle className="h-4 w-4" />
+                        {itemsWatch.filter((item) => item.isCritical).length} critical
+                      </span>
+                    </div>
+                  </div>
+                </Card>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={onCancel}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {submitLabel}
+              </Button>
+            </div>
+          </form>
         </Form>
       </CardContent>
     </Card>

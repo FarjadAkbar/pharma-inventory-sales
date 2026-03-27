@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { distributionApi } from "@/services"
 import { toast } from "sonner"
 import type { SalesOrder } from "@/types/distribution"
+import { formatMoneyAmount } from "@/lib/utils"
 
 /** Align with shipments list filters where possible */
 const CARRIER_OPTIONS = [
@@ -166,8 +167,12 @@ export default function NewShipmentPage() {
                     <div className="text-sm text-muted-foreground">
                       Items: {selectedSalesOrder.items.length} items, {selectedSalesOrder.items.reduce((sum, item) => sum + item.quantity, 0)} units
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      Total Amount: {selectedSalesOrder.totalAmount} {selectedSalesOrder.currency}
+                    <div className="text-sm text-muted-foreground tabular-nums">
+                      Total amount:{" "}
+                      {formatMoneyAmount(
+                        selectedSalesOrder.totalAmount,
+                        selectedSalesOrder.currency,
+                      )}
                     </div>
                   </div>
                 )}
