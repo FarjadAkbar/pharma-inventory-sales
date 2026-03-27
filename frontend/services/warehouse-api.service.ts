@@ -87,6 +87,24 @@ export class WarehouseApiService extends BaseApiService {
     })
   }
 
+  async assignPutawayLocation(
+    putawayId: number,
+    assignDto: {
+      locationId: string
+      zone?: string
+      rack?: string
+      shelf?: string
+      position?: string
+      remarks?: string
+      assignedBy: number
+    }
+  ) {
+    return this.request(`/warehouse/putaway/${putawayId}/assign-location`, {
+      method: "POST",
+      body: JSON.stringify(assignDto),
+    })
+  }
+
   async updatePutawayTask(taskData: any) {
     return this.request("/warehouse/putaway", {
       method: "PUT",

@@ -7,10 +7,20 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Plus, Package, MapPin, User, AlertCircle, Thermometer } from "lucide-react"
-import { apiService } from "@/services/api.service"
+import { Plus, Package } from "lucide-react"
+import { warehouseApi } from "@/services"
 import { toast } from "sonner"
 import { UNIT_OPTIONS } from "@/lib/constants"
+import { useAuth } from "@/contexts/auth.context"
+
+/** Labels/codes aligned with material select values (demo / UI catalog). */
+const PUTAWAY_MATERIAL_BY_ID: Record<string, { materialName: string; materialCode: string }> = {
+  "1": { materialName: "Paracetamol API", materialCode: "RM-001" },
+  "2": { materialName: "Microcrystalline Cellulose", materialCode: "RM-002" },
+  "3": { materialName: "Sodium Starch Glycolate", materialCode: "RM-003" },
+  "4": { materialName: "Paracetamol Tablets", materialCode: "DRG-001" },
+  "5": { materialName: "Ibuprofen Tablets", materialCode: "DRG-002" },
+}
 
 interface PutawayTaskFormProps {
   onSuccess?: () => void
@@ -18,6 +28,7 @@ interface PutawayTaskFormProps {
 }
 
 export function PutawayTaskForm({ onSuccess, trigger }: PutawayTaskFormProps) {
+  const { user } = useAuth()
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -39,38 +50,113 @@ export function PutawayTaskForm({ onSuccess, trigger }: PutawayTaskFormProps) {
     e.preventDefault()
     setLoading(true)
 
-    try {
-      const response = await apiService.createPutawayTask({
-        ...formData,
-        quantity: parseFloat(formData.quantity),
-        assignedAt: new Date().toISOString(),
-        status: "Pending"
-      })
+    const materialId = parseInt(formData.materialId, 10)
+    const requestedBy = user?.id ?? parseInt(formData.assignedTo, 10)
+    const assigneeId = parseInt(formData.assignedTo, 10)
+    const qty = parseFloat(formData.quantity)
 
-      if (response.success) {
-        toast.success("Putaway task created successfully")
-        setOpen(false)
-        setFormData({
-          grnId: "",
-          grnNumber: "",
-          materialId: "",
-          batchNumber: "",
-          quantity: "",
-          unit: "",
-          sourceLocation: "",
-          targetLocation: "",
-          priority: "Normal",
-          assignedTo: "",
-          temperatureCompliance: true,
-          notes: ""
-        })
-        onSuccess?.()
-      } else {
-        toast.error("Failed to create putaway task")
+    if (!formData.materialId || Number.isNaN(materialId)) {
+      toast.error("Please select a material")
+      setLoading(false)
+      return
+    }
+    const materialMeta = PUTAWAY_MATERIAL_BY_ID[formData.materialId]
+    if (!materialMeta) {
+      toast.error("Unknown material selection")
+      setLoading(false)
+      return
+    }
+    if (!formData.assignedTo || Number.isNaN(assigneeId)) {
+      toast.error("Please select assignee")
+      setLoading(false)
+      return
+    }
+    if (Number.isNaN(requestedBy)) {
+      toast.error("Could not resolve requesting user")
+      setLoading(false)
+      return
+    }
+    if (Number.isNaN(qty) || qty < 0) {
+      toast.error("Enter a valid quantity")
+      setLoading(false)
+      return
+    }
+
+    const remarkParts: string[] = []
+    if (formData.notes.trim()) remarkParts.push(formData.notes.trim())
+    if (formData.grnNumber.trim()) remarkParts.push(`GRN: ${formData.grnNumber.trim()}`)
+    if (formData.grnId.trim()) remarkParts.push(`GRN ID: ${formData.grnId.trim()}`)
+    if (formData.sourceLocation.trim()) remarkParts.push(`From: ${formData.sourceLocation.trim()}`)
+    if (formData.targetLocation.trim()) remarkParts.push(`Target: ${formData.targetLocation.trim()}`)
+    remarkParts.push(`Priority: ${formData.priority}`)
+    remarkParts.push(`Temp compliance: ${formData.temperatureCompliance ? "yes" : "no"}`)
+
+    const payload: Record<string, unknown> = {
+      materialId,
+      materialName: materialMeta.materialName,
+      materialCode: materialMeta.materialCode,
+      batchNumber: formData.batchNumber.trim(),
+      quantity: qty,
+      unit: formData.unit,
+      requestedBy,
+      remarks: remarkParts.join(" | "),
+    }
+
+    const grnItemId = parseInt(formData.grnId.trim(), 10)
+    if (formData.grnId.trim() !== "" && !Number.isNaN(grnItemId)) {
+      payload.goodsReceiptItemId = grnItemId
+    }
+
+    try {
+      const response = (await warehouseApi.createPutawayTask(payload)) as {
+        success?: boolean
+        id?: number
+        error?: { message?: string }
       }
-    } catch (error) {
+
+      if (response && response.success === false) {
+        toast.error(response.error?.message ?? "Failed to create putaway task")
+        return
+      }
+
+      const res = response as { id?: number; data?: { id?: number } }
+      const putawayId =
+        typeof res.id === "number" ? res.id : typeof res.data?.id === "number" ? res.data.id : undefined
+
+      if (putawayId != null && formData.targetLocation.trim()) {
+        try {
+          await warehouseApi.assignPutawayLocation(putawayId, {
+            locationId: formData.targetLocation.trim(),
+            assignedBy: assigneeId,
+            remarks: `Source: ${formData.sourceLocation.trim() || "—"}`,
+          })
+        } catch (assignErr) {
+          console.error(assignErr)
+          toast.warning("Putaway created but location assignment failed — assign location manually")
+        }
+      }
+
+      toast.success("Putaway task created successfully")
+      setOpen(false)
+      setFormData({
+        grnId: "",
+        grnNumber: "",
+        materialId: "",
+        batchNumber: "",
+        quantity: "",
+        unit: "",
+        sourceLocation: "",
+        targetLocation: "",
+        priority: "Normal",
+        assignedTo: "",
+        temperatureCompliance: true,
+        notes: "",
+      })
+      onSuccess?.()
+    } catch (error: unknown) {
       console.error("Error creating putaway task:", error)
-      toast.error("An error occurred while creating the putaway task")
+      const msg = error instanceof Error ? error.message : "An error occurred while creating the putaway task"
+      toast.error(msg)
     } finally {
       setLoading(false)
     }
@@ -275,7 +361,7 @@ export function PutawayTaskForm({ onSuccess, trigger }: PutawayTaskFormProps) {
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="bg-orange-600 hover:bg-orange-700">
+            <Button type="submit" disabled={loading}>
               {loading ? "Creating..." : "Create Task"}
             </Button>
           </div>
