@@ -134,7 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setPermissions(null)
     setUserSiteIds([])
     setIsSiteScoped(false)
-    router.push("/login")
+    router.push("/auth/login")
   }
 
   const changePassword = async (

@@ -1,5 +1,6 @@
 import { DataSource } from 'typeorm';
 import { hash } from '@node-rs/bcrypt';
+import { buildCrudPermissionSeeds } from '@repo/shared';
 import { Permission } from '../../../identity-service/src/entities/permission.entity';
 import { Role } from '../../../identity-service/src/entities/role.entity';
 import { User } from '../../../identity-service/src/entities/user.entity';
@@ -9,30 +10,7 @@ export async function seedIdentity(ds: DataSource) {
   const roleRepo = ds.getRepository(Role);
   const userRepo = ds.getRepository(User);
 
-  const requiredPermissions: Array<{
-    name: string;
-    description: string;
-    resource: string;
-    action: string;
-  }> = [
-    { name: 'users.create', description: 'Create users', resource: 'users', action: 'create' },
-    { name: 'users.read', description: 'View users', resource: 'users', action: 'read' },
-    { name: 'users.update', description: 'Update users', resource: 'users', action: 'update' },
-    { name: 'users.delete', description: 'Delete users', resource: 'users', action: 'delete' },
-    // Module-level "manage" permissions (preferred for role assignment)
-    { name: 'identity.manage', description: 'Manage identity and access', resource: 'identity', action: 'manage' },
-    { name: 'master_data.manage', description: 'Manage master data', resource: 'master_data', action: 'manage' },
-    { name: 'roles.manage', description: 'Manage roles', resource: 'roles', action: 'manage' },
-    { name: 'sites.manage', description: 'Manage sites', resource: 'sites', action: 'manage' },
-    { name: 'procurement.manage', description: 'Manage procurement', resource: 'procurement', action: 'manage' },
-    { name: 'manufacturing.manage', description: 'Manage manufacturing', resource: 'manufacturing', action: 'manage' },
-    { name: 'quality.manage', description: 'Manage quality', resource: 'quality', action: 'manage' },
-    { name: 'warehouse.manage', description: 'Manage warehouse', resource: 'warehouse', action: 'manage' },
-    { name: 'distribution.manage', description: 'Manage distribution', resource: 'distribution', action: 'manage' },
-    { name: 'sales.manage', description: 'Manage sales and POS', resource: 'sales', action: 'manage' },
-    // Resource-level manage (use this when you want single-resource control)
-    { name: 'raw_materials.manage', description: 'Manage raw materials', resource: 'raw_materials', action: 'manage' },
-  ];
+  const requiredPermissions = buildCrudPermissionSeeds();
 
   const existing = await permRepo.find();
   const existingByName = new Map(existing.map((p) => [p.name, p]));

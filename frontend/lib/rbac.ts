@@ -1,6 +1,8 @@
 /**
- * RBAC aligned with identity permission names: `{resource}.{action}` (e.g. raw_materials.read, procurement.manage).
- * Module keys (PROCUREMENT, MASTER_DATA, …) expand to multiple resources; `*.manage` on a bucket grants that module.
+ * RBAC aligned with identity permission names: `{resource}.{action}` (e.g. suppliers.read).
+ * Module keys (PROCUREMENT, MASTER_DATA, …) expand to multiple resources.
+ * Identity seeder creates CRUD rows per resource (`buildCrudPermissionSeeds` in `@repo/shared` / backend).
+ * Optional `*.manage` on a bucket or resource still grants full access if present on the role/JWT.
  */
 
 export const RBAC_MODULES: Record<string, { resources: readonly string[]; bucket?: string }> = {

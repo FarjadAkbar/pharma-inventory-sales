@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -25,7 +24,6 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [submitError, setSubmitError] = useState<string>("")
   const { login } = useAuth()
-  const router = useRouter()
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -39,7 +37,7 @@ export function LoginForm() {
     setSubmitError("")
     try {
       await login(data.email, data.password)
-      router.push("/dashboard")
+      // AuthProvider.login already navigates to /dashboard
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Login failed")
     }

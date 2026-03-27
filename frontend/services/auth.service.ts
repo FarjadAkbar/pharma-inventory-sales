@@ -26,7 +26,9 @@ class AuthService {
   setToken(token: string): void {
     if (typeof window !== "undefined") {
       localStorage.setItem(this.tokenKey, token)
-      document.cookie = `${this.tokenKey}=${token}; path=/; max-age=${24 * 60 * 60}; samesite=strict`
+      // Do not mirror the full JWT into document.cookie — large payloads (many permissions)
+      // exceed browser cookie limits (~4KB) and the cookie is dropped, so Next middleware
+      // would redirect to login while localStorage still holds a valid token.
     }
   }
 

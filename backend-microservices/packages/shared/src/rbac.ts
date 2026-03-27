@@ -1,6 +1,10 @@
 /**
  * RBAC aligned with identity permission names: `{resource}.{action}`.
  * Used by API gateway permission guard (same rules as frontend).
+ *
+ * Seeded permissions: use `buildCrudPermissionSeeds()` for one row per resource
+ * (create, read, update, delete). Optional `{bucket}.manage` or `{resource}.manage`
+ * in JWT still grants full module/resource access when present.
  */
 
 export const RBAC_MODULES: Record<string, { resources: readonly string[]; bucket?: string }> = {
@@ -45,6 +49,41 @@ export const RBAC_MODULES: Record<string, { resources: readonly string[]; bucket
     bucket: 'identity',
   },
 };
+
+export const RBAC_CRUD_ACTIONS = ['create', 'read', 'update', 'delete'] as const;
+
+export type RbacPermissionSeed = {
+  name: string;
+  description: string;
+  resource: string;
+  action: string;
+};
+
+/** Rows for identity `permissions` table — every resource in RBAC_MODULES × CRUD. */
+export function buildCrudPermissionSeeds(): RbacPermissionSeed[] {
+  const seen = new Set<string>();
+  const out: RbacPermissionSeed[] = [];
+  for (const cfg of Object.values(RBAC_MODULES)) {
+    for (const resource of cfg.resources) {
+      for (const action of RBAC_CRUD_ACTIONS) {
+        const name = `${resource}.${action}`;
+        if (seen.has(name)) continue;
+        seen.add(name);
+        const label = resource.replace(/_/g, ' ');
+        const description =
+          action === 'create'
+            ? `Create ${label}`
+            : action === 'read'
+              ? `View ${label}`
+              : action === 'update'
+                ? `Update ${label}`
+                : `Delete ${label}`;
+        out.push({ name, description, resource, action });
+      }
+    }
+  }
+  return out;
+}
 
 export function normalizeRbacAction(action: string): string {
   const a = action.toLowerCase();

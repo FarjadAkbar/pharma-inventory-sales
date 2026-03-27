@@ -109,7 +109,7 @@ export default function DashboardPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
             <p className="text-muted-foreground">
-              Welcome back, {user?.name}! Here's what's happening with your pharma inventory sales system.
+              Welcome back, {user?.fullname || user?.email}! Here's what's happening with your pharma inventory sales system.
             </p>
           </div>
           <Button onClick={loadDashboardData} variant="outline" size="sm" disabled={loading}>

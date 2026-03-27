@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { extractUserFromToken, isTokenValid } from "@/lib/jwt"
 
 const protectedRoutes = [
   "/dashboard",
@@ -12,63 +11,75 @@ const protectedRoutes = [
   "/procurement",
   "/quality",
   "/manufacturing",
-  "/warehouse"
+  "/warehouse",
 ]
 
-const publicRoutes = [
-  "/auth/login",
-  "/auth/register",
-  "/auth/forgot-password",
-  "/auth/reset-password"
-]
+/**
+ * Edge-safe JWT payload decode (no jsonwebtoken — avoids Edge/runtime issues).
+ */
+function decodeJwtPayload(token: string): {
+  sub?: number
+  id?: number
+  exp?: number
+  role?: string
+  roleName?: string
+} | null {
+  try {
+    const parts = token.split(".")
+    if (parts.length !== 3) return null
+    const segment = parts[1]
+    let base64 = segment.replace(/-/g, "+").replace(/_/g, "/")
+    const pad = base64.length % 4
+    if (pad) base64 += "=".repeat(4 - pad)
+    const json = atob(base64)
+    return JSON.parse(json)
+  } catch {
+    return null
+  }
+}
+
+function isTokenExpired(payload: { exp?: number }): boolean {
+  if (!payload.exp) return false
+  return payload.exp <= Math.floor(Date.now() / 1000)
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Check if the route is protected
-  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
-  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
+  const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route))
 
   if (!isProtectedRoute) {
     return NextResponse.next()
   }
 
-  // Extract token from cookies or headers
-  const token = request.cookies.get("pharma_inventory_sales_token")?.value ||
-                request.headers.get("authorization")?.replace("Bearer ", "")
+  const token =
+    request.cookies.get("pharma_inventory_sales_token")?.value ||
+    request.headers.get("authorization")?.replace("Bearer ", "")
 
+  // Token is stored in localStorage only when the JWT is large (many permissions).
+  // Middleware cannot read localStorage, so allow the request through; client RouteGuard
+  // and API Bearer auth enforce access.
   if (!token) {
-    console.log("Middleware: No token found, redirecting to login")
-    return NextResponse.redirect(new URL("/auth/login", request.url))
+    return NextResponse.next()
   }
 
-  const userData = extractUserFromToken(token)
+  const userData = decodeJwtPayload(token)
   if (!userData) {
-    console.log("Middleware: Failed to extract user data, redirecting to login")
-    return NextResponse.redirect(new URL("/auth/login", request.url))
+    return NextResponse.next()
   }
 
-  // Check if token is expired
-  if (userData.exp) {
-    const currentTime = Math.floor(Date.now() / 1000)
-    if (userData.exp <= currentTime) {
-      console.log("Middleware: Token expired, redirecting to login")
-      return NextResponse.redirect(new URL("/auth/login", request.url))
-    }
+  if (isTokenExpired(userData)) {
+    return NextResponse.redirect(new URL("/auth/login", request.url))
   }
 
   const response = NextResponse.next()
-  // JWT payload uses 'sub' for user ID (standard JWT claim)
-  const userId = userData.sub || userData.id
-  response.headers.set("x-user-role", userData.role || "")
-  response.headers.set("x-user-id", userId ? userId.toString() : "")
+  const userId = userData.sub ?? userData.id
+  response.headers.set("x-user-role", userData.role || userData.roleName || "")
+  response.headers.set("x-user-id", userId != null ? String(userId) : "")
 
-  console.log("Middleware: Authentication successful, allowing access")
   return response
 }
 
 export const config = {
-  matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
-  ],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 }

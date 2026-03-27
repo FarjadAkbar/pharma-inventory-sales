@@ -9,6 +9,7 @@ import { Sidebar } from "./sidebar"
 import { Header } from "./header"
 import { RouteGuard } from "@/components/auth/route-guard"
 import { useMounted } from "@/hooks/use-mounted"
+import { authService } from "@/services/auth.service"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -18,12 +19,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { isAuthenticated, loading } = useAuth()
   const router = useRouter()
   const mounted = useMounted()
+  // Match RouteGuard: token in localStorage counts (JWT may be too large for cookies).
+  const sessionOk = isAuthenticated || authService.isAuthenticated()
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
+    if (!loading && !sessionOk) {
       router.replace("/auth/login")
     }
-  }, [isAuthenticated, loading, router])
+  }, [sessionOk, loading, router])
 
   if (!mounted || loading) {
     return (
@@ -36,7 +39,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     )
   }
 
-  if (!isAuthenticated) {
+  if (!sessionOk) {
     return null
   }
 
